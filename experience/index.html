@@ -145,6 +145,27 @@
           <p class="bike-lab-deck">A protected cycle track connects a person to more than a route. Explore how a hypothetical redesign could change a trip, a stop at a shop, and the curb outside. This is a schematic, illustrative replay.</p>
         </div>
 
+        <div class="bike-workbench" aria-label="Bloor scenario workbench">
+          <aside class="bike-workbench-pipeline" aria-label="How this scenario is framed">
+            <div class="bike-inspector-head"><strong>Run pipeline</strong><span>PREVIEW</span></div>
+            <ol class="bike-pipeline-list">
+              <li><span>01</span><div><strong>Define the change</strong><small>Remove the protected Bloor West track between Shaw Street and Avenue Road.</small></div></li>
+              <li><span>02</span><div><strong>Load people and places</strong><small>Follow a cyclist, a delivery trip, and a local shop through possible decisions.</small></div></li>
+              <li><span>03</span><div><strong>Check the evidence</strong><small>Toronto counts and retail research set context; neither gives a removal coefficient.</small></div></li>
+              <li><span>04</span><div><strong>Compare branches</strong><small>Select a response and inspect what must be measured before estimating impact.</small></div></li>
+            </ol>
+            <div class="bike-pipeline-context"><span>OBSERVED TORONTO CONTEXT</span><strong>3,524 <small>passages / day</small></strong><p>At one Bloor counter west of Huron in 2025. A scale cue only; the proposed removal has no measured response here.</p></div>
+            <div class="bike-pipeline-note"><span>◇ EVIDENCE BOUNDARY</span><p>This is an interactive mechanism storyboard. No Bloor agent event trace or numeric policy forecast is attached.</p></div>
+          </aside>
+
+          <div class="bike-workbench-city">
+            <div class="bike-inspector-head"><strong>Living district</strong><span>SCHEMATIC / MOVING CITY</span></div>
+            <div class="bike-world" aria-label="Animated isometric Bloor district illustration">
+              <canvas id="bikeWorldCanvas" data-fit="parent" aria-hidden="true"></canvas>
+              <div class="bike-world-hud"><span><i></i> BLOOR STREET WEST</span><strong id="bikeWorldState">HYPOTHETICAL REMOVAL</strong></div>
+              <div class="bike-world-caption">People · bikes · cars · shops <span>ILLUSTRATIVE MOTION</span></div>
+            </div>
+            <div class="bike-section-label"><span>STREET SECTION / COMPARE THE LAYOUT</span><span>02 / 02</span></div>
         <div class="bike-stage" id="bikeStage" data-view="policy">
           <div class="bike-stage-top"><span><i></i> BLOOR STREET WEST / SCHEMATIC SECTION</span><span>STEADY-STATE ILLUSTRATION · NOT AN ENGINEERING PLAN</span></div>
           <div class="bike-stage-visual" role="group" aria-label="Schematic Bloor street layout comparison">
@@ -157,6 +178,8 @@
             <span class="bike-stage-location">NEAR HURON / BATHURST <span>↗</span> ILLUSTRATIVE DISTRICT</span>
           </div>
         </div>
+
+          </div>
 
         <div class="bike-trace">
           <div class="bike-trace-head"><div><span>FOLLOW THE DECISION</span><h3>Who moves differently?</h3></div><p>Choose a person, then choose a possible response. These branches demonstrate mechanisms; they are not decisions from a connected agent event log.</p></div>
@@ -175,6 +198,7 @@
               <div class="bike-trace-card-bottom"><span id="bikeOutcomeLabel">WHAT TO VERIFY</span><strong id="bikeOutcomeText"></strong></div>
             </div>
           </div>
+        </div>
         </div>
 
         <div class="bike-evidence-grid">
@@ -231,7 +255,7 @@
     <script defer src="./scenarios.js"></script>
     <script defer src="../demo-ui/sim.js"></script>
     <script defer src="./trace-adapter.js"></script>
-    <script defer src="./city.js"></script>
-    <script defer src="./app.js"></script>
+    <script defer src="./city.js?v=bloor-workbench"></script>
+    <script defer src="./app.js?v=bloor-workbench"></script>
   </body>
 </html>

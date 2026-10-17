@@ -5,6 +5,9 @@ const traceAdapter = window.CounterfactualTraceAdapter;
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const scene = new CityScene($('#cityCanvas'));
+const bikeScene = new CityScene($('#bikeWorldCanvas'));
+bikeScene.setScenario('bike');
+bikeScene.setPhase('lab');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current = preparedScenarios.fare;
 let phase = 'intro';
@@ -95,6 +98,7 @@ function resetToIntro() {
   $('#investigation').hidden = true;
   $('#lab').hidden = true;
   $('#bikeLab').hidden = true;
+  bikeScene.setMotion(false);
   $('#ttcWorkbench').hidden = true;
   $('#impact').hidden = true;
   scene.setSector(null);
@@ -144,6 +148,11 @@ async function runScenario(scenario, promptOverride = null) {
 
 function renderLab() {
   $('#bikeLab').hidden = current.id !== 'bike';
+  if (current.id === 'bike') {
+    bikeScene.resize();
+    bikeScene.setPhase('lab');
+    bikeScene.setMotion(true);
+  } else bikeScene.setMotion(false);
   $('#bikeLabButton').hidden = current.id !== 'bike';
   $('#ttcWorkbench').hidden = current.id !== 'fare';
   $('#ttcInspectorButton').hidden = current.id !== 'fare';
@@ -365,6 +374,8 @@ function setViewSelection(mode) {
 
 function setCityMode(mode) {
   scene.setMode(mode);
+  bikeScene.setMode(mode);
+  $('#bikeWorldState').textContent = mode === 'baseline' ? 'EXISTING PROTECTED TRACK' : 'HYPOTHETICAL REMOVAL';
   setViewSelection(mode);
   $('#bikeStage').dataset.view = mode;
   for (const [choice, selector] of [['baseline', '#bikeViewBaseline'], ['policy', '#bikeViewPolicy']]) {
