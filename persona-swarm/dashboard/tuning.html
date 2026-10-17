@@ -1,0 +1,790 @@
+<!-- Persona tuning record: a Dashboard page. Datasets it reads: "rounds" (data/record/rounds.json) and "final" (data/record/final.json),
+     both written by autoresearch/export_record.py. Every figure on the page comes from those rows or from the calcs below. -->
+<style>
+  /* One column, summary first: the bar, then one line per round, then detail on demand, then the trend per check. */
+  .tn { display: grid; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); color: var(--color-fg); min-width: 0; }
+  .tn-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .tn-lede { margin: var(--cds-gap-xs) 0 0; font-size: var(--cds-font-size-body); max-width: 72ch; }
+  .tn-h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .tn-h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .tn-k, .tn-note, .tn-status, .tn-msg { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .tn-status { margin-top: var(--cds-gap-xs); }
+  .tn-status:empty { display: none; }
+  .tn-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-md); align-content: start; min-width: 0; container-type: inline-size; }
+  .tn-head { display: grid; gap: 2px; }
+  .tn-head .tn-note { max-width: 80ch; }
+  .tn-dim { color: var(--color-fg-muted); }
+
+  /* the bar: four checks, 2 across when narrow */
+  .tn-four { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cds-gap-sm); margin: 0; }
+  @container (min-width: 36rem) { .tn-four { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .tn-barv { display: grid; gap: 2px; margin: 0; min-width: 0; }
+  .tn-barv dd { margin: 0; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .tn-v { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .tn-pm { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+
+  /* rounds: a table when wide, one block per round when narrow */
+  .tn-tablebox { max-height: 34rem; overflow: auto; }
+  .tn-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: var(--cds-font-size-body); }
+  .tn-table th, .tn-table td { text-align: left; vertical-align: middle; padding: var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); overflow-wrap: break-word; }
+  .tn-table th { position: sticky; top: 0; z-index: 1; background: var(--color-panel); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); }
+  .tn-table td.tn-num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tn-table td.tn-msg { padding: var(--cds-pad-lg) var(--cds-pad-sm); }
+  .tn-list { table-layout: fixed; }
+  .tn-list th.tn-c-round { width: 2.75rem; }
+  .tn-list th.tn-c-verdict { width: 6.25rem; }
+  .tn-list th.tn-c-moved { width: 17rem; }
+  .tn-list th.tn-c-papers { width: 8rem; }
+  .tn-list th.tn-c-review { width: 13rem; }
+  .tn-list td.tn-c-round { font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
+  .tn-list td.tn-c-papers { font-size: var(--cds-font-size-caption); }
+  .tn-list td.tn-c-change, .tn-list td.tn-c-papers, .tn-list td.tn-c-review { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tn-list tbody tr { cursor: pointer; }
+  .tn-list tbody tr:hover td { background: color-mix(in srgb, var(--color-fg) 4%, transparent); }
+  .tn-list tbody tr[aria-current] td { background: color-mix(in srgb, var(--color-fg) 8%, transparent); }
+  .tn-list tbody tr:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+  @container (max-width: 46rem) {
+    .tn-list thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .tn-list, .tn-list tbody { display: block; }
+    .tn-list tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "round verdict" "change change" "moved moved" "papers papers"; gap: 6px var(--cds-gap-sm); padding: var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+    .tn-list tbody td { display: block; padding: 0; border: 0; background: none !important; }
+    .tn-list tbody tr:hover, .tn-list tbody tr[aria-current] { background: color-mix(in srgb, var(--color-fg) 6%, transparent); }
+    .tn-list td.tn-c-round { grid-area: round; }
+    .tn-list td.tn-c-round::before { content: "Round "; }
+    .tn-tablebox { max-height: none; }
+    .tn-list td.tn-c-verdict { grid-area: verdict; text-align: right; }
+    .tn-list td.tn-c-change { grid-area: change; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .tn-list td.tn-c-moved { grid-area: moved; }
+    .tn-list td.tn-c-papers { grid-area: papers; font-size: var(--cds-font-size-caption); }
+    .tn-list td.tn-c-papers::before { content: "Papers: "; color: var(--color-fg-muted); }
+    .tn-list td.tn-c-review { grid-column: 1 / -1; white-space: normal; }
+    .tn-list td.tn-msg { grid-column: 1 / -1; }
+  }
+
+  .tn-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border-line); white-space: nowrap; font-size: var(--cds-font-size-caption); }
+  .tn-pill-kept { color: var(--color-ok); border-color: currentColor; }
+  .tn-pill-trial { color: var(--color-warn); border-color: currentColor; border-style: dashed; }
+  .tn-pill-discarded, .tn-pill-baseline { color: var(--color-fg-muted); }
+  .tn-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tn-chip { display: inline-block; padding: 1px 6px; border-radius: 4px; white-space: nowrap; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .tn-up { color: var(--color-ok); background: color-mix(in srgb, var(--color-ok) 13%, transparent); }
+  .tn-down { color: var(--color-bad); background: color-mix(in srgb, var(--color-bad) 13%, transparent); }
+  .tn-flat { color: var(--color-fg-muted); padding-inline: 0; }
+
+  /* one round, on demand */
+  .tn-dhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .tn-select { font: inherit; font-size: var(--cds-font-size-body); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); max-width: 100%; }
+  .tn-select:focus-visible, .tn-more summary:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .tn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tn-chain { list-style: none; margin: 0; padding: 0; counter-reset: tn-step; }
+  .tn-step { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); column-gap: var(--cds-gap-sm); row-gap: var(--cds-gap-xs); position: relative; padding-bottom: var(--cds-gap-lg); }
+  .tn-step:last-child { padding-bottom: 0; }
+  .tn-step::before { counter-increment: tn-step; content: counter(tn-step); grid-row: 1; width: 1.5rem; height: 1.5rem; box-sizing: border-box; border-radius: 50%; border: 1px solid var(--color-border-line); background: var(--color-panel); display: grid; place-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); position: relative; z-index: 1; }
+  .tn-step:not(:last-child)::after { content: ""; position: absolute; left: calc(.75rem - .5px); top: 1.5rem; bottom: 0; width: 1px; background: var(--color-border-line); }
+  .tn-step-done::before { content: "✓"; background: var(--color-fg); border-color: var(--color-fg); color: var(--color-panel); }
+  .tn-step-wait::before { border: 1.5px dashed var(--color-warn); color: var(--color-warn); }
+  .tn-step-k { grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--cds-gap-sm); min-height: 1.5rem; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .tn-step-k .tn-note, .tn-step-k .tn-mv { font-weight: 400; }
+  .tn-step-v { grid-column: 2; display: grid; gap: var(--cds-gap-sm); min-width: 0; }
+  .tn-review { margin: 0; font-size: var(--cds-font-size-heading); line-height: 1.45; max-width: 75ch; }
+  .tn-next { margin: 0; font-size: var(--cds-font-size-body); max-width: 75ch; }
+  .tn-next .tn-k { display: inline; margin-right: 6px; font-weight: var(--cds-font-weight-medium); }
+  .tn-vcell { display: grid; gap: 2px; align-content: start; padding: var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); min-width: 0; }
+  .tn-vrow { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .tn-vnum { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
+  .tn-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--cds-gap-md); margin: 0; }
+  .tn-meta > div { display: grid; gap: 2px; align-content: start; min-width: 0; }
+  .tn-meta > .tn-full { grid-column: 1 / -1; }
+  .tn-mv { font-size: var(--cds-font-size-body); overflow-wrap: anywhere; max-width: 80ch; }
+  .tn-srcs { display: grid; gap: 4px; min-width: 0; }
+  .tn-src summary { cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--cds-font-size-body); }
+  .tn-src summary b { font-weight: var(--cds-font-weight-medium); }
+  .tn-src summary:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .tn-src > div { display: grid; gap: 4px; justify-items: start; padding: 4px 0 6px 1rem; }
+  .tn-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--cds-font-size-caption); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--color-border-line); overflow-wrap: anywhere; }
+  .tn-more { border-top: 1px solid var(--color-border-line); padding-top: var(--cds-gap-sm); }
+  .tn-more summary { cursor: pointer; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .tn-more summary .tn-note { display: inline; font-weight: 400; }
+  .tn-more[open] > :not(summary) { margin-top: var(--cds-gap-sm); }
+  .tn-diff { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); max-height: 28rem; overflow: auto; font-size: var(--cds-font-size-caption); line-height: 1.45; }
+  .tn-diff:empty { display: none; }
+  .tn-line { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); min-height: 1.45em; border-left: 3px solid transparent; }
+  .tn-line > span:first-child { text-align: center; color: var(--color-fg-muted); user-select: none; }
+  .tn-line > span:last-child { white-space: pre-wrap; overflow-wrap: anywhere; padding: 1px var(--cds-pad-sm) 1px 0; }
+  .tn-same { color: var(--color-fg-muted); }
+  .tn-add, .tn-del { color: var(--color-fg); }
+  .tn-add { border-left-color: var(--color-ok); background: color-mix(in srgb, var(--color-ok) 16%, transparent); }
+  .tn-del { border-left-color: var(--color-bad); background: color-mix(in srgb, var(--color-bad) 16%, transparent); }
+
+  /* checks by round: one small chart per check */
+  .tn-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .tn-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .tn-legend svg { flex: none; overflow: visible; }
+  .tn-mults { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cds-gap-md); }
+  @container (min-width: 30rem) { .tn-mults { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @container (min-width: 60rem) { .tn-mults { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .tn-mult { margin: 0; display: grid; gap: 4px; min-width: 0; }
+  .tn-mcap { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .tn-plot { position: relative; min-height: 128px; }
+  .tn-plot svg { display: block; }
+  .tn-gridl { stroke: var(--cds-chart-grid, var(--color-border-line)); stroke-width: 1; }
+  .tn-tick { fill: var(--color-fg-muted); font-size: 10px; font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
+  .tn-band { fill: var(--color-fg); opacity: .08; }
+  .tn-barline { stroke: var(--cds-chart-reference, var(--color-fg-muted)); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .tn-pick-rule { stroke: var(--color-fg); stroke-width: 1; opacity: .35; }
+  .tn-pt { stroke: var(--color-panel); stroke-width: 2; paint-order: stroke; }
+  .tn-pt-flat { fill: var(--cds-chart-muted, var(--color-fg-muted)); }
+  .tn-pt-base { fill: var(--color-fg); }
+  .tn-pt-up { fill: var(--color-ok); }
+  .tn-pt-down { fill: var(--color-bad); }
+  .tn-pt-on { stroke: var(--color-fg); stroke-width: 1.5; }
+  .tn-tip { position: absolute; pointer-events: none; z-index: 2; max-width: 15rem; background: var(--cds-surface-popover, var(--color-panel)); border: 1px solid var(--cds-border, var(--color-border-line)); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover, 0 2px 8px rgba(0, 0, 0, .18)); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg); font-variant-numeric: tabular-nums; }
+  .tn-tip-t { color: var(--cds-text-secondary, var(--color-fg-muted)); }
+
+  .tn-sec { display: grid; gap: var(--cds-gap-md); min-width: 0; }
+  .tn [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow, .3s); }
+</style>
+
+<div class="tn">
+  <header>
+    <h1 class="tn-title">Persona tuning record</h1>
+    <p class="tn-lede" data-source="tuning_summary" data-field="takeaway">—</p>
+    <p class="tn-status" id="tn-status" role="status"></p>
+  </header>
+
+  <section class="tn-card" id="tn-bar" aria-labelledby="tn-h-bar">
+    <div class="tn-head">
+      <h2 class="tn-h2" id="tn-h-bar">Current bar</h2>
+      <p class="tn-note">Set by round <span data-source="bars" data-field="round">—</span><span id="tn-bar-runs"></span>. A round is kept when one check rises past its noise (±), none falls past it, and benchmark marks passed don't fall.</p>
+    </div>
+    <dl class="tn-four">
+      <div class="tn-barv"><dt class="tn-k">Right person</dt><dd><span class="tn-v" data-source="bars" data-field="right_person">—</span><span class="tn-pm">± <span data-source="bars" data-field="noise_right_person">—</span></span></dd></div>
+      <div class="tn-barv"><dt class="tn-k">Right spread</dt><dd><span class="tn-v" data-source="bars" data-field="right_spread">—</span><span class="tn-pm">± <span data-source="bars" data-field="noise_right_spread">—</span></span></dd></div>
+      <div class="tn-barv"><dt class="tn-k">Right group gaps</dt><dd><span class="tn-v" data-source="bars" data-field="right_group_gaps">—</span><span class="tn-pm">± <span data-source="bars" data-field="noise_right_group_gaps">—</span></span></dd></div>
+      <div class="tn-barv"><dt class="tn-k">Steady</dt><dd><span class="tn-v" data-source="bars" data-field="steady">—</span><span class="tn-pm">± <span data-source="bars" data-field="noise_steady">—</span></span></dd></div>
+    </dl>
+  </section>
+
+  <section class="tn-card" id="tn-rounds" aria-labelledby="tn-h-rounds">
+    <div class="tn-head">
+      <h2 class="tn-h2" id="tn-h-rounds">Rounds</h2>
+      <p class="tn-note">Each round is compared with the bar in force when it ran. ▲ and ▼ mark a check that moved past its noise. Select a round for its scores, hypothesis and instructions.</p>
+    </div>
+    <div class="tn-tablebox">
+      <table class="tn-table tn-list" id="tn-table" data-source="rounds" data-row-key="round">
+        <thead><tr>
+          <th class="tn-c-round" data-field="round">Round</th>
+          <th class="tn-c-change" data-field="change">Change</th>
+          <th class="tn-c-verdict" data-source="round_checks" data-field="verdict">Verdict</th>
+          <th class="tn-c-moved" data-source="round_checks" data-field="moved">Checks that moved</th>
+          <th class="tn-c-papers" data-source="round_checks" data-field="papers">Papers</th>
+          <th class="tn-c-review" data-source="round_checks" data-field="review_summary">Review</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="tn-card" id="tn-detail" aria-labelledby="tn-h-detail">
+    <div class="tn-dhead">
+      <h2 class="tn-h2" id="tn-h-detail">Round</h2>
+      <label><span class="tn-sr">Round</span><select class="tn-select" id="tn-pick" data-source="rounds"></select></label>
+    </div>
+    <ol class="tn-chain" aria-label="From highlights to review">
+      <li class="tn-step">
+        <div class="tn-step-k">Highlights and notes</div>
+        <div class="tn-step-v"><div class="tn-srcs" id="tn-srcs" data-source="papiers_sources"></div></div>
+      </li>
+      <li class="tn-step">
+        <div class="tn-step-k">Edit <span class="tn-note">targeting <span class="tn-mv" data-source="rounds" data-field="check_targeted">—</span></span></div>
+        <div class="tn-step-v"><div class="tn-mv" data-source="rounds" data-field="change">—</div></div>
+      </li>
+      <li class="tn-step">
+        <div class="tn-step-k">Result <span class="tn-mv" data-source="round_checks" data-field="verdict">—</span></div>
+        <div class="tn-step-v"><div class="tn-four" id="tn-vs" data-source="round_checks"></div></div>
+      </li>
+      <li class="tn-step" id="tn-review-step">
+        <div class="tn-step-k">Review</div>
+        <div class="tn-step-v" id="tn-review" data-source="round_checks"></div>
+      </li>
+    </ol>
+    <details class="tn-more">
+      <summary>Hypothesis</summary>
+      <div class="tn-mv" data-source="rounds" data-field="hypothesis">—</div>
+    </details>
+    <details class="tn-more">
+      <summary>Instructions diff <span class="tn-note" id="tn-diff-sum"></span></summary>
+      <p class="tn-note" id="tn-diff-note"></p>
+      <div class="tn-diff" id="tn-diff" data-source="rounds" data-field="instructions_after"></div>
+    </details>
+  </section>
+
+  <section class="tn-card" id="tn-checks" aria-labelledby="tn-h-checks">
+    <div class="tn-head">
+      <h2 class="tn-h2" id="tn-h-checks">Checks by round</h2>
+      <p class="tn-note">Each point is one round's score. The dashed line is the bar in force and the shaded band its noise, so a point outside the band moved past noise. Select a point to open that round.</p>
+    </div>
+    <div class="tn-legend">
+      <span><svg width="10" height="10" aria-hidden="true"><circle class="tn-pt-flat" cx="5" cy="5" r="4"></circle></svg>Within noise</span>
+      <span><svg width="10" height="10" aria-hidden="true"><path class="tn-pt-up" d="M5 0 10 9H0Z"></path></svg>Rose past noise</span>
+      <span><svg width="10" height="10" aria-hidden="true"><path class="tn-pt-down" d="M5 10 10 1H0Z"></path></svg>Fell past noise</span>
+      <span><svg width="16" height="10" aria-hidden="true"><rect class="tn-band" x="0" y="1" width="16" height="8"></rect><line class="tn-barline" x1="0" x2="16" y1="5" y2="5"></line></svg>Bar and noise</span>
+    </div>
+    <div class="tn-mults" id="tn-mults" data-source="rounds round_checks bars"></div>
+  </section>
+
+  <section class="tn-card" id="tn-final-card" aria-labelledby="tn-h-final">
+    <h2 class="tn-h2" id="tn-h-final">Final results</h2>
+    <div class="tn-sec" id="tn-final" data-source="final"></div>
+  </section>
+</div>
+
+<script>
+dash.calc("bars", {
+  title: "Bar each round was judged against",
+  description: "The scores a round was compared with, by the first round they applied to: each kept round's own run, and from round 7 the mean of round 3's two runs; with each check's noise from round 0's two runs.",
+  inputs: ["rounds"],
+  fn: (rounds) => {
+    // noise: autoresearch/rounds/000-start/decision.json, at the 4 decimals the rows carry
+    const NOISE = { right_person: 0.0150, right_spread: 0.0100, right_group_gaps: 0.0494, steady: 0.0100 };
+    // shortcut: re-measures are typed in from rounds/003-spending-habits/decision.json ("remeasured": compare round 7 on with the mean); read them from the record once export_record.py exports them
+    const REMEASURED = { "003": { from: 7, runs: 2, right_person: 0.8072, right_spread: 0.8692, right_group_gaps: 0.8210, steady: 0.9720, marks_passed: 4 } };
+    const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
+    const kept = (r) => ["yes", "baseline"].includes(String(r.kept == null ? "" : r.kept).trim().toLowerCase());
+    const out = [];
+    for (const r of rounds.filter((x) => num(x.round) !== null && kept(x))) {
+      const round = String(r.round).trim(), m = REMEASURED[round];
+      const runs = [{ id: round, from: num(r.round) + 1, runs: 1, src: r }];
+      if (m) runs.push({ id: round + " mean", from: m.from, runs: m.runs, src: m });
+      for (const b of runs) {
+        const row = { id: b.id, round, from: b.from, runs: b.runs };
+        for (const k of ["right_person", "right_spread", "right_group_gaps", "steady", "marks_passed"]) row[k] = num(b.src[k]);
+        for (const k in NOISE) row["noise_" + k] = NOISE[k];
+        out.push(row);
+      }
+    }
+    return out.sort((a, b) => a.from - b.from);
+  },
+});
+
+dash.calc("papiers_sources", {
+  title: "Papiers papers, highlights and notes",
+  description: "Each Papiers paper, highlight or note a round cites, with the rounds citing it, the paper's short title and a one-line snippet, looked up in a copy of autoresearch/rounds/009-relative-profile/sources.json (7 papers, 49 highlights, 3 notes).",
+  inputs: ["rounds"],
+  fn: (rounds) => {
+    // shortcut: a copy of the Papiers library as of round 9; refresh it from the latest sources.json when rounds cite new ids
+    const PAPERS = {
+      doc_b14ed2372a0d45530de3bbcdece95bd9: ["Automated Social Science", "Automated Social Science: Language Models as Scientist and Subjects"],
+      doc_4263e0764c02001f058768f44cb68c16: ["Anthology of Backstories", "Virtual Personas for Language Models via an Anthology of Backstories"],
+      doc_4d2afcfc265012d5ac2a64ea041358e3: ["Synthetic Replacements", "Synthetic Replacements for Human Survey Data? The Perils of Large Language Models | Political Analysis"],
+      doc_cc20423e144801b093183b20c203aea9: ["Funhouse Mirrors", "Digital Twins are Funhouse Mirrors: Five Systematic Distortions"],
+      doc_7da5e62b18d7f7d7db21e8b3a31daea3: ["Out of One, Many", "Out of One, Many: Using Language Models to Simulate Human Samples"],
+      doc_330ef4d6ba57e810d7a2af873763fbe2: ["Twin-2K-500", "Twin-2K-500: A dataset for building digital twins of over 2,000 people based on their answers to over 500 questions"],
+      doc_a1d9036f214a2085310d71266ed352b2: ["Grounded in Self-Reports", "LLM Agents Grounded in Self-Reports Enable General-Purpose Simulation of Individuals"],
+    };
+    // highlights (hl_) and notes (nte_): [paper id, one-line snippet]
+    const ITEMS = {
+      hl_76259db5830e0bb91f89577a647ef9db: ["doc_330ef4d6ba57e810d7a2af873763fbe2", "Finally, we construct average demand curves from the pricing study. Figure A1 shows the average demand curves…"],
+      hl_81b8ce21cb7767aa5c59705f2ac8345f: ["doc_330ef4d6ba57e810d7a2af873763fbe2", "Table 3: Replications of heuristics and biases Task Source Prediction Replicated Waves 1-3 Wave 4 Twins…"],
+      hl_f7a275865b8648da2decd12b1dc83025: ["doc_330ef4d6ba57e810d7a2af873763fbe2", "Moving to within-subject experiments, we find that the digital twin results match the human results in two of…"],
+      hl_4092daffba318e05037914d5518d63d6: ["doc_330ef4d6ba57e810d7a2af873763fbe2", "In the outcome bias experiment, participants evaluate a physician’s decision to operate on a patient. Humans…"],
+      hl_e7cb2f240eb5252825f30bd48c68a8c2: ["doc_330ef4d6ba57e810d7a2af873763fbe2", "…e test whether the data simulated from the digital twins replicates the average treatment effects from the 11…"],
+      hl_e1ff2bde882e047214131a91022f6c1a: ["doc_330ef4d6ba57e810d7a2af873763fbe2", "Table 2: Various persona simulation approaches and evaluation results Approach LLM Accuracy Text Persona…"],
+      hl_0abcbe6719eb9539f32488ca085c7c9c: ["doc_330ef4d6ba57e810d7a2af873763fbe2", "To systematically evaluate different strategies for LLM-based persona simulation, we experimented with over a…"],
+      hl_e25379634539fdb3c859bafd2e90c448: ["doc_a1d9036f214a2085310d71266ed352b2", "Taken together, these results suggest both mechanisms play a role in the predictive accuracy of generative…"],
+      hl_446d7a53e251d1613580855b5d887d31: ["doc_a1d9036f214a2085310d71266ed352b2", "Mechanism 2: Reasoning based on other answers. Next, we examine a second mechanism: even if the answer to a…"],
+      hl_e0d9a4719df5c3188603828271c3cef6: ["doc_a1d9036f214a2085310d71266ed352b2", "Mechanism 1: Direct retrieval of answers. The most straightforward possibility is that the model can directly…"],
+      hl_5de8960584b17d5ac3866c1e02668828: ["doc_a1d9036f214a2085310d71266ed352b2", "Summary Agents. We investigated whether the predictive power of interviews stems from linguistic cues in the…"],
+      hl_bef13bfe4b6e6381dad8c1d31706fd53: ["doc_a1d9036f214a2085310d71266ed352b2", "Main analysis. Alongside interview based, survey based, and survey + interview based, we evaluate two…"],
+      hl_d801ce32e3867713d37ab80ec53b85ff: ["doc_a1d9036f214a2085310d71266ed352b2", "Agents that rely on the survey and/or interview information generally reduced DPD, compared to…"],
+      hl_1687e1761b23b74c1e0d8c33e5639731: ["doc_a1d9036f214a2085310d71266ed352b2", "In exploratory analyses, we conducted additional tests by ablating portions of the interview-based generative…"],
+      hl_9ece5bcfe7b1deb500633faf93945f0a: ["doc_a1d9036f214a2085310d71266ed352b2", "Self-report-grounded agents generally outperformed demographic and persona baselines. Our main results are…"],
+      hl_fe4003e87f7dc9544de516679a748b85: ["doc_4d2afcfc265012d5ac2a64ea041358e3", "…second issue is whether the same prompt produces similar responses over time. This is a key question for the…"],
+      hl_345b3838511c9e42293f8eda6402fe0c: ["doc_4d2afcfc265012d5ac2a64ea041358e3", "We investigate the sensitivity by predicting the mean absolute error (the absolute difference between the…"],
+      hl_1c714786dd1a3d2480b6ebc16e29b4cb: ["doc_4d2afcfc265012d5ac2a64ea041358e3", "One unavoidable issue with using LLMs is that different prompts may affect the accuracy of responses. To…"],
+      hl_f18aa709faacc6143d24b8564e885491: ["doc_4d2afcfc265012d5ac2a64ea041358e3", "Even though the synthetic data broadly perform well in terms of summarizing overall human opinion, issues…"],
+      hl_766c16f2e0c9208379839235369312bb: ["doc_4d2afcfc265012d5ac2a64ea041358e3", "While the average of ChatGPT responses does not exactly match the average survey response in the ANES, every…"],
+      hl_1fcd30dc188db70fe015d2a19d9c73ca: ["doc_4d2afcfc265012d5ac2a64ea041358e3", "Figure 1 plots the sample means and standard deviations for the various feeling thermometer scores estimated…"],
+      hl_800984ef747ecfb2ea62455a3a06a226: ["doc_cc20423e144801b093183b20c203aea9", "We add as a benchmark an alternative way to construct digital twins, labeled “persona summary:” a concise…"],
+      hl_a3134f518d8ed710238232a0e4eef2e6: ["doc_cc20423e144801b093183b20c203aea9", "In sum, digital twins distort human behavior by imposing a hyper-rational lens. This yields the final…"],
+      hl_8d8f3cc54aad15421d969324891a2068: ["doc_cc20423e144801b093183b20c203aea9", "We next examined this distortion for substudies that contained questions that test rationality. We again find…"],
+      hl_6230b02974261bef32decc9e2d65889d: ["doc_cc20423e144801b093183b20c203aea9", "…nother form of bias that may be introduced by digital twins relates to cognitive skills. Specifically, one of…"],
+      hl_5499870070a3b5f790837eacb15575e6: ["doc_cc20423e144801b093183b20c203aea9", "Twins tend to be more accurate for participants with higher education levels and higher income, as well as…"],
+      hl_f57683b29512ddaedba0dea530297f21: ["doc_cc20423e144801b093183b20c203aea9", "In sum, this differential accuracy constitutes another distortion: digital twins systematically"],
+      hl_5cd37bc496632c5d9e1ed542388e62b4: ["doc_cc20423e144801b093183b20c203aea9", "It may be counter-intuitive that full personas significantly improve correlation compared to…"],
+      hl_d4a1364a7321f8a6ce4a662812f91f50: ["doc_cc20423e144801b093183b20c203aea9", "As discussed earlier, correlation on the other hand improves more substantially when using full vs.…"],
+      hl_151fb87edf7f1018f60c0e4138291037: ["doc_cc20423e144801b093183b20c203aea9", "…he fact that full-persona twins achieve only slightly higher individual-level accuracy than those based only…"],
+      hl_aa7442f770fd4aac6935927509fdf271: ["doc_cc20423e144801b093183b20c203aea9", "In sum, we find that digital twins distort human behavior by insufficiently deviating from the base model.…"],
+      hl_a35a526505593457c2d3c453f76fb05a: ["doc_cc20423e144801b093183b20c203aea9", "To further quantify this, we compare the MAD between answers from full-persona twins vs. humans to the MAD…"],
+      hl_e71cbe9877f96e1f9c8b498a41726d03: ["doc_cc20423e144801b093183b20c203aea9", "The under-dispersion of digital twin answers relative to their human counterparts suggests that while the…"],
+      hl_f8241cd7c980db19af30d0d2ce1c6415: ["doc_cc20423e144801b093183b20c203aea9", "…y augmenting the base LLM with extensive individual-level data, digital twins offer the potential to address…"],
+      hl_9d3098141d0abf0919dbce307500742d: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "Using these concepts and methods, we show that GPT-3, one of the largest publicly available language models…"],
+      hl_3b7f6a90d3593c54bda6b93c8eb0233c: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "In this paper, we introduce the concept of algorithmic fidelity as a means to justify the use of large-scale…"],
+      hl_5703c07f40e1f2f3b0f76374047995fc: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "Interviewer: What is your gender? Are you “male” or “female”? Me: male Interviewer: I am going to read you a…"],
+      hl_19015628461946954422daaabd88f3fc: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "For Study 3, we generated a silicon sample of virtual ANES participants by constructing a complete virtual…"],
+      hl_79e7a1c718f2069a9ce579f614d9501e: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "We here additionally note that no attempt was made to optimize the template used during our experiments; the…"],
+      hl_f9cf5b71d8b01335a0f1fee0962f34de: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "The results are shown in Fig. 8. There are a few notable elements to these results. First, no single…"],
+      hl_ef176edeb52094c16f68e9ad57932e9a: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "…lthough we provide first-person backstories based on specific human survey profiles, we do not expect the…"],
+      hl_d1cf914bb377b6ed2788b8e79056aa4e: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "For this task, we produce an interview-style conditioning template (see the appendix for an example). The…"],
+      hl_5f211fb0cb7db871830699a264cd9770: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "The conditional nature of GPT-3’s text completions creates a situation analogous to Simpson’s Paradox [28]…"],
+      hl_5450e3baedbd73114002297fe64c3787: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "Applying language models to social science research raises an obvious question: how can we compensate for the…"],
+      hl_39746a61ef98d937816daf833be4f776: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "We define algorithmic fidelity as the degree to which the complex patterns of relationships between ideas…"],
+      hl_a57f83114dc9b82734d028801f8cf37a: ["doc_7da5e62b18d7f7d7db21e8b3a31daea3", "How much algorithmic fidelity in a language model is enough for social science use? We suggest at a minimum a…"],
+      hl_fad936419019dc39f2dc36006d3f195f: ["doc_4263e0764c02001f058768f44cb68c16", "…or each ATP survey considered, we format the select questions into language model prompts to administer…"],
+      hl_42736e321c9efbb55c00281d4eaf4edc: ["doc_4263e0764c02001f058768f44cb68c16", "In our experience, instruction-tuned models (i.e. most LLM agent models) are completely unsuitable for this…"],
+      hl_60400884d07ac4ccbeb95cd931d65797: ["doc_4263e0764c02001f058768f44cb68c16", "There are two practical considerations when using backstories as conditioned virtual personas for…"],
+      nte_d065ced88cfc601fc8e4fdcdd6c33563: ["doc_cc20423e144801b093183b20c203aea9", "This paper identifies three failures relevant to our digital-twin loop: Insufficient individuation: Twin…"],
+      nte_f1392d2dbcc068218164bc7d4d730434: ["doc_330ef4d6ba57e810d7a2af873763fbe2", "Text, JSON, and summary formats produce broadly similar individual-level accuracy. Format changes should…"],
+      nte_5fda00df283d4ba21864448ef45d18c0: ["doc_a1d9036f214a2085310d71266ed352b2", "For individual simulation, use the person’s own reported attitudes, experiences, and previous answers as the…"],
+    };
+    const cited = new Map();
+    for (const r of rounds) for (const id of String(r.papiers_ids == null ? "" : r.papiers_ids).split(/[\s,;|]+/).filter(Boolean)) {
+      cited.set(id, [...(cited.get(id) || []), Number(r.round)]);
+    }
+    return [...cited].map(([id, used]) => {
+      const h = ITEMS[id], doc = h ? h[0] : id, p = PAPERS[doc] || null;
+      const kind = !p ? "not in the copy" : !h ? "paper" : id.startsWith("nte_") ? "note" : "highlight";
+      return { id, rounds: used.join(", "), kind, paper: p ? p[0] : null, title: p ? p[1] : null, snippet: h ? h[1] : null };
+    });
+  },
+});
+
+dash.calc("round_checks", {
+  title: "Each round against its bar",
+  description: "Each round's change in every check from the bar it was judged against, whether it moved past that check's noise, its verdict, the Papiers papers it used, and the review typed after it (taken from its coach notes, without the reviewer's name).",
+  inputs: ["rounds", "bars", "papiers_sources"],
+  fn: (rounds, bars, papiers_sources) => {
+    const CHECKS = [["right_person", "right person"], ["right_spread", "right spread"], ["right_group_gaps", "group gaps"], ["steady", "steady"]];
+    const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
+    const signed = (n) => { const s = Math.abs(n).toFixed(3); return s === "0.000" ? s : (n > 0 ? "+" : "−") + s; };
+    const papers = new Map(papiers_sources.map((p) => [p.id, p.paper]));
+    const REVIEWS_FROM = 7;   // record_round.py REVIEW_FROM: rounds before 7 predate the typed review
+    return rounds.filter((r) => num(r.round) !== null).map((r) => {
+      const n = num(r.round), kind = String(r.kept == null ? "" : r.kept).trim().toLowerCase();
+      const signer = String(r.signed_off_by == null ? "" : r.signed_off_by).trim();
+      const bar = bars.filter((b) => b.from <= n).pop() || null;
+      const out = {
+        round: String(r.round).trim(), bar_id: bar ? bar.id : null,
+        bar_label: !bar ? null : `round ${num(bar.round)}` + (bar.runs > 1 ? " mean" : ""),
+        verdict: kind === "baseline" ? "Baseline" : kind === "yes" ? (signer ? "Kept" : "On trial") : kind === "no" ? "Discarded" : "Pending",
+      };
+      const chips = [];
+      for (const [c, name] of CHECKS) {
+        const v = num(r[c]), b = bar ? bar[c] : null, noise = bar ? bar["noise_" + c] : null;
+        // rows and noise carry 4 decimals; a change equal to the noise does not count, as in evaluate.keep
+        const d = v === null || b === null ? null : Math.round((v - b) * 1e4) / 1e4;
+        const past = d === null ? 0 : d > noise + 1e-9 ? 1 : d < -noise - 1e-9 ? -1 : 0;
+        Object.assign(out, { [c]: v, ["bar_" + c]: b, ["noise_" + c]: noise, ["d_" + c]: d, ["past_" + c]: past });
+        if (past) chips.push(`${past > 0 ? "▲" : "▼"} ${name} ${signed(d)}`);
+      }
+      const marks = num(r.marks_passed);
+      if (bar && marks !== null && bar.marks_passed !== null && marks < bar.marks_passed) chips.push(`▼ marks ${bar.marks_passed} → ${marks}`);
+      out.moved = !bar ? "Sets the first bar" : chips.length ? chips.join(" ") : "Within noise";
+      const ids = String(r.papiers_ids == null ? "" : r.papiers_ids).split(/[\s,;|]+/).filter(Boolean);
+      const named = [...new Set(ids.map((id) => papers.get(id)).filter(Boolean))], unknown = ids.filter((id) => !papers.get(id)).length;
+      out.papers = ids.length ? [...named, ...(unknown ? [`${unknown} other ${unknown > 1 ? "sources" : "source"}`] : [])].join(", ") : null;
+      // record_round.py appends a review as "<name>: <comment> Next: <improvement>"; the page shows it without the name
+      const notes = String(r.coach_notes == null ? "" : r.coach_notes).trim(), at = notes.lastIndexOf("Next:"), head = at < 0 ? "" : notes.slice(0, at);
+      const who = [...head.matchAll(/(?:^|[.!?)]\s+)([A-Z][A-Za-z'-]*):\s/g)].pop() || [...head.matchAll(/(?:^|\s)([A-Z][A-Za-z'-]*):\s/g)].pop();
+      out.review = who ? head.slice(who.index + who[0].length).trim() : null;
+      out.review_next = who ? notes.slice(at + 5).trim() : null;
+      out.review_summary = who ? out.review : n >= REVIEWS_FROM ? "Awaiting review" : null;
+      return out;
+    });
+  },
+});
+
+dash.calc("tuning_summary", {
+  title: "Tuning summary",
+  description: "One row: the latest round out of the plan's 10, and changes kept and discarded so far.",
+  inputs: ["rounds"],
+  fn: (rounds) => {
+    const TOTAL = 10;
+    const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
+    const kind = (r) => String(r.kept == null ? "" : r.kept).trim().toLowerCase();
+    const rows = rounds.filter((r) => num(r.round) !== null);
+    const n = rows.length ? Math.max(...rows.map((r) => num(r.round))) : null;
+    const nYes = rows.filter((r) => kind(r) === "yes").length, nNo = rows.filter((r) => kind(r) === "no").length;
+    const takeaway = n === null ? "No rounds recorded yet. The record fills in as the loop runs."
+      : n === 0 ? `Round 0 of ${TOTAL}: the starting instructions set the first bar.`
+      : `Round ${n} of ${TOTAL}: ${nYes} ${nYes === 1 ? "change" : "changes"} kept, ${nNo} discarded.`;
+    return [{ takeaway, latest_round: n, kept_n: nYes, discarded_n: nNo, rounds_total: TOTAL }];
+  },
+});
+</script>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const root = document.querySelector(".tn");
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  // cells may arrive as text, and blank must stay blank (Number("") is 0)
+  const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
+  const text = (v) => (v == null || String(v).trim() === "" ? "—" : String(v).trim());
+  const label = (v) => text(v).replace(/_/g, " ");
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const f3 = (v) => { const n = num(v); return n === null ? "—" : n.toFixed(3); };
+  const signed = (v) => { const n = num(v); if (n === null) return "—"; const s = Math.abs(n).toFixed(3); return s === "0.000" ? s : (n > 0 ? "+" : "−") + s; };
+  const key = (r) => String(r.round).trim();
+  const short = (r) => String(num(r.round));
+  const where = (r) => "round=" + encodeURIComponent(key(r));
+  const msg = (t) => el("p", "tn-msg", t);
+  const statusNote = (status, what) => ({
+    loading: `Loading ${what}…`,
+    connect: `Connect ${what} to see this.`,
+    declined: `Access to ${what} was declined.`,
+    error: `Could not load ${what}.`,
+    missing: `Waiting for ${what}: it has not been set up yet.`,
+  }[status] || `${cap(what)} is not available (${status}).`);
+  const smooth = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+
+  const CHECKS = [["right_person", "Right person"], ["right_spread", "Right spread"], ["right_group_gaps", "Right group gaps"], ["steady", "Steady"]];
+  const PILL = { Kept: "kept", Discarded: "discarded", Baseline: "baseline" };
+  let rows = [];            // the rounds dataset, in round order
+  let checks = new Map();   // round_checks rows by round
+  let bars = [];            // bars rows, in the order they came into force
+  let sources = new Map();  // papiers_sources rows by id
+  let picked = null;        // the round open in the detail card; survives redraws
+  let blank = "";           // what to say where there is nothing to draw
+  let hideTip = () => {};   // hides the open chart tooltip
+
+  const pill = (v) => el("span", "tn-pill tn-pill-" + (PILL[v] || "trial"), v || "Pending");
+  // the calc's "moved" text, split back into its ▲/▼ chips so the cell reads exactly as the calc
+  function chips(box, moved) {
+    const parts = String(moved || "").match(/[▲▼][^▲▼]*/g);
+    if (!parts) { box.appendChild(el("span", "tn-chip tn-flat", text(moved))); return; }
+    parts.forEach((t, i) => { if (i) box.append(" "); box.appendChild(el("span", "tn-chip " + (t[0] === "▲" ? "tn-up" : "tn-down"), t.trim())); });
+  }
+
+  // ---- the current bar: the last kept round's scores
+  function drawBar() {
+    const b = bars[bars.length - 1] || null;
+    $("tn-bar").querySelectorAll('[data-source="bars"]').forEach((e) => {
+      if (b) e.setAttribute("data-where", "id=" + encodeURIComponent(b.id)); else e.removeAttribute("data-where");
+      e.textContent = !b ? "—" : e.dataset.field === "round" ? String(num(b.round)) : f3(b[e.dataset.field]);
+    });
+    $("tn-bar-runs").textContent = b && b.runs > 1 ? `, the mean of its ${b.runs} runs, in force from round ${b.from}` : "";
+  }
+
+  // ---- one line per round
+  function markRows() {
+    $("tn-table").querySelectorAll("tbody tr[data-key]").forEach((tr) => {
+      if (tr.dataset.key === picked) tr.setAttribute("aria-current", "true"); else tr.removeAttribute("aria-current");
+    });
+  }
+  function drawTable() {
+    const tb = $("tn-table").querySelector("tbody");
+    tb.textContent = "";
+    if (!rows.length) { tb.appendChild(el("tr")).appendChild(el("td", "tn-msg", blank)).colSpan = 6; return; }
+    for (const r of rows) {
+      const c = checks.get(key(r)) || {};
+      const tr = tb.appendChild(el("tr"));
+      tr.dataset.key = key(r); tr.tabIndex = 0;
+      tr.appendChild(el("td", "tn-c-round", short(r)));
+      tr.appendChild(el("td", "tn-c-change", text(r.change))).title = text(r.change);
+      tr.appendChild(el("td", "tn-c-verdict")).appendChild(pill(c.verdict));
+      chips(tr.appendChild(el("td", "tn-c-moved")).appendChild(el("div", "tn-chips")), c.moved);
+      tr.appendChild(el("td", "tn-c-papers" + (c.papers ? "" : " tn-dim"), text(c.papers))).title = c.papers || "";
+      const rv = tr.appendChild(el("td", "tn-c-review" + (c.review_summary ? "" : " tn-dim")));
+      if (c.review) { rv.textContent = c.review_summary; rv.title = c.review_summary + (c.review_next ? " Next: " + c.review_next : ""); }
+      else if (c.review_summary) rv.appendChild(el("span", "tn-pill tn-pill-trial", c.review_summary));
+      else rv.textContent = "—";
+    }
+    markRows();
+  }
+
+  // ---- one round, opened from the table, the picker or a chart point
+  const lines = (s) => { const t = String(s == null ? "" : s).replace(/\r\n?/g, "\n").replace(/\s+$/, ""); return t ? t.split("\n") : []; };
+  // shortcut: line-level only, so a one-word edit flags its whole line; add word marks if instructions turn into long paragraphs
+  function diff(a, b) {
+    const n = a.length, m = b.length, same = (i, j) => a[i].trimEnd() === b[j].trimEnd();
+    if (n * m > 4e6) return [...a.map((t) => ["del", t]), ...b.map((t) => ["add", t])];   // too long for the table below
+    const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = same(i, j) ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+    const out = []; let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (same(i, j)) { out.push(["same", b[j]]); i++; j++; }
+      else if (L[i + 1][j] >= L[i][j + 1]) out.push(["del", a[i++]]);
+      else out.push(["add", b[j++]]);
+    }
+    while (i < n) out.push(["del", a[i++]]);
+    while (j < m) out.push(["add", b[j++]]);
+    return out;
+  }
+  function drawDiff(r) {
+    const box = $("tn-diff"), note = $("tn-diff-note"), sum = $("tn-diff-sum");
+    if (r) box.setAttribute("data-where", where(r)); else box.removeAttribute("data-where");
+    box.textContent = ""; sum.textContent = "";
+    if (!r) { note.textContent = blank; return; }
+    const before = lines(r.instructions_before), after = lines(r.instructions_after);
+    let ops;
+    if (!after.length) { note.textContent = "No instructions are on record for this round."; return; }
+    if (!before.length) { note.textContent = "There are no earlier instructions to compare with, so these are shown as they are."; ops = after.map((t) => ["same", t]); }
+    else {
+      ops = diff(before, after);
+      const add = ops.filter(([o]) => o === "add").length, del = ops.filter(([o]) => o === "del").length;
+      sum.textContent = add || del ? `· ${add} added, ${del} removed` : "· unchanged";
+      note.textContent = add || del ? "Compared with the last kept instructions: removed lines are red, added lines are green."
+        : "These instructions are unchanged from the last kept round.";
+    }
+    for (const [op, t] of ops) {
+      const line = box.appendChild(el("div", "tn-line tn-" + op));
+      line.appendChild(el("span", null, op === "add" ? "+" : op === "del" ? "−" : ""));
+      line.appendChild(el("span", null, t));
+    }
+  }
+  function drawVs(r, c) {
+    const box = $("tn-vs");
+    box.textContent = "";
+    if (!r) return;
+    for (const [k, name] of CHECKS) {
+      const cell = box.appendChild(el("div", "tn-vcell"));
+      const mark = (e, f) => { e.dataset.source = "round_checks"; e.dataset.where = where(r); e.dataset.field = f; return e; };
+      cell.appendChild(el("div", "tn-k", name));
+      const row = cell.appendChild(el("div", "tn-vrow"));
+      row.appendChild(mark(el("span", "tn-vnum", f3(c[k])), k));
+      const past = c["past_" + k] || 0;
+      if (c["d_" + k] != null) row.appendChild(mark(el("span", "tn-chip " + (past > 0 ? "tn-up" : past < 0 ? "tn-down" : "tn-flat"), (past > 0 ? "▲ " : past < 0 ? "▼ " : "") + signed(c["d_" + k])), "d_" + k));
+      const note = cell.appendChild(el("div", "tn-note"));
+      if (c["bar_" + k] == null) { note.textContent = "Sets the first bar"; continue; }
+      note.append(`vs ${c.bar_label}: `);
+      note.appendChild(mark(el("span", null, f3(c["bar_" + k])), "bar_" + k));
+      note.append(" ± ");
+      note.appendChild(mark(el("span", null, f3(c["noise_" + k])), "noise_" + k));
+    }
+  }
+  // each cited id as its paper and snippet; the id and full title open on demand
+  function drawSources(r) {
+    const box = $("tn-srcs");
+    box.textContent = "";
+    const ids = r ? String(r.papiers_ids == null ? "" : r.papiers_ids).split(/[\s,;|]+/).filter(Boolean) : [];
+    if (!ids.length) { box.appendChild(el("p", "tn-mv", r ? "None for this round." : "—")); return; }
+    for (const id of ids) {
+      const p = sources.get(id) || {};
+      const mark = (e, f) => { e.dataset.source = "papiers_sources"; e.dataset.where = "id=" + encodeURIComponent(id); e.dataset.field = f; return e; };
+      const d = box.appendChild(el("details", "tn-src"));
+      const sum = d.appendChild(el("summary"));
+      sum.appendChild(p.paper ? mark(el("b", null, p.paper), "paper") : el("b", null, "Not in the copied Papiers library"));
+      if (p.kind === "note") sum.append(" · note");
+      if (p.snippet) { sum.append(" · "); sum.appendChild(mark(el("span", "tn-dim", `“${p.snippet}”`), "snippet")); }
+      const body = d.appendChild(el("div"));
+      if (p.title) body.appendChild(mark(el("span", "tn-note", p.title), "title"));
+      body.appendChild(mark(el("code", "tn-id", id), "id"));
+    }
+  }
+  // the last step of the chain: the typed review, or that it is still owed
+  function drawReview(r, c) {
+    const box = $("tn-review"), step = $("tn-review-step");
+    const mark = (e, f) => { e.dataset.source = "round_checks"; e.dataset.where = where(r); e.dataset.field = f; return e; };
+    box.textContent = "";
+    step.className = "tn-step" + (!r ? "" : c.review ? " tn-step-done" : c.review_summary ? " tn-step-wait" : "");
+    if (!r) { box.textContent = "—"; return; }
+    if (c.review) {
+      box.appendChild(mark(el("p", "tn-review", c.review), "review"));
+      if (c.review_next) {
+        const nx = box.appendChild(el("p", "tn-next"));
+        nx.appendChild(el("span", "tn-k", "Next"));
+        nx.appendChild(mark(el("span", null, c.review_next), "review_next"));
+      }
+    } else if (c.review_summary) {
+      box.appendChild(el("div")).appendChild(mark(el("span", "tn-pill tn-pill-trial", c.review_summary), "review_summary"));
+    } else box.appendChild(el("p", "tn-note", "Typed reviews began after this round."));
+  }
+  function drawDetail() {
+    const sel = $("tn-pick");
+    const r = rows.find((x) => key(x) === picked), c = r ? checks.get(key(r)) || {} : null;
+    sel.replaceChildren(...rows.map((x) => new Option(`Round ${short(x)} · ${(checks.get(key(x)) || {}).verdict || "Pending"}`, key(x))));
+    sel.disabled = !rows.length;
+    if (r) sel.value = picked;
+    $("tn-h-detail").textContent = r ? `Round ${short(r)}` : "Round";
+    $("tn-detail").querySelectorAll(".tn-mv[data-field]").forEach((e) => {
+      const f = e.dataset.field, v = !r ? null : e.dataset.source === "round_checks" ? c[f] : r[f];
+      if (r) e.setAttribute("data-where", where(r)); else e.removeAttribute("data-where");
+      e.textContent = "";
+      if (!r) e.textContent = "—";
+      else if (f === "verdict") e.appendChild(pill(v));
+      else e.textContent = f === "check_targeted" ? label(v) : text(v);
+    });
+    drawVs(r, c);
+    drawSources(r);
+    drawReview(r, c);
+    drawDiff(r);
+  }
+
+  // ---- one small chart per check: scores, the bar in force and its noise band
+  function drawChecks() {
+    const box = $("tn-mults");
+    hideTip();
+    box.textContent = "";
+    if (!rows.length) { box.appendChild(msg(blank)); return; }
+    const maxR = Math.max(10, d3.max(rows, (r) => num(r.round)));
+    // each band spans the rounds judged against that bar
+    const segs = bars.map((b, i) => ({ b, from: b.from - 0.5, to: Math.min(maxR, i + 1 < bars.length ? bars[i + 1].from - 0.5 : maxR) }));
+    const cur = bars[bars.length - 1];
+    for (const [k, name] of CHECKS) {
+      const fig = box.appendChild(el("figure", "tn-mult"));
+      const capt = fig.appendChild(el("figcaption", "tn-mcap"));
+      capt.appendChild(el("span", "tn-h3", name));
+      capt.appendChild(el("span", "tn-note", cur ? `bar ${f3(cur[k])} ± ${f3(cur["noise_" + k])}` : ""));
+      const plot = fig.appendChild(el("div", "tn-plot"));
+      const pts = rows.map((r) => {
+        const c = checks.get(key(r)) || {};
+        return { r, c, x: num(r.round), v: num(r[k]), past: c["past_" + k] || 0, base: c["bar_" + k] == null };
+      }).filter((d) => d.v !== null);
+      const vals = [...pts.map((d) => d.v), ...segs.flatMap((s) => [s.b[k] - s.b["noise_" + k], s.b[k] + s.b["noise_" + k]])].filter(Number.isFinite);
+      const [lo, hi] = d3.extent(vals), pad = Math.max((hi - lo) * 0.12, 0.005);
+      const W = Math.max(200, plot.clientWidth || 260), H = 128, mt = 8, mb = 20;
+      const y = d3.scaleLinear([lo - pad, hi + pad], [H - mb, mt]);
+      const yt = y.ticks(4), fmt = d3.format("." + d3.precisionFixed(yt.length > 1 ? yt[1] - yt[0] : 0.01) + "f");
+      const moved = (s) => pts.filter((d) => d.past === s).map((d) => short(d.r));
+      const svg = d3.select(plot).append("svg").attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img")
+        .attr("aria-label", `${name} by round. ` + (cur ? `Bar ${f3(cur[k])}, noise ${f3(cur["noise_" + k])}. ` : "")
+          + (moved(1).length ? `Rose past noise in round ${moved(1).join(", ")}. ` : "") + (moved(-1).length ? `Fell past noise in round ${moved(-1).join(", ")}.` : ""));
+      // left margin from the widest tick label as drawn
+      const probe = svg.append("text").attr("class", "tn-tick");
+      const ml = d3.max(yt, (t) => probe.text(fmt(t)).node().getComputedTextLength()) + 8;
+      probe.remove();
+      const x = d3.scaleLinear([0, maxR], [ml + 6, W - 8]);
+      svg.append("g").selectAll("line").data(yt).join("line").attr("class", "tn-gridl")
+        .attr("x1", ml).attr("x2", W - 4).attr("y1", (t) => y(t)).attr("y2", (t) => y(t));
+      svg.append("g").selectAll("text").data(yt).join("text").attr("class", "tn-tick").attr("text-anchor", "end")
+        .attr("x", ml - 4).attr("y", (t) => y(t) + 3).text(fmt);
+      const every = x(1) - x(0) >= 16 ? 1 : 2;
+      svg.append("g").selectAll("text").data(d3.range(0, maxR + 1, every)).join("text").attr("class", "tn-tick").attr("text-anchor", "middle")
+        .attr("x", (t) => x(t)).attr("y", H - 5).text((t) => t);
+      for (const s of segs) {
+        const b = s.b[k], n = s.b["noise_" + k];
+        if (b === null || n === null) continue;
+        svg.append("rect").attr("class", "tn-band").attr("x", x(s.from)).attr("width", Math.max(0, x(s.to) - x(s.from)))
+          .attr("y", y(b + n)).attr("height", Math.max(0, y(b - n) - y(b + n)));
+        svg.append("line").attr("class", "tn-barline").attr("x1", x(s.from)).attr("x2", x(s.to)).attr("y1", y(b)).attr("y2", y(b));
+      }
+      const on = pts.find((d) => key(d.r) === picked);
+      if (on) svg.append("line").attr("class", "tn-pick-rule").attr("x1", x(on.x)).attr("x2", x(on.x)).attr("y1", mt).attr("y2", H - mb);
+      const sym = (d) => d3.symbol(d.past ? d3.symbolTriangle : d3.symbolCircle, d.past ? 70 : 42)();
+      svg.append("g").selectAll("path").data(pts).join("path")
+        .attr("class", (d) => "tn-pt " + (d.base ? "tn-pt-base" : d.past > 0 ? "tn-pt-up" : d.past < 0 ? "tn-pt-down" : "tn-pt-flat") + (d === on ? " tn-pt-on" : ""))
+        .attr("d", sym).attr("transform", (d) => `translate(${x(d.x)},${y(d.v)})` + (d.past < 0 ? " rotate(180)" : ""));
+
+      const tip = d3.select(plot).append("div").attr("class", "tn-tip").style("display", "none");
+      const near = (ev) => { const px = d3.pointer(ev, svg.node())[0]; return d3.least(pts, (d) => Math.abs(x(d.x) - px)); };   // d3.pointer gives viewBox units
+      const hide = () => tip.style("display", "none");
+      const show = (ev) => {
+        const d = near(ev);
+        if (!d) return hide();
+        hideTip(); hideTip = hide;
+        tip.style("display", null).text("");
+        tip.append("div").attr("class", "tn-tip-t").text(`Round ${short(d.r)} · ${d.c.verdict || "Pending"}`);
+        tip.append("div").text(d.base ? `${f3(d.v)}, sets the first bar` : `${f3(d.v)}, ${signed(d.c["d_" + k])} vs ${d.c.bar_label} ${f3(d.c["bar_" + k])}`);
+        if (!d.base) tip.append("div").attr("class", "tn-tip-t").text(d.past ? `Past its noise of ${f3(d.c["noise_" + k])}` : `Within its noise of ${f3(d.c["noise_" + k])}`);
+        const sx = plot.clientWidth / W, w = tip.node().offsetWidth, h = tip.node().offsetHeight;
+        const left = x(d.x) * sx + 10 + w > plot.clientWidth ? x(d.x) * sx - w - 10 : x(d.x) * sx + 10;
+        tip.style("left", `${Math.max(0, left)}px`).style("top", `${Math.max(0, Math.min(y(d.v) * sx - h / 2, plot.clientHeight - h))}px`);
+      };
+      svg.append("rect").attr("x", ml).attr("y", 0).attr("width", W - ml).attr("height", H).attr("fill", "transparent")
+        .style("cursor", "pointer").style("touch-action", "pan-y")
+        .on("pointermove", show).on("pointerleave", (ev) => { if (ev.pointerType === "mouse") hide(); })
+        .on("click", (ev) => { const d = near(ev); if (d) choose(key(d.r), true); });
+    }
+  }
+  document.addEventListener("pointerdown", (e) => { if (!$("tn-mults").contains(e.target)) hideTip(); });
+
+  function choose(round, scroll) {
+    picked = round;
+    markRows(); drawDetail(); drawChecks();
+    if (scroll) $("tn-detail").scrollIntoView({ behavior: smooth(), block: "nearest" });
+  }
+  $("tn-pick").addEventListener("change", (e) => choose(e.target.value, false));
+  $("tn-table").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-key]"); if (tr) choose(tr.dataset.key, true); });
+  $("tn-table").addEventListener("keydown", (e) => {
+    const tr = e.target.closest("tr[data-key]");
+    if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); choose(tr.dataset.key, true); }
+  });
+
+  // ---- final results: the pending note, then one table per section, columns taken from the rows
+  const SECTIONS = {
+    scorecard: ["Scorecard", "The best signed-off instructions, scored once on the final set."],
+    baselines: ["Baselines and human consistency", "Simple ways of answering that the agents must beat, and how often people repeat their own answers."],
+    held_out: ["Held-out decision puzzles", "A question family never used in tuning, scored only here."],
+    experiment_effects: ["Experiment effects", "The difference in answers between two conditions of a puzzle, among respondents and among their persona agents."],
+    given_size: ["Given answers", "How the scores change with the number of given answers each persona agent reads."],
+    follow_one: ["Follow one respondent", "One respondent followed question by question."],
+  };
+  const isNum = (v) => typeof v === "number" || (typeof v === "string" && /^-?(0|[1-9]\d*)(\.\d+)?$/.test(v.trim()));
+  function finalTable(part) {
+    const cols = [];
+    for (const r of part) for (const k of Object.keys(r)) if (k !== "section" && k !== "row_id" && !cols.includes(k)) cols.push(k);
+    const table = el("table", "tn-table");
+    table.dataset.source = "final"; table.dataset.rowKey = "row_id";
+    const head = table.appendChild(el("thead")).appendChild(el("tr"));
+    const tb = table.appendChild(el("tbody"));
+    const fmt = cols.map((c) => {
+      const vals = part.map((r) => r[c]).filter((v) => v != null && v !== "");
+      const all = vals.length > 0 && vals.every(isNum);
+      const int = all && vals.every((v) => Number.isInteger(Number(v)));
+      const dp = vals.some((v) => { const a = Math.abs(Number(v)); return a > 0 && a < 0.01; }) ? 3 : 2;
+      return { num: all, show: (v) => (v == null || v === "" ? "—" : !all ? String(v) : int ? String(Number(v)) : Number(v).toFixed(dp)) };
+    });
+    cols.forEach((c) => { head.appendChild(el("th", null, cap(c.replace(/_/g, " ")))).dataset.field = c; });
+    for (const r of part) {
+      const tr = tb.appendChild(el("tr"));
+      tr.dataset.key = r.row_id;
+      cols.forEach((c, i) => tr.appendChild(el("td", fmt[i].num ? "tn-num" : null, fmt[i].show(r[c]))));
+    }
+    const wrap = el("div", "tn-tablebox");
+    wrap.appendChild(table);
+    return wrap;
+  }
+  function drawFinal(F) {
+    const box = $("tn-final");
+    box.textContent = "";
+    if (F.status !== "ok") { box.appendChild(msg(statusNote(F.status, "the final results"))); return; }
+    const parts = new Map();
+    for (const r of F.data || []) {
+      if (!r || typeof r !== "object") continue;
+      const s = text(r.section) === "—" ? "results" : String(r.section);
+      if (!parts.has(s)) parts.set(s, []);
+      parts.get(s).push(r);
+    }
+    for (const r of parts.get("pending") || []) {
+      const p = box.appendChild(el("p", "tn-mv", text(r.status)));
+      p.dataset.source = "final"; p.dataset.field = "status"; p.dataset.where = "row_id=" + encodeURIComponent(r.row_id);
+    }
+    parts.delete("pending");
+    if (!parts.size) {
+      box.appendChild(el("p", "tn-note", "No change was chosen using the final set, so its scores will show whether the gains hold for people the loop never saw."));
+      return;
+    }
+    const order = [...Object.keys(SECTIONS).filter((s) => parts.has(s)), ...[...parts.keys()].filter((s) => !(s in SECTIONS))];
+    for (const s of order) {
+      const [title, about] = SECTIONS[s] || [cap(s.replace(/_/g, " ")), ""];
+      const sec = box.appendChild(el("div", "tn-sec"));
+      const head = sec.appendChild(el("div"));
+      head.appendChild(el("h3", "tn-h3", title));
+      if (about) head.appendChild(el("p", "tn-note", about));
+      sec.appendChild(finalTable(parts.get(s)));
+    }
+  }
+
+  // ---- redraw everything from the datasets
+  function render() {
+    const R = dash.data("rounds"), C = dash.data("round_checks"), B = dash.data("bars"), P = dash.data("papiers_sources"), S = dash.data("tuning_summary"), F = dash.data("final");
+    const ok = R.status === "ok";
+    rows = ok ? (R.data || []).filter((r) => r && num(r.round) !== null).sort((a, b) => num(a.round) - num(b.round)) : [];
+    checks = new Map(ok && C.status === "ok" ? (C.data || []).map((c) => [String(c.round), c]) : []);
+    bars = ok && B.status === "ok" ? B.data || [] : [];
+    sources = new Map(ok && P.status === "ok" ? (P.data || []).map((x) => [x.id, x]) : []);
+    blank = ok ? "No rounds recorded yet. They appear here as each tuning round ends." : statusNote(R.status, "the tuning record");
+    const sum = ok && S.status === "ok" && S.data && S.data[0] ? S.data[0] : null;
+    root.querySelectorAll('[data-source="tuning_summary"]').forEach((e) => { e.textContent = sum ? text(sum[e.dataset.field]) : "—"; });
+    $("tn-status").textContent = !ok ? blank : [C, B, P, S].some((x) => x.status === "error") ? "Some comparisons could not be worked out." : "";
+    if (!rows.some((r) => key(r) === picked)) picked = rows.length ? key(rows[rows.length - 1]) : null;
+    drawBar();
+    drawTable();
+    drawDetail();
+    drawChecks();
+    drawFinal(F);
+  }
+  dash.onData(render);
+})();
+</script>

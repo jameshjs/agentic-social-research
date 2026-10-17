@@ -1,0 +1,42 @@
+{
+ "at": "2026-10-17T08:51:41+00:00",
+ "queries": [
+  {
+   "command": "papiers list --kind note --limit 50",
+   "request_id": "req_1f1abf7d3c66407fa40bbf188a5c5298",
+   "error": null,
+   "count": 0,
+   "items": []
+  },
+  {
+   "command": "papiers list --kind highlight --since 1d --limit 50",
+   "request_id": "req_028fe1fb154f4317aee5487e2ad4ce3d",
+   "error": null,
+   "count": 0,
+   "items": []
+  },
+  {
+   "command": "papiers list --kind document --filter annotated=true --limit 50",
+   "request_id": "req_ed9bf356821d4d589b95f9d72296b339",
+   "error": null,
+   "count": 0,
+   "items": []
+  },
+  {
+   "command": "papiers search purchase intention survey --limit 10",
+   "request_id": "req_618c3c93c7b94eccbf87ac609066096d",
+   "error": null,
+   "count": 0,
+   "items": []
+  },
+  {
+   "command": "papiers search acquiescence bias language models --limit 10",
+   "request_id": "req_756ffdc42b1e46089e7724c85248da5b",
+   "error": null,
+   "count": 0,
+   "items": []
+  }
+ ],
+ "notes_used": [],
+ "status": "Papiers library has no notes, highlights or annotated papers yet"
+}

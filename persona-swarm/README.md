@@ -14,8 +14,8 @@ instructions then drive the agents in the product's demos (TTC fare and Bloor bi
 What improves is **the instructions**: not a policy, and not the model, which is never retrained.
 
 ```
- THE PRODUCT (answers a policy question)            THE AGENT GYM (this folder, runs beforehand)
- ───────────────────────────────────────            ────────────────────────────────────────────
+ THE PRODUCT (answers a policy question)            THE PERSONA TUNING LOOP (this folder, runs first)
+ ───────────────────────────────────────            ─────────────────────────────────────────────────
  5 Screens          Aadit  city + dashboard          Twin exam  +  tuning loop  +  Papiers coaching
  4 Orchestrator     James  weeks, rules, metrics                 │
  3 Agents           Steven people + choices  ◄───────────────────┘  best instructions
@@ -23,8 +23,8 @@ What improves is **the instructions**: not a policy, and not the model, which is
  1 Scenario         Meet   question → settings
 ```
 
-Papiers is used in two places: Meet's layer 2 for policy evidence, and this gym for coaching the agents. Use one
-shared adapter for both.
+Papiers is used in two places: Meet's layer 2 for policy evidence, and the persona tuning loop for coaching the
+agents. Use one shared adapter for both.
 
 ## The evaluation set: Twin-2K-500
 
@@ -147,6 +147,9 @@ that's settled, round summaries live in `results.tsv` and the round folders.
 
 ## Status
 
+The build plan is [PLAN.md](./PLAN.md); the agreed vocabulary is in [CONTEXT.md](./CONTEXT.md) and the decisions in
+[docs/adr/](./docs/adr/). Work happens on the `steven/persona-tuning-loop` branch.
+
 | Built | Not built yet |
 |---|---|
 | The earlier reaction prototype in `scripts/` (below) and its self-check | `program.md`, `instructions.md`, `twin_loader.py`, `evaluate.py`, `run_round.py`, the timeline page |
@@ -176,6 +179,15 @@ python3 scripts/react.py men "Adult transit fares rise by 50 cents per ride next
     --context data/contexts/transit_split_men.json --run fare-transit-split
 python3 scripts/export_reactions.py   # runs → data/dashboard/reactions.csv for the dashboard
 python3 scripts/test_swarm.py         # offline self-check, no model calls
+```
+
+**Anthropic API backend (hosted demo).** `scripts/plan.py` takes a freeform hypothesis: one Opus 5.5 call picks the
+most affected group and words the proposal, then each persona in it reacts through Haiku 5.5. Calls bill to the API
+key, not a Claude plan. Run `pip install anthropic` and put `ANTHROPIC_API_KEY` in `persona-swarm/.env` (see
+`.env.example`). The tuning loop and `react.py` stay on the CLI.
+
+```bash
+python3 scripts/plan.py "Raising TTC fares by 50 cents will push low-income riders to drive"
 ```
 
 What it taught us, which is the starting point for `instructions.md`:

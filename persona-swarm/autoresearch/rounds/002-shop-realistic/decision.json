@@ -1,0 +1,77 @@
+{
+ "round": "002",
+ "decided_at": "2026-10-17T08:56:39+00:00",
+ "check_targeted": "right_person",
+ "hypothesis": "Agents over-buy (56% against 48%), most of all everyday staples such as coffee, pain reliever and cat food, so a realistic shopping rule should cut wrong yeses and raise right person on pricing.",
+ "change": "Added one bullet: say yes only if the person would really buy this exact product at this price on this trip; people pass on useful items at fair prices when they don't use them, already have some or don't need them now; more money doesn't mean buying more.",
+ "compared_with": "000-start",
+ "kept": false,
+ "on_trial": false,
+ "reason": "discard: fell beyond noise: right_spread -0.069 (noise 0.010); no check improved beyond noise: right_person +0.008 (noise 0.015), right_spread -0.069 (noise 0.010), right_group_gaps +0.012 (noise 0.049), steady +0.009 (noise 0.010)",
+ "deltas": {
+  "right_person": 0.0077247191011236005,
+  "right_spread": -0.06895940622560282,
+  "right_group_gaps": 0.012345679012345734,
+  "steady": 0.009000000000000008
+ },
+ "noise": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ },
+ "check": {
+  "right_person": 0.8139044943820225,
+  "right_spread": 0.8102365298201408,
+  "right_group_gaps": 0.8024691358024691,
+  "steady": 0.968,
+  "marks_passed": 4,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8148558758314856,
+    "right_spread": 0.9002350522154712,
+    "right_group_gaps": 0.9444444444444444
+   },
+   "pricing": {
+    "right_person": 0.8136498516320475,
+    "right_spread": 0.7877368992213083,
+    "right_group_gaps": 0.7619047619047619
+   }
+  }
+ },
+ "tuning": {
+  "right_person": 0.8067226890756303,
+  "right_spread": 0.8140334757931532,
+  "right_group_gaps": 0.6583333333333333,
+  "steady": null,
+  "marks_passed": 2,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.7810810810810811,
+    "right_spread": 0.878677781768728,
+    "right_group_gaps": 0.8888888888888888
+   },
+   "pricing": {
+    "right_person": 0.8140432098765432,
+    "right_spread": 0.7978723992992596,
+    "right_group_gaps": 0.6176470588235294
+   }
+  }
+ },
+ "triggers_fired": [
+  "2: moved more than 3x its noise: right_spread -0.069"
+ ],
+ "question": "Trigger 2: the realistic-shopping rule cut buying from 56% to 44% (people 48%) but agents fell back on product stereotypes, so spread dropped 0.069 (7x its noise); discarded by the rule. Round 3 would point agents at each person's own tightwad-spendthrift answers to decide how readily they buy. Go ahead?",
+ "reply": {
+  "by": "Steven",
+  "at": "2026-10-17T09:11:09+00:00",
+  "text": "Go ahead"
+ },
+ "spend_total_usd": 5.28,
+ "format": "full",
+ "tuning_findings": [
+  "Pricing: buying fell to 44% (people 48%) but per-person buying still correlates only 0.14 with people, and products got uniform answers (milk 0.90 yes, dog food 0.28), so pricing spread fell 0.877 -> 0.788."
+ ]
+}

@@ -1,0 +1,84 @@
+{
+ "round": "000",
+ "kind": "baseline",
+ "decided_at": "2026-10-17T07:35:10+00:00",
+ "runs": {
+  "start": "000-start",
+  "repeat": "000-start-repeat",
+  "no_persona": "000-no-persona"
+ },
+ "check_start": {
+  "right_person": 0.8061797752808989,
+  "right_spread": 0.8791959360457436,
+  "right_group_gaps": 0.7901234567901234,
+  "steady": 0.959,
+  "marks_passed": 3,
+  "marks": {
+   "right_person": true,
+   "right_spread": true,
+   "right_group_gaps": false,
+   "beats_baselines": true
+  }
+ },
+ "check_repeat": {
+  "right_person": 0.8211610486891385,
+  "right_spread": 0.8775694069661537,
+  "right_group_gaps": 0.8395061728395061,
+  "steady": 0.963,
+  "marks_passed": 4,
+  "marks": {
+   "right_person": true,
+   "right_spread": true,
+   "right_group_gaps": true,
+   "beats_baselines": true
+  }
+ },
+ "tuning_start": {
+  "right_person": 0.7977190876350541,
+  "right_spread": 0.8563570069165611,
+  "right_group_gaps": 0.6833333333333333,
+  "steady": null,
+  "marks_passed": 2,
+  "marks": {
+   "right_person": true,
+   "right_spread": true,
+   "right_group_gaps": false,
+   "beats_baselines": false
+  }
+ },
+ "noise": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ },
+ "baselines_check": {
+  "most_common": 0.7097378277153558,
+  "demographic": 0.6591760299625468,
+  "most_similar": 0.6889044943820225,
+  "no_persona": 0.7326779026217228
+ },
+ "compare_next_round_with": "000-start (the first run); the repeat only measures the noise",
+ "benchmark": "The repeat run passes all 4 marks; the first run passes 3, with right group gaps 0.790 below 0.80 (its noise is 0.049).",
+ "triggers_fired": [
+  "5: the benchmark is passed (by the repeat run)"
+ ],
+ "question": "Trigger 5: the starting instructions pass the benchmark on one of two round-0 runs (the other misses only right group gaps, 0.765 vs 0.80, noise 0.047). The plan keeps going to 10 rounds. Round 1 would target agents caricaturing party (Democrat-Republican policy gaps of 1.8-3.2 points against about 0.2-1.3 for people). Go ahead?",
+ "reply": {
+  "by": "Steven",
+  "at": "2026-10-17T08:42:51+00:00",
+  "text": "Go ahead"
+ },
+ "tuning_findings": [
+  "Policy: agents caricature party. Their Democrat minus Republican gap is 1.8 to 3.2 points on the 5-point scale for every item, where real tuning respondents differ by -0.9 to +1.3 (mostly 0.2 to 0.6).",
+  "Policy: agents choose 'strongly oppose' 16% of the time against 6% for people, and the senior-vouchers item is answered 1.98 on average against 3.55.",
+  "Pricing: agents buy 57% of products against 48%, most of all in the $100,000+ band (26 of 40 against 20), and who buys more correlates only 0.17 with people."
+ ],
+ "cost_usd": 2.16,
+ "seconds": {
+  "000-no-persona": 156.1,
+  "000-start": 221.3,
+  "000-start-repeat": 181.6
+ },
+ "rescored": "Re-scored after round 1 ran: pricing items are now named by product (the block was shuffled per respondent), puzzle slugs are no longer cut off, and keep() ignores float rounding. The same answers, re-keyed; right person is unchanged."
+}

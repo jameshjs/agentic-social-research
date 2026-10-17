@@ -1,6 +1,7 @@
 # python scripts/test_swarm.py — offline checks of the pipeline's own logic, no model calls
 import asyncio
 from make_groups import labelled, matches, parse_where
+from plan import planner_schema, plan_and_react
 from react import question, quote_check, react, slug
 from run_swarm import persona_prompt, persona_sheet
 
@@ -36,6 +37,15 @@ for bad in ("", " ", "x" * 501):
     try:
         asyncio.run(react("all_adults", bad))
         raise AssertionError("accepted bad policy text")
+    except ValueError:
+        pass
+
+# planner: it can only pick a listed group, and the hypothesis is validated before any model call
+assert planner_schema([{"id": "men"}, {"id": "age_65_plus"}])["properties"]["group"]["enum"] == ["men", "age_65_plus"]
+for bad in ("", "x" * 2001):
+    try:
+        asyncio.run(plan_and_react(bad))
+        raise AssertionError("accepted bad hypothesis")
     except ValueError:
         pass
 print("ok")

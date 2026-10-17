@@ -1,0 +1,142 @@
+{
+ "round": "008",
+ "decided_at": "2026-10-17T12:29:40+00:00",
+ "check_targeted": "right_spread",
+ "hypothesis": "Steven's notes: the Self-Reports note (nte_5fda00df283d4ba21864448ef45d18c0) asks for self-report-first conditioning with demographics kept but secondary, and the Funhouse note (nte_d065ced88cfc601fc8e4fdcdd6c33563) gives the same evidence order against under-dispersion and stereotyping. Agents can retrieve and reason from the person's answers (hl_e0d9a4719df5c3188603828271c3cef6, hl_446d7a53e251d1613580855b5d887d31); full-persona twins sit close to demographics-only ones (hl_151fb87edf7f1018f60c0e4138291037), and self-report agents cut subgroup bias (hl_d801ce32e3867713d37ab80ec53b85ff). Answers grounded in each person's own answers should differ more between people (spread up), unlike round 4, which banned group information.",
+ "change": "Added one bullet: first find this person's earlier answers that bear most directly on the question (own habits, experiences, views and limits) and answer from those; if none settle it, reason from their other answers; use age, sex, income, party or ideology only as a tiebreaker, never as the main reason, but don't ignore them. Format full; otherwise round 3's instructions.",
+ "compared_with": {
+  "runs": [
+   "003-spending-habits",
+   "003-spending-habits-repeat"
+  ],
+  "mean": {
+   "right_person": 0.8072331460674157,
+   "right_spread": 0.869222608886088,
+   "right_group_gaps": 0.8209876543209876,
+   "steady": 0.972
+  },
+  "marks_passed": 4
+ },
+ "kept": false,
+ "on_trial": false,
+ "reason": "discard: no check improved beyond noise: right_person +0.003 (noise 0.015), right_spread -0.008 (noise 0.010), right_group_gaps -0.019 (noise 0.049), steady -0.001 (noise 0.010)",
+ "deltas": {
+  "right_person": 0.0033941947565543362,
+  "right_spread": -0.007891584174764876,
+  "right_group_gaps": -0.01851851851851849,
+  "steady": -0.0010000000000000009
+ },
+ "noise": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ },
+ "check": {
+  "right_person": 0.81062734082397,
+  "right_spread": 0.8613310247113232,
+  "right_group_gaps": 0.8024691358024691,
+  "steady": 0.971,
+  "marks_passed": 4,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8281596452328159,
+    "right_spread": 0.9006778429911895,
+    "right_group_gaps": 1.0
+   },
+   "pricing": {
+    "right_person": 0.8059347181008902,
+    "right_spread": 0.8514943201413565,
+    "right_group_gaps": 0.746031746031746
+   }
+  }
+ },
+ "tuning": {
+  "right_person": 0.8151260504201681,
+  "right_spread": 0.8678129146675095,
+  "right_group_gaps": 0.6333333333333333,
+  "steady": null,
+  "marks_passed": 2,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8108108108108109,
+    "right_spread": 0.8937499624365385,
+    "right_group_gaps": 0.8888888888888888
+   },
+   "pricing": {
+    "right_person": 0.816358024691358,
+    "right_spread": 0.8613286527252525,
+    "right_group_gaps": 0.5882352941176471
+   }
+  }
+ },
+ "triggers_fired": [
+  "1: three rounds in a row kept nothing"
+ ],
+ "question": "Trigger 1: rounds 6-8 kept nothing. Round 8 (self-report first, from Steven's notes) held tuning spread level with round 3 and raised policy right person on the check set to 0.828, but every pooled check stayed within noise (spread -0.008, gaps -0.019). Run round 9 with suggestion 1, 2 or 3, or change course?",
+ "reply": null,
+ "spend_total_usd": 14.57,
+ "format": "full",
+ "spend_note": "The recorder misses the revoked round 7 run in rounds/_revoked/ ($1.29): true total $15.86.",
+ "next_suggestions": {
+  "written_at": "2026-10-17T12:30:16+00:00",
+  "context": "Results of rounds 0-8 and the Papiers library: 7 papers, 49 highlights and 3 notes by Steven (sources.json).",
+  "suggestions": [
+   {
+    "rank": 1,
+    "kind": "persona format",
+    "edit": "New format full_relative: the full persona plus 3-4 lines computed from the person's given answers against the 240-respondent pool (spending habits, risk, giving to others, openness), e.g. 'Finds it harder to limit spending than about 80% of respondents'. One instructions line: 'The relative profile lists tendencies, not rules.'",
+    "answers_result": "Round 8's evidence order didn't individuate agents: the standard deviation of each agent's yes count stayed at 6.2 (people 7.5, round 3 6.8), and milk, baking soda and eggs stayed at 93-100% yes.",
+    "highlights": [
+     "nte_d065ced88cfc601fc8e4fdcdd6c33563",
+     "hl_800984ef747ecfb2ea62455a3a06a226",
+     "hl_e71cbe9877f96e1f9c8b498a41726d03",
+     "hl_aa7442f770fd4aac6935927509fdf271"
+    ],
+    "why": "The Funhouse note proposes a relative-profile block as the instruction-level fix for under-dispersion; its paper finds a summary with percentile ranks does about as well as the full persona, and that twins shrink toward the base model.",
+    "expected": "Agents at the extremes move further apart: spread up, mainly on pricing.",
+    "risk": "Needs new formats.py code and the leak check. The Twin-2K-500 note (nte_f1392d2dbcc068218164bc7d4d730434) says format changes are a baseline comparison rather than a fix for collapsed spread; percentiles read as rules could overshoot and cut right person."
+   },
+   {
+    "rank": 2,
+    "kind": "instructions",
+    "edit": "The Funhouse note's whole intervention as one idea: round 8's evidence-order bullet plus 'Keep the uncertainty, mixed motives, gaps in knowledge and non-textbook choices that this person's answers show, rather than the sensible or normative answer.'",
+    "answers_result": "Round 8 alone held spread but didn't move the normative choices (staples near 100% yes, free items far above people's 78%).",
+    "highlights": [
+     "nte_d065ced88cfc601fc8e4fdcdd6c33563",
+     "nte_f1392d2dbcc068218164bc7d4d730434",
+     "hl_f7a275865b8648da2decd12b1dc83025",
+     "hl_8d8f3cc54aad15421d969324891a2068"
+    ],
+    "why": "The Funhouse note pairs the evidence order with preserving non-normative choices, and says it works only if individuation improves without adding noise or hyper-rationality; Twin-2K-500 finds twins pick the normative option almost every time.",
+    "expected": "Spread and pricing right person up, with the imperfection tied to each person's own answers rather than a blanket cue.",
+    "risk": "Round 7's generic version cut spread; two bullets make it harder to tell which one acted."
+   },
+   {
+    "rank": 3,
+    "kind": "instructions",
+    "edit": "Policy only: 'Political opinions: combine all of your background. Party is one part, but your age, religion, income, work and your own answers about values also shape each view, and many people back some proposals from the other side.'",
+    "answers_result": "Rounds 7 and 8 both raised policy right person (check 0.822, 0.828 against about 0.81), yet agents still oppose the two conservative items far more than people (tuning means 1.9 against 2.8 and 3.55).",
+    "highlights": [
+     "hl_f9cf5b71d8b01335a0f1fee0962f34de",
+     "hl_f18aa709faacc6143d24b8564e885491",
+     "hl_766c16f2e0c9208379839235369312bb"
+    ],
+    "why": "Out of One, Many finds combining backstory elements predicts best; Synthetic Replacements finds synthetic partisans more extreme and less varied than people.",
+    "expected": "Policy right person and spread up.",
+    "risk": "Policy is 10 of 50 items, so the pooled checks will likely stay within noise: probably a discard under the keep rule."
+   }
+  ],
+  "chosen": null
+ },
+ "page_store": "datasets/rounds v9 -> /_blob/428d508c92a4507092635e9d5fae1ead (rounds 000-008; old blob cd5b13e5 deleted); next update uses if_version 9.",
+ "human_review": {
+  "by": "Steven",
+  "at": "2026-10-17T12:33:35+00:00",
+  "verdict": "continue",
+  "comment": "For round 9 we should try the relative profile approach mentioned",
+  "improvement": "run papier to get the exact note content for the instruction changes, then run round 9"
+ }
+}

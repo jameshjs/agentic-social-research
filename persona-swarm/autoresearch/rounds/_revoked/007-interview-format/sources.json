@@ -1,0 +1,208 @@
+{
+ "at": "2026-10-17T10:10:20+00:00",
+ "queries": [
+  {
+   "command": "papiers list --kind document --limit 50",
+   "request_id": "req_0c08c345d8484726935232e829f6b383",
+   "error": null,
+   "count": 7,
+   "ids": [
+    "doc_b14ed2372a0d45530de3bbcdece95bd9",
+    "doc_4263e0764c02001f058768f44cb68c16",
+    "doc_4d2afcfc265012d5ac2a64ea041358e3",
+    "doc_cc20423e144801b093183b20c203aea9",
+    "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+    "doc_330ef4d6ba57e810d7a2af873763fbe2",
+    "doc_a1d9036f214a2085310d71266ed352b2"
+   ]
+  },
+  {
+   "command": "papiers list --kind highlight --limit 50",
+   "request_id": "req_9c65242e495f4e869fc4847cd2c1b52c",
+   "error": null,
+   "count": 15,
+   "ids": [
+    "hl_9d3098141d0abf0919dbce307500742d",
+    "hl_3b7f6a90d3593c54bda6b93c8eb0233c",
+    "hl_5703c07f40e1f2f3b0f76374047995fc",
+    "hl_19015628461946954422daaabd88f3fc",
+    "hl_79e7a1c718f2069a9ce579f614d9501e",
+    "hl_f9cf5b71d8b01335a0f1fee0962f34de",
+    "hl_ef176edeb52094c16f68e9ad57932e9a",
+    "hl_d1cf914bb377b6ed2788b8e79056aa4e",
+    "hl_5f211fb0cb7db871830699a264cd9770",
+    "hl_5450e3baedbd73114002297fe64c3787",
+    "hl_39746a61ef98d937816daf833be4f776",
+    "hl_a57f83114dc9b82734d028801f8cf37a",
+    "hl_fad936419019dc39f2dc36006d3f195f",
+    "hl_42736e321c9efbb55c00281d4eaf4edc",
+    "hl_60400884d07ac4ccbeb95cd931d65797"
+   ]
+  },
+  {
+   "command": "papiers list --kind note --limit 50",
+   "request_id": "req_61f89d8193e148f0bd6dc79662a4456d",
+   "error": null,
+   "count": 0,
+   "ids": []
+  },
+  {
+   "command": "papiers search interview template conditioning --limit 10",
+   "request_id": "req_d35d080edb3d4f2eab749855c5d73ebb",
+   "error": null,
+   "count": 1,
+   "ids": [
+    "doc_7da5e62b18d7f7d7db21e8b3a31daea3"
+   ]
+  },
+  {
+   "command": "papiers search algorithmic fidelity --limit 10",
+   "request_id": "req_27b18e72d4504befa76b988738321ded",
+   "error": null,
+   "count": 1,
+   "ids": [
+    "doc_7da5e62b18d7f7d7db21e8b3a31daea3"
+   ]
+  }
+ ],
+ "papers": [
+  {
+   "id": "doc_b14ed2372a0d45530de3bbcdece95bd9",
+   "title": "Automated Social Science: Language Models as Scientist and Subjects"
+  },
+  {
+   "id": "doc_4263e0764c02001f058768f44cb68c16",
+   "title": "Virtual Personas for Language Models via an Anthology of Backstories"
+  },
+  {
+   "id": "doc_4d2afcfc265012d5ac2a64ea041358e3",
+   "title": "Synthetic Replacements for Human Survey Data? The Perils of Large Language Models | Political Analysis"
+  },
+  {
+   "id": "doc_cc20423e144801b093183b20c203aea9",
+   "title": "Digital Twins are Funhouse Mirrors: Five Systematic Distortions"
+  },
+  {
+   "id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "title": "Out of One, Many: Using Language Models to Simulate Human Samples"
+  },
+  {
+   "id": "doc_330ef4d6ba57e810d7a2af873763fbe2",
+   "title": "Twin-2K-500: A dataset for building digital twins of over 2,000 people based on their answers to over 500 questions"
+  },
+  {
+   "id": "doc_a1d9036f214a2085310d71266ed352b2",
+   "title": "LLM Agents Grounded in Self-Reports Enable General-Purpose Simulation of Individuals"
+  }
+ ],
+ "highlights": [
+  {
+   "id": "hl_9d3098141d0abf0919dbce307500742d",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:57:09.820813+00:00",
+   "text": "Using these concepts and methods, we show that GPT-3, one of the largest publicly available language models, contains a striking degree of algorithmic fidelity within the realm of public opinion in the United States. Study 1 shows that GPT-3 passes a social science version of the Turing Test (Criterion 1) and exhibits both strong Backward Continuity (Criterion 2) and Pattern Correspondence (Criterion 4). Studies 2 and 3 provide compelling evidence of Forward Continuity (Criterion 3) as well as additional, much more granular evidence for Pattern Correspondence (Criterion 4). As noted in Studies 2 and 3, careful conditioning of GPT3 allows us to address issues of temporality and replicability, points further supported in results presented in the appendix. Importantly, in all studies, we find evidence that GPT-3 is capable of replicating the viewpoints of demographically varied sub-populations within the U.S. Taken together, these studies show consistent, repeated evidence for these criteria across a range of data sources, measures, and points in time."
+  },
+  {
+   "id": "hl_3b7f6a90d3593c54bda6b93c8eb0233c",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:57:03.312724+00:00",
+   "text": "In this paper, we introduce the concept of algorithmic fidelity as a means to justify the use of large-scale language models as proxies for human cognition at an aggregate level, and as general-purpose windows into human thinking. We propose four criteria to establish the algorithmic fidelity of these models and demonstrate empirical methods for their evaluation."
+  },
+  {
+   "id": "hl_5703c07f40e1f2f3b0f76374047995fc",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:56:44.852748+00:00",
+   "text": "Interviewer: What is your gender? Are you “male” or “female”? Me: male Interviewer: I am going to read you a list of four race categories. What race do you consider yourself to be? “White”, “Black”, “Asian”, or “Hispanic”? Me: white Interviewer: What is your age in years? Me: 29 Interviewer: What is the highest level of school you have completed, or the highest degree you have received? Is it “high school”, “some college”, “a four-year college degree”, or “an advanced degree”? Me: high school Interviewer: When you see the American flag flying, how does it make you feel? Does it make you feel “extremely good”, “moderately good”, “a little good”, “neither good nor bad”, “a little bad”, “moderately bad”, or “extremely bad”? Me: extremely good Interviewer: Do you ever discuss politics with your family and friends? Please respond with “yes” or “no”. Me: yes Interviewer: How interested would you say you are in politics? Are you “very interested”, “somewhat interested”, “not very interested”, or “not at all interested”? Me: somewhat interested Interviewer: Which would you say best describes your partisan identification. Would you say you are a “strong democrat”, “not very strong democrat”, “independent, but closer to the Democratic party”, “independent”, “independent, but closer to the Republican party”, “not very strong Republican”, or “strong Republican”? Me: strong Republican Interviewer: Did you vote in the 2016 general election? Please answer with “yes” or “no”. Me: yes Interviewer: Which presidential candidate did you vote for in the 2016 presidential election, “Hillary Clinton”, “Donald Trump”, or “someone else”? Me: Donald Trump Interviewer: Lots of things come up that keep people from attending religious services even if they want to. Thinking about your life these days, do you ever attend religious services? Please respond with “yes” or “no”. Me: yes"
+  },
+  {
+   "id": "hl_19015628461946954422daaabd88f3fc",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:56:14.787552+00:00",
+   "text": "For Study 3, we generated a silicon sample of virtual ANES participants by constructing a complete virtual interview. As the example template (Figure 10) indicates, we selected twelve common variables1 from the 2016 ANES for exploration, representing a variety of demographic (gender, race/ethnicity, age, education, religiosity), attitudinal (political interest, patriotic feelings about the flag, party identification, ideology), and behavioral (talk about politics, vote, and vote choice) information. The conditioning text included the mock interview with questions and responses for eleven of the twelve items, leaving the twelfth question for GPT-3 to answer. Each backstory was based on actual responses given by one human ANES respondent.2 In study 2, the goal was to measure the probability of a single token; here the goal is to measure a wide variety of multi-token responses, which complicates the analysis of their raw probabilities. Instead, we allow the GPT-3 API to sample completions, which we then analyze."
+  },
+  {
+   "id": "hl_79e7a1c718f2069a9ce579f614d9501e",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:56:03.333422+00:00",
+   "text": "We here additionally note that no attempt was made to optimize the template used during our experiments; the template used and the 10 elements selected represent our first try. Future work can likely improve these results by optimizing template and backstory elements before an experiment begins."
+  },
+  {
+   "id": "hl_f9cf5b71d8b01335a0f1fee0962f34de",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:55:55.421187+00:00",
+   "text": "The results are shown in Fig. 8. There are a few notable elements to these results. First, no single backstory element accounted for all of the predicted power of GPT-3’s vote predictions, suggesting that GPT-3 is indeed synthesizing or fusing multiple backstory elements together, yielding a more accurate final prediction. Second, GPT-3 can use either Party or Ideology to predict vote choice, but Party is more predictive. Third, the addition of some elements of the backstory template (such as State or Political Interest) mildly hurt performance. Finally, we conducted an experiment where we removed both Party and Ideology from the template, yielding only demographic factors; we see that the combination of the remaining 8 elements yields better accuracy than any single element."
+  },
+  {
+   "id": "hl_ef176edeb52094c16f68e9ad57932e9a",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:55:39.126769+00:00",
+   "text": "lthough we provide first-person backstories based on specific human survey profiles, we do not expect the values in the silicon sample to exactly match the human response on the individual level. For each text completion, the language model uses a stochastic sampling process to select the completion from the distribution of probable next tokens. Therefore, with a large enough sample size we expect the overall distribution of text responses in the silicon sample to match the overall distribution in the human data, but we do not evaluate correspondence at the individual level. Additionally, as with all stochastic processes, we expect some variation in different draws of the silicon sample. In the appendix, we report on variation in the pattern correspondence based on different sampling parameters in GPT-3."
+  },
+  {
+   "id": "hl_d1cf914bb377b6ed2788b8e79056aa4e",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:55:24.803565+00:00",
+   "text": "For this task, we produce an interview-style conditioning template (see the appendix for an example). The purpose of this approach is two-fold. First, leveraging the zero-shot learning property of language models [9], the format induces GPT-3 to respond to survey questions using short strings of tokens drawn from options provided by the “Interviewer.” Second, the questions incorporated in the conditioning text provide necessary demographic and attitudinal background information to generate each distinct silicon subject. We generate the conditioning text using responses that humans gave on the 2016 ANES to eleven survey questions. We then use GPT-3 to predict the response to the twelfth. Using the ANES and silicon data, we calculate Cramer’s V for each combi"
+  },
+  {
+   "id": "hl_5f211fb0cb7db871830699a264cd9770",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:54:57.139241+00:00",
+   "text": "The conditional nature of GPT-3’s text completions creates a situation analogous to Simpson’s Paradox [28], in which the trends evident in a combined group do not reflect the trends of its composite distributions. Specifically, our silicon sampling method allows us to examine the distinct opinions, biases, and voting patterns of identified sub-populations, which can differ drastically from the patterns exhibited by generic (i.e. not demographically conditioned) GPT-3 text completions. Of course, the ability to sample from GPT3’s component text distributions does not, in and of itself, guarantee that these distributions faithfully reflect the behavior of specific human sub-populations. For that, one must first examine the model’s algorithmic fidelity with respect to both the domain of study and the demographic groups of interest."
+  },
+  {
+   "id": "hl_5450e3baedbd73114002297fe64c3787",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:54:35.59482+00:00",
+   "text": "Applying language models to social science research raises an obvious question: how can we compensate for the fact that the demographics of internet users (on which the model was trained) are neither representative of most populations of interest nor demographically balanced, and that language models are trained on internet snapshots acquired at a fixed point in time?"
+  },
+  {
+   "id": "hl_39746a61ef98d937816daf833be4f776",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:54:05.478678+00:00",
+   "text": "We define algorithmic fidelity as the degree to which the complex patterns of relationships between ideas, attitudes, and socio-cultural contexts within a model accurately mirror those within a range of human subpopulations. The core assumption of algorithmic fidelity is that texts generated by the model are selected not from a single overarching probability distribution, but from a combination of many distributions, and that structured curation of the conditioning context can induce the model to produce outputs that correlate with the attitudes, opinions, experiences of distinct human sub-populations."
+  },
+  {
+   "id": "hl_a57f83114dc9b82734d028801f8cf37a",
+   "paper": "Out of One, Many: Using Language Models to Simulate Human Samples",
+   "document_id": "doc_7da5e62b18d7f7d7db21e8b3a31daea3",
+   "updated_at": "2026-10-17T09:53:20.087977+00:00",
+   "text": "How much algorithmic fidelity in a language model is enough for social science use? We suggest at a minimum a language model must provide repeated, consistent evidence of meeting the following four criteria: Criterion 1 (Social Science Turing Test) Generated responses are indistinguishable from parallel human texts. Criterion 2 (Backward Continuity) Generated responses are consistent with the attitudes and socio-demographic information of its input/“conditioning context,” such that humans viewing the responses can infer key elements of that input. Criterion 3 (Forward Continuity) Generated responses proceed naturally from the conditioning context provided, reliably reflecting the form, tone, and content of the context. Criterion 4 (Pattern Correspondence) Generated responses reflect underlying patterns of relationships between ideas, demographics, and behavior that would be observed in comparable human-produced data."
+  },
+  {
+   "id": "hl_fad936419019dc39f2dc36006d3f195f",
+   "paper": "Virtual Personas for Language Models via an Anthology of Backstories",
+   "document_id": "doc_4263e0764c02001f058768f44cb68c16",
+   "updated_at": "2026-10-17T09:49:00.55929+00:00",
+   "text": "or each ATP survey considered, we format the select questions into language model prompts to administer survey approximations. Examples of such formatted questions are shown in Figure 5. All questions we consider are in multiple-choice question answer formats, and we carefully preserve the wording of each question and choice options from the original survey. We ask all questions in series—language models are given all previous questions and their answers when answering each new question. This process replicates the mental process that human respondents would undergo during surveys. For further details on prompts used and the experimental setting, see Appendix C."
+  },
+  {
+   "id": "hl_42736e321c9efbb55c00281d4eaf4edc",
+   "paper": "Virtual Personas for Language Models via an Anthology of Backstories",
+   "document_id": "doc_4263e0764c02001f058768f44cb68c16",
+   "updated_at": "2026-10-17T09:48:47.283271+00:00",
+   "text": "In our experience, instruction-tuned models (i.e. most LLM agent models) are completely unsuitable for this task. Whereas pre-trained models naturally represent an enormous spectrum of real users voices, instruction-tuned models have been trained towards a single helpful, largely unemotional voice. Attempting to prompt an instruction-tuned model for a backstory leads to short, evasive and vague answers. And queries to an instruction-tuned model conditioned on a (real or synthetic) backstory lead to actions which are only positive and helpful, and avoiding the (realistically human) actions that are not."
+  },
+  {
+   "id": "hl_60400884d07ac4ccbeb95cd931d65797",
+   "paper": "Virtual Personas for Language Models via an Anthology of Backstories",
+   "document_id": "doc_4263e0764c02001f058768f44cb68c16",
+   "updated_at": "2026-10-17T09:48:34.610488+00:00",
+   "text": "There are two practical considerations when using backstories as conditioned virtual personas for approximating human subjects. In the following sections, we discuss how we address each of these implications: (i) We must acquire a substantial set of backstories that reflects a sufficient variety of human authors, since the target human study may require arbitrary demographic distribution of subjects. To this end, we introduce LLM-generated backstories to efficiently generate diverse backstories (Section 2.1); and (ii) We cannot a priori determine the possible demographic profile of a given backstory, since demographic variables may not be explicitly mentioned in a naturalistic life narrative. Hence, we introduce methods to estimate demographics of the virtual persona conditioned by each backstory (Section 2.3) and sample subsets of backstories from anthology that match target human populations (Section 2.4)."
+  }
+ ],
+ "notes": [],
+ "notes_used": [],
+ "status": "7 papers, 15 highlights, 0 notes"
+}

@@ -1,0 +1,144 @@
+{
+ "round": "007",
+ "decided_at": "2026-10-17T10:35:08+00:00",
+ "check_targeted": "right_spread",
+ "hypothesis": "Anthology (hl_42736e321c9efbb55c00281d4eaf4edc) finds instruction-tuned models conditioned on a backstory take only positive, helpful actions; round 3's agents shop that way (staples near 100% yes against people's 50-85%, giving those items spread 0-0.4, and treats slightly under-bought). Out of One, Many asks for distributions that match many sub-populations rather than one voice (hl_39746a61ef98d937816daf833be4f776, hl_ef176edeb52094c16f68e9ad57932e9a). A two-sided cue (skip staples, buy treats) should raise spread on those items without the global shift to no that cut spread in rounds 2 and 6.",
+ "change": "Added one bullet: be a real, imperfect person, not a helpful or sensible assistant; don't pick an answer because it is the responsible, healthy, kind or widely approved one; real people buy treats on a whim, skip things they arguably should buy, and hold views others dislike. Format full; otherwise round 3's instructions.",
+ "compared_with": {
+  "runs": [
+   "003-spending-habits",
+   "003-spending-habits-repeat"
+  ],
+  "mean": {
+   "right_person": 0.8072331460674157,
+   "right_spread": 0.869222608886088,
+   "right_group_gaps": 0.8209876543209876,
+   "steady": 0.972
+  },
+  "marks_passed": 4
+ },
+ "kept": false,
+ "on_trial": false,
+ "reason": "discard: fell beyond noise: right_spread -0.011 (noise 0.010); marks passed fell 4 -> 3; no check improved beyond noise: right_person +0.005 (noise 0.015), right_spread -0.011 (noise 0.010), right_group_gaps -0.031 (noise 0.049), steady -0.006 (noise 0.010)",
+ "deltas": {
+  "right_person": 0.005266853932584303,
+  "right_spread": -0.010936864735229923,
+  "right_group_gaps": -0.030864197530864224,
+  "steady": -0.006000000000000005
+ },
+ "noise": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ },
+ "check": {
+  "right_person": 0.8125,
+  "right_spread": 0.8582857441508581,
+  "right_group_gaps": 0.7901234567901234,
+  "steady": 0.966,
+  "marks_passed": 3,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8215077605321508,
+    "right_spread": 0.8986403073698893,
+    "right_group_gaps": 1.0
+   },
+   "pricing": {
+    "right_person": 0.8100890207715133,
+    "right_spread": 0.8481971033461002,
+    "right_group_gaps": 0.7301587301587301
+   }
+  }
+ },
+ "tuning": {
+  "right_person": 0.8043217286914766,
+  "right_spread": 0.8619979505813273,
+  "right_group_gaps": 0.6166666666666667,
+  "steady": null,
+  "marks_passed": 2,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.7594594594594595,
+    "right_spread": 0.899528857608612,
+    "right_group_gaps": 0.9444444444444444
+   },
+   "pricing": {
+    "right_person": 0.8171296296296297,
+    "right_spread": 0.8526152238245063,
+    "right_group_gaps": 0.5588235294117647
+   }
+  }
+ },
+ "triggers_fired": [
+  "1: three rounds in a row kept nothing"
+ ],
+ "question": "Trigger 1: rounds 5-7 kept nothing. Round 7's paper-guided edit (not a helpful assistant) moved treats toward people's answers but left staples near 100% yes, and spread fell 0.011 against a noise of 0.010 (marks 4 -> 3, as gaps fell 0.031 within its noise). Run round 8 with suggestion 1 (policy only: party is one input among several), first re-measure the noise as the method note says, or steer another way?",
+ "reply": null,
+ "spend_total_usd": 12.98,
+ "format": "full",
+ "spend_note": "The recorder sums rounds/NNN-*/meta.json, so it misses the revoked round 7 run in rounds/_revoked/ ($1.29): true total $14.27.",
+ "next_suggestions": {
+  "written_at": "2026-10-17T10:36:35+00:00",
+  "context": "Results of rounds 0-7 and the Papiers library: 7 papers, 15 highlights by Steven, 0 notes (unchanged since the revoked round 7).",
+  "suggestions": [
+   {
+    "rank": 1,
+    "kind": "instructions",
+    "edit": "Policy only, one bullet: 'Political opinions: combine all of your background. Party is one part, but your age, religion, income, work and your own answers about values also shape each view, and many people back some proposals from the other side.' Leave the shopping bullets as round 3 has them.",
+    "answers_result": "Round 7 left agents opposing the two conservative policy items far more than people do (tuning means 1.8-1.9 against 2.8 and 3.55), and under-supporting the costly progressive ones (3.45-3.80 against 4.05-4.20). Shopping-readiness edits have now cut pricing spread three times (rounds 2, 6, 7), so this edit leaves shopping alone.",
+    "highlights": [
+     "hl_f9cf5b71d8b01335a0f1fee0962f34de",
+     "hl_39746a61ef98d937816daf833be4f776"
+    ],
+    "why": "Out of One, Many: no single backstory element carries the prediction, party is the strongest but combining elements predicts best; fidelity means matching patterns across many sub-populations.",
+    "expected": "Policy right person and spread up (round 1's similar edit raised policy right person 0.799 -> 0.826); pricing untouched, so pooled spread should hold.",
+    "risk": "Policy is 10 of 50 items, so the pooled checks are likely within noise: probably a discard under the keep rule."
+   },
+   {
+    "rank": 2,
+    "kind": "instructions",
+    "edit": "Shopping, one bullet on which products fit, not how readily to buy: 'Which products you buy depends on your household and your life: your age, whether you are a man or a woman, who you live with, your income and your tastes.'",
+    "answers_result": "Pricing group gaps are the weakest family check (check 0.73, tuning 0.56 in round 7). On the tuning set, men said yes more often than women to about a dozen products, and agents show no difference there.",
+    "highlights": [
+     "hl_a57f83114dc9b82734d028801f8cf37a",
+     "hl_f9cf5b71d8b01335a0f1fee0962f34de"
+    ],
+    "why": "Out of One, Many's pattern correspondence: responses should reflect the relationships between demographics and behaviour seen in people; combining backstory elements predicts best.",
+    "expected": "Pricing group gaps up; spread may rise as agents differ more by household.",
+    "risk": "Tuning groups are small (6-20 people), so those sex gaps may be noise; round 4 showed group instructions can erase real differences or invent stereotypes; gaps' noise (0.049) is hard to clear."
+   },
+   {
+    "rank": 3,
+    "kind": "instructions",
+    "edit": "Drop the shopping-readiness idea entirely and test a policy-and-shopping cue against overconfident answers: 'When your answers don't settle a question, don't fall back on the most typical choice; pick what this particular person most plausibly does, even if it is unusual.'",
+    "answers_result": "Spread is the check that keeps falling (rounds 2, 6, 7); agents converge on one answer for staples and for two policy items.",
+    "highlights": [
+     "hl_ef176edeb52094c16f68e9ad57932e9a",
+     "hl_42736e321c9efbb55c00281d4eaf4edc"
+    ],
+    "why": "Out of One, Many expects the distribution, not each individual, to match; Anthology finds instruction-tuned models speak with one voice.",
+    "expected": "Spread up.",
+    "risk": "Can add random variety that lowers right person and steady; round 4's 'ignore groups' cue cut steady."
+   }
+  ],
+  "method_note": {
+   "suggestion": "Before round 8, run round 3's kept instructions once more on the check set (about $0.3-1.6) and ask whether spread's noise of 0.010, measured from one pair of round 0 runs, is too tight: round 3's own two runs differ by 0.009, and rounds 6, revoked 7 and 7 fell 0.011-0.021.",
+   "highlights": [
+    "hl_ef176edeb52094c16f68e9ad57932e9a"
+   ],
+   "why": "Out of One, Many expects variation between draws of the same conditioning."
+  },
+  "chosen": null
+ },
+ "page_store": "datasets/rounds v8 -> /_blob/cd5b13e5a7fd5b5e15a01c3f5b0d3931 (rounds 000-007; old blob 485a05ef deleted); next update uses if_version 8.",
+ "human_review": {
+  "by": "Steven",
+  "at": "2026-10-17T12:23:32+00:00",
+  "verdict": "continue",
+  "comment": "think round 7 lack notes from paper",
+  "improvement": "roung 8 should focus on the notes + highlihghts for bullet poing and finr tune the prompt"
+ }
+}
