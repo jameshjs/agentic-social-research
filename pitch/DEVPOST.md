@@ -6,7 +6,7 @@
 **Categories:** Papiers Autoresearch Challenge · U of T School of Cities · [MLH] Best Use of Vultr · Sustainable FinTech & Economic Inclusion (household and shop ledgers) · Top 3 overall
 
 ## Inspiration
-In 2024 Ontario moved to remove the protected bike lanes on Bloor, Yonge and University. The City estimated the cost at more than $48 million for the three corridors. TTC fares keep rising. Decisions like these touch thousands of people, and they are argued on intuition, with no way to try them first. Agent simulations promise a way to do that. Most of them, though, are an LLM role-playing a stereotype on a cartoon map, with numbers nobody can trace.
+In 2024 Ontario moved to remove the protected bike lanes on Bloor, Yonge and University. The City estimated the cost at more than $48 million for the three corridors. TTC fares have been frozen for three years running, and every budget reopens the question of raising them. Decisions like these touch thousands of people, and they are argued on intuition, with no way to try them first. Agent simulations promise a way to do that. Most of them, though, are an LLM role-playing a stereotype on a cartoon map, with numbers nobody can trace.
 
 ## What it does
 You type a policy question. Counterfactual Lab:

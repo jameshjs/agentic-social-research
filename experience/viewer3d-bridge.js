@@ -55,12 +55,23 @@
     if (event.data.type === 'viewer3d:arm' && event.data.arm !== arm()) document.getElementById(event.data.arm === 'baseline' ? 'baselineView' : 'policyView')?.click();
   });
   for (const id of ['baselineView', 'policyView']) document.getElementById(id)?.addEventListener('click', () => setTimeout(() => send({ type: 'viewer3d:arm', arm: arm() }), 0));
+  // The page also changes arm without a click (a new run opens on Baseline in the demo view; following a ledger event
+  // switches arm), so follow the toggle's own state as well. The viewer ignores an arm it already shows.
+  const baselineButton = document.getElementById('baselineView');
+  if (baselineButton) new MutationObserver(() => send({ type: 'viewer3d:arm', arm: arm() })).observe(baselineButton, { attributes: true, attributeFilter: ['class'] });
   // A changed decision chosen in the ledger: fly to that person in 3D.
   document.getElementById('runLedgerChoices')?.addEventListener('click', (event) => {
     const label = event.target.closest('button')?.querySelector('strong')?.textContent || '';
     const run = window.CounterfactualCurrentRun, name = label.split(' · ')[0];
     const person = isMapped(run) && run.personas.find((p) => p.name === name || p.id === name);
     if (person) send({ type: 'viewer3d:person', id: person.id });
+  });
+  // Any control marked data-viewer3d-person="<persona id>" (the demo view's "people who changed" strip) does the same.
+  // app.js switches the page to "With policy" on the same click, before this bubbling handler runs.
+  document.addEventListener('click', (event) => {
+    const id = event.target.closest && event.target.closest('[data-viewer3d-person]')?.dataset.viewer3dPerson;
+    const run = window.CounterfactualCurrentRun;
+    if (id && isMapped(run) && run.personas.some((p) => p.id === id)) send({ type: 'viewer3d:person', id });
   });
 
   // The 3D view is the default when the mapped world is in use and WebGL works.

@@ -6,9 +6,11 @@
     <meta name="theme-color" content="#07131c" />
     <meta name="description" content="Counterfactual Lab — explore how a city might respond to a policy change through a living simulation and connected impact map." />
     <title>Counterfactual Lab — Ask a city what if</title>
-    <link rel="stylesheet" href="./styles.css?v=mapped-run-2" />
+    <link rel="stylesheet" href="./styles.css?v=demo-view-1" />
   </head>
   <body data-phase="intro" data-scenario="fare">
+    <!-- Sets body.demo-view (default) or Researcher view before the first paint. -->
+    <script src="./view-mode.js?v=demo-view-1"></script>
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="city-stage" aria-hidden="true">
@@ -30,7 +32,10 @@
         <span class="brand-word">counterfactual<span class="brand-dot">.</span><small>LAB</small></span>
       </a>
       <div class="header-center"><span class="live-pulse"></span> A LIVING CITY MODEL <span class="header-rule"></span> TORONTO / 2026</div>
-      <button id="headerExplore" class="header-action" type="button">Explore a scenario <span aria-hidden="true">↗</span></button>
+      <div class="header-actions">
+        <button id="researchToggle" class="research-toggle" type="button" aria-pressed="false" title="Show every section, rail and tool (?detail=1)"><span class="research-toggle-track" aria-hidden="true"><span></span></span><span class="research-toggle-label">Researcher view</span></button>
+        <button id="headerExplore" class="header-action" type="button">Explore a scenario <span aria-hidden="true">↗</span></button>
+      </div>
     </header>
     <p id="agentsNote" class="agents-note" hidden role="status">AGENTS OFFLINE · PREPARED REPLAYS</p>
 
@@ -50,7 +55,7 @@
             <div class="composer-heading">
               <div class="eyebrow"><span class="eyebrow-line"></span> START WITH A QUESTION</div>
               <h2>Change one thing.<br /><em>Watch everything else move.</em></h2>
-              <p>Describe a policy or choose a Toronto scenario to see people, places, and systems respond.</p>
+              <p>Type a policy, or pick one of two Toronto cases.</p>
             </div>
             <form id="hypothesisForm" class="hypothesis-card">
               <label for="hypothesisInput">YOUR HYPOTHESIS</label>
@@ -84,6 +89,19 @@
         <div class="lab-topline">
           <div class="breadcrumb"><span class="breadcrumb-star">✳</span> THE CITY LAB <span>/</span> <strong id="scenarioBreadcrumb">MORNINGSIDE · HIGHLAND CREEK</strong></div>
           <div class="run-status"><span class="live-pulse"></span><span id="runStatus">DEMO REPLAY ACTIVE</span><span class="status-separator">/</span><span id="sampleStatus">ILLUSTRATIVE SAMPLE</span></div>
+        </div>
+
+        <!-- Demo view: one compact title bar instead of the two side rails. -->
+        <div class="lab-titlebar demo-only">
+          <div class="lab-titlebar-main">
+            <span class="lab-kicker"><span class="breadcrumb-star" aria-hidden="true">✳</span> <span id="labKicker">BLOOR ST W · BATHURST → SPADINA</span></span>
+            <h2 id="labQuestion">What if?</h2>
+            <p class="lab-status"><span class="live-pulse" aria-hidden="true"></span><span id="labStatus">Synthetic people · same seed · real Bloor St W map</span><span id="labHost" class="lab-badge" hidden></span><span id="labCompiler" class="lab-badge lab-badge--compiler" hidden></span></p>
+          </div>
+          <div class="lab-scenarios" role="group" aria-label="Choose a prepared policy">
+            <button class="switch-button" type="button" data-scenario-choice="fare" aria-pressed="false">TTC fare</button>
+            <button class="switch-button" type="button" data-scenario-choice="bike" aria-pressed="false">Bloor bike lane</button>
+          </div>
         </div>
 
         <div class="lab-layout">
@@ -138,6 +156,13 @@
           <div id="timelineFrames" class="timeline-time"><span>00</span><span>01</span><span>02</span><span>03</span><span>04</span></div>
           <div id="timelinePeriods" class="timeline-periods" role="group" aria-label="Jump to a modelled period" hidden></div>
         </div>
+
+        <!-- Demo view: who changed, from the same changed-decision rows as the ledger. A click flies the 3D view to them. -->
+        <div id="peopleStrip" class="people-strip demo-only" hidden>
+          <div class="people-strip-head"><span>PEOPLE WHO CHANGED</span><small id="peopleStripNote"></small></div>
+          <div id="peopleStripChoices" class="people-strip-choices" role="group" aria-label="People whose choice changed with the policy"></div>
+        </div>
+        <p id="labCredit" class="lab-credit demo-only">Map data: City of Toronto · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a> · TTC GTFS · the people are synthetic</p>
       </section>
 
       <section id="runLedger" class="run-ledger" hidden aria-label="Shared decision ledger for the mapped run">
@@ -264,6 +289,18 @@
       </section>
 
       <section id="impact" class="impact-section" hidden aria-label="Connected impact map">
+        <!-- Demo view: the short report. Every value is read from the same RunResult as the 3D view and the charts. -->
+        <div class="report demo-only">
+          <div class="report-head">
+            <div><div class="eyebrow"><span class="eyebrow-line"></span> <span id="reportEyebrow">THE REPORT · ONE EVENT LOG</span></div><h2><span id="reportTitleLead">What</span> <em id="reportTitleEm">changed.</em></h2></div>
+            <p id="reportQuestion"></p>
+          </div>
+          <div class="report-top">
+            <div class="report-headline"><small id="reportHeadlineLabel"></small><strong id="reportHeadlineValue">—</strong><span id="reportHeadlineDirection"></span></div>
+            <div id="reportMini" class="report-mini"></div>
+          </div>
+          <p id="reportStory" class="report-story" hidden></p>
+        </div>
         <div class="impact-section-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> INSIDE THE CASCADE</div><h2><span id="impactHeadingLine">One decision.</span><br /><em id="impactHeadingEm">Many futures.</em></h2></div><p id="impactDescription">Choose a connected sector to inspect its illustrative comparison and evidence boundary.</p></div>
         <div class="impact-layout">
           <div class="sector-board">
@@ -291,8 +328,17 @@
           </div>
         </div>
         <div class="overview-section">
+          <div class="report-charts-head demo-only"><span id="reportChartsLabel">FIVE CHARTS · 4 MODELLED PERIODS</span><span class="report-legend"><i class="chart-key chart-key--base"></i> BASELINE <i class="chart-key chart-key--policy"></i> WITH POLICY</span><span>OPEN ONE FOR DETAIL ↗</span></div>
           <div class="overview-head"><div><span id="overviewStatus">SCENARIO OUTPUTS / PREPARED REPLAY</span><h3 id="overviewTitle">Every signal in view.</h3></div><p id="overviewDescription">Five connected sectors, one illustrative comparison. Choose any chart to inspect its mechanism and evidence boundary.</p></div>
           <div id="overviewGrid" class="overview-grid" aria-label="All sector charts"></div>
+        </div>
+        <div class="report-limits demo-only">
+          <div class="report-limits-box">
+            <div class="report-limits-head"><span>WE DON'T GUESS</span><strong>Not estimable from this run</strong></div>
+            <ul id="reportNotEstimable" class="report-not-estimable"></ul>
+            <button id="reportEvidence" class="text-link" type="button">Evidence &amp; limits <span aria-hidden="true">↗</span></button>
+          </div>
+          <p id="reportProvenance" class="report-provenance">Every number is summed from recorded events in this run · synthetic people, real map · not a forecast</p>
         </div>
       </section>
 
@@ -318,7 +364,7 @@
         <p class="persona-boundary">These saved reactions are from synthetic US persona cards with assigned transit contexts. They are separate from the TTC city's seeded actors and are not Toronto survey data, observed behaviour, or inputs to its event trace. Their near-uniform opposition motivated the later persona evaluation.</p>
       </section>
 
-      <section id="about" class="about-strip"><div>EVERY FUTURE BEGINS<br /><em>WITH A BETTER QUESTION.</em></div><p>Counterfactual Lab is a research prototype. Our city is a way to inspect assumptions, mechanisms and tradeoffs—not to certify a real-world prediction.</p><a id="askAnother" href="#intro">ASK ANOTHER QUESTION ↗</a></section>
+      <section id="about" class="about-strip"><div>EVERY FUTURE BEGINS<br /><em>WITH A BETTER QUESTION.</em></div><p>A research prototype for testing assumptions and trade-offs. Not a real-world prediction.</p><a id="askAnother" href="#intro">ASK ANOTHER QUESTION ↗</a></section>
     </main>
 
     <div id="investigation" class="investigation" hidden role="status" aria-live="polite">
@@ -343,8 +389,8 @@
     <script defer src="./city.js?v=bloor-workbench"></script>
     <script defer src="./bloor-map.js?v=mapped-run-1"></script>
     <script defer src="../persona-swarm/runtime/agents-client.js"></script>
-    <script defer src="./app.js?v=mapped-run-2"></script>
+    <script defer src="./app.js?v=demo-view-1"></script>
     <script defer src="./persona-lab.js?v=2"></script>
-    <script defer src="./viewer3d-bridge.js?v=1"></script>
+    <script defer src="./viewer3d-bridge.js?v=demo-view-1"></script>
   </body>
 </html>

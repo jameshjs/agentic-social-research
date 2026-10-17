@@ -14,7 +14,7 @@
 
 ## 0:00–0:20 · Meet · Slide 1 "What if?"
 
-> "In 2024, Ontario moved to tear out the protected bike lanes on Bloor, Yonge and University. The City put the bill at over 48 million dollars. Every year the TTC fare goes up again. Decisions like these get made on gut feel and shouting matches. Nobody gets to test them first."
+> "In 2024, Ontario moved to tear out the protected bike lanes on Bloor, Yonge and University. The City put the bill at over 48 million dollars. And the TTC fare has been frozen three years running, so every budget asks the same question: raise it? Decisions like these get made on gut feel and shouting matches. Nobody gets to test them first."
 
 ## 0:20–0:40 · Meet · Slide 2 "Ask a city what if"
 
@@ -40,11 +40,11 @@
 | --- | --- | --- |
 | 1:30 | Page is at the top. **Scroll slowly** through the clouds. | "This is Toronto. Scroll down…" |
 | 1:38 | Composer appears. Click the **Bloor bike lane** chip. | "…and ask it anything. Let's take the hard one: remove the protected bike lane on Bloor." |
-| 1:45 | The run overlay plays, then the 3D view. Leave it on **Baseline**. | "This is the real 619 metres of Bloor, Bathurst to Spadina. 925 buildings from the City's 3D massing data, 243 real businesses, real signals, Line 2 on its actual schedule. The background traffic is calibrated to the City's 2025 counts, within 1% at both ends." |
+| 1:45 | The run overlay plays, then the 3D view. Leave it on **Baseline**. | "This is the real 619 metres of Bloor, Bathurst to Spadina. 925 buildings from the City's 3D massing data, 243 real businesses, the mapped signals, Line 2 on its actual schedule. The background traffic is calibrated to the City's 2025 counts, within 1% at both ends." |
 | 2:05 | Click **With policy**. | "Same 19 people, same seed. The only difference is the track is gone. Watch the cyclists: they're in the car lane now." |
 | 2:15 | In the ledger or the people list, click **Leila**. The camera flies to her. | "Leila is a less-confident cyclist. She stops riding Bloor and takes a side street. Hawa, Maria and Sam switch to the TTC." |
 | 2:35 | **Scroll** to the report. | "Every number here is added up from those events. Nothing is typed in by hand." |
-| 2:40 | Point at the headline and the charts. | "Cycling trips on Bloor drop from 7 to 3. Cycling next to cars goes from zero to over a kilometre a day. Kaya, a visitor, shops somewhere else, so Curbside Cycle's takings fall below its staffing line and it closes early the next week. And drivers? No time gain. Those cyclists are in the drivers' queue now." |
+| 2:40 | Point at the headline and the charts. | "Cycling trips on Bloor drop from 7 to 3. Cycling next to cars goes from zero to over a kilometre a day. Kaya, a visitor, shops somewhere else, so Curbside Cycle's takings fall below its staffing line, and under our staffing rule it closes early the next period. And drivers? No time gain. Those cyclists are in the drivers' queue now." |
 | 3:05 | Point at the *not estimable* list. | "Injuries, closures, construction cost: we mark them not estimable instead of making them up." |
 | 3:12 | Scroll to the **100 agents** panel. | "And here are Steven's 100 agents reacting live: the rating split, by group, each with a reason." |
 | 3:25 | *(Only if ahead of time)* Click **TTC fare**. | "Same city, same people, a different policy. Fair Pass riders don't move. Adults near the cutoff do." |
@@ -67,7 +67,7 @@
 | "explore", "stress-test", "show the trade-offs" | "predict", "forecast", "will happen" |
 | "19 synthetic people on a real map" | "Toronto residents" |
 | "agents tuned against real survey answers" | "AI that thinks like Torontonians" |
-| "closes early next week, under our staffing rule" | "the shop will close" |
+| "closes early next period, under our staffing rule" | "the shop will close" |
 | "Clef cross-checked every decision" | "Clef makes the decisions" |
 
 These lines are what make the numbers defensible in Q&A. Confident is good. Making things up gets caught.
@@ -77,6 +77,7 @@ These lines are what make the numbers defensible in Q&A. Confident is good. Maki
 | Number | Source |
 | --- | --- |
 | $48M+ for Bloor, Yonge and University | City of Toronto 2024 supplemental report; see [bloor-bike-demo.md](../bloor-bike-demo.md) B07 |
+| Fares frozen a third year | `data/ttc_fare_context.json` (2026 TTC budget, p. 9) |
 | 81% right person on the final set (0.808); 76% no persona; 74% most common answer; 10 rounds; 2 kept (003, 009) | `persona-swarm/data/record/final.json`, `persona-swarm/autoresearch/results.tsv` |
 | 100 agents live; 40 deciders × 560 calls per policy run | `persona-swarm/RUNTIME.md`, `persona-swarm/data/city/live/samples/*run*.json` |
 | 619 m, 925 buildings, 243 businesses, calibration within 1% (max hourly GEH 0.45) | [world/README.md](../world/README.md) |

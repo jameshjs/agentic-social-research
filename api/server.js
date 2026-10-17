@@ -73,9 +73,10 @@ const STATIC_RULES = [
   { prefix: '/data/', exts: null },
   { prefix: '/persona-swarm/data/record/', exts: ['.json'] },
   { prefix: '/persona-swarm/data/reactions/', exts: ['.json'] },
+  { prefix: '/pitch/', exts: ['.html', '.png', '.jpg', '.svg', '.md'] },
 ];
 const STATIC_FILES = new Set(['/persona-swarm/runtime/agents-client.js', '/bloor-bike-demo.md', '/bike-lane-papers.md', '/papers.md', '/demo-data.md', '/prd.md']);
-const DIR_REDIRECTS = new Set(['/experience', '/demo-ui']);
+const DIR_REDIRECTS = new Set(['/experience', '/demo-ui', '/pitch']);
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.geojson': 'application/geo+json; charset=utf-8',

@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Counterfactual Lab · Pitch · Hack the Valley 11</title>
+<meta name="description" content="Counterfactual Lab: ask a city what if. 4-minute pitch deck.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="preload" as="image" href="assets/bloor-night-3d.jpg">
+<style>
+/* ---------- tokens (match /experience/) ---------- */
+:root{
+  --ink:#07131c;--ink2:#0c2430;--pane:#10262f;--stroke:rgba(168,244,209,.15);--line:rgba(184,208,202,.22);
+  --mint:#a8f4d1;--mintdeep:#56caaa;--coral:#ff987e;--sand:#e5d7ae;--lemon:#e4f692;
+  --cream:#f3f6ed;--soft:#d3dfde;--muted:#a9b9bf;--dim:#7d969d;
+  --sans:'DM Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --display:'Space Grotesk','Avenir Next','Helvetica Neue',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --serif:Georgia,'Iowan Old Style','Times New Roman',serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#03090d;overflow:hidden}
+body{font-family:var(--sans);color:var(--cream);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-synthesis:none}
+a{color:inherit}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:var(--ink)}
+
+/* ---------- slide shell ---------- */
+.slide{position:absolute;inset:0;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .55s ease,visibility 0s linear .55s;
+  background:
+    radial-gradient(1100px 760px at 80% 12%,rgba(39,84,99,.55) 0%,transparent 62%),
+    radial-gradient(900px 700px at 4% 104%,rgba(255,152,126,.07),transparent 60%),
+    linear-gradient(162deg,#0c2430 0%,#091a24 46%,#07131c 100%)}
+.slide.active{opacity:1;visibility:visible;transition:opacity .55s ease}
+.slide::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(168,244,209,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(168,244,209,.035) 1px,transparent 1px);
+  background-size:120px 120px;mask-image:radial-gradient(ellipse at 70% 40%,#000 0%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 70% 40%,#000 0%,transparent 75%)}
+.slide::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.13;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.pad{position:absolute;inset:92px 128px 112px;z-index:2}
+.foot{position:absolute;left:128px;right:128px;bottom:40px;display:flex;justify-content:space-between;align-items:center;z-index:3;
+  font:500 20px/1 var(--sans);letter-spacing:.08em;color:var(--dim)}
+.brand{display:flex;align-items:center;gap:14px;text-transform:none;letter-spacing:0;color:var(--muted);font:600 21px/1 var(--display)}
+.mark{width:22px;height:22px;display:grid;grid-template-columns:1fr 1fr;gap:3px;transform:rotate(-12deg)}
+.mark i{border:1.5px solid var(--mint);border-radius:3px;background:rgba(168,244,209,.12)}
+.mark i:nth-child(3){background:var(--coral);border-color:var(--coral)}
+.num{font:600 20px/1 var(--display);letter-spacing:.12em}
+.num b{color:var(--mint);font-weight:600}
+
+/* ---------- type ---------- */
+.eyebrow{display:flex;align-items:center;gap:18px;margin:0;font:700 23px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--mint)}
+.eyebrow::before{content:"";width:52px;height:2px;background:currentColor;opacity:.8}
+.eyebrow .who{color:var(--sand)}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:700;letter-spacing:-.035em}
+.h2{font-size:100px;line-height:.98;margin-top:30px}
+.h2.sm{font-size:84px}
+em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.025em;color:var(--mint)}
+em.coral,.coral{color:var(--coral)}
+.mint{color:var(--mint)}.sand{color:var(--sand)}.lemon{color:var(--lemon)}.muted{color:var(--muted)}
+.lead{font:400 36px/1.38 var(--sans);color:var(--soft);margin:30px 0 0;max-width:1260px}
+.lead b{color:var(--cream);font-weight:600}
+.src{position:absolute;left:128px;right:128px;bottom:76px;z-index:3;font:400 21px/1.35 var(--sans);color:var(--dim)}
+.src code,.mono{font-family:var(--mono);font-size:.92em;color:#93abb1}
+.tag{display:inline-flex;align-items:center;gap:10px;padding:9px 16px;border-radius:999px;border:1px solid var(--stroke);
+  font:700 19px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mint);background:rgba(10,30,38,.6)}
+.tag.coral{color:var(--coral);border-color:rgba(255,152,126,.35)}
+.tag.sand{color:var(--sand);border-color:rgba(229,215,174,.3)}
+
+/* ---------- reusable blocks ---------- */
+.card{position:relative;background:linear-gradient(160deg,rgba(24,56,67,.72),rgba(12,32,42,.58));border:1px solid rgba(168,244,209,.14);border-radius:26px;padding:40px 40px 38px;box-shadow:0 24px 60px rgba(0,0,0,.22)}
+.frame{position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(184,208,202,.26);box-shadow:0 34px 90px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.03);background:#0c1f29}
+.frame img{display:block;width:100%;height:auto}
+.frame::before,.frame::after{content:"";position:absolute;width:26px;height:26px;border-top:2px solid var(--mint);top:14px;z-index:2}
+.frame::before{left:14px;border-left:2px solid var(--mint)}
+.frame::after{right:14px;border-right:2px solid var(--mint)}
+.cap{font:400 21px/1.35 var(--sans);color:var(--dim);margin-top:14px}
+.chips{display:flex;flex-wrap:wrap;gap:14px}
+.chip{display:inline-flex;align-items:baseline;gap:10px;padding:15px 24px;border-radius:999px;border:1px solid var(--stroke);background:rgba(14,36,46,.72);font:500 28px/1 var(--sans);color:var(--soft)}
+.chip b{font:700 30px/1 var(--display);color:var(--mint);letter-spacing:-.01em}
+.live{display:inline-flex;align-items:center;gap:14px;padding:12px 22px 12px 18px;border-radius:999px;background:rgba(168,244,209,.1);border:1px solid rgba(168,244,209,.4);font:700 22px/1 var(--sans);letter-spacing:.18em;color:var(--mint)}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 0 rgba(168,244,209,.6)}
+.slide.active .dot{animation:ping 1.8s ease-out infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(168,244,209,.55)}100%{box-shadow:0 0 0 18px rgba(168,244,209,0)}}
+
+/* ---------- motion ---------- */
+.rv{opacity:0}
+.slide.active .rv{animation:rise .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--d,0) * 95ms + 120ms)}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.slide.active .grow{animation:grow 1.1s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--d,0) * 110ms + 420ms);transform-box:fill-box;transform-origin:left center}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.slide.active .ring-flow{animation:flow 2.4s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-48}}
+.slide.active .bg-img{animation:drift 22s ease-out both}
+@keyframes drift{from{transform:scale(1.07)}to{transform:scale(1)}}
+.static .rv{opacity:1;animation:none!important}
+.static .grow,.static .bg-img,.static .ring-flow,.static .dot{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .slide,.slide.active{transition:none}
+  .rv{opacity:1}
+  .slide.active .rv,.slide.active .grow,.slide.active .ring-flow,.slide.active .bg-img,.slide.active .dot{animation:none}
+}
+
+/* ---------- 1 · hook ---------- */
+.bg-img{position:absolute;inset:0;background-size:cover;background-position:60% 50%;z-index:0}
+.scrim{position:absolute;inset:0;z-index:1;background:
+  linear-gradient(90deg,rgba(7,19,28,.97) 0%,rgba(7,19,28,.93) 42%,rgba(7,19,28,.8) 62%,rgba(7,19,28,.34) 82%,rgba(7,19,28,.14) 100%),
+  linear-gradient(0deg,rgba(7,19,28,.92) 0%,rgba(7,19,28,0) 34%)}
+.hero{font-size:290px;line-height:.86;letter-spacing:-.05em;margin:44px 0 0 -10px}
+.hero em{letter-spacing:-.04em}
+.facts{margin-top:52px;display:grid;gap:20px;max-width:1200px}
+.fact{display:grid;grid-template-columns:240px 1fr;align-items:baseline;gap:28px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.fact b{font:700 58px/1 var(--display);letter-spacing:-.03em;color:var(--cream)}
+.fact span{font:400 34px/1.3 var(--sans);color:var(--soft)}
+.kicker{margin:34px 0 0;font:600 50px/1.15 var(--display);letter-spacing:-.025em}
+.kicker em{font-size:1.06em}
+
+/* ---------- 2 · product ---------- */
+.steps{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);gap:34px}
+.step{padding:36px 34px 40px;min-height:380px}
+.step .n{font:700 22px/1 var(--display);letter-spacing:.16em;color:var(--mint)}
+.step svg{display:block;width:96px;height:96px;margin:26px 0 26px}
+.step h3{font-size:42px;line-height:1.06;letter-spacing:-.025em}
+.step p{margin:14px 0 0;font:400 28px/1.32 var(--sans);color:var(--muted)}
+.step:not(:last-child)::after{content:"";position:absolute;right:-27px;top:50%;width:20px;height:20px;border-top:3px solid var(--mint);border-right:3px solid var(--mint);transform:translateY(-50%) rotate(45deg);opacity:.7}
+.step.hi{border-color:rgba(168,244,209,.4);background:linear-gradient(160deg,rgba(40,86,92,.75),rgba(14,38,46,.62))}
+
+/* ---------- 3 · loop ---------- */
+.two{display:grid;grid-template-columns:760px 1fr;gap:40px;height:100%}
+.stat{margin-top:34px;padding:28px 0 0;border-top:1px solid var(--line)}
+.stat .big{font:700 64px/1 var(--display);letter-spacing:-.03em}
+.stat p{margin:12px 0 0;font:400 30px/1.3 var(--sans);color:var(--muted)}
+.ring{width:870px;height:870px;margin:-30px 0 0 -10px}
+
+/* ---------- 4 · chart ---------- */
+.chart-wrap{position:absolute;left:0;right:0;top:296px;display:grid;grid-template-columns:1090px 1fr;gap:64px;align-items:start}
+.chart{width:1090px;height:510px}
+.big-pct{font:700 214px/.82 var(--display);letter-spacing:-.06em;color:var(--mint);margin:0}
+.big-pct small{font-size:.42em;letter-spacing:-.03em}
+.side-k{font:500 32px/1.25 var(--sans);color:var(--soft);margin:18px 0 0}
+.side-k b{color:var(--lemon);font-weight:600}
+.dots{display:grid;grid-template-columns:repeat(20,14px);gap:9px;margin-top:30px}
+.dots i{width:14px;height:14px;border-radius:50%;background:var(--mint);opacity:.85}
+.dots i:nth-child(7n){opacity:.45}
+.dots i:nth-child(13n){background:var(--lemon);opacity:1}
+.live-k{margin:22px 0 0;font:600 32px/1.25 var(--display);letter-spacing:-.01em}
+
+/* ---------- 5 · demo ---------- */
+.demo{display:grid;grid-template-columns:600px 1fr;gap:60px;height:100%}
+.demo>div:last-child{align-self:center;margin-top:-20px}
+.beats{margin-top:46px;display:grid;gap:4px;counter-reset:b}
+.beat{display:grid;grid-template-columns:76px 1fr;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line)}
+.beat .bn{font:700 24px/1 var(--display);letter-spacing:.1em;color:var(--mint)}
+.beat h3{font-size:42px;line-height:1;letter-spacing:-.02em}
+.beat p{grid-column:2;margin:10px 0 0;font:400 27px/1.25 var(--sans);color:var(--muted)}
+.url{margin-top:22px;font:500 26px/1 var(--mono);color:var(--mint);letter-spacing:-.01em}
+
+/* ---------- 6 · close ---------- */
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;margin-top:76px}
+.col{padding:44px 40px 44px}
+.col svg{width:64px;height:64px;display:block}
+.col h3{font-size:42px;line-height:1.05;letter-spacing:-.025em;margin-top:22px;min-height:88px}
+.col ul{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:16px}
+.col li{font:400 28px/1.28 var(--sans);color:var(--soft);padding-left:26px;position:relative}
+.col li::before{content:"";position:absolute;left:0;top:.52em;width:10px;height:10px;border-radius:2px;background:var(--mint);transform:rotate(45deg)}
+.col li b{color:var(--cream);font-weight:700}
+.tagline{margin:96px 0 0;font:700 86px/1 var(--display);letter-spacing:-.04em}
+.team{display:flex;justify-content:space-between;align-items:center;margin-top:44px;font:600 30px/1 var(--display);color:var(--soft)}
+.team span{color:var(--dim);margin:0 12px}
+
+/* ---------- divider ---------- */
+.s-divider .huge{font-size:330px;line-height:.86;letter-spacing:-.055em;margin-top:40px}
+.toc{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;gap:0 64px}
+.toc a{display:grid;grid-template-columns:80px 1fr;align-items:baseline;padding:22px 0;border-top:1px solid var(--line);text-decoration:none;font:600 38px/1.1 var(--display);letter-spacing:-.02em;color:var(--cream)}
+.toc a span{font:700 24px/1 var(--display);color:var(--mint);letter-spacing:.1em}
+.toc a:hover{color:var(--mint)}
+
+/* ---------- results ---------- */
+.res{display:grid;grid-template-columns:930px 1fr;gap:56px;margin-top:44px;align-items:start}
+.rows{display:grid}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:20px;padding:17px 0;border-bottom:1px solid var(--line)}
+.row:first-child{border-top:1px solid var(--line)}
+.row .k{font:500 28px/1.2 var(--sans);color:var(--soft)}
+.row .k small{display:block;font:400 21px/1.25 var(--sans);color:var(--dim);margin-top:4px}
+.row .v{font:700 42px/1 var(--display);letter-spacing:-.02em;white-space:nowrap;text-align:right}
+.row .v i{font-style:normal;color:var(--dim);margin:0 10px;font-weight:500}
+.row .v .to{color:var(--coral)}
+.row .v .ok{color:var(--mint)}
+.row .v .note{display:block;font:500 20px/1 var(--sans);color:var(--dim);letter-spacing:.04em;margin-top:6px}
+
+/* ---------- architecture ---------- */
+.arch{width:1664px;height:700px;margin-top:22px}
+
+/* ---------- vultr / tracks / limits ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:44px}
+.vc{padding:38px 40px 36px;display:grid;grid-template-columns:200px 1fr;gap:4px 26px;align-items:start}
+.vc .badge{grid-row:1/4;font:700 92px/.9 var(--display);letter-spacing:-.05em;color:var(--mint)}
+.vc .badge small{display:block;font:700 19px/1.2 var(--sans);letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-top:12px}
+.vc h3{font-size:36px;line-height:1.05;letter-spacing:-.02em}
+.vc p{margin:8px 0 0;font:400 27px/1.3 var(--sans);color:var(--soft)}
+.vc .rc{margin-top:10px;font:400 20px/1.3 var(--mono);color:var(--dim)}
+.lim{display:grid;grid-template-columns:1.12fr 1fr;gap:56px;margin-top:40px}
+.lim ul{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.lim li{font:400 29px/1.3 var(--sans);color:var(--soft);padding:17px 0 17px 44px;border-bottom:1px solid var(--line);position:relative}
+.lim li:first-child{border-top:1px solid var(--line)}
+.lim li::before{content:"";position:absolute;left:4px;top:28px;width:16px;height:16px;border:2px solid var(--sand);border-radius:50%}
+.lim li b{color:var(--cream);font-weight:600}
+.ne{padding:30px 38px}
+.ne h3{font-size:40px;letter-spacing:-.02em}
+.ne p{margin:10px 0 18px;font:400 27px/1.3 var(--sans);color:var(--muted)}
+.ne .chips{gap:12px}
+.ne .tier{margin-top:26px;padding-top:24px;border-top:1px solid var(--line)}
+.ne .tier h3{font-size:34px;margin-bottom:16px}
+.ne .tier .chip{border-style:solid;border-color:var(--stroke);color:var(--soft);background:rgba(14,36,46,.72)}
+.ne .tier .chip.sand-c{border-color:rgba(229,215,174,.35);color:var(--sand)}
+.ne .chip{font-size:26px;padding:10px 20px;border-style:dashed;border-color:rgba(255,152,126,.45);color:var(--coral);background:rgba(255,152,126,.06)}
+.tc{padding:40px 42px 42px}
+.tc .tag{margin-bottom:18px}
+.tc h3{font-size:40px;line-height:1.05;letter-spacing:-.02em}
+.tc p{margin:12px 0 0;font:400 27px/1.32 var(--sans);color:var(--soft)}
+.tc p b{color:var(--cream);font-weight:600}
+
+/* ---------- chrome: progress, notes, grid, hint ---------- */
+#progress{position:fixed;left:0;bottom:0;height:4px;width:0;background:linear-gradient(90deg,var(--mintdeep),var(--mint));z-index:20;transition:width .45s ease;box-shadow:0 0 12px rgba(168,244,209,.5)}
+#notes{position:fixed;left:0;right:0;bottom:0;z-index:30;max-height:50vh;overflow:auto;padding:22px clamp(20px,4vw,64px) 30px;
+  background:rgba(4,12,17,.95);border-top:2px solid var(--mint);backdrop-filter:blur(8px);font-size:clamp(15px,1.45vw,22px);line-height:1.45;color:var(--soft);display:none}
+#notes.on{display:block}
+#notes header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-bottom:12px;font:600 .82em/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+#notes header .sp{color:var(--ink);background:var(--mint);padding:6px 12px;border-radius:999px;letter-spacing:.08em}
+#notes header .tm{color:var(--lemon)}
+#notes blockquote{margin:0 0 .7em;padding-left:16px;border-left:3px solid rgba(168,244,209,.5);color:var(--cream)}
+#notes .cue{color:var(--lemon);font-style:italic}
+#notes .warn{color:var(--coral)}
+#notes table{border-collapse:collapse;width:100%;font-size:.9em}
+#notes td{vertical-align:top;padding:6px 10px 6px 0;border-bottom:1px solid rgba(184,208,202,.14)}
+#notes td:first-child{color:var(--lemon);white-space:nowrap;font-weight:700}
+#notes td:nth-child(2){color:var(--muted);width:28%}
+#notes ul{margin:.2em 0 .6em;padding-left:1.2em}
+#notes .keys{margin-top:10px;font-size:.78em;color:var(--dim)}
+#grid{position:fixed;inset:0;z-index:40;overflow:auto;padding:36px clamp(16px,3vw,48px);background:#03090d;display:none}
+#grid.on{display:block}
+#grid>h2{font:700 22px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--mint);margin:0 0 24px}
+#grid .cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+#grid button{all:unset;cursor:pointer;display:block}
+#grid .th{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:10px;border:1px solid var(--line);background:var(--ink)}
+#grid .th.cur{outline:3px solid var(--mint);outline-offset:3px}
+#grid .th>.slide{width:1920px;height:1080px;right:auto;bottom:auto;transform-origin:0 0}
+#grid .lbl{display:flex;gap:10px;margin-top:10px;font:600 15px/1.2 var(--sans);color:var(--soft)}
+#grid .lbl b{color:var(--mint)}
+#grid button:focus-visible .th{outline:3px solid var(--lemon);outline-offset:3px}
+#hint{position:fixed;right:18px;top:16px;z-index:25;font:500 13px/1 var(--sans);color:rgba(169,185,191,.75);background:rgba(4,12,17,.7);padding:9px 12px;border-radius:8px;transition:opacity .6s;pointer-events:none}
+#hint.gone{opacity:0}
+.nw{white-space:nowrap}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<main id="stage" aria-live="polite">
+
+<!-- ============ 1 · WHAT IF ============ -->
+<section class="slide s-hook" data-n="1" data-title="What if?" aria-label="Slide 1: What if?">
+  <div class="bg-img" style="background-image:url('assets/bloor-night-3d.jpg')" role="img" aria-label="3D model of Bloor St W between Bathurst and Spadina at night"></div>
+  <div class="scrim"></div>
+  <div class="pad">
+    <p class="eyebrow rv">Toronto · Bloor St W</p>
+    <h1 class="hero rv" style="--d:1">What <em>if?</em></h1>
+    <div class="facts">
+      <div class="fact rv" style="--d:2"><b>2024</b><span>Ontario moved to remove the protected bike lanes on Bloor, Yonge and University.</span></div>
+      <div class="fact rv" style="--d:3"><b class="coral">$48M+</b><span>The City’s estimate for those three corridors.</span></div>
+      <div class="fact rv" style="--d:4"><b>3rd year</b><span>The TTC fare is frozen again. Raise it, and who pays?</span></div>
+    </div>
+    <p class="kicker rv" style="--d:5">Decided on gut feel. <em class="coral">Nobody can test them first.</em></p>
+  </div>
+  <p class="src">Sources: City of Toronto 2024 supplemental report, pp. 1, 12–13 (bloor-bike-demo.md, B07) · TTC 2026 operating budget, p. 9 (data/ttc_fare_context.json)</p>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>01</b> / 12</div></div>
+</section>
+
+<!-- ============ 2 · ASK A CITY ============ -->
+<section class="slide" data-n="2" data-title="Ask a city what if" aria-label="Slide 2: Ask a city what if">
+  <div class="pad">
+    <p class="eyebrow rv">Counterfactual Lab</p>
+    <h2 class="h2 rv" style="--d:1;font-size:120px">Ask a city <em>what if.</em></h2>
+    <p class="lead rv" style="--d:2">Type a policy. We generate the people it affects, put them on a <b>real, rule-checked map of Bloor Street</b>, and run the city twice.</p>
+    <div class="steps">
+      <div class="card step rv" style="--d:3">
+        <div class="n">01</div>
+        <svg viewBox="0 0 96 96" fill="none" stroke="#a8f4d1" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><rect x="8" y="22" width="80" height="52" rx="12"/><path d="M22 41h36M22 55h22" opacity=".6"/><path d="M68 34v28" stroke="#e4f692"/></svg>
+        <h3>Type a policy</h3>
+        <p>Any question, in plain words.</p>
+      </div>
+      <div class="card step rv" style="--d:4">
+        <div class="n">02</div>
+        <svg viewBox="0 0 96 96" fill="none" stroke="#a8f4d1" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><circle cx="48" cy="30" r="10"/><path d="M30 70c2-12 9-18 18-18s16 6 18 18"/><circle cx="20" cy="40" r="7" opacity=".6"/><path d="M6 72c1-9 6-14 14-14" opacity=".6"/><circle cx="76" cy="40" r="7" opacity=".6"/><path d="M90 72c-1-9-6-14-14-14" opacity=".6"/></svg>
+        <h3>Generate the people</h3>
+        <p>Homes, trips, budgets, and reasons.</p>
+      </div>
+      <div class="card step hi rv" style="--d:5">
+        <div class="n">03</div>
+        <svg viewBox="0 0 96 96" fill="none" stroke-width="3.6" stroke-linecap="round" aria-hidden="true"><circle cx="14" cy="48" r="7" fill="#a8f4d1" stroke="none"/><path d="M20 44c14-12 26-14 66-14" stroke="#a8f4d1"/><path d="M20 52c14 12 26 14 66 14" stroke="#ff987e"/><path d="M78 23l8 7-8 7" stroke="#a8f4d1"/><path d="M78 59l8 7-8 7" stroke="#ff987e"/></svg>
+        <h3>Run the city twice</h3>
+        <p>Baseline vs policy, same people, same seed.</p>
+      </div>
+      <div class="card step rv" style="--d:6">
+        <div class="n">04</div>
+        <svg viewBox="0 0 96 96" fill="none" stroke="#a8f4d1" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M12 82h72"/><rect x="16" y="48" width="12" height="28" rx="2"/><rect x="36" y="30" width="12" height="46" rx="2"/><rect x="56" y="40" width="12" height="36" rx="2" stroke="#ff987e" stroke-dasharray="4 5"/><path d="M76 22a7 7 0 1 1 7 8v5M83 42v1" stroke="#e5d7ae"/></svg>
+        <h3>See every choice, every dollar</h3>
+        <p>…and what we <span class="sand">can’t</span> know.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>02</b> / 12</div></div>
+</section>
+
+<!-- ============ 3 · AUTORESEARCH LOOP ============ -->
+<section class="slide" data-n="3" data-title="Agents that research how to be human" aria-label="Slide 3: Agents that research how to be human">
+  <div class="pad">
+    <div class="two">
+      <div>
+        <p class="eyebrow rv"><span><span class="who">Steven</span> · Persona autoresearch</span></p>
+        <h2 class="h2 rv" style="--d:1;font-size:94px">Agents that <em>research</em> how to be human</h2>
+        <p class="lead rv" style="--d:2;font-size:32px;max-width:720px">Ask an LLM to “act like a cyclist” and you get a stereotype. So an agent tunes our persona instructions against <b>real people</b>.</p>
+        <div class="stat rv" style="--d:3"><div class="big">10 rounds · <span class="mint">2 kept</span></div><p>Stopped when the gains fell below the noise.</p></div>
+        <div class="stat rv" style="--d:4"><div class="big sand">Twin-2K-500</div><p>Scored against real survey respondents.</p></div>
+      </div>
+      <svg class="ring rv" style="--d:2" viewBox="0 0 900 900" role="img" aria-label="Loop: Papiers highlights and notes, hypothesis, one edit to the instructions, scored by code on four checks against a noise bar, human sign-off or reject, next round">
+        <defs>
+          <radialGradient id="rg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#a8f4d1" stop-opacity=".12"/><stop offset="1" stop-color="#a8f4d1" stop-opacity="0"/></radialGradient>
+        </defs>
+        <circle cx="450" cy="450" r="250" fill="url(#rg)"/>
+        <circle cx="450" cy="450" r="330" fill="none" stroke="rgba(168,244,209,.18)" stroke-width="22"/>
+        <circle class="ring-flow" cx="450" cy="450" r="330" fill="none" stroke="#a8f4d1" stroke-width="3" stroke-dasharray="14 10" opacity=".85"/>
+        <g fill="#a8f4d1">
+          <path d="M-11-10L12 0-11 10Z" transform="translate(615 164.2) rotate(30)"/>
+          <path d="M-11-10L12 0-11 10Z" transform="translate(780 450) rotate(90)"/>
+          <path d="M-11-10L12 0-11 10Z" transform="translate(615 735.8) rotate(150)"/>
+          <path d="M-11-10L12 0-11 10Z" transform="translate(285 735.8) rotate(210)"/>
+          <path d="M-11-10L12 0-11 10Z" transform="translate(120 450) rotate(270)"/>
+          <path d="M-11-10L12 0-11 10Z" transform="translate(285 164.2) rotate(330)"/>
+        </g>
+        <g font-family="Space Grotesk, Avenir Next, Helvetica Neue, system-ui, sans-serif" text-anchor="middle">
+          <g transform="translate(450 120)"><rect x="-150" y="-56" width="300" height="112" rx="22" fill="#152f2a" stroke="#e4f692" stroke-width="2.5"/><text y="-6" font-size="33" font-weight="700" fill="#e4f692">Papiers</text><text y="30" font-size="24" fill="#d3dfde" font-family="DM Sans, system-ui, sans-serif">highlights &amp; notes</text></g>
+          <g transform="translate(735.8 285)"><rect x="-145" y="-56" width="290" height="112" rx="22" fill="#10262f" stroke="#a8f4d1" stroke-width="2"/><text y="-6" font-size="33" font-weight="700" fill="#f3f6ed">Hypothesis</text><text y="30" font-size="24" fill="#a9b9bf" font-family="DM Sans, system-ui, sans-serif">one per round</text></g>
+          <g transform="translate(735.8 615)"><rect x="-145" y="-56" width="290" height="112" rx="22" fill="#10262f" stroke="#a8f4d1" stroke-width="2"/><text y="-6" font-size="33" font-weight="700" fill="#f3f6ed">One edit</text><text y="30" font-size="24" fill="#a9b9bf" font-family="DM Sans, system-ui, sans-serif">to the instructions</text></g>
+          <g transform="translate(450 780)"><rect x="-160" y="-56" width="320" height="112" rx="22" fill="#10262f" stroke="#a8f4d1" stroke-width="2"/><text y="-6" font-size="33" font-weight="700" fill="#f3f6ed">Scored by code</text><text y="30" font-size="24" fill="#a9b9bf" font-family="DM Sans, system-ui, sans-serif">4 checks vs a noise bar</text></g>
+          <g transform="translate(164.2 615)"><rect x="-145" y="-56" width="290" height="112" rx="22" fill="#2a2a20" stroke="#e5d7ae" stroke-width="2.5"/><text y="-6" font-size="33" font-weight="700" fill="#e5d7ae">Human</text><text y="30" font-size="24" fill="#d3dfde" font-family="DM Sans, system-ui, sans-serif">signs off or rejects</text></g>
+          <g transform="translate(164.2 285)"><rect x="-145" y="-56" width="290" height="112" rx="22" fill="#10262f" stroke="#a8f4d1" stroke-width="2"/><text y="-6" font-size="33" font-weight="700" fill="#f3f6ed">Next round</text><text y="30" font-size="24" fill="#a9b9bf" font-family="DM Sans, system-ui, sans-serif">or stop at noise</text></g>
+          <text x="450" y="378" font-size="21" font-weight="700" fill="#a8f4d1" letter-spacing="3.5" font-family="DM Sans, system-ui, sans-serif">4 CHECKS</text>
+          <text x="450" y="428" font-size="31" font-weight="600" fill="#f3f6ed">right person</text>
+          <text x="450" y="472" font-size="31" font-weight="600" fill="#f3f6ed">right spread</text>
+          <text x="450" y="516" font-size="31" font-weight="600" fill="#f3f6ed">right group gaps</text>
+          <text x="450" y="560" font-size="31" font-weight="600" fill="#f3f6ed">steady</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <p class="src">Source: persona-swarm/autoresearch/results.tsv (rounds 001–010; kept 003 and 009) · Claude Haiku persona agents, no weights trained</p>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>03</b> / 12</div></div>
+</section>
+
+<!-- ============ 4 · FINAL SET ============ -->
+<section class="slide" data-n="4" data-title="Scored once on 100 people it had never seen" aria-label="Slide 4: Scored once on 100 people it had never seen">
+  <div class="pad">
+    <p class="eyebrow rv"><span><span class="who">Steven</span> · Final set, scored once</span></p>
+    <h2 class="h2 rv" style="--d:1;font-size:88px;max-width:1500px">Scored once on 100 people it had <em>never seen</em></h2>
+    <div class="chart-wrap">
+      <svg class="chart rv" style="--d:2" viewBox="0 0 1090 510" role="img" aria-label="Right-person accuracy: tuned agents 0.808, no persona 0.756, most common answer 0.744, most similar respondent 0.703, demographic group 0.683">
+        <g font-family="DM Sans, system-ui, sans-serif">
+          <g stroke="rgba(184,208,202,.22)" stroke-width="1.5" stroke-dasharray="4 8">
+            <line x1="440" y1="0" x2="440" y2="462"/><line x1="656" y1="0" x2="656" y2="462"/><line x1="872" y1="0" x2="872" y2="462"/>
+          </g>
+          <g font-size="22" fill="#7d969d" text-anchor="middle"><text x="440" y="496">0.60</text><text x="656" y="496">0.70</text><text x="872" y="496">0.80</text></g>
+          <text x="1090" y="496" font-size="20" fill="#7d969d" text-anchor="end">axis starts at 0.60</text>
+          <!-- rows: y = 2 + i*92 ; bar width = (v-0.60)*2160 -->
+          <g transform="translate(0 2)">
+            <text x="0" y="30" font-size="31" font-weight="700" fill="#a8f4d1">Tuned agents</text>
+            <text x="0" y="60" font-size="22" fill="#a9b9bf">round 9 instructions</text>
+            <rect class="grow" style="--d:0" x="440" y="4" width="449" height="58" rx="10" fill="#a8f4d1"/>
+            <text x="905" y="48" font-size="44" font-weight="700" fill="#a8f4d1" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">0.808</text>
+          </g>
+          <g transform="translate(0 94)">
+            <text x="0" y="30" font-size="30" font-weight="600" fill="#f3f6ed">No persona</text>
+            <text x="0" y="60" font-size="22" fill="#7d969d">a generic agent</text>
+            <rect class="grow" style="--d:1" x="440" y="4" width="337" height="58" rx="10" fill="#5f818b"/>
+            <text x="793" y="48" font-size="40" font-weight="700" fill="#d3dfde" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">0.756</text>
+          </g>
+          <g transform="translate(0 186)">
+            <text x="0" y="30" font-size="30" font-weight="600" fill="#f3f6ed">Most common answer</text>
+            <text x="0" y="60" font-size="22" fill="#7d969d">everyone gets the usual answer</text>
+            <rect class="grow" style="--d:2" x="440" y="4" width="311" height="58" rx="10" fill="#4f6f79"/>
+            <text x="767" y="48" font-size="40" font-weight="700" fill="#d3dfde" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">0.744</text>
+          </g>
+          <g transform="translate(0 278)">
+            <text x="0" y="30" font-size="30" font-weight="600" fill="#f3f6ed">Most similar respondent</text>
+            <text x="0" y="60" font-size="22" fill="#7d969d">copy their answers</text>
+            <rect class="grow" style="--d:3" x="440" y="4" width="223" height="58" rx="10" fill="#45626b"/>
+            <text x="679" y="48" font-size="40" font-weight="700" fill="#d3dfde" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">0.703</text>
+          </g>
+          <g transform="translate(0 370)">
+            <text x="0" y="30" font-size="30" font-weight="600" fill="#f3f6ed">Demographic group</text>
+            <text x="0" y="60" font-size="22" fill="#7d969d">answer of people like them</text>
+            <rect class="grow" style="--d:4" x="440" y="4" width="179" height="58" rx="10" fill="#3d5860"/>
+            <text x="635" y="48" font-size="40" font-weight="700" fill="#d3dfde" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">0.683</text>
+          </g>
+        </g>
+      </svg>
+      <div>
+        <p class="big-pct rv" style="--d:3">81<small>%</small></p>
+        <p class="side-k rv" style="--d:4">get the right person’s answer.<br><b>Beats all four baselines.</b></p>
+        <div class="dots rv" style="--d:5" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <p class="live-k rv" style="--d:6"><span class="mint">100</span> of these agents are live in the demo.</p>
+      </div>
+    </div>
+  </div>
+  <p class="src">Right-person accuracy, 100 unseen Twin-2K-500 respondents, 5,000 survey answers (not travel) · persona-swarm/data/record/final.json</p>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>04</b> / 12</div></div>
+</section>
+
+<!-- ============ 5 · LIVE DEMO ============ -->
+<section class="slide" data-n="5" data-title="Live: Bloor St W, Bathurst → Spadina" aria-label="Slide 5: Live demo">
+  <div class="pad">
+    <div class="demo">
+      <div>
+        <span class="live rv"><span class="dot"></span>LIVE · <span style="color:var(--sand)">Aadit</span></span>
+        <h2 class="h2 rv" style="--d:1;font-size:84px;margin-top:34px">Bloor St W, <span class="mint">Bathurst&nbsp;→ Spadina</span></h2>
+        <div class="beats">
+          <div class="beat rv" style="--d:2"><span class="bn">01</span><h3>City</h3><p>Scroll down into Toronto.</p></div>
+          <div class="beat rv" style="--d:3"><span class="bn">02</span><h3>Prompt</h3><p>Remove the Bloor bike lane.</p></div>
+          <div class="beat rv" style="--d:4"><span class="bn">03</span><h3>3D</h3><p>Baseline, then with policy. Same people.</p></div>
+          <div class="beat rv" style="--d:5"><span class="bn">04</span><h3>Report</h3><p>Every number added up from events.</p></div>
+        </div>
+      </div>
+      <div>
+        <div class="frame rv" style="--d:2"><img src="assets/bloor-3d-policy.jpg" alt="3D replay of the bike-lane run on Bloor St W with policy, showing the five people who changed a choice"></div>
+        <div class="chips rv" style="--d:6;margin-top:28px">
+          <span class="chip"><b>619 m</b> mapped</span>
+          <span class="chip"><b>925</b> buildings</span>
+          <span class="chip"><b>243</b> businesses</span>
+          <span class="chip">mapped signals</span>
+          <span class="chip">Line 2 on <b>GTFS</b></span>
+          <span class="chip">traffic within <b>1%</b> of City counts</span>
+        </div>
+        <div class="url rv" style="--d:7">155-138-141-130.sslip.io/experience/</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>05</b> / 12</div></div>
+</section>
+
+<!-- ============ 6 · WHY THIS WINS ============ -->
+<section class="slide" data-n="6" data-title="Why this wins" aria-label="Slide 6: Why this wins">
+  <div class="pad">
+    <p class="eyebrow rv">Why this wins</p>
+    <div class="cols">
+      <div class="card col rv" style="--d:1">
+        <svg viewBox="0 0 64 64" fill="none" stroke="#a8f4d1" stroke-width="3" stroke-linejoin="round" aria-hidden="true"><path d="M6 54h52"/><rect x="10" y="26" width="12" height="28"/><rect x="26" y="12" width="12" height="42"/><rect x="42" y="32" width="12" height="22"/><path d="M14 33h4M14 41h4M30 20h4M30 28h4M30 36h4M46 39h4" opacity=".6"/></svg>
+        <h3>Real Toronto world</h3>
+        <ul><li>City open data, TTC GTFS and OpenStreetMap</li><li>Game-master rules check every move</li><li><b>0</b> rejected moves</li></ul>
+      </div>
+      <div class="card col rv" style="--d:2">
+        <svg viewBox="0 0 64 64" fill="none" stroke="#a8f4d1" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="22" cy="22" r="8"/><path d="M8 50c1-9 6-14 14-14s13 5 14 14"/><circle cx="44" cy="22" r="8" stroke="#e5d7ae"/><path d="M34 37c3-1 6-1 10-1 8 0 13 5 14 14" stroke="#e5d7ae"/></svg>
+        <h3>People measured against people</h3>
+        <ul><li>Haiku agents tuned on <span class="nw">Twin-2K-500</span></li><li>Papiers notes + human sign-off</li><li><b>0.808</b> vs 0.756 with no persona</li></ul>
+      </div>
+      <div class="card col rv" style="--d:3">
+        <svg viewBox="0 0 64 64" fill="none" stroke="#a8f4d1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="10" width="48" height="16" rx="4"/><rect x="8" y="38" width="48" height="16" rx="4"/><path d="M16 18h4M16 46h4M28 18h20M28 46h20" opacity=".6"/><path d="M32 26v12"/></svg>
+        <h3>Runs on Vultr</h3>
+        <ul><li>Cloud Compute runs the experiments</li><li>GLM compiles any question</li><li>Clef cross-checked <b>448</b> decisions, <b>91%</b> agreement</li></ul>
+      </div>
+    </div>
+    <p class="tagline rv" style="--d:4">Test the policy before you test it <em>on people.</em></p>
+    <div class="team rv" style="--d:5"><div>Meet<span>·</span>Steven<span>·</span>Aadit<span>·</span>James</div><div class="url" style="margin:0">155-138-141-130.sslip.io/experience/</div></div>
+  </div>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>06</b> / 12</div></div>
+</section>
+
+<!-- ============ DIVIDER ============ -->
+<section class="slide s-divider" data-n="backup" data-title="Backup / Q&amp;A" aria-label="Backup slides and Q&amp;A">
+  <div class="pad">
+    <p class="eyebrow rv">Backup</p>
+    <h2 class="huge rv" style="--d:1">Q<em>&amp;</em>A</h2>
+    <nav class="toc rv" style="--d:2" aria-label="Backup slides">
+      <a href="#7" data-go="7"><span>07</span>Bike lane result</a>
+      <a href="#10" data-go="10"><span>10</span>Vultr receipts</a>
+      <a href="#8" data-go="8"><span>08</span>TTC fare result</a>
+      <a href="#11" data-go="11"><span>11</span>Honest limits</a>
+      <a href="#9" data-go="9"><span>09</span>Architecture</a>
+      <a href="#12" data-go="12"><span>12</span>How we fit the tracks</a>
+    </nav>
+  </div>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num">BACKUP</div></div>
+</section>
+
+<!-- ============ 7 · BIKE RESULT ============ -->
+<section class="slide" data-n="7" data-title="Bike lane result" aria-label="Slide 7: Bike lane result">
+  <div class="pad">
+    <p class="eyebrow rv">Backup · Bike run · period 4, a modelled weekday</p>
+    <h2 class="h2 sm rv" style="--d:1">Cyclists move. <em class="coral">Drivers gain nothing.</em></h2>
+    <div class="res">
+      <div>
+        <div class="frame rv" style="--d:2"><img src="assets/bloor-3d-policy.jpg" alt="3D view with policy: Hawa, Kaya, Leila, Maria and Sam changed a choice"></div>
+        <p class="cap rv" style="--d:3">The same 19 synthetic people, seed 42. Leila takes a side street; Hawa, Maria and Sam switch to the TTC; Kaya shops elsewhere.</p>
+      </div>
+      <div class="rows">
+        <div class="row rv" style="--d:2"><div class="k">Bloor cycling trips</div><div class="v">7<i>→</i><span class="to">3</span></div></div>
+        <div class="row rv" style="--d:3"><div class="k">Cycling shared with cars<small>exposure, not injuries</small></div><div class="v">0<i>→</i><span class="to">1,135 m</span></div></div>
+        <div class="row rv" style="--d:4"><div class="k">Focal shop receipts</div><div class="v">$316<i>→</i><span class="to">$260</span></div></div>
+        <div class="row rv" style="--d:5"><div class="k">Curbside Cycle closes early<small>next period, synthetic rule: $56 → $30, under its $45 line</small></div><div class="v">21:00<i>→</i><span class="to">18:00</span></div></div>
+        <div class="row rv" style="--d:6"><div class="k">Driver minutes in the section<small>no time gain</small></div><div class="v">1.94<i>→</i>1.97</div></div>
+        <div class="row rv" style="--d:7"><div class="k">Changed choices · rejected moves</div><div class="v"><span class="mint">15</span><i>·</i><span class="ok">0</span></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="src">experiment/sample-world-bike.json · by_tick[3], changed_decisions, game_master, set_shop_hours events · synthetic, not a forecast</p>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>07</b> / 12</div></div>
+</section>
+
+<!-- ============ 8 · FARE RESULT ============ -->
+<section class="slide" data-n="8" data-title="TTC fare result" aria-label="Slide 8: TTC fare result">
+  <div class="pad">
+    <p class="eyebrow rv">Backup · Fare run · period 4, a modelled weekday</p>
+    <h2 class="h2 sm rv" style="--d:1">Adult fare +50¢: <em>Fair Pass riders don’t move</em></h2>
+    <div class="res">
+      <div>
+        <div class="frame rv" style="--d:2"><img src="assets/lab-fare.jpg" alt="Live site lab for the TTC fare question, showing sample TTC receipts $21.50 against $26.10"></div>
+        <p class="cap rv" style="--d:3">Live site, 17 Oct. Elena drives; Maria and Hawa bike; Grace and Ravi shop elsewhere. All five pay the adult fare.</p>
+      </div>
+      <div class="rows">
+        <div class="row rv" style="--d:2"><div class="k">Adult fare<small>Fair Pass stays $2.10</small></div><div class="v">$3.30<i>→</i><span class="to">$3.80</span></div></div>
+        <div class="row rv" style="--d:3"><div class="k">TTC trips</div><div class="v">9<i>→</i><span class="to">7</span></div></div>
+        <div class="row rv" style="--d:4"><div class="k">TTC fare receipts<small>this sample, not citywide</small></div><div class="v">$26.10<i>→</i><span class="to">$21.50</span></div></div>
+        <div class="row rv" style="--d:5"><div class="k">Focal shop receipts</div><div class="v">$316<i>→</i><span class="to">$289</span></div></div>
+        <div class="row rv" style="--d:6"><div class="k">Dollarama closes early<small>next period, synthetic rule: $27 → $12, under its $22 line</small></div><div class="v">21:00<i>→</i><span class="to">18:00</span></div></div>
+        <div class="row rv" style="--d:7"><div class="k">Changed choices · by Fair Pass riders</div><div class="v"><span class="mint">8</span><i>·</i><span class="ok">0</span></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="src">experiment/sample-world-fare.json · by_tick[3], changed_decisions, set_shop_hours events · 0 rejected moves · synthetic, not a forecast</p>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>08</b> / 12</div></div>
+</section>
+
+<!-- ============ 9 · ARCHITECTURE ============ -->
+<section class="slide" data-n="9" data-title="Architecture" aria-label="Slide 9: Architecture">
+  <div class="pad">
+    <p class="eyebrow rv">Backup · Architecture</p>
+    <h2 class="h2 sm rv" style="--d:1">One question, one run, <em>one event log</em></h2>
+    <svg class="arch rv" style="--d:2" viewBox="0 0 1664 700" role="img" aria-label="Question to Vultr GLM compiler to validator to paired runs on Vultr Cloud Compute, into one event log feeding the 3D city, decision ledger and economic report; Steven's persona agents and Vultr Clef alongside">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" fill="#a8f4d1"/></marker>
+        <marker id="ahs" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" fill="#e5d7ae"/></marker>
+      </defs>
+      <g font-family="DM Sans, system-ui, sans-serif">
+        <!-- Vultr Cloud Compute container -->
+        <rect x="798" y="8" width="866" height="216" rx="26" fill="rgba(168,244,209,.04)" stroke="rgba(168,244,209,.45)" stroke-dasharray="8 8" stroke-width="2"/>
+        <text x="820" y="40" font-size="20" font-weight="700" fill="#a8f4d1" letter-spacing="2.6">VULTR CLOUD COMPUTE · TORONTO · api/server.js</text>
+        <!-- row 1 -->
+        <g>
+          <rect x="0" y="56" width="250" height="152" rx="20" fill="#10262f" stroke="rgba(184,208,202,.3)" stroke-width="2"/>
+          <text x="26" y="104" font-size="30" font-weight="700" fill="#f3f6ed" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">Any question</text>
+          <text x="26" y="142" font-size="22" fill="#a9b9bf">“What if Line 2</text><text x="26" y="171" font-size="22" fill="#a9b9bf">came half as often?”</text>
+        </g>
+        <line x1="256" y1="132" x2="296" y2="132" stroke="#a8f4d1" stroke-width="3" marker-end="url(#ah)"/>
+        <g>
+          <rect x="304" y="40" width="460" height="184" rx="20" fill="#122d2a" stroke="#a8f4d1" stroke-width="2"/>
+          <text x="330" y="78" font-size="19" font-weight="700" fill="#a8f4d1" letter-spacing="2.4">VULTR SERVERLESS INFERENCE</text>
+          <text x="330" y="122" font-size="32" font-weight="700" fill="#f3f6ed" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">GLM-5.3-flash compiler</text>
+          <text x="330" y="160" font-size="24" fill="#d3dfde">JSON schema → the world’s 7 levers</text>
+          <text x="330" y="196" font-size="24" fill="#a9b9bf">a proposal, not a decision</text>
+        </g>
+        <line x1="770" y1="132" x2="812" y2="132" stroke="#a8f4d1" stroke-width="3" marker-end="url(#ah)"/>
+        <g>
+          <rect x="820" y="62" width="330" height="146" rx="20" fill="#10262f" stroke="rgba(184,208,202,.3)" stroke-width="2"/>
+          <text x="846" y="106" font-size="30" font-weight="700" fill="#f3f6ed" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">Validator</text>
+          <text x="846" y="144" font-size="23" fill="#d3dfde">lever bounds decide</text>
+          <text x="846" y="178" font-size="23" fill="#e5d7ae">no lever → not estimable</text>
+        </g>
+        <line x1="1156" y1="135" x2="1196" y2="135" stroke="#a8f4d1" stroke-width="3" marker-end="url(#ah)"/>
+        <g>
+          <rect x="1204" y="62" width="440" height="146" rx="20" fill="#10262f" stroke="#a8f4d1" stroke-width="2"/>
+          <text x="1230" y="106" font-size="30" font-weight="700" fill="#f3f6ed" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">Paired runs, same seed</text>
+          <text x="1230" y="144" font-size="23" fill="#d3dfde"><tspan fill="#a8f4d1">baseline</tspan> + <tspan fill="#ff987e">policy</tspan> on James’s</text>
+          <text x="1230" y="178" font-size="23" fill="#d3dfde">Game Master sandbox</text>
+        </g>
+        <!-- down to event log -->
+        <line x1="1424" y1="214" x2="1424" y2="286" stroke="#a8f4d1" stroke-width="3" marker-end="url(#ah)"/>
+        <g>
+          <rect x="0" y="296" width="1664" height="100" rx="22" fill="rgba(168,244,209,.1)" stroke="#a8f4d1" stroke-width="2"/>
+          <text x="32" y="358" font-size="33" font-weight="700" fill="#a8f4d1" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">One event log · experiment.v2 RunResult</text>
+          <text x="1636" y="356" font-size="25" fill="#d3dfde" text-anchor="end">every move, wait, fare and purchase is an event</text>
+        </g>
+        <!-- outputs -->
+        <g font-family="Space Grotesk, Avenir Next, system-ui, sans-serif" font-weight="700" font-size="30" fill="#f3f6ed">
+          <line x1="140" y1="402" x2="140" y2="458" stroke="#a8f4d1" stroke-width="3" marker-end="url(#ah)"/>
+          <line x1="440" y1="402" x2="440" y2="458" stroke="#a8f4d1" stroke-width="3" marker-end="url(#ah)"/>
+          <line x1="740" y1="402" x2="740" y2="458" stroke="#a8f4d1" stroke-width="3" marker-end="url(#ah)"/>
+          <rect x="0" y="466" width="280" height="120" rx="20" fill="#10262f" stroke="rgba(184,208,202,.3)" stroke-width="2"/><text x="26" y="516">3D city</text><text x="26" y="556" font-family="DM Sans, system-ui, sans-serif" font-weight="400" font-size="23" fill="#a9b9bf">replays the events</text>
+          <rect x="300" y="466" width="280" height="120" rx="20" fill="#10262f" stroke="rgba(184,208,202,.3)" stroke-width="2"/><text x="326" y="516">Decision ledger</text><text x="326" y="556" font-family="DM Sans, system-ui, sans-serif" font-weight="400" font-size="23" fill="#a9b9bf">every changed choice</text>
+          <rect x="600" y="466" width="280" height="120" rx="20" fill="#10262f" stroke="rgba(184,208,202,.3)" stroke-width="2"/><text x="626" y="516">Economic report</text><text x="626" y="556" font-family="DM Sans, system-ui, sans-serif" font-weight="400" font-size="23" fill="#a9b9bf">summed from events</text>
+        </g>
+        <!-- persona agents -->
+        <g>
+          <rect x="940" y="440" width="350" height="172" rx="20" fill="#24241c" stroke="#e5d7ae" stroke-width="2"/>
+          <text x="966" y="486" font-size="30" font-weight="700" fill="#e5d7ae" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">100 Haiku agents</text>
+          <text x="966" y="524" font-size="23" fill="#d3dfde">Steven’s laptop → SSH</text>
+          <text x="966" y="556" font-size="23" fill="#d3dfde">reverse tunnel to the VM</text>
+          <text x="966" y="590" font-size="23" fill="#a9b9bf">1–5 ratings beside the run</text>
+        </g>
+        <!-- clef -->
+        <line x1="1480" y1="402" x2="1480" y2="432" stroke="#a8f4d1" stroke-width="3" stroke-dasharray="6 6" marker-end="url(#ah)"/>
+        <g>
+          <rect x="1314" y="440" width="350" height="172" rx="20" fill="#122d2a" stroke="#a8f4d1" stroke-width="2"/>
+          <text x="1340" y="478" font-size="19" font-weight="700" fill="#a8f4d1" letter-spacing="2.4">VULTR INFERENCE</text>
+          <text x="1340" y="518" font-size="30" font-weight="700" fill="#f3f6ed" font-family="Space Grotesk, Avenir Next, system-ui, sans-serif">Clef second opinion</text>
+          <text x="1340" y="556" font-size="23" fill="#d3dfde">re-decides every trip</text>
+          <text x="1340" y="590" font-size="23" fill="#a9b9bf">recorded, not the default</text>
+        </g>
+        <text x="0" y="672" font-size="23" fill="#7d969d">Agents choose only among moves the sandbox has already proven legal. Keys stay server-side. Offline, the same runner works in the browser.</text>
+      </g>
+    </svg>
+  </div>
+  <p class="src" style="bottom:70px">VULTR.md · api/README.md · ops/agents-tunnel.md · persona-swarm/RUNTIME.md</p>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>09</b> / 12</div></div>
+</section>
+
+<!-- ============ 10 · VULTR RECEIPTS ============ -->
+<section class="slide" data-n="10" data-title="Vultr receipts" aria-label="Slide 10: Vultr receipts">
+  <div class="pad">
+    <p class="eyebrow rv">Backup · Best Use of Vultr</p>
+    <h2 class="h2 sm rv" style="--d:1">Four Vultr jobs, <em>with receipts</em></h2>
+    <div class="grid2">
+      <div class="card vc rv" style="--d:2">
+        <div class="badge">yto<small>Cloud Compute</small></div>
+        <h3>Hosts the site and runs every experiment</h3>
+        <p>vc2-1c-2gb in Toronto. Paired runs in 2 worker threads, plus bounded assumption sweeps.</p>
+        <div class="rc">/api/health → host: vultr-cloud-compute</div>
+      </div>
+      <div class="card vc rv" style="--d:3">
+        <div class="badge">4/4<small>GLM-5.3-flash</small></div>
+        <h3>Compiles any question</h3>
+        <p>Expected mappings, 2 of them unseen prompts. 0 fallbacks, 7.2 s total, 4,732 tokens.</p>
+        <div class="rc">vultr-runs/compiler-probe-*.json</div>
+      </div>
+      <div class="card vc rv" style="--d:4">
+        <div class="badge">91%<small>Clef</small></div>
+        <h3>Second opinion on 448 decisions</h3>
+        <p>340 live calls, 0 errors, ~215 ms median. Both paired sanity checks pass.</p>
+        <div class="rc">vultr-runs/clef-world-{fare,bike}.json</div>
+      </div>
+      <div class="card vc rv" style="--d:5">
+        <div class="badge">API<small>Vultr API v2</small></div>
+        <h3>Provisions and redeploys from scripts</h3>
+        <p>The inference subscription, the SSH key and the VM. Keys never touch the repo.</p>
+        <div class="rc">ops/vultr.js · ops/deploy.sh</div>
+      </div>
+    </div>
+  </div>
+  <p class="src">Sanity checks: Fair Pass riders, 0 choice changes of 9 paired states · cautious cyclists, 0 moves onto unprotected Bloor of 7 · VULTR.md, experiment/vultr-runs/</p>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>10</b> / 12</div></div>
+</section>
+
+<!-- ============ 11 · HONEST LIMITS ============ -->
+<section class="slide" data-n="11" data-title="Honest limits" aria-label="Slide 11: Honest limits">
+  <div class="pad">
+    <p class="eyebrow rv">Backup · What we don’t claim</p>
+    <h2 class="h2 sm rv" style="--d:1">A test bench, <em>not a forecast</em></h2>
+    <div class="lim">
+      <ul class="rv" style="--d:2">
+        <li><b>19 synthetic people</b> on a real map. Not Toronto residents.</li>
+        <li><b>Signal timings are assumed</b> (90 s cycle). Counts and geometry are observed.</li>
+        <li>Persona tuning measures <b>survey answers, not travel behaviour</b>.</li>
+        <li><b>Gains are small.</b> Round 9 cleared its noise bar by 0.001.</li>
+        <li>On new people, <b>policy answers trail simple baselines</b> (0.792 vs 0.810).</li>
+        <li><b>Model choice moves the result:</b> Clef changed 4 bike choices where our rule changed 15.</li>
+      </ul>
+      <div class="card ne rv" style="--d:3">
+        <h3>Not estimable</h3>
+        <p>Marked, not guessed. Every run lists these.</p>
+        <div class="chips">
+          <span class="chip">Injuries</span><span class="chip">Business closures</span><span class="chip">Emissions</span><span class="chip">GDP</span><span class="chip">Citywide TTC revenue</span><span class="chip">Driver time beyond the section</span><span class="chip">Removal construction cost</span>
+        </div>
+        <div class="tier">
+          <h3>Labelled on every run</h3>
+          <div class="chips"><span class="chip sand-c">assumption-driven</span><span class="chip sand-c"><b class="sand">9</b> named assumptions</span><span class="chip">observed sources, linked</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="src">world/README.md · persona-swarm/docs/demo.md · VULTR.md · experiment/sample-world-bike.json (not_estimable)</p>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>11</b> / 12</div></div>
+</section>
+
+<!-- ============ 12 · TRACKS ============ -->
+<section class="slide" data-n="12" data-title="How we fit the tracks" aria-label="Slide 12: How we fit the tracks">
+  <div class="pad">
+    <p class="eyebrow rv">Backup · Tracks</p>
+    <h2 class="h2 sm rv" style="--d:1">Built for <em>four tracks</em></h2>
+    <div class="grid2">
+      <div class="card tc rv" style="--d:2">
+        <span class="tag">Papiers Autoresearch</span>
+        <h3>Human notes in, human sign-off out</h3>
+        <p>Papiers highlights and notes → the agent’s one edit → scored by code → a typed human review → rescored. Round 7 revoked, round 9 kept after a re-benchmark.</p>
+      </div>
+      <div class="card tc rv" style="--d:3">
+        <span class="tag sand">U of T School of Cities</span>
+        <h3>Toronto open data, a real Toronto fight</h3>
+        <p>3D massing, pedestrian and cycling networks, signals, 2025 turning counts and TTC GTFS, on the Bloor lanes the province moved to remove.</p>
+      </div>
+      <div class="card tc rv" style="--d:4">
+        <span class="tag">Best Use of Vultr</span>
+        <h3>The engine room</h3>
+        <p>Cloud Compute hosts and runs every paired experiment. GLM compiles questions. Clef cross-checks every decision. The API provisions it all.</p>
+      </div>
+      <div class="card tc rv" style="--d:5">
+        <span class="tag coral">FinTech &amp; Economic Inclusion</span>
+        <h3>Every dollar, both sides</h3>
+        <p>Household fares, shop receipts and TTC receipts come from the same transactions, so they <b>reconcile</b>. Results split Fair Pass vs adult riders.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span>Counterfactual Lab</div><div class="num"><b>12</b> / 12</div></div>
+</section>
+
+</main>
+
+<div id="progress" aria-hidden="true"></div>
+<aside id="notes" aria-label="Speaker notes"></aside>
+<div id="grid" role="dialog" aria-label="Slide overview"><h2>Overview · press G or Esc to close</h2><div class="cells"></div></div>
+<div id="hint">→ / Space next · ← back · N notes · G overview · F fullscreen</div>
+
+<script>
+(() => {
+  'use strict';
+  /* ---------- speaker notes: exact lines from pitch/SCRIPT.md and pitch/QA.md ---------- */
+  const NOTES = {
+    '1': { sp: 'Meet', tm: '0:00–0:20', html: `
+      <blockquote>“In 2024, Ontario moved to tear out the protected bike lanes on Bloor, Yonge and University. The City put the bill at over 48 million dollars. Every year the TTC fare goes up again. Decisions like these get made on gut feel and shouting matches. Nobody gets to test them first.”</blockquote>
+      <p class="warn">⚠ data/ttc_fare_context.json: fares were frozen at 2023 levels for a third year in the 2026 budget (p. 9). The slide says so. Safer line: “The TTC fare has been frozen three years running. Raise it, and who pays?”</p>` },
+    '2': { sp: 'Meet', tm: '0:20–0:40', html: `
+      <blockquote>“Counterfactual Lab lets you ask a city <i>what if</i>. Type a policy. We generate the people it affects, put them on a real, rule-checked map of Bloor Street, and run the city twice, once without the policy and once with it. Then we show every choice, every dollar, and what we <i>can't</i> know.”</blockquote>
+      <p class="cue">Click to slide 3, hand to Steven.</p>` },
+    '3': { sp: 'Steven', tm: '0:40–1:30 (part 1)', html: `
+      <blockquote>“The hard part is people. Ask an LLM to ‘act like a cyclist’ and you get a stereotype. So we built an agent that researches how to be human.</blockquote>
+      <blockquote>It tunes our persona instructions against real people, the Twin-2K-500 survey respondents. Each round has one hypothesis and one edit. Code scores it on four checks. A human signs off or rejects it.</blockquote>
+      <p class="cue">(slide 4) — script cue: click here.</p>` },
+    '4': { sp: 'Steven', tm: '0:40–1:30 (part 2)', html: `
+      <blockquote>The ideas came from papers our team read and annotated in <b>Papiers</b>. Every round links the exact highlight and note it used. Ten rounds, two kept. We stopped when the gains fell below the noise.</blockquote>
+      <blockquote>Then we scored it once, on 100 people it had never seen. It gets the right person's answer <b>81% of the time</b>. That beats all four baselines: a generic agent with no persona gets 76%, and just guessing the most common answer gets 74%.</blockquote>
+      <blockquote>Those tuned Haiku agents are running live right now, 100 of them. Aadit?”</blockquote>` },
+    '5': { sp: 'Aadit', tm: '1:30–3:35 · live site', html: `
+      <table>
+        <tr><td>1:30</td><td>Page at the top. Scroll slowly through the clouds.</td><td>“This is Toronto. Scroll down…”</td></tr>
+        <tr><td>1:38</td><td>Composer appears. Click the Bloor bike lane chip.</td><td>“…and ask it anything. Let's take the hard one: remove the protected bike lane on Bloor.”</td></tr>
+        <tr><td>1:45</td><td>Run overlay plays, then the 3D view. Leave it on Baseline.</td><td>“This is the real 619 metres of Bloor, Bathurst to Spadina. 925 buildings from the City's 3D massing data, 243 real businesses, real signals, Line 2 on its actual schedule. The background traffic is calibrated to the City's 2025 counts, within 1% at both ends.” <span class="warn">⚠ world/README.md: signal locations are mapped, timings are assumed (90 s cycle). The slide says “mapped signals”.</span></td></tr>
+        <tr><td>2:05</td><td>Click With policy.</td><td>“Same 19 people, same seed. The only difference is the track is gone. Watch the cyclists: they're in the car lane now.”</td></tr>
+        <tr><td>2:15</td><td>In the ledger or people list, click Leila.</td><td>“Leila is a less-confident cyclist. She stops riding Bloor and takes a side street. Hawa, Maria and Sam switch to the TTC.”</td></tr>
+        <tr><td>2:35</td><td>Scroll to the report.</td><td>“Every number here is added up from those events. Nothing is typed in by hand.”</td></tr>
+        <tr><td>2:40</td><td>Point at the headline and the charts.</td><td>“Cycling trips on Bloor drop from 7 to 3. Cycling next to cars goes from zero to over a kilometre a day. Kaya, a visitor, shops somewhere else, so Curbside Cycle's takings fall below its staffing line and it closes early the next week. And drivers? No time gain. Those cyclists are in the drivers' queue now.” <span class="warn">⚠ a period is a modelled weekday: “the next day” is accurate, “next week” is not.</span></td></tr>
+        <tr><td>3:05</td><td>Point at the not-estimable list.</td><td>“Injuries, closures, construction cost: we mark them not estimable instead of making them up.”</td></tr>
+        <tr><td>3:12</td><td>Scroll to the 100 agents panel.</td><td>“And here are Steven's 100 agents reacting live: the rating split, by group, each with a reason.”</td></tr>
+        <tr><td>3:25</td><td>(Only if ahead) Click TTC fare.</td><td>“Same city, same people, a different policy. Fair Pass riders don't move. Adults near the cutoff do.”</td></tr>
+      </table>
+      <p><b>If something breaks:</b> 3D won't load → press <b>2D</b>. Agents offline → skip, “they're on Steven's laptop”. Site down → backup slides 7–9.</p>` },
+    '6': { sp: 'Meet', tm: '3:35–4:00', html: `
+      <blockquote>“One city. Any question. Two very different policies on the same people, from real Toronto open data. Persona agents tuned with Papiers research and human sign-off. And it all runs on <b>Vultr</b>: cloud compute runs the experiments, a GLM model on Vultr turns any question into a runnable policy, and Vultr's Clef model double-checked all 448 trip decisions, agreeing 91% of the time.</blockquote>
+      <blockquote>Counterfactual Lab. Test the policy before you test it on people.”</blockquote>` },
+    'backup': { sp: 'All', tm: 'Q&A · 1 min', html: `
+      <p>Answer in one sentence and then offer the proof: “happy to show it.”</p>
+      <p><b>Say:</b> explore, stress-test, show the trade-offs · 19 synthetic people on a real map · tuned against real survey answers · Clef cross-checked every decision. <b>Don't say:</b> predict, forecast, Toronto residents, “the shop will close”, “Clef makes the decisions”.</p>` },
+    '7': { sp: 'James / Aadit', tm: 'Q&A', html: `
+      <p><b>“Why does removing the bike lane not help drivers?”</b></p>
+      <blockquote>Removal adds no car lane in this layout, and the cyclists who keep riding Bloor now sit in the drivers' queue at 0.5 car-equivalents each. Sample drivers go from 1.94 to 1.97 minutes. The City's own 2024 assessment also expected minimal driver gains.</blockquote>
+      <p><b>“What stops the agents from doing impossible things?”</b> (James)</p>
+      <blockquote>James's world is a game master. Every move goes through his sandbox: walkers use sidewalks and cross only at mapped crosswalks on the walk signal, vehicles stop at red, the subway leaves only at scheduled times and charges the fare, and shop visits happen only at the door. In the demo runs, 0 actions were rejected, because agents only choose among options the sandbox has already proven legal.</blockquote>` },
+    '8': { sp: 'Meet', tm: 'Q&A', html: `
+      <p><b>Demo line (3:25):</b> “Same city, same people, a different policy. Fair Pass riders don't move. Adults near the cutoff do.”</p>
+      <p><b>“What's the economic part?”</b></p>
+      <blockquote>Household fare and travel spending, shop receipts and TTC receipts are the two sides of the same transactions, so they reconcile exactly; the tests check it. Fare and bike results also split by Fair Pass versus adult riders.</blockquote>` },
+    '9': { sp: 'Meet / Steven', tm: 'Q&A', html: `
+      <p><b>“How is this general and not a fare calculator?”</b></p>
+      <blockquote>Type a different question. A Vultr-hosted GLM model turns it into the world's levers (fare, track, car lanes, parking, signals, Line 2 frequency), the backend validates it, and the same people run in the same city. “What if Line 2 came half as often?” compiles in about a second and runs. A question with no lever, like minimum wage, is kept as speculative / not estimable rather than faked.</blockquote>
+      <p><b>“Do the LLM agents make the decisions on the map?”</b></p>
+      <blockquote>The map run uses an explicit, editable decision rule, so it's instant and replays exactly. The same decision slot takes a model. Vultr Clef decided every trip in a full replayable paired run. Steven's 40 Haiku deciders made 560 live decisions per policy in our first paired experiment, and Aadit's 3D viewer replays those too. On stage, the 100 Haiku agents give live 1–5 reactions.</blockquote>` },
+    '10': { sp: 'Meet', tm: 'Q&A', html: `
+      <p><b>“How did you use Vultr?”</b> Four ways, all live:</p>
+      <ul><li><b>Cloud Compute in Toronto</b> hosts the site and runs every paired experiment and sensitivity sweep.</li><li><b>Serverless Inference GLM-5.3-flash</b> compiles freeform questions with JSON-schema output. The probe got 4/4 right with 0 fallbacks.</li><li><b>Clef</b> gave a typed second opinion on all 448 trip decisions: 340 calls, 0 errors, 91% agreement, and both sanity checks passed.</li><li><b>The Vultr API</b> provisions and redeploys everything from scripts.</li></ul>
+      <p><b>“Why not have Clef make the decisions?”</b></p>
+      <blockquote>It's the second opinion on purpose. It agrees 91% of the time, and where it disagrees, mostly with car owners, the policy result moves. That is the point: we show which model decided and let you compare, instead of hiding model choice inside one number.</blockquote>` },
+    '11': { sp: 'Meet / James', tm: 'Q&A', html: `
+      <p><b>“Is this a prediction?”</b></p>
+      <blockquote>No. It's a test bench. The map, schedules and traffic counts are real, the people and their responses are synthetic, and every output is labelled that way. Anything we can't support, like injuries, closures or a citywide total, is marked not estimable instead of guessed.</blockquote>
+      <p><b>“Why only 19 people?”</b> (James)</p>
+      <blockquote>Every person is fully traceable: each move, fare and purchase is an event you can click. The default scale is small so it runs in under a second and replays exactly. Steven's runtime adds 100 live persona agents for reactions and 40 for decisions, and the engine has no hard cap. We'd rather show 19 people we can audit than 10,000 dots we can't.</blockquote>
+      <p><b>Pushback:</b> “The gains are small.” → “Yes, and we report the noise bar next to every gain. Round 9 cleared it by a hair, so we stopped instead of overfitting.” · “Synthetic people means made-up results.” → “The behaviour rules are explicit and editable on screen. Change one and the whole city reruns as a new version.”</p>` },
+    '12': { sp: 'Steven / James', tm: 'Q&A', html: `
+      <p><b>“Where does Papiers come in?”</b> (Steven)</p>
+      <blockquote>Every tuning round starts from papers we annotated in Papiers. The round log cites the exact highlight and note IDs (for example the Funhouse Mirrors note behind round 9), and a human typed the review that kept or rejected each edit. Round 7 was revoked by Steven, round 9 was kept after a re-benchmark, and we stopped at round 10 when the gains fell below noise.</blockquote>
+      <p><b>“Is the map real?”</b> (James)</p>
+      <blockquote>Yes. It's the 619 m of Bloor between Bathurst and Spadina, built from City of Toronto open data (3D massing, the pedestrian and cycling networks, signal locations, 2025 turning-movement counts), TTC GTFS and OpenStreetMap businesses. The routed background traffic reproduces the counts at both ends within 0.6% per day, with a max hourly GEH of 0.45. Signal timings are assumed, and we say so.</blockquote>` },
+  };
+
+  const stage = document.getElementById('stage');
+  const slides = [...stage.querySelectorAll('.slide')];
+  const keyOf = (s) => s.dataset.n;
+  const progress = document.getElementById('progress');
+  const notes = document.getElementById('notes');
+  const grid = document.getElementById('grid');
+  const hint = document.getElementById('hint');
+  let cur = -1;
+
+  function fit() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const s = Math.min(vw / 1920, vh / 1080);
+    stage.style.transform = `translate(${(vw - 1920 * s) / 2}px, ${(vh - 1080 * s) / 2}px) scale(${s})`;
+    if (grid.classList.contains('on')) fitThumbs();
+  }
+
+  function indexFromHash() {
+    const h = decodeURIComponent(location.hash.slice(1)).toLowerCase();
+    if (!h) return 0;
+    const i = slides.findIndex((s) => keyOf(s) === h);
+    return i >= 0 ? i : 0;
+  }
+
+  function renderNotes() {
+    const s = slides[cur], n = NOTES[keyOf(s)] || { sp: '', tm: '', html: '' };
+    const label = keyOf(s) === 'backup' ? 'Backup' : `Slide ${keyOf(s)}`;
+    notes.innerHTML = `<header><span class="sp">${n.sp}</span><span class="tm">${n.tm}</span><span>${label} · ${s.dataset.title}</span></header>${n.html}
+      <div class="keys">→ / Space / PgDn next · ← / PgUp back · Home / End · N notes · G overview · F fullscreen · click advances (Shift-click back)</div>`;
+  }
+
+  function go(i, { push = true } = {}) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    if (i === cur) return;
+    if (cur >= 0) { slides[cur].classList.remove('active'); slides[cur].setAttribute('aria-hidden', 'true'); }
+    cur = i;
+    const s = slides[cur];
+    s.classList.add('active');
+    s.removeAttribute('aria-hidden');
+    progress.style.width = `${((cur + 1) / slides.length) * 100}%`;
+    document.title = `${s.dataset.title.replace(/&amp;/g, '&')} · Counterfactual Lab`;
+    if (push && location.hash.slice(1) !== keyOf(s)) history.replaceState(null, '', `#${keyOf(s)}`);
+    renderNotes();
+  }
+  const next = () => go(cur + 1);
+  const prev = () => go(cur - 1);
+
+  /* ---------- overview grid ---------- */
+  function buildGrid() {
+    const cells = grid.querySelector('.cells');
+    if (cells.childElementCount) return;
+    slides.forEach((s, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-label', `Go to ${s.dataset.title.replace(/&amp;/g, '&')}`);
+      const th = document.createElement('div');
+      th.className = 'th';
+      const c = s.cloneNode(true);
+      c.classList.add('active', 'static');
+      c.removeAttribute('aria-hidden');
+      c.setAttribute('aria-hidden', 'true');
+      th.appendChild(c);
+      const lbl = document.createElement('div');
+      lbl.className = 'lbl';
+      lbl.innerHTML = `<b>${keyOf(s) === 'backup' ? '—' : String(keyOf(s)).padStart(2, '0')}</b>${s.dataset.title}`;
+      b.append(th, lbl);
+      b.addEventListener('click', (e) => { e.stopPropagation(); toggleGrid(false); go(i); });
+      cells.appendChild(b);
+    });
+  }
+  function fitThumbs() {
+    for (const th of grid.querySelectorAll('.th')) {
+      const sl = th.firstElementChild;
+      sl.style.transform = `scale(${th.clientWidth / 1920})`;
+    }
+  }
+  function toggleGrid(force) {
+    const on = force ?? !grid.classList.contains('on');
+    if (on) buildGrid();
+    grid.classList.toggle('on', on);
+    if (on) {
+      fitThumbs();
+      grid.querySelectorAll('.th').forEach((t, i) => t.classList.toggle('cur', i === cur));
+      const btn = grid.querySelectorAll('button')[cur];
+      if (btn) { btn.focus({ preventScroll: true }); btn.scrollIntoView({ block: 'nearest' }); }
+    }
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else document.documentElement.requestFullscreen?.().catch(() => {});
+  }
+
+  /* ---------- input ---------- */
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (grid.classList.contains('on')) {
+      if (k === 'Escape' || k === 'g' || k === 'G') { e.preventDefault(); toggleGrid(false); }
+      return;
+    }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); next(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); prev(); }
+    else if (k === 'Home') { e.preventDefault(); go(0); }
+    else if (k === 'End') { e.preventDefault(); go(slides.length - 1); }
+    else if (k === 'f' || k === 'F') { e.preventDefault(); toggleFullscreen(); }
+    else if (k === 'n' || k === 'N') { e.preventDefault(); notes.classList.toggle('on'); }
+    else if (k === 'g' || k === 'G') { e.preventDefault(); toggleGrid(true); }
+    else if (k === 'Escape') { notes.classList.remove('on'); }
+    else if (/^[0-9]$/.test(k)) {
+      /* type a slide number, e.g. 1 then 2 for slide 12 */
+      clearTimeout(typed.t); typed.v += k;
+      typed.t = setTimeout(() => { const i = slides.findIndex((s) => keyOf(s) === String(Number(typed.v))); typed.v = ''; if (i >= 0) go(i); }, 450);
+    }
+    hint.classList.add('gone');
+  });
+  const typed = { v: '', t: 0 };
+
+  document.addEventListener('click', (e) => {
+    if (grid.classList.contains('on') || notes.contains(e.target)) return;
+    const jump = e.target.closest('[data-go]');
+    if (jump) { e.preventDefault(); const i = slides.findIndex((s) => keyOf(s) === jump.dataset.go); if (i >= 0) go(i); return; }
+    if (e.target.closest('a,button')) return;
+    if (e.shiftKey) prev(); else next();
+    hint.classList.add('gone');
+  });
+
+  let tx = null;
+  document.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (tx === null) return;
+    const dx = e.changedTouches[0].clientX - tx; tx = null;
+    if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+  }, { passive: true });
+
+  window.addEventListener('hashchange', () => go(indexFromHash(), { push: false }));
+  window.addEventListener('resize', fit);
+  slides.forEach((s) => s.setAttribute('aria-hidden', 'true'));
+  fit();
+  go(indexFromHash(), { push: false });
+  const qs = new URLSearchParams(location.search);
+  if (qs.has('notes')) notes.classList.add('on');
+  if (qs.has('grid')) toggleGrid(true);
+  setTimeout(() => hint.classList.add('gone'), 5000);
+})();
+</script>
+</body>
+</html>

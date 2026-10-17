@@ -9,6 +9,8 @@ const worldRunner = window.CounterfactualWorldExperiment;
 const worldFixtures = window.CounterfactualWorldFixtures;
 const worldAdapter = window.CounterfactualWorldRunAdapter;
 const scenarioCompiler = window.CounterfactualScenarioCompiler;
+// Demo view (the default stage walkthrough) or Researcher view (?detail=1); see view-mode.js. Both read the same run.
+const demoView = () => Boolean(window.CounterfactualView?.isDemo());
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -22,7 +24,7 @@ const bloorBikeMap = new window.BloorMapView($('#bloorMapBike'));
 // Mapped-run state. `runs` keeps the latest version per prepared scenario; `active` is what the lab shows.
 const mapped = {
   world: null, runs: {}, specs: {}, active: null, activeKey: null, activeEvent: null, ratingsOn: false,
-  rerunStatus: {}, pending: {}, servedBy: new WeakMap(), clef: {}, unsubscribe: null, lastLabel: '',
+  rerunStatus: {}, pending: {}, servedBy: new WeakMap(), clef: {}, unsubscribe: null, lastLabel: '', stripActor: null,
 };
 const worldReady = fetch('../data/world/bloor_spadina_bathurst.json')
   .then((response) => { if (!response.ok) throw new Error(`Map HTTP ${response.status}`); return response.json(); })
@@ -64,7 +66,8 @@ const backendReady = (async () => {
   const candidates = param ? [param.replace(/\/$/, '')] : local ? ['', VULTR_ENGINE_URL] : [''];
   for (const base of candidates) {
     try {
-      const health = await api('/api/health', null, base ? 4000 : 1500, base);
+      // Same origin gets 4 s too: the first health check races the world JSON parse on the main thread.
+      const health = await api('/api/health', null, 4000, base);
       if (health?.ok && health.host) { mapped.base = base; mapped.backend = { ...health, remote: Boolean(base) }; return mapped.backend; }
     } catch { /* try the next candidate */ }
   }
@@ -495,6 +498,130 @@ function renderRunPath(result, row, by) {
   path.append(caveat);
 }
 
+// ---------- Demo view: title bar, "people who changed" strip and the short report, all from the same RunResult ----------
+const SHORT_CHOICE = { bike_bloor: 'bike on Bloor', bike_side_street: 'side street', transit: 'TTC', walk: 'walk', drive: 'drive', car: 'drive', bike: 'bike', shop_elsewhere: 'shops elsewhere', defer: 'stays home' };
+const NOT_ESTIMABLE_PLAIN = { injuries: 'Injuries', business_closures: 'Business closures', removal_construction_cost_cad: 'Construction cost', emissions_kg: 'Emissions', gdp_cad: 'GDP', citywide_ttc_revenue_cad: 'Citywide TTC revenue', driver_time_beyond_section: 'Driver time beyond the section' };
+const NOT_ESTIMABLE_ORDER = Object.keys(NOT_ESTIMABLE_PLAIN);
+const leadAction = (side) => String(typeof side === 'string' ? side : side?.action || '').split(' ')[0];
+function changeText(row) {
+  const from = leadAction(row.from), to = leadAction(row.to);
+  if (from === 'bike_bloor' && to === 'bike_side_street') return 'Bloor → side street';
+  if (from === to) return `${nice(row.trip_id)} trip changes route`;
+  return `${SHORT_CHOICE[from] || nice(from)} → ${SHORT_CHOICE[to] || nice(to)}`;
+}
+// One row per person: their earliest changed choice (changedRows is ordered by period, then person).
+function peopleWhoChanged(result) {
+  const first = new Map();
+  for (const row of changedRows(result)) if (!first.has(row.actor)) first.set(row.actor, row);
+  return [...first.values()];
+}
+
+function renderPeopleStrip(result) {
+  $('#peopleStrip').hidden = !result;
+  if (!result) return;
+  const people = peopleWhoChanged(result);
+  const shown = people.slice(0, 8);
+  if (!people.some((row) => row.actor === mapped.stripActor)) mapped.stripActor = null;
+  $('#peopleStripChoices').replaceChildren(...shown.map((row) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'people-chip';
+    button.dataset.viewer3dPerson = row.actor;   // viewer3d-bridge.js flies the 3D camera to this person
+    button.setAttribute('aria-pressed', String(row.actor === mapped.stripActor));
+    button.title = `Show ${row.name || row.actor} with the policy`;
+    const name = document.createElement('strong'); name.textContent = row.name || row.actor;
+    const what = document.createElement('span'); what.textContent = changeText(row);
+    button.append(name, what);
+    button.addEventListener('click', () => focusChangedPerson(row));
+    return button;
+  }));
+  $('#peopleStripNote').textContent = !people.length
+    ? 'Nobody changed a choice in this run, so both worlds show the same events.'
+    : `${people.length} of ${result.population.count} people changed a choice${people.length > shown.length ? ` · first ${shown.length} shown` : ''} · pick one to follow`;
+}
+
+// A person picked in the strip: switch to "With policy" through its button (so the 3D view follows), then follow them.
+function focusChangedPerson(row) {
+  mapped.stripActor = row.actor;
+  $$('#peopleStripChoices .people-chip').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.viewer3dPerson === row.actor)));
+  if (!$('#policyView').classList.contains('selected')) $('#policyView').click();
+  mapped.activeKey = row.key;
+  renderRunLedger();
+  followDecision(row);
+}
+
+// A focal shop whose synthetic staffing rule cuts its hours only in the policy world, read from set_shop_hours events.
+function shopHoursStory(result) {
+  const hours = (arm) => result.runs[arm].events.filter((event) => event.action === 'set_shop_hours');
+  const baseline = new Map(hours('baseline').map((event) => [`${event.business_id}|${event.tick}`, event]));
+  const event = hours('intervention').find((item) => item.reduced && !baseline.get(`${item.business_id}|${item.tick}`)?.reduced);
+  if (!event) return '';
+  const before = baseline.get(`${event.business_id}|${event.tick}`);
+  const name = event.name || placeName(event.business_id, result);
+  const takings = Number.isFinite(event.receipts_cad) && Number.isFinite(event.receipt_floor_cad) ? ` takes ${cad(event.receipts_cad)}, under its ${cad(event.receipt_floor_cad)} staffing line, so it` : '';
+  const close = typeof event.closes_at === 'string' ? event.closes_at : hhmm(event.closes_at);
+  const usual = before && before.closes_at !== event.closes_at ? ` instead of ${typeof before.closes_at === 'string' ? before.closes_at : hhmm(before.closes_at)}` : '';
+  const when = event.tick < result.scenario.ticks ? `from period ${event.tick + 1}` : 'after the last period';
+  return `${name}${takings} closes at ${close}${usual} ${when}. Synthetic staffing rule, not a closure forecast.`;
+}
+
+function notEstimableItems(result) {
+  if (!result && current.id === 'custom') return [{ id: 'everything', label: 'Every outcome', reason: 'No mapped lever matched this question, so nothing was simulated.' }];
+  // The earlier prepared replays (no mapped world) carry no not_estimable list; show the same boundary.
+  if (!result) return NOT_ESTIMABLE_ORDER.filter((id) => current.id === 'bike' || id !== 'removal_construction_cost_cad').map((id) => ({ id, label: NOT_ESTIMABLE_PLAIN[id], reason: '' }));
+  return (result.not_estimable || [])
+    .filter((item) => item.id !== 'removal_construction_cost_cad' || trackChanged(result))   // a street-layout cost; irrelevant to a fare change
+    .map((item) => ({ id: item.id, label: NOT_ESTIMABLE_PLAIN[item.id] || nice(item.id).replace(/^./, (c) => c.toUpperCase()), reason: item.reason || '' }))
+    .sort((a, b) => (NOT_ESTIMABLE_ORDER.indexOf(a.id) + 1 || 99) - (NOT_ESTIMABLE_ORDER.indexOf(b.id) + 1 || 99));
+}
+
+function renderDemo(result) {
+  const custom = current.id === 'custom';
+  const served = result && mapped.servedBy.get(result);
+  $('#labKicker').textContent = custom ? 'SPECULATIVE · NOT SIMULATED' : 'BLOOR ST W · BATHURST → SPADINA';
+  $('#labCredit').hidden = custom;
+  $('#labQuestion').textContent = current.title;
+  $('#labStatus').textContent = custom
+    ? 'Speculative · no mapped lever matched · nothing was simulated'
+    : result ? `${result.population.count} synthetic people · same seed · real Bloor St W map` : 'Prepared replay · synthetic people · not a forecast';
+  $('#labHost').hidden = !served;
+  $('#labHost').textContent = !served ? '' : served.remote ? `RUN ON ${hostLabel(served).toUpperCase()}${served.cached ? ' · CACHED' : ''}` : 'RUN IN THIS BROWSER';
+  $('#labCompiler').hidden = !current.compilerBadge;
+  $('#labCompiler').textContent = current.compilerBadge || '';
+  renderPeopleStrip(result);
+
+  $('#reportEyebrow').textContent = custom ? 'THE REPORT · NOTHING WAS SIMULATED' : 'THE REPORT · ONE EVENT LOG';
+  $('#reportTitleLead').textContent = custom ? 'Nothing' : 'What';
+  $('#reportTitleEm').textContent = custom ? 'to sum yet.' : 'changed.';
+  $('#reportChartsLabel').textContent = custom ? 'FIVE SECTORS · NO SERIES ATTACHED' : `FIVE CHARTS · ${result?.scenario?.ticks || 4} MODELLED PERIODS`;
+  $('#reportQuestion').textContent = current.title;
+  $('#reportHeadlineLabel').textContent = current.headline.label;
+  const headline = String(current.headline.value).replace(/(\$\d+)\.00\b/g, '$1');
+  $('#reportHeadlineValue').textContent = headline;
+  $('#reportHeadlineValue').classList.toggle('is-long', headline.length > 9);
+  $('#reportHeadlineDirection').textContent = current.headline.direction;
+  $('#reportMini').replaceChildren(...current.mini.slice(0, 3).map((metric) => {
+    const card = document.createElement('div'); card.className = 'report-mini-card';
+    const label = document.createElement('span'); label.textContent = metric.label;
+    // Whole-dollar amounts read better at this size ("$260 / $316"); the charts keep the cents.
+    const value = document.createElement('strong'); value.textContent = String(metric.value).replace(/(\$\d+)\.00\b/g, '$1'); value.className = custom && metric.tone === 'positive' ? 'neutral' : metric.tone || 'neutral';   // a placeholder is not good news
+    card.append(label, value); return card;
+  }));
+  const story = result ? shopHoursStory(result) : '';
+  $('#reportStory').hidden = !story;
+  $('#reportStory').textContent = story;
+  $('#reportNotEstimable').replaceChildren(...notEstimableItems(result).map((item) => {
+    const li = document.createElement('li');
+    li.textContent = item.label;
+    if (item.reason) li.title = item.reason;
+    return li;
+  }));
+  $('#reportProvenance').textContent = custom
+    ? 'Nothing was simulated for this question · no numbers to sum · not a forecast'
+    : result ? `Every number is summed from recorded events in this run (v${result.version}, seed ${result.seed}) · synthetic people, real map · not a forecast`
+      : 'Every number comes from a prepared synthetic replay · not a forecast';
+}
+
 function revealMap() {
   const rect = $('#simulationViewport').getBoundingClientRect();
   if (rect.bottom < 90 || rect.top > window.innerHeight - 90) $('#simulationViewport').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'nearest' });
@@ -535,8 +662,8 @@ function showPersonaCard(personaId) {
   card.replaceChildren(name, facts);
   if (rows.length) {
     const link = document.createElement('button'); link.type = 'button'; link.className = 'map-persona-link';
-    link.textContent = `${rows.length} changed choice${rows.length === 1 ? '' : 's'} in the ledger ↓`;
-    link.addEventListener('click', () => $('#runLedger').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
+    link.textContent = `${rows.length} changed choice${rows.length === 1 ? '' : 's'} ${demoView() ? 'below' : 'in the ledger'} ↓`;
+    link.addEventListener('click', () => $(demoView() ? '#peopleStrip' : '#runLedger').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: demoView() ? 'nearest' : 'start' }));
     card.append(link);
   } else {
     const same = document.createElement('small'); same.textContent = 'Same choices in both worlds this run.'; card.append(same);
@@ -790,6 +917,22 @@ const mappedSteps = [
   ['Reviewing the evidence.', 'Separating observed Toronto inputs from synthetic assumptions.'],
   ['Running both worlds.', 'Baseline and policy from one seed; every move passes the world’s rule checks.'],
 ];
+// Demo view: the same four steps, shorter and plainer, on a faster clock.
+const demoSteps = [
+  ['Reading the question.', 'Turning it into one change on the map.'],
+  ['Placing the people.', 'Synthetic residents and visitors on the real Bloor St W map.'],
+  ['Running the city twice.', 'Same people, same seed: once without the policy, once with it.'],
+  ['Adding it up.', 'Every number is summed from the recorded events.'],
+];
+const DEMO_STEP_LABELS = ['Read', 'Place people', 'Run twice', 'Add up'];
+let researchStepLabels = null;
+// A short name for where a run executed, e.g. "Vultr · YTO" for the deployed engine.
+function hostLabel(served) {
+  if (!served) return '';
+  if (!served.remote) return 'this browser';
+  const host = String(served.host || 'backend');
+  return /vultr/i.test(host) ? `Vultr${served.region ? ` · ${String(served.region).toUpperCase()}` : ''}` : host === 'local' ? 'the local engine' : host;
+}
 
 function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
@@ -1011,18 +1154,26 @@ async function runScenario(scenario, promptOverride = null) {
   if (scenario !== 'custom') startPolicyPoll(scenario);   // the composer drafts a policy for the agents via draftPolicy
   const agentNote = !agents.online ? 'no live model call'
     : scenario === 'custom' ? 'drafting a policy, then asking all 100 persona agents for a 1–5 rating' : 'asking all 100 persona agents for a 1–5 rating';
+  const demo = demoView();
+  const where = mapped.backend ? `on ${demo ? hostLabel({ ...mapped.backend, remote: true }) : mapped.backend.host}` : 'in this browser';
   $('#investigationNote').textContent = !useMapped
     ? (!agents.online ? 'Prepared demo replay · no live model call'
       : scenario === 'custom' ? 'Drafting a policy, then asking all 100 persona agents for a 1–5 rating' : 'Asking all 100 persona agents for a 1–5 rating')
-    : scenario === 'custom'
-      ? `Compiling the hypothesis ${mapped.backend ? `on ${mapped.backend.host}` : 'with offline rules in this browser'} · ${agentNote}`
-      : `Mapped paired run ${mapped.backend ? `on ${mapped.backend.host}` : 'in this browser'} · ${agentNote}`;
+    : demo
+      ? `${scenario === 'custom' ? `Compiling ${mapped.backend ? where : 'with offline rules'}` : `Running ${where}`}${agents.online ? ' · 100 persona agents are rating it' : ''}`
+      : scenario === 'custom'
+        ? `Compiling the hypothesis ${mapped.backend ? `on ${mapped.backend.host}` : 'with offline rules in this browser'} · ${agentNote}`
+        : `Mapped paired run ${where} · ${agentNote}`;
+  const stepItems = $$('#investigationSteps li');
+  researchStepLabels ||= stepItems.map((li) => li.textContent);
+  stepItems.forEach((li, n) => { li.textContent = demo && useMapped ? DEMO_STEP_LABELS[n] : researchStepLabels[n]; });
   document.body.dataset.scenario = useMapped ? scenario : current.id;
   scene.setScenario(useMapped ? scenario : current.id);
   const overlay = $('#investigation');
   overlay.hidden = false;
   setPhase('investigating');
-  const copy = useMapped ? mappedSteps : steps;
+  const copy = useMapped ? (demo ? demoSteps : mappedSteps) : steps;
+  const stepMs = reducedMotion ? 100 : demo ? 350 : 670;
   let work = null;
   for (let i = 0; i < copy.length; i++) {
     if (token !== investigationToken) return;
@@ -1031,7 +1182,7 @@ async function runScenario(scenario, promptOverride = null) {
     $('#investigationDescription').textContent = copy[i][1];
     $('#investigationProgress').style.width = `${(i + 1) * 25}%`;
     $$('#investigationSteps li').forEach((li, n) => li.classList.toggle('complete', n <= i));
-    await wait(reducedMotion ? 100 : 670);
+    await wait(stepMs);
     // Start the run after the overlay has painted; the in-browser paired run blocks the main thread briefly.
     if (useMapped && i === 0) { work = mappedWork(scenario, promptOverride); work.catch(() => {}); }
   }
@@ -1055,7 +1206,8 @@ async function runScenario(scenario, promptOverride = null) {
   $('#personaLab').hidden = false;
   setPhase('lab');
   requestAnimationFrame(() => {
-    $($('#agentPoll').hidden ? '#lab' : '#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+    // The demo view always lands on the 3D lab; the 100-agent panel is the last beat, further down.
+    $(demoView() || $('#agentPoll').hidden ? '#lab' : '#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
     startReplay();
   });
 }
@@ -1140,6 +1292,8 @@ function renderLab(options = {}) {
   const result = current.run || null;
   bloorMainMap.canvas.hidden = current.id === 'custom' || !bloorMainMap.world;
   $('#simulationViewport').classList.toggle('has-mapped-world', !bloorMainMap.canvas.hidden);
+  // A speculative question has no run, so the 3D view (which still holds the previous run) steps aside.
+  $('#simulationViewport').classList.toggle('is-speculative', current.id === 'custom');
   $('#mapAttribution').hidden = bloorMainMap.canvas.hidden;
   if (result) attachRun(rerun);
   else { if (bloorMainMap.run) bloorMainMap.setRun(null); bloorMainMap.setScenario(current.id); }
@@ -1249,7 +1403,8 @@ function renderLab(options = {}) {
   renderSector();
   renderOverview();
   scene.setSector(null);
-  if (!rerun) setCityMode('policy');
+  // The demo view opens a fresh run on Baseline, so the presenter can switch to "With policy" on stage.
+  if (!rerun) setCityMode(demoView() ? 'baseline' : 'policy');
   if (current.id === 'bike' && !rerun) setBikeRole('cyclist');
   const moving = scene.setMotion(true);
   $('#motionButton').textContent = moving ? 'Ⅱ' : '▶';
@@ -1268,8 +1423,11 @@ function renderLab(options = {}) {
     $('#runLedgerSeek').textContent = '';
     $('#mapPersonaCard').hidden = true;
     $('#sweepResult').hidden = true;
+    $('#impact').classList.remove('is-detail-open');
+    mapped.stripActor = null;
   }
   renderRunLedger();
+  renderDemo(result);
   $('#focusMarkerA').style.top = current.id === 'bike' ? '45%' : '39%';
   $('#focusMarkerA').style.left = current.id === 'bike' ? '43%' : '52%';
   $('#focusMarkerB').style.top = current.id === 'bike' ? '62%' : '63%';
@@ -1356,8 +1514,10 @@ function renderOverview() {
     const num = document.createElement('span'); num.textContent = `${String(i + 1).padStart(2, '0')} / ${key.toUpperCase()}`;
     const icon = document.createElement('span'); icon.textContent = data.icon; top.append(num, icon);
     const title = document.createElement('strong'); title.textContent = key === 'public' ? 'Public realm' : key === 'commerce' ? 'Local shops' : key[0].toUpperCase() + key.slice(1);
+    // The sector's plain-language finding (e.g. "No driver-time gain."); shown in the demo view only.
+    const finding = document.createElement('span'); finding.className = 'overview-card-finding'; finding.textContent = data.title || '';
     const delta = document.createElement('em'); delta.textContent = data.delta;
-    card.append(top, title, delta);
+    card.append(top, title, finding, delta);
     if (data.baseline.length && data.policy.length) {
       const ns = 'http://www.w3.org/2000/svg';
       const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', '0 0 200 58'); svg.setAttribute('aria-hidden', 'true');
@@ -1376,6 +1536,7 @@ function renderOverview() {
     card.addEventListener('click', () => {
       if (phase !== 'impact') setPhase('impact');
       chooseSector(key);
+      $('#impact').classList.add('is-detail-open');   // the demo view opens the detail under the charts
       $('#sectorDetail').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'center' });
     });
     grid.append(card);
@@ -1530,7 +1691,8 @@ $('#bikeImpactButton').addEventListener('click', () => {
 $$('[data-bike-role]').forEach(button => button.addEventListener('click', () => setBikeRole(button.dataset.bikeRole)));
 $('#bikeViewBaseline').addEventListener('click', () => setCityMode('baseline'));
 $('#bikeViewPolicy').addEventListener('click', () => setCityMode('policy'));
-$('#backToCity').addEventListener('click', () => { setPhase('lab'); scene.setSector(null); $('#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' }); });
+$('#backToCity').addEventListener('click', () => { setPhase('lab'); scene.setSector(null); $('#impact').classList.remove('is-detail-open'); $('#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' }); });
+$('#reportEvidence').addEventListener('click', openEvidence);
 $$('.sector-node').forEach(node => {
   node.addEventListener('click', () => chooseSector(node.dataset.sector));
   node.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); chooseSector(node.dataset.sector); } });

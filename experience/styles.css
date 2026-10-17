@@ -750,3 +750,130 @@ body.replay-collapsed:not([data-scenario=custom]) #impact,body.replay-collapsed 
 @media(max-width:900px){.run-ledger-tools{flex-direction:column}.run-ledger-tools .clef-card{flex:none}}
 @media(max-width:760px){.run-ledger{padding:0 15px 24px}.map-persona-card{top:auto;bottom:70px;right:12px}}
 @media(prefers-reduced-motion:reduce){.experiment-event,.event-replay-play,.timeline-periods button{transition:none}}
+
+/* ---------- Demo view (default) and Researcher view (?detail=1 or the header switch); see view-mode.js ----------
+   The demo view is the four-beat stage walkthrough: city → prompt → 3D → report, then the 100 agents.
+   It only hides and restyles; every section, rail and tool stays in the DOM for Researcher view. */
+body:not(.demo-view) .demo-only{display:none!important}
+.people-strip[hidden],.lab-badge[hidden],.report-story[hidden]{display:none!important}
+
+/* Header switch */
+.header-actions{display:flex;align-items:center;gap:10px}
+.research-toggle{display:inline-flex;align-items:center;gap:9px;border:1px solid #b8e9d83d;border-radius:50px;background:#0a2029a6;color:#cfe0de;padding:9px 14px 9px 10px;font-size:10px;font-weight:700;letter-spacing:.4px;transition:border-color .2s,color .2s}
+.research-toggle:hover{border-color:#b8e9d880;color:var(--cream)}
+.research-toggle-track{position:relative;flex:none;width:26px;height:14px;border-radius:10px;background:#2a4650;transition:background .2s}
+.research-toggle-track span{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#cfe0de;transition:transform .2s}
+.research-toggle[aria-pressed="true"]{border-color:#a8f4d18a;color:var(--mint)}
+.research-toggle[aria-pressed="true"] .research-toggle-track{background:var(--mint)}
+.research-toggle[aria-pressed="true"] .research-toggle-track span{transform:translateX(12px);background:#0a242a}
+@media(max-width:760px){.research-toggle{padding:9px}.research-toggle-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
+
+/* What the demo view hides (all still present in Researcher view) */
+body.demo-view .lab-topline,body.demo-view .story-rail,body.demo-view .insight-rail,body.demo-view .focus-marker,
+body.demo-view .viewport-upper,body.demo-view .world-caption,body.demo-view #mapMotionNote,body.demo-view #mapAttribution,
+body.demo-view #runLedger,body.demo-view #replayToggle,body.demo-view #ttcWorkbench,body.demo-view #bikeLab,body.demo-view #personaLab,
+body.demo-view .impact-section-head,body.demo-view .sector-board,body.demo-view .overview-head{display:none!important}
+/* The 3D viewer has its own playback; the event scrubber stays only for the 2D fallback. */
+body.demo-view .lab-shell:has(.simulation-viewport.is-3d) .timeline-bar{display:none!important}
+body.demo-view #impact:not(.is-detail-open) .impact-layout{display:none}
+body.demo-view.replay-collapsed #impact:not([hidden]){display:block}
+body.demo-view .agents-note{padding:6px 10px;font-size:8px;letter-spacing:.1em;opacity:.85}
+
+/* Lab: one title bar, the 3D view full width, a big Baseline / With policy switch */
+/* Opaque behind the title bar and the strip; see-through behind the viewport, where a speculative question shows the city. */
+body.demo-view .lab-shell{padding-top:86px;padding-bottom:28px;min-height:100vh;background:linear-gradient(#07131cf7 0,#07131cf2 170px,#07131c80 230px,#07131c80 calc(100% - 150px),#07131cf2 calc(100% - 90px),#081720)}
+.simulation-viewport.is-speculative .view3d-frame,.simulation-viewport.is-speculative .view3d-toggle{display:none!important}
+.lab-titlebar{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.lab-titlebar-main{min-width:0}
+.lab-kicker{display:flex;align-items:center;gap:9px;color:var(--mint);font-size:9px;font-weight:700;letter-spacing:1.6px}
+.lab-kicker .breadcrumb-star{font-size:14px;line-height:1}
+.lab-titlebar h2{max-width:1080px;margin:6px 0 7px;font:500 clamp(19px,1.6vw,25px)/1.18 'Space Grotesk',sans-serif;letter-spacing:-.025em;text-wrap:balance}
+.lab-status{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0;color:#c3d6d6;font-size:11px;font-weight:600;letter-spacing:.2px}
+.lab-status .live-pulse{width:5px;height:5px}
+.lab-badge{padding:4px 9px;border:1px solid #a8f4d14d;border-radius:20px;background:#0b212ad9;color:var(--mint);font-size:9px;font-weight:700;letter-spacing:1.1px}
+.lab-badge--compiler{border-color:#e4f6926b;color:#e4f692}
+.lab-scenarios{flex:none;display:inline-flex;gap:3px;padding:4px;border:1px solid #a8f4d13b;border-radius:40px;background:#0b212ae6}
+.lab-scenarios .switch-button{display:block;border:0;border-radius:30px;padding:10px 16px;background:transparent;color:#aac1c4;font-size:11px;font-weight:700}
+.lab-scenarios .switch-button:hover{color:var(--cream);background:#ffffff12}
+.lab-scenarios .switch-button.active{background:var(--mint);color:#0c2a2a}
+body.demo-view .lab-layout{display:block;margin-top:14px;min-height:0}
+body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{position:relative;top:auto;height:clamp(460px,calc(100vh - 262px),880px);min-height:0;border-radius:16px}
+body.demo-view .simulation-viewport .viewport-bottom{top:16px;left:16px;right:auto;bottom:auto;gap:8px;justify-content:flex-start}
+body.demo-view .view-toggle{padding:5px;box-shadow:0 12px 34px #0007}
+body.demo-view .view-toggle button{padding:12px 24px;font-size:13px;letter-spacing:.2px}
+body.demo-view .view-toggle button:not(.selected):hover{color:var(--cream);background:#ffffff14}
+body.demo-view .view3d-toggle{order:2}
+body.demo-view .motion-button{order:3}
+
+/* People who changed: one chip per person, under the 3D view */
+.people-strip{display:flex;align-items:center;gap:18px;margin-top:12px;padding:10px 12px 10px 18px;border:1px solid #a8f4d12e;border-radius:14px;background:linear-gradient(145deg,#12303aeb,#0b222ce8);backdrop-filter:blur(10px)}
+.people-strip-head{flex:none;display:grid;gap:4px;max-width:200px}
+.people-strip-head span{color:var(--mint);font-size:9px;font-weight:700;letter-spacing:1.5px}
+.people-strip-head small{color:#9fbdb8;font-size:10px;line-height:1.4}
+.people-strip-choices{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;padding:2px}
+.people-chip{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:9px 15px;border:1px solid #a8f4d13d;border-radius:11px;background:#0e2a33;color:var(--cream);text-align:left;transition:border-color .2s,background .2s,transform .2s}
+.people-chip strong{font:600 14px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.02em}
+.people-chip span{color:#b9d5ca;font-size:11px;white-space:nowrap}
+.people-chip:hover{border-color:var(--mint);background:#173d43;transform:translateY(-1px)}
+.people-chip[aria-pressed="true"]{border-color:var(--mint);background:#1d4a48;box-shadow:inset 0 0 0 1px #a8f4d140}
+.people-chip[aria-pressed="true"] strong{color:var(--mint)}
+.people-chip:focus-visible{outline-offset:2px}
+.lab-credit{margin:9px 2px 0;color:#86a5a8;font-size:9px;letter-spacing:.3px}
+.lab-credit a{color:inherit}
+
+/* Report: headline, mini cards, the five charts, what we don't estimate */
+body.demo-view .impact-section{min-height:0;padding:96px clamp(22px,4vw,64px) 70px}
+.report{max-width:1480px;margin:0 auto}
+.report-head{display:flex;justify-content:space-between;align-items:end;gap:32px;margin-bottom:24px}
+.report-head h2{margin:14px 0 0;font-size:clamp(46px,5vw,78px);line-height:1}
+.report-head p{max-width:440px;margin:0 0 4px;color:#b3c9c7;font-size:13px;line-height:1.55}
+.report-top{display:grid;grid-template-columns:minmax(300px,1.4fr) minmax(0,3fr);gap:12px;align-items:stretch}
+.report-headline{display:flex;flex-direction:column;justify-content:center;padding:24px 26px;border:1px solid #a8f4d166;border-radius:14px;background:radial-gradient(circle at 85% 0%,#2f6a5a73,transparent 55%),linear-gradient(150deg,#163a40,#0c252e);box-shadow:0 24px 60px #0004}
+.report-headline small{color:#cfe3dc;font-size:9px;font-weight:700;letter-spacing:1.5px}
+.report-headline strong{display:block;margin:8px 0 6px;color:var(--mint);font:500 clamp(54px,5.4vw,88px)/1 'Space Grotesk',sans-serif;letter-spacing:-.06em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.report-headline strong.is-long{font-size:clamp(30px,2.7vw,44px);letter-spacing:-.04em;margin:14px 0 12px}
+.report-headline span{color:#9fbdb8;font-size:11px}
+.report-mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.report-mini-card{display:flex;flex-direction:column;justify-content:space-between;gap:18px;min-width:0;padding:20px 22px;border:1px solid #a8f4d130;border-radius:14px;background:#102d34d9}
+.report-mini-card span{color:#bfd0d1;font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase}
+.report-mini-card strong{font:500 clamp(22px,1.95vw,32px)/1.08 'Space Grotesk',sans-serif;letter-spacing:-.04em;color:#e2e9e4;font-variant-numeric:tabular-nums}
+.report-mini-card strong.negative{color:var(--coral)}.report-mini-card strong.positive{color:var(--mint)}
+.report-story{display:flex;gap:11px;align-items:baseline;margin:12px 0 0;padding:13px 16px;border:1px solid #e4f69240;border-left:3px solid #e4f692;border-radius:10px;background:#e4f6920f;color:#e6f0dc;font-size:13px;line-height:1.5}
+.report-story::before{content:'⌑';flex:none;color:#e4f692}
+.report-charts-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px;color:var(--mint);font-size:9px;font-weight:700;letter-spacing:1.4px}
+.report-legend{display:flex;align-items:center;gap:6px;color:#b7cecc}
+.report-legend .chart-key{margin-left:10px}
+body.demo-view .overview-section{margin-top:30px;padding-top:24px}
+.overview-card-finding{display:none}
+body.demo-view .overview-card-finding{display:block;margin:0 0 9px;color:#cfe0dc;font-size:11px;line-height:1.35}
+body.demo-view .overview-card strong{margin-top:14px}
+body.demo-view .impact-layout{grid-template-columns:1fr;margin-top:12px}
+body.demo-view .sector-detail{width:100%;max-width:880px;min-height:0;margin:0 auto}
+.report-limits{max-width:1480px;margin:22px auto 0}
+.report-limits-box{display:flex;align-items:center;gap:20px;padding:18px 20px;border:1px solid #ff987e55;border-radius:14px;background:linear-gradient(120deg,#3a2e2a8c,#14262cc7)}
+.report-limits-head{flex:none;display:grid;gap:4px}
+.report-limits-head span{color:var(--coral);font-size:9px;font-weight:700;letter-spacing:1.5px}
+.report-limits-head strong{font:600 18px 'Space Grotesk',sans-serif;letter-spacing:-.02em}
+.report-not-estimable{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:7px;margin:0;padding:0;list-style:none}
+.report-not-estimable li{padding:7px 12px;border:1px solid #ff987e4d;border-radius:20px;background:#2b1f1c80;color:#f4d6cc;font-size:11px;font-weight:600}
+.report-not-estimable li[title]{cursor:help}
+.report-limits .text-link{flex:none;margin:0}
+.report-provenance{margin:14px 2px 0;color:#9fbdb8;font-size:11px;letter-spacing:.2px}
+
+/* The 100 agents close the walkthrough; the footer stays short. */
+body.demo-view .agent-poll{padding-top:76px;padding-bottom:76px}
+body.demo-view .about-strip{min-height:0;padding:34px clamp(24px,5vw,84px)}
+body.demo-view .about-strip>div{font-size:clamp(24px,2.4vw,38px)}
+
+@media(max-width:1100px){.report-top{grid-template-columns:1fr}}
+@media(max-width:760px){
+  .lab-titlebar{display:block}.lab-scenarios{margin-top:12px}
+  body.demo-view .lab-shell{padding-top:76px}
+  body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{height:62vh;min-height:380px}
+  body.demo-view .view-toggle button{padding:10px 16px;font-size:12px}
+  .people-strip{display:block;padding:12px}.people-strip-head{max-width:none;margin-bottom:9px}
+  .report-head{display:block}.report-head p{margin-top:12px}
+  .report-mini{grid-template-columns:1fr}
+  .report-charts-head{flex-wrap:wrap}
+  .report-limits-box{display:block}.report-not-estimable{margin:12px 0}
+}

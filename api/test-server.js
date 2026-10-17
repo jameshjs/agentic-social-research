@@ -106,6 +106,25 @@ test('redirects, gzip, ETag revalidation and security headers', async () => {
   assert.equal((await request(server, 'POST', '/experience/')).status, 405);
 });
 
+test('the pitch deck is served from /pitch/ with its assets, and nothing else leaks', async () => {
+  const dir = await request(server, 'GET', '/pitch');
+  assert.equal(dir.status, 301);
+  assert.equal(dir.headers.location, '/pitch/');
+  const deck = await request(server, 'GET', '/pitch/');
+  assert.equal(deck.status, 200);
+  assert.match(deck.headers['content-type'], /text\/html/);
+  assert.match(deck.text, /Counterfactual Lab/);
+  const img = await request(server, 'GET', '/pitch/assets/bloor-night-3d.jpg');
+  assert.equal(img.status, 200);
+  assert.match(img.headers['content-type'], /image\/jpeg/);
+  for (const p of ['/pitch/../.env', '/pitch/%2e%2e/.env', '/pitch/.env', '/pitch/assets/../../.env', '/pitch/missing.html', '/pitch/index.js']) {
+    const r = await request(server, 'GET', p);
+    assert.equal(r.status, 404, p);
+    assert.ok(!/VULTR|API_KEY/.test(r.text), `${p} leaked content`);
+  }
+  assert.equal(resolveStatic('/pitch/../.env'), null);
+});
+
 test('health reports the service and unconfigured inference', async () => {
   const r = await request(server, 'GET', '/api/health');
   assert.equal(r.status, 200);
