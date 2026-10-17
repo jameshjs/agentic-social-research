@@ -16,6 +16,19 @@ The default demo view now runs landing → prompt → 3D. The changes live in `t
 - **Lab:** shows only the 3D view, made larger and with no 2D toggle, under a single timeline. Below it is one row of metric tiles, baseline → with policy, summed by `two-world.js` from the run's own `metrics.by_tick`. Everything else below (people strip, report, ledger, footer) is hidden in the demo view.
 - **The 100-agent panel:** sits right after the prompt, without its caveat line or its mean/flagged line.
 
+## Landing globe
+
+Scrolling the landing flies from the whole Earth to Toronto, then down to a tilted 3D view of Bloor St W from Bathurst to Spadina. The 619 m section is drawn as a mint line, and the camera lands behind the question box. It is `globe-intro.js` and `globe-intro.css`, with no change to `app.js`: the script reads the same scroll progress as `updateReveal()`.
+
+- **Map and tiles:** MapLibre GL 5.6.0 from jsdelivr, with dark OpenFreeMap vector tiles (no key, OpenStreetMap data, attribution shown). `api/server.js` allows `tiles.openfreemap.org` in `connect-src` and `img-src` for this.
+- **What is shown:** the street and building shapes are OpenStreetMap context only. The world the runs use is still `data/world/`.
+- **Fallback:** the globe removes itself and the drawn city landing shows as before when any of these apply:
+  - the page has `?globe=off`
+  - reduced motion is on
+  - there is no WebGL
+  - MapLibre or the tiles fail to load within 12 s, which also covers being offline
+- **Once a run starts:** the globe hides, and it comes back when you return to the landing.
+
 ## Run it
 
 From the repository root:

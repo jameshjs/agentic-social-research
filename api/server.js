@@ -141,8 +141,9 @@ const CSP = [
   "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob:",
-  "connect-src 'self'",
+  // The landing globe (experience/globe-intro.js) reads map tiles, glyphs and sprites from OpenFreeMap.
+  "img-src 'self' data: blob: https://tiles.openfreemap.org",
+  "connect-src 'self' https://tiles.openfreemap.org",
   "worker-src 'self' blob:",
   "frame-src 'self'",
   "frame-ancestors 'self'",

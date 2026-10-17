@@ -9,6 +9,7 @@
     <link rel="icon" href="./brand/two-world-favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css?v=demo-view-1" />
     <link rel="stylesheet" href="./two-world.css?v=4" />
+    <link rel="stylesheet" href="./globe-intro.css?v=2" />
   </head>
   <body data-phase="intro" data-scenario="fare">
     <!-- Sets body.demo-view (default) or Researcher view before the first paint. -->
@@ -20,6 +21,13 @@
       <div class="sky-glow"></div>
       <div class="scene-grain"></div>
       <div class="city-haze"></div>
+    </div>
+
+    <!-- Landing globe: scrolling flies from the Earth to Bloor, Bathurst–Spadina (globe-intro.js; ?globe=off keeps the drawn city). -->
+    <div id="globeStage" class="globe-stage" aria-hidden="true">
+      <div class="globe-map"></div>
+      <div class="globe-caption"></div>
+      <div class="globe-credit"><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
     </div>
 
     <div class="cloud-field" aria-hidden="true">
@@ -391,5 +399,6 @@
     <script defer src="./persona-lab.js?v=2"></script>
     <script defer src="./viewer3d-bridge.js?v=demo-view-1"></script>
     <script defer src="./two-world.js?v=3"></script>
+    <script defer src="./globe-intro.js?v=3"></script>
   </body>
 </html>

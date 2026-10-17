@@ -95,6 +95,7 @@ test('redirects, gzip, ETag revalidation and security headers', async () => {
   assert.ok(js.headers['referrer-policy']);
   assert.match(js.headers['content-security-policy'], /script-src 'self' 'unsafe-inline' https:\/\/cdnjs\.cloudflare\.com https:\/\/cdn\.jsdelivr\.net/);
   assert.match(js.headers['content-security-policy'], /fonts\.googleapis\.com/);
+  assert.match(js.headers['content-security-policy'], /connect-src 'self' https:\/\/tiles\.openfreemap\.org/);
   const again = await request(server, 'GET', '/experience/app.js', { headers: { 'Accept-Encoding': 'gzip', 'If-None-Match': js.headers.etag } });
   assert.equal(again.status, 304);
   const plain = await request(server, 'GET', '/experience/app.js');
