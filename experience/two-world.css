@@ -43,3 +43,18 @@ body.demo-view .tw-metrics:not([hidden]){display:block;margin-top:12px}
 .tw-metric i.up,.tw-metric i.down{color:#e4f692}
 .tw-metrics-note{margin:8px 2px 0;color:#86a5a8;font-size:10px;letter-spacing:.2px}
 @media(max-width:900px){.tw-metrics-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---------- everyone in the run, under the metric tiles ---------- */
+.tw-people{margin-top:14px;padding:12px;border:1px solid #a8f4d126;border-radius:14px;background:#0b222ce0}
+.tw-people-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 4px 10px}
+.tw-people-head span{color:var(--mint);font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase}
+.tw-people-head small{color:#9fbdb8;font-size:11px}
+.tw-people-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.tw-person{display:grid;gap:2px;text-align:left;padding:9px 12px;border:1px solid #a8f4d12e;border-radius:10px;background:#0e2a33;color:var(--cream);cursor:pointer;transition:border-color .2s,background .2s}
+.tw-person strong{font:600 14px/1.15 'Space Grotesk',sans-serif}
+.tw-person span{color:#cfe0dc;font-size:11px;text-transform:capitalize}
+.tw-person small{color:#8fa9ad;font-size:10px}
+.tw-person em{font-style:normal;color:#9fbdb8;font-size:11px;margin-top:3px}
+.tw-person.is-changed{border-color:#ff3df066;background:linear-gradient(150deg,#2a1638,#0e2a33)}
+.tw-person.is-changed em{color:#ff9ff3;font-weight:600}
+.tw-person:hover,.tw-person[aria-pressed="true"]{border-color:var(--mint);background:#173d43}

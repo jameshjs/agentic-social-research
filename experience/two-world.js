@@ -44,9 +44,37 @@
         tile('Sales at Bloor shops', B('shop_sales_cad'), P('shop_sales_cad'), money)];
     const periods = run.scenario.ticks - run.scenario.policy_start + 1;
     box.innerHTML = `<div class="tw-metrics-row">${tiles.join('')}</div>
-      <p class="tw-metrics-note">Without → with the policy, ${periods} simulated weekdays · ${people} of ${run.population.count} synthetic people changed a choice · simulated, not a forecast</p>`;
+      <p class="tw-metrics-note">Without → with the policy, ${periods} simulated weekdays · ${people} of ${run.population.count} synthetic people changed a choice · simulated, not a forecast</p>
+      ${roster(run)}`;
     box.hidden = false;
   }
+  /* Everyone in the run, the people whose choice changed first. A click flies the 3D view to them
+   * (viewer3d-bridge.js listens for data-viewer3d-person) and opens their card. */
+  const nice = (v) => String(v || '').replace(/_/g, ' ');
+  const CHOICE = { bike_bloor: 'cycle on Bloor', bike_side_street: 'cycle via side streets', transit: 'TTC', car: 'drive', drive: 'drive', walk: 'walk', shop_elsewhere: 'shop elsewhere', defer: 'stay home' };
+  const choice = (v) => CHOICE[v] || nice(v);
+  const esc = (v) => String(v ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function roster(run) {
+    const changes = new Map();
+    for (const c of run.changed_decisions) (changes.get(c.actor) || changes.set(c.actor, []).get(c.actor)).push(c);
+    const rows = run.personas.map((p) => {
+      const cs = changes.get(p.id) || [];
+      const what = [...new Set(cs.map((c) => `${choice(c.baseline.action)} → ${choice(c.intervention.action)}`))].slice(0, 2).join(' · ');
+      const kit = [p.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare', p.has_car ? 'car' : null, p.has_bike ? 'bike' : null].filter(Boolean).join(' · ');
+      return { p, cs, html: `<button type="button" class="tw-person${cs.length ? ' is-changed' : ''}" data-viewer3d-person="${esc(p.id)}" data-changed="${cs.length ? 1 : 0}">
+        <strong>${esc(p.name)}</strong><span>${esc(nice(p.role))}</span><small>${esc(kit)}</small><em>${cs.length ? esc(what) : 'same choices'}</em></button>` };
+    }).sort((a, b) => b.cs.length - a.cs.length || a.p.name.localeCompare(b.p.name));
+    return `<div class="tw-people"><div class="tw-people-head"><span>Everyone in this run · ${run.personas.length} people</span><small>${changes.size} changed a choice with the policy · click anyone to follow them in 3D</small></div>
+      <div class="tw-people-grid">${rows.map((r) => r.html).join('')}</div></div>`;
+  }
+  // A changed person is shown in the policy world; anyone else keeps the current view.
+  document.addEventListener('click', (event) => {
+    const b = event.target.closest && event.target.closest('.tw-person');
+    if (!b) return;
+    if (b.dataset.changed === '1') document.getElementById('policyView')?.click();
+    for (const x of document.querySelectorAll('.tw-person')) x.setAttribute('aria-pressed', String(x === b));
+    document.getElementById('simulationViewport')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, true);
   window.addEventListener('counterfactual:result', (event) => render(event.detail));
   if (window.CounterfactualCurrentRun) render(window.CounterfactualCurrentRun);
 })();
