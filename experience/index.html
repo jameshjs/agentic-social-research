@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#07131c" />
     <meta name="description" content="Counterfactual Lab — explore how a city might respond to a policy change through a living simulation and connected impact map." />
     <title>Counterfactual Lab — Ask a city what if</title>
-    <link rel="stylesheet" href="./styles.css?v=shared-section-1" />
+    <link rel="stylesheet" href="./styles.css?v=agent-ratings-1" />
   </head>
   <body data-phase="intro" data-scenario="fare">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -32,6 +32,7 @@
       <div class="header-center"><span class="live-pulse"></span> A LIVING CITY MODEL <span class="header-rule"></span> TORONTO / 2026</div>
       <button id="headerExplore" class="header-action" type="button">Explore a scenario <span aria-hidden="true">↗</span></button>
     </header>
+    <p id="agentsNote" class="agents-note" hidden role="status">AGENTS OFFLINE · PREPARED REPLAYS</p>
 
     <main id="main">
       <section id="intro" class="intro-chapter" aria-label="Introduce a hypothesis">
@@ -101,6 +102,7 @@
             <button class="focus-marker focus-marker--a" id="focusMarkerA" type="button" aria-label="Inspect mobility impact"><span class="focus-ring"></span><span class="focus-label" id="focusLabelA">01 / RIDER DECISION</span></button>
             <button class="focus-marker focus-marker--b" id="focusMarkerB" type="button" aria-label="Inspect local business impact"><span class="focus-ring"></span><span class="focus-label" id="focusLabelB">02 / LOCAL BUSINESS</span></button>
             <div class="world-caption"><span>MAPPED CONTEXT</span><span class="caption-line"></span><span id="worldCaption">People choose. The city changes.</span></div>
+            <div id="mapMotionNote" class="map-motion-note" hidden><strong>Illustrative motion mapped from agents' 1–5 ratings, not simulated trip decisions.</strong> <span id="mapMotionCount"></span> Click a dot for that agent's rating and reason.<span class="map-motion-legend"><i style="background:#a9f4d6"></i>transit<i style="background:#f2e6c9"></i>walk<i style="background:#ffd27a"></i>bike<i style="background:#ff987e"></i>side-street detour<i style="background:#8fb7ff"></i>car</span><p id="mapActorCard" class="map-actor-card" hidden></p></div>
             <div id="mapAttribution" class="map-attribution" hidden>Map data: City of Toronto · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a></div>
             <div class="viewport-bottom">
               <div class="view-toggle" id="viewToggle" role="group" aria-label="Compare city state"><button id="baselineView" type="button" aria-pressed="false">Baseline</button><button id="policyView" class="selected" type="button" aria-pressed="true">With policy</button></div>
@@ -125,6 +127,14 @@
           <div class="timeline-controls"><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub schematic city animation; recorded decisions appear in the experiment ledger below" /><span>END</span></div>
           <div class="timeline-time"><span>00</span><span>01</span><span>02</span><span>03</span><span>04</span></div>
         </div>
+      </section>
+
+      <section id="agentPoll" class="persona-lab agent-poll" hidden aria-label="Live persona agent poll">
+        <div class="persona-reaction-head"><div><span id="agentPollStatus">LIVE AGENT POLL</span><h3 id="agentPollQuestion"></h3></div><p><b id="agentPollLabel">Survey-style reaction, not a forecast.</b> <span id="agentPollSummary"></span></p></div>
+        <div id="agentPollSplit" class="agent-poll-split" role="img" aria-label="Answer split"></div>
+        <p id="agentPollStats" class="agent-poll-stats"></p>
+        <button id="agentPollAction" class="text-link agent-poll-action" type="button" hidden></button>
+        <div id="agentPollCards" class="persona-reaction-cards agent-poll-cards" aria-live="polite"></div>
       </section>
 
       <section id="ttcWorkbench" class="ttc-workbench" hidden aria-label="TTC agent replay and research workbench">
@@ -206,7 +216,7 @@
         </div>
 
         <div class="experiment-ledger" id="bikeExperimentLedger" aria-live="polite">
-          <div class="experiment-ledger-head"><div><span>PAIRED WORLD / SEED 42</span><h3>What the people in this run did.</h3></div><p>Choose a changed decision to follow its committed events. All figures below are for eight synthetic people over four model periods.</p></div>
+          <div class="experiment-ledger-head"><div><span id="bikeLedgerSeed">PAIRED WORLD</span><h3>What the people in this run did.</h3></div><p id="bikeLedgerScope">Choose a changed decision to follow its committed events.</p></div>
           <div id="bikeExperimentChoices" class="experiment-ledger-choices"></div>
           <div id="bikeExperimentPath" class="experiment-ledger-path"></div>
         </div>
@@ -279,7 +289,7 @@
     </main>
 
     <div id="investigation" class="investigation" hidden role="status" aria-live="polite">
-      <div class="investigation-card"><div class="investigation-top"><span class="investigation-orbit">✳</span><span>SCENARIO REPLAY</span><span id="investigationCount">01 / 04</span></div><h2 id="investigationTitle">Framing the question.</h2><p id="investigationDescription">Identifying the policy, affected people, and the change to test.</p><div class="investigation-progress"><span id="investigationProgress"></span></div><ol id="investigationSteps"><li>Frame the question</li><li>Load stakeholders</li><li>Review evidence</li><li>Compare worlds</li></ol><small>Prepared demo replay · no live model call</small></div>
+      <div class="investigation-card"><div class="investigation-top"><span class="investigation-orbit">✳</span><span>SCENARIO REPLAY</span><span id="investigationCount">01 / 04</span></div><h2 id="investigationTitle">Framing the question.</h2><p id="investigationDescription">Identifying the policy, affected people, and the change to test.</p><div class="investigation-progress"><span id="investigationProgress"></span></div><ol id="investigationSteps"><li>Frame the question</li><li>Load stakeholders</li><li>Review evidence</li><li>Compare worlds</li></ol><small id="investigationNote">Prepared demo replay · no live model call</small></div>
     </div>
 
     <dialog id="evidenceDialog" class="evidence-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close evidence panel">×</button></form><div class="eyebrow"><span class="eyebrow-line"></span> WHAT WE KNOW, WHAT WE ASSUME</div><h2 id="evidenceDialogTitle">Evidence has a boundary.</h2><p id="evidenceDialogText"></p><div id="evidenceLinks" class="evidence-links"></div><div class="evidence-warning">The figures in this visual prototype are simulated examples. They are not calibrated Toronto forecasts, causal estimates, or a prediction that a shop will close.</div></dialog>
@@ -289,10 +299,11 @@
     <script defer src="./trace-adapter.js?v=shared-section-1"></script>
     <script defer src="../experiment/runner.js"></script>
     <script defer src="../experiment/fixtures.js"></script>
-    <script defer src="./experiment-adapter.js"></script>
+    <script defer src="./experiment-adapter.js?v=live-agents-2"></script>
     <script defer src="./city.js?v=bloor-workbench"></script>
-    <script defer src="./bloor-map.js?v=shared-section-1"></script>
-    <script defer src="./app.js?v=shared-section-1"></script>
+    <script defer src="./bloor-map.js?v=agent-ratings-2"></script>
+    <script defer src="../persona-swarm/runtime/agents-client.js"></script>
+    <script defer src="./app.js?v=agent-ratings-4"></script>
     <script defer src="./persona-lab.js?v=1"></script>
   </body>
 </html>

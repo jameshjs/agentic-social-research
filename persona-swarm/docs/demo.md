@@ -61,15 +61,14 @@ Run from `persona-swarm/`. Rehearsed on 17 Oct: 42 s for the Papiers read, 36 s 
 failed, $0.42).
 
 ```bash
-set -a; . ./.env; set +a
 python3 autoresearch/coach_notes.py "persona variety"
 python3 autoresearch/run_round.py --scratch --slug live --concurrency 16
 ```
 
-1. The first line loads the Papiers token. Never echo it.
-2. `coach_notes.py` reads every paper, highlight and note in the library and prints the count (7 papers, 49
-   highlights, 3 notes).
-3. The scratch run sends 40 real Haiku calls with round 9's instructions and the `full_relative` format, on the
+1. `coach_notes.py` reads the Papiers token from `.env` itself. Don't source `.env` into the shell: if it holds
+   `ANTHROPIC_API_KEY`, every `claude -p` call would move from the Claude plan to API billing. It reads every paper,
+   highlight and note in the library and prints the count (7 papers, 49 highlights, 3 notes).
+2. The scratch run sends 40 real Haiku calls with round 9's instructions and the `full_relative` format, on the
    tuning set only. It writes `rounds/demo-live/` (a rerun replaces it), outside the record: round numbering, the
    review gate, `results.tsv` and the page all ignore it. It then prints the tuning-set checks beside round 9's,
    overall and for policy against pricing.

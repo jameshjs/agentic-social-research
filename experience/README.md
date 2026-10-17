@@ -16,6 +16,22 @@ python3 -m http.server 4173 --bind 127.0.0.1
 
 Open `http://127.0.0.1:4173/experience/`. Add `?demo=fare` or `?demo=bike` to open a prepared case. No package install or build is required. Serve from the **repository root** because the TTC page loads `../demo-ui/sim.js` and embeds `../demo-ui/?embedded=1`. The detailed TTC scene uses Three.js from a CDN; the outer experience has a canvas fallback and the cited trace generator works locally.
 
+**Live persona agents.** The agent server serves this site at `http://127.0.0.1:4174/experience/` (`npm --prefix persona-swarm/runtime start`). The page loads [`agents-client.js`](../persona-swarm/runtime/agents-client.js) and calls the server on the same origin. The browser never holds an access key. When the server is online:
+- `?demo=fare` and `?demo=bike` ask all 100 persona agents to rate the prepared policy on a 1–5 scale (`askAgents` with fixed options, about 100 calls; no live world run). The panel under the city shows a live 1–5 bar, the mean, N answered, a by-group split (Fair Pass vs adult fare; Bloor by travel mode), agent cards and the orchestrator's summary, labelled "survey-style reaction from 100 persona agents, not a forecast".
+- Each rating drives one dot on the mapped Bloor section through `MOTION_MAP` in `app.js`. The dots are labelled "Illustrative motion mapped from agents' 1–5 ratings, not simulated trip decisions", and clicking one shows that agent's rating and reason. The ledger and charts stay on the prepared replay, labelled "prepared replay (synthetic)".
+- The composer sends the typed text to the Opus orchestrator (`chat`). A poll streams into the same panel; a reply shows as text. If the orchestrator picks a world run, the panel says runs are not enabled in this site and offers the policy's 1–5 poll instead.
+
+`MOTION_MAP` (tune it in `app.js`). The baseline view shows each agent's usual mode; the policy view uses the agent's rating, 1 to 5:
+
+| Policy | Mode | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| fare | transit rider (adult fare) | car if they have one, else walk | walk for half (stable hash), else transit | transit | transit | transit |
+| bike | cyclist | side-street detour | side-street detour | Bloor | Bloor | Bloor |
+
+Fair Pass riders keep transit. Drivers, pedestrians and any mode not listed keep their usual cue. The cues are transit (walks to Bathurst or Spadina station), walk, bike (Bloor), side-street detour, and car (Bloor).
+
+Served any other way (for example `python3 -m http.server 4173`), or with the agent server offline, the page shows an "agents offline" note and behaves as before: the bike fixture runs in the browser and fare uses the `demo-ui` trace.
+
 ## What works now
 
 1. **Cloud descent:** a continuously animated isometric city sits behind a scroll-driven cloud reveal; an entry control scrolls to the centered hypothesis composer.

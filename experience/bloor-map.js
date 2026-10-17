@@ -8,6 +8,15 @@
     institutional: '#7490a2', other: '#526e78',
   };
   const SECTION = { x0: -35, x1: 655, y0: -185, y1: 185 };
+  // Illustrative actor cues (app.js maps each agent's 1–5 rating to one). Speeds are metres per second of animation.
+  const CUES = {
+    walk: { color: '#f2e6c9', speed: 9, lane: 15 },
+    transit: { color: '#a9f4d6', speed: 9, lane: 15 },
+    bike: { color: '#ffd27a', speed: 26, lane: 11.5 },
+    detour: { color: '#ff987e', speed: 22, lane: 0 },
+    drive: { color: '#8fb7ff', speed: 40, lane: 5 },
+  };
+  const hash = (text) => [...text].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
 
   function projection(width, height) {
     const raw = (x, y) => [x - y * .52, x * .27 - y * .66];
@@ -56,6 +65,77 @@
       this.world = null;
       this.observer = new ResizeObserver(() => this.draw());
       this.observer.observe(canvas.parentElement);
+      this.actors = [];
+      this.onPick = null;
+    }
+
+    // One dot per polled agent, moving along a fixed path for its cue. Motion is illustrative, not a simulated trip.
+    setActors(actors) {
+      this.actors = actors;
+      if (!this.overlay && !actors.length) return;
+      if (!this.overlay) {
+        this.overlay = document.createElement('canvas');
+        this.overlay.className = 'bloor-map-canvas bloor-map-actors';
+        this.overlay.setAttribute('aria-hidden', 'true');
+        this.canvas.after(this.overlay);
+        this.overlay.addEventListener('click', (event) => this.pick(event));
+        const loop = (time) => { this.drawActors(time); requestAnimationFrame(loop); };
+        requestAnimationFrame(loop);
+      }
+      this.draw();
+    }
+
+    position(actor, time) {
+      const h = hash(actor.id);
+      const cue = this.mode === 'baseline' ? actor.base : actor.policy;
+      const { speed, lane } = CUES[cue] || CUES.walk;
+      const side = h & 1 ? 1 : -1;
+      const length = this.world.frame.section_length_m;
+      const travelled = ((h % 997) / 997) * length + (time / 1000) * speed;
+      if (cue === 'detour') {
+        const streets = this.world.bloor.intersections.filter((c) => c.x > 0 && c.x < length);
+        const street = streets[h % streets.length];
+        const north = street.legs.some((leg) => leg.endsWith('|north'));
+        const along = travelled % 320;
+        return [street.x + 3 * side, (north ? 1 : -1) * (17 + (along < 160 ? along : 320 - along))];
+      }
+      if (cue === 'transit') {
+        const start = ((h % 997) / 997) * length;
+        const station = start < length / 2 ? 0 : length;
+        return [station + (start - station) * (1 - ((travelled / 120) % 1)), lane * side];
+      }
+      const lap = travelled % (2 * length);
+      return [lap < length ? lap : 2 * length - lap, lane * side];
+    }
+
+    drawActors(time) {
+      const overlay = this.overlay;
+      if (!overlay || overlay.hidden || !this.P || !this.world) return;
+      const ctx = overlay.getContext('2d');
+      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+      const still = root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      this.placed = this.actors.map((actor) => {
+        const [x, y] = this.position(actor, still ? 0 : time);
+        const [px, py] = this.P(x, y, 1);
+        const cue = this.mode === 'baseline' ? actor.base : actor.policy;
+        ctx.beginPath(); ctx.arc(px, py, cue === 'drive' ? 4 : 3, 0, Math.PI * 2);
+        ctx.fillStyle = (CUES[cue] || CUES.walk).color; ctx.fill();
+        if (actor === this.picked) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke(); }
+        return [px, py, actor];
+      });
+    }
+
+    pick(event) {
+      const rect = this.overlay.getBoundingClientRect();
+      const x = event.clientX - rect.left, y = event.clientY - rect.top;
+      let best = null, distance = 14;
+      for (const [px, py, actor] of this.placed || []) {
+        const d = Math.hypot(px - x, py - y);
+        if (d < distance) { best = actor; distance = d; }
+      }
+      this.picked = best;
+      this.onPick?.(best);
     }
 
     setWorld(world) {
@@ -70,6 +150,7 @@
     setMode(mode) { this.mode = mode; this.draw(); }
 
     draw() {
+      if (this.overlay) this.overlay.hidden = this.canvas.hidden || !this.actors.length;
       if (!this.world || this.canvas.hidden) return;
       const rect = this.canvas.parentElement.getBoundingClientRect();
       if (rect.width < 2 || rect.height < 2) return;
@@ -78,6 +159,8 @@
       const dpr = Math.min(2, root.devicePixelRatio || 1);
       this.canvas.width = Math.round(width * dpr);
       this.canvas.height = Math.round(height * dpr);
+      if (this.overlay) { this.overlay.width = this.canvas.width; this.overlay.height = this.canvas.height; }
+      this.dpr = dpr;
       const ctx = this.ctx;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = '#0c2430'; ctx.fillRect(0, 0, width, height);
@@ -85,6 +168,7 @@
       glow.addColorStop(0, '#285459'); glow.addColorStop(1, '#0c2430');
       ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
       const P = projection(width, height);
+      this.P = P;
       const world = this.world;
 
       // Side streets are limited to the mapped intersecting legs.

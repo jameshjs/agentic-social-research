@@ -36,6 +36,24 @@ let activeBikeDecisionKey = null;
 let fareTrace = null;
 let bikeExperiment = null;
 
+// Live persona agents. The agent server (persona-swarm/runtime/server.js) also serves this site, so calls are same-origin
+// and the browser holds no key. Served any other way, health() fails and the prepared replays run.
+const agents = { client: window.AgentsClient?.create() || null, online: false, count: 0, roster: new Map(), polls: {}, chatPoll: null, shown: null, chatToken: 0, focusPoll: false };
+const agentsReady = (async () => {
+  try {
+    const health = agents.client && await agents.client.health();
+    agents.online = Boolean(health?.ok);
+    agents.count = health?.agents || 0;
+    if (agents.online) agents.roster = new Map((await agents.client.agents()).agents.map((agent) => [agent.id, agent]));
+  } catch (error) { console.warn('Persona agents unavailable; using prepared replays.', error); }
+  // The corner pill always states the agents' real state.
+  const note = $('#agentsNote');
+  note.textContent = agents.online ? `LIVE · ${agents.count} PERSONA AGENTS` : 'AGENTS OFFLINE · PREPARED REPLAYS';
+  note.dataset.state = agents.online ? 'live' : 'offline';
+  note.hidden = false;
+  return agents.online;
+})();
+
 function useFareTrace(trace) {
   if (!traceAdapter.isFareTrace(trace)) return;
   fareTrace = trace;
@@ -96,7 +114,7 @@ function eventDescendants(events, startId) {
 }
 
 function eventText(event) {
-  if (event.action === 'choose_trip') return `Chose ${event.chosen.replaceAll('_', ' ')}`;
+  if (event.action === 'choose_trip') return `Chose ${event.chosen.replaceAll('_', ' ')} · ${event.provider.replaceAll('_', ' ')}: ${event.reason}`;
   if (event.action === 'change_destination') return `Changed destination: ${event.from.replaceAll('_', ' ')} → ${event.to.replaceAll('_', ' ')}`;
   if (event.action === 'travel') return `${event.mode} via ${event.route_id.replaceAll('_', ' ')} → ${event.to.replaceAll('_', ' ')}`;
   if (event.action === 'enter_shop') return 'Entered the local shop';
@@ -110,6 +128,9 @@ function eventText(event) {
 
 function renderBikeExperiment(result) {
   if (!result) return;
+  const by = experimentAdapter.deciders(result);
+  $('#bikeLedgerSeed').textContent = `PREPARED REPLAY (SYNTHETIC) / SEED ${result.seed}`;
+  $('#bikeLedgerScope').textContent = `Choose a changed decision to follow its committed events. All figures below are for ${result.population.count} ${by.who} over ${result.scenario.ticks} model periods.`;
   const changes = result.changed_decisions.filter((change) => change.tick >= result.scenario.policy_start);
   if (!changes.some((change) => change.key === activeBikeDecisionKey)) activeBikeDecisionKey = changes.find((change) => change.trip_id === 'shop')?.key || changes[0]?.key;
   const buttons = $('#bikeExperimentChoices');
@@ -131,8 +152,9 @@ function renderBikeExperiment(result) {
   if (!change) return;
   const person = result.personas.find((item) => item.id === change.actor);
   const heading = document.createElement('div'); heading.className = 'experiment-path-heading';
-  const title = document.createElement('strong'); title.textContent = `${person?.name || change.actor}'s ${change.trip_id} trip · period ${change.tick}`;
-  const note = document.createElement('span'); note.textContent = 'SYNTHETIC DECISION / TRACEABLE EVENTS';
+  const provider = result.runs.intervention.decisions.find((item) => item.key === change.key)?.provider || 'fixture_rule';
+  const title = document.createElement('strong'); title.textContent = `${person?.name || change.actor} (${(person?.role || 'resident').replaceAll('_', ' ')}) · ${change.trip_id} trip · period ${change.tick}`;
+  const note = document.createElement('span'); note.textContent = `${provider === 'fixture_rule' ? 'FIXTURE RULE' : `AGENT · ${provider.toUpperCase()}`} / TRACEABLE EVENTS`;
   heading.append(title, note); path.append(heading);
   const columns = document.createElement('div'); columns.className = 'experiment-path-columns';
   for (const [arm, startId, label] of [['baseline', change.baseline_event_id, 'BASELINE'], ['intervention', change.intervention_event_id, 'WITH REMOVAL']]) {
@@ -149,7 +171,7 @@ function renderBikeExperiment(result) {
   }
   path.append(columns);
   const caveat = document.createElement('p'); caveat.className = 'experiment-path-caveat';
-  caveat.textContent = 'The policy starts in period 2. Route preferences, safety sensitivity and basket values are explicit synthetic assumptions. These are sampled choices, not observed Toronto behavior.';
+  caveat.textContent = `The policy starts in period ${result.scenario.policy_start}. ${by.agent ? `Choices come from persona agents (${by.label})${by.agent < by.total ? '; the rest used the fixture rule' : ''}.` : 'Route preferences, safety sensitivity and basket values are explicit synthetic assumptions.'} These are sampled choices, not observed Toronto behavior.`;
   path.append(caveat);
 }
 
@@ -191,6 +213,10 @@ function resetToIntro() {
   $('#ttcWorkbench').hidden = true;
   $('#impact').hidden = true;
   $('#personaLab').hidden = true;
+  agents.chatToken++;
+  agents.chatPoll = null;
+  showPoll(null);
+  agents.focusPoll = false;
   scene.setSector(null);
   scene.setScenario('fare');
   setPhase('intro');
@@ -205,8 +231,202 @@ const steps = [
 
 function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
+// ---------- Persona agents: 1–5 policy polls, the composer, and illustrative map motion ----------
+const SCALE = ['1 strongly oppose', '2 oppose', '3 neutral', '4 support', '5 strongly support'];
+const STANCES = ['strongly oppose', 'oppose', 'neutral', 'support', 'strongly support'];
+const ratingOf = (answer) => (SCALE.indexOf(answer.choice) + 1) || (STANCES.indexOf(answer.stance) + 1) || null;
+const POLICY_POLLS = {
+  fare: { question: 'The adult TTC fare rises by $0.50 per ride (to $3.80); Fair Pass stays at $2.10. How do you feel about this change?', group: (agent) => agent.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare' },
+  bike: { question: 'The protected bike lanes on Bloor St W between Bathurst St and Spadina Ave are removed and the space returned to cars. How do you feel about this change?', group: (agent) => agent.mode },
+};
+
+// Illustrative map motion, tunable here (and documented in README.md): a fixed, role-aware map from each agent's
+// 1–5 rating to a cue that bloor-map.js animates. Baseline view: the agent's usual mode (base). Policy view:
+// MOTION_MAP[policy][mode][rating - 1]; modes not listed keep their base cue. 'car_or_walk' = drive with a car, else
+// walk; 'half_walk' = walk for half the agents (stable hash of id and seed 42), else transit. No model calls, no trips
+// simulated, and the ledger and charts stay on the prepared replay.
+const MOTION_MAP = {
+  base: { cyclist: 'bike', driver: 'drive', transit_rider: 'transit', pedestrian: 'walk' },
+  fare: { transit_rider: ['car_or_walk', 'half_walk', 'transit', 'transit', 'transit'] },   // Fair Pass riders keep transit
+  bike: { cyclist: ['detour', 'detour', 'bike', 'bike', 'bike'] },                          // drivers keep driving Bloor
+};
+function motionFor(policy, agent, rating) {
+  const base = MOTION_MAP.base[agent.mode] || 'walk';
+  let cue = (policy === 'fare' && agent.fare_category === 'fair_pass') ? base : MOTION_MAP[policy][agent.mode]?.[rating - 1] || base;
+  if (cue === 'car_or_walk') cue = agent.has_car ? 'drive' : 'walk';
+  if (cue === 'half_walk') cue = [...agent.id].reduce((sum, c) => sum + c.charCodeAt(0), 42) % 2 ? 'walk' : 'transit';
+  return { base, policy: cue };
+}
+
+const stanceColor = (key) => /oppose/.test(key) ? '#ff987e' : /support/.test(key) ? '#a8f4d1' : '#5b7a7e';
+const newPoll = (question, label, group, view) => ({ question, label, group, view, rows: [], status: '', summary: '', action: null });
+
+function pollCard({ id, answer, agent }) {
+  const card = document.createElement('article'); card.className = 'persona-reaction-card';
+  const top = document.createElement('div'); top.className = 'persona-reaction-top';
+  const role = document.createElement('span'); role.textContent = `${(agent.role || 'agent').replaceAll('_', ' ').toUpperCase()}${answer.affected ? ` · AFFECTED ${answer.affected.toUpperCase()}` : ''}`;
+  const choice = answer.choice || answer.stance;
+  const pill = document.createElement('span'); pill.className = `persona-stance${/support/.test(choice) ? ' persona-stance--support' : ''}`; pill.textContent = choice.toUpperCase();
+  const name = document.createElement('h4'); name.textContent = agent.name || id;
+  const reason = document.createElement('p'); reason.className = 'persona-reaction-quote'; reason.textContent = answer.reason || '';
+  top.append(role, pill); card.append(top, name, reason);
+  return card;
+}
+
+// The split bar, the mean and N, and the by-group means, from the rows received so far.
+function renderPollStats(poll) {
+  const counts = {};
+  for (const { answer } of poll.rows) { const key = answer.choice || answer.stance; counts[key] = (counts[key] || 0) + 1; }
+  const keys = Object.keys(counts).sort((a, b) => (ratingOf({ choice: a, stance: a }) || 99) - (ratingOf({ choice: b, stance: b }) || 99));
+  $('#agentPollSplit').hidden = !keys.length;
+  $('#agentPollSplit').setAttribute('aria-label', `Answer split: ${keys.map((key) => `${key} ${counts[key]}`).join(', ')}`);
+  $('#agentPollSplit').replaceChildren(...keys.map((key) => {
+    const part = document.createElement('span');
+    part.style.flex = String(counts[key]);
+    part.style.background = stanceColor(key);
+    part.textContent = `${key.toUpperCase()} · ${counts[key]}`;
+    return part;
+  }));
+  const mean = (rows) => { const r = rows.map((row) => ratingOf(row.answer)).filter(Boolean); return r.length ? (r.reduce((a, b) => a + b, 0) / r.length).toFixed(1) : null; };
+  const groups = {};
+  for (const row of poll.rows) (groups[poll.group(row.agent)] ||= []).push(row);
+  const all = mean(poll.rows);
+  $('#agentPollStats').textContent = !poll.rows.length ? '' : [
+    `${poll.rows.length} OF ${poll.asked || 100} ANSWERED${all ? ` · MEAN ${all} / 5` : ''}`,
+    ...(all ? [`BY GROUP · ${Object.entries(groups).sort((a, b) => b[1].length - a[1].length).map(([name, rows]) => `${String(name).replaceAll('_', ' ')} ${mean(rows)} (${rows.length})`).join(' · ')}`] : []),
+  ].join('  —  ');
+}
+
+// The shared #agentPoll panel shows one poll: the current policy view's, or the composer's.
+function showPoll(poll) {
+  agents.shown = poll;
+  $('#agentPoll').hidden = !poll;
+  if (!poll) return;
+  $('#agentPollCards').replaceChildren(...poll.rows.map(pollCard));
+  renderPollStats(poll);
+  updatePoll(poll, {});
+}
+
+function updatePoll(poll, patch) {
+  Object.assign(poll, patch);
+  if (agents.shown !== poll) return;
+  $('#agentPollLabel').textContent = poll.label;
+  $('#agentPollQuestion').textContent = poll.question;
+  $('#agentPollStatus').textContent = poll.status;
+  $('#agentPollSummary').textContent = poll.summary;
+  $('#agentPollAction').hidden = !poll.action;
+  if (poll.action) $('#agentPollAction').textContent = poll.action.label;
+}
+
+function addPollRow(poll, id, answer, agent) {
+  if (!answer) return;
+  const row = { id, answer, agent: agent || agents.roster.get(id) || { id } };
+  poll.rows.push(row);
+  poll.onRow?.(row);
+  if (agents.shown === poll) { $('#agentPollCards').append(pollCard(row)); renderPollStats(poll); }
+}
+
+// ?demo=fare / ?demo=bike: all 100 agents rate the prepared policy 1–5. The ratings drive the map's illustrative motion.
+function startPolicyPoll(view) {
+  const prior = agents.polls[view];
+  if ((prior && !prior.failed) || !agents.online) return;
+  const spec = POLICY_POLLS[view];
+  const poll = agents.polls[view] = newPoll(spec.question, 'Survey-style reaction from 100 persona agents, not a forecast.', spec.group, view);
+  poll.actors = [];
+  poll.onRow = (row) => {
+    const rating = ratingOf(row.answer);
+    if (!rating) return;
+    poll.actors.push({ ...row.agent, rating, reason: row.answer.reason, ...motionFor(view, row.agent, rating) });
+    if (current.id === view) showActors();
+  };
+  if (current.id === view) showPoll(poll);
+  const fail = (error) => { poll.failed = true; updatePoll(poll, { status: `AGENT POLL FAILED · ${error.message}`.toUpperCase() }); };
+  updatePoll(poll, { status: 'LIVE AGENT POLL · ASKING 100 AGENTS' });
+  agents.client.askAgents(spec.question, {
+    options: SCALE, orchestrate: false, filter: {},   // all 100 agents; the server needs a filter object without the orchestrator
+    onStart: (start) => { poll.asked = start.ids.length; },
+    onAnswer: (event) => { addPollRow(poll, event.id, event.answer, event.agent); updatePoll(poll, { status: `LIVE AGENT POLL · ${poll.rows.length} OF ${poll.asked || 100} ANSWERED` }); },
+    onStatus: (status) => { if (status.stage === 'summarising') updatePoll(poll, { summary: 'Summarising…' }); },
+    onSummary: (summary) => updatePoll(poll, { summary: `${summary.summary} (${summary.numbers_verified ? 'numbers checked' : 'numbers not verified'})` }),
+    // At the plan limit the server replays the newest saved poll; use it only if it asked this exact question.
+    onReplay: (saved) => {
+      if (saved.record.question !== spec.question) { fail({ message: 'agent backend at its limit; no saved poll for this policy' }); return; }
+      Object.entries(saved.record.answers || {}).forEach(([id, answer]) => addPollRow(poll, id, answer));
+      updatePoll(poll, { status: saved.label.toUpperCase() });
+    },
+    onError: fail,
+  }).catch((error) => { if (!poll.failed && !poll.rows.length) fail(error); });
+}
+
+function showActors() {
+  const actors = agents.polls[current.id]?.actors || [];
+  bloorMainMap.setActors(actors);
+  bloorBikeMap.setActors(agents.polls.bike?.actors || []);
+  const poll = agents.polls[current.id];
+  $('#mapMotionNote').hidden = !actors.length || bloorMainMap.canvas.hidden;
+  if (!actors.length) $('#mapActorCard').hidden = true;
+  else $('#mapMotionCount').textContent = `${actors.length} of ${poll.asked || 100} agents rated · mean ${(actors.reduce((sum, a) => sum + a.rating, 0) / actors.length).toFixed(1)} / 5.`;
+}
+
+function showPickedActor(actor) {
+  $('#mapActorCard').hidden = !actor;
+  if (actor) $('#mapActorCard').textContent = `${actor.name} · ${actor.role.replaceAll('_', ' ')} · rated ${actor.rating}/5 · shown as ${bloorMainMap.mode === 'baseline' ? actor.base : actor.policy}: “${actor.reason}”`;
+}
+bloorMainMap.onPick = showPickedActor;
+
+// Composer text goes to the Opus orchestrator (chat). It may poll, reply, or pick a world run, which this site does not run.
+async function askOrchestrator(message, view) {
+  if (!(await agentsReady)) return;
+  const token = ++agents.chatToken;
+  const fresh = () => token === agents.chatToken;
+  const poll = agents.chatPoll = newPoll(message, 'Survey-style reaction, not a forecast.', (agent) => agent.mode || 'agent', view);
+  let ended = false, refused = false;
+  const update = (patch) => { if (fresh()) updatePoll(poll, patch); };
+  showPoll(poll);
+  update({ status: 'ORCHESTRATOR · PLANNING…' });
+  try {
+    await agents.client.chat(message, {
+      onStatus: (status) => { if (refused) return; if (status.stage === 'planning') update({ status: `ORCHESTRATOR · ${status.message.toUpperCase()}` }); else update({ summary: 'Summarising…' }); },
+      onPlan: (plan) => {
+        if (!fresh()) return;
+        agents.focusPoll = true;
+        if (phase === 'lab' || phase === 'impact') $('#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+        if (plan.mode === 'run') {
+          refused = true;
+          const target = plan.policy === 'fare' ? 'fare' : 'bike';
+          update({ status: 'WORLD RUNS ARE NOT ENABLED IN THIS SITE', summary: `The orchestrator picked a live world run of the ${target === 'fare' ? 'TTC fare' : 'Bloor bike lane'} policy. This site asks all 100 agents for a 1–5 rating instead.`,
+            action: { label: `Ask all 100 agents to rate the ${target === 'fare' ? 'fare change' : 'Bloor change'} 1–5 ↗`, run: () => runScenario(target) } });
+          return;
+        }
+        if (plan.mode === 'poll') update({ question: plan.question, status: 'LIVE AGENT POLL · ASKING', summary: plan.note || '' });
+        if (plan.mode === 'reply') update({ label: 'Orchestrator reply.', status: 'ORCHESTRATOR REPLY' });
+      },
+      onStart: (start) => { if (!refused) { poll.asked = start.ids?.length; update({ label: `${start.label[0].toUpperCase()}${start.label.slice(1)}.` }); } },
+      onAnswer: (event) => { if (!fresh() || refused) return; addPollRow(poll, event.id, event.answer, event.agent); update({ status: `LIVE AGENT POLL · ${poll.rows.length} ANSWERED` }); },
+      onDone: (done) => { ended = true; if (!refused) update({ status: `LIVE AGENT POLL · ${poll.rows.length} OF ${done.aggregate?.asked ?? poll.rows.length} ANSWERED` }); },
+      // At the plan limit the server replays the newest saved poll instead; label it as such.
+      onReplay: (saved) => {
+        ended = true;
+        if (saved.record.kind !== 'poll' || !fresh()) return;
+        Object.entries(saved.record.answers || {}).forEach(([id, answer]) => addPollRow(poll, id, answer));
+        update({ question: saved.record.question, status: saved.label.toUpperCase() });
+      },
+      onReply: (reply) => { ended = true; update({ summary: reply.text }); },
+      onSummary: (summary) => { if (!refused) update({ summary: `${summary.summary} (${summary.numbers_verified ? 'numbers checked' : 'numbers not verified'})` }); },
+      onError: (error) => {
+        ended = true;
+        if (poll.rows.length || poll.summary) update({ summary: `${poll.summary} (${error.message})`.trim() });
+        else update({ status: `AGENT REQUEST FAILED · ${error.message}`.toUpperCase() });
+      },
+    });
+  } catch (error) { if (!ended) update({ status: `AGENT REQUEST FAILED · ${error?.message || error}`.toUpperCase() }); }
+}
+
 async function runScenario(scenario, promptOverride = null) {
   const token = ++investigationToken;
+  if (promptOverride === null) agents.focusPoll = false;
+  await agentsReady;
+  if (token !== investigationToken) return;
   if (scenario === 'fare') {
     if (!fareTrace) fareTrace = window.CFSim.buildTrace({ seed: 42, version: 1 });
     current = traceAdapter.toFareScenario(fareTrace, preparedScenarios.fare);
@@ -218,6 +438,9 @@ async function runScenario(scenario, promptOverride = null) {
     window.CounterfactualCurrentExperiment = bikeExperiment;
     current = experimentAdapter.toBikeScenario(bikeExperiment, preparedScenarios.bike);
   } else current = exploratoryScenario(promptOverride || '');
+  if (scenario !== 'custom' && promptOverride === null) startPolicyPoll(scenario);   // composer questions go through askOrchestrator
+  $('#investigationNote').textContent = !agents.online ? 'Prepared demo replay · no live model call'
+    : promptOverride !== null ? 'Asking the persona agents through the orchestrator' : 'Prepared replay (synthetic) · asking all 100 persona agents for a 1–5 rating';
   document.body.dataset.scenario = current.id;
   scene.setScenario(current.id);
   const overlay = $('#investigation');
@@ -239,7 +462,7 @@ async function runScenario(scenario, promptOverride = null) {
   $('#impact').hidden = false;
   $('#personaLab').hidden = false;
   setPhase('lab');
-  requestAnimationFrame(() => $('#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
+  requestAnimationFrame(() => $(agents.focusPoll ? '#agentPoll' : '#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
 }
 
 function renderLab() {
@@ -248,6 +471,8 @@ function renderLab() {
   $('#mapAttribution').hidden = bloorMainMap.canvas.hidden;
   bloorMainMap.setScenario(current.id);
   bloorBikeMap.setScenario('bike');
+  showPoll(agents.polls[current.id] || (agents.chatPoll?.view === current.id ? agents.chatPoll : null));
+  showActors();
   $('#bikeLab').hidden = current.id !== 'bike';
   if (current.id === 'bike') {
     bikeScene.resize();
@@ -259,8 +484,10 @@ function renderLab() {
   $('#ttcWorkbench').hidden = current.id !== 'fare';
   $('#ttcInspectorButton').hidden = current.id !== 'fare';
   $('#scenarioBreadcrumb').textContent = current.breadcrumb;
-  $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : current.id === 'fare' ? 'SEEDED EVENT REPLAY' : 'PAIRED EVENT REPLAY';
-  $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT' : current.id === 'fare' ? `SYNTHETIC v${current.trace.version}` : `SYNTHETIC v${current.experiment.version}`;
+  const run = current.experiment || current.trace;
+  const by = current.experiment && experimentAdapter.deciders(current.experiment);
+  $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : 'PREPARED REPLAY (SYNTHETIC)';
+  $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT' : `SYNTHETIC v${run.version}`;
   $('#studyTitle').textContent = current.title;
   $('#studySummary').textContent = current.summary;
   $('#viewportArea').textContent = current.viewport;
@@ -273,18 +500,18 @@ function renderLab() {
   $('#insightNarrative').textContent = current.narrative;
   $('#sourceRibbon').textContent = current.sourceRibbon;
   $('#impactScenarioTag').textContent = current.mapTag;
-  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : current.id === 'fare' ? `SCENARIO OUTPUTS / SHARED TRACE v${current.trace.version}` : `SCENARIO OUTPUTS / PAIRED TRACE v${current.experiment.version}`;
+  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : current.trace ? `SCENARIO OUTPUTS / SHARED TRACE v${run.version}` : `SCENARIO OUTPUTS / PAIRED TRACE v${run.version}`;
   const custom = current.id === 'custom';
   $('#chainLabel').textContent = custom ? 'WHAT A CONNECTED ENGINE WOULD DO' : 'WATCH THE CHAIN';
   $('#impactButtonHint').textContent = custom ? 'Inspect missing evidence' : 'See the connected effects';
-  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : current.id === 'fare' ? 'The map shows observed Bathurst–Spadina context; the fare run still uses a separate synthetic district. Open its inspector for people, events and reruns.' : 'The map shows observed Bathurst–Spadina context; eight synthetic people use a separate paired trace. The charts and decision ledger share that trace, not the map yet.';
+  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : current.trace ? 'The map shows observed Bathurst–Spadina context; the fare run still uses a separate synthetic district. Open its inspector for people, events and reruns.' : current.id === 'fare' ? `The map shows observed Bathurst–Spadina context; ${current.experiment.population.count} ${by.who} use a separate paired run. The charts share that run; the TTC inspector below is the earlier rule-based prototype with its own trace.` : `The map shows observed Bathurst–Spadina context; ${current.experiment.population.count} ${by.who} use a separate paired trace. The charts and decision ledger share that trace, not the map yet.`;
   $('#impactHeadingLine').textContent = custom ? 'One question.' : 'One decision.';
   $('#impactHeadingEm').textContent = custom ? 'Open outcomes.' : 'Many futures.';
-  $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : current.id === 'fare' ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : 'Each Bloor chart reduces the same committed events shown in the decision ledger.';
-  $('#boardCaption').textContent = custom ? 'NO RUN RESULT ATTACHED' : current.id === 'fare' ? `SEEDED TRACE v${current.trace.version} · NOT A FORECAST` : 'PAIRED SYNTHETIC TRACE · NOT A FORECAST';
+  $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : current.trace ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : current.id === 'fare' ? 'Each fare chart reduces the same committed events of one paired run.' : 'Each Bloor chart reduces the same committed events shown in the decision ledger.';
+  $('#boardCaption').textContent = custom ? 'NO RUN RESULT ATTACHED' : `PREPARED REPLAY (SYNTHETIC) v${run.version} · NOT A FORECAST`;
   $('#boardAction').textContent = custom ? '✳ INSPECT AN OPEN QUESTION' : '✳ TRACE A CONNECTION';
   $('#overviewTitle').textContent = custom ? 'What remains to measure.' : 'Every signal in view.';
-  $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : current.id === 'fare' ? 'Five linked views of one seeded run. Change an assumption in the TTC inspector and every chart updates.' : 'Five event-derived views of one paired Bloor sample. Choose a chart to inspect its assumption boundary.';
+  $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : current.trace ? 'Five linked views of one seeded run. Change an assumption in the TTC inspector and every chart updates.' : `Five event-derived views of one paired ${current.id === 'fare' ? 'TTC fare' : 'Bloor'} sample. Choose a chart to inspect its assumption boundary.`;
   $('#viewToggle').hidden = custom;
   $('#motionButton').hidden = !bloorMainMap.canvas.hidden;
   $('.timeline-bar').hidden = !bloorMainMap.canvas.hidden;
@@ -340,9 +567,9 @@ function renderChart(data) {
   chart.replaceChildren();
   const summary = !base.length || !policy.length
     ? 'No modelled series or numeric effect is attached to this question.'
-    : current.id === 'fare'
+    : current.trace
       ? `Seeded model values, weeks 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed change compares the average after the policy starts: ${data.delta}. Not a Toronto forecast.`
-      : `Paired synthetic event totals, periods 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed value compares period 4: ${data.delta}. Not a Toronto forecast.`;
+      : `Paired event totals, periods 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed value compares period 4: ${data.delta}. Not a Toronto forecast.`;
   chart.setAttribute('aria-label', `${data.chartTitle}. ${summary}`);
   $('#chartSummary').textContent = summary;
   const ns = 'http://www.w3.org/2000/svg';
@@ -553,6 +780,7 @@ $('#hypothesisForm').addEventListener('submit', event => {
   const match = Object.entries(preparedScenarios).find(([, prepared]) => [prepared.prompt, ...(prepared.aliases || [])].some(phrase => phrase.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').replace(/[?.!]+$/, '') === normalized));
   const chosen = match ? match[0] : 'custom';
   runScenario(chosen, query);
+  askOrchestrator(query, chosen);
 });
 $('#hypothesisInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('#hypothesisForm').requestSubmit(); } });
 $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', () => {
@@ -560,6 +788,7 @@ $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', 
   $('#hypothesisInput').value = preparedScenarios[chosen].prompt;
   runScenario(chosen);
 }));
+$('#agentPollAction').addEventListener('click', () => agents.shown?.action?.run());
 $('#impactMapButton').addEventListener('click', () => { $('#impact').hidden = false; setPhase('impact'); scene.setSector(activeSector); $('#impact').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' }); });
 $('#bikeLabButton').addEventListener('click', () => $('#bikeLab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
 $('#ttcInspectorButton').addEventListener('click', () => $('#ttcWorkbench').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));

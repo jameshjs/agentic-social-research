@@ -1,0 +1,23 @@
+{
+ "round": "demo",
+ "slug": "rehearsal",
+ "scratch": true,
+ "started_at": "2026-10-17T14:12:47+00:00",
+ "ended_at": "2026-10-17T14:13:22+00:00",
+ "seconds": 35.6,
+ "sets": [
+  "tuning"
+ ],
+ "format": "full_relative",
+ "given_size": null,
+ "no_persona": false,
+ "all_families": false,
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "dry_run": false,
+ "respondents": 40,
+ "calls": 40,
+ "failed_calls": 0,
+ "missing_items": 0,
+ "cost_usd": 0.4195
+}
