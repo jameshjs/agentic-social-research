@@ -1,6 +1,7 @@
-# Offline self-check of the frozen scorer (PLAN.md Task 3) on synthetic fixtures in a temporary folder. It never reads
-# data/twin or ~/.cache/persona-swarm and makes no model calls.
-# Usage: python3 autoresearch/test_autoresearch.py      (prints "ok"; pytest also collects test_all)
+# Offline self-check of the frozen scorer (PLAN.md Task 3), and of the round review gate (ADR 0003), on synthetic
+# fixtures in a temporary folder. It never reads data/twin, the real round record or ~/.cache/persona-swarm, and makes
+# no model calls.
+# Usage: python3 autoresearch/test_autoresearch.py      (prints "ok"; pytest also collects test_all and test_review_gate)
 import hashlib, importlib.util, json, random, tempfile
 from pathlib import Path
 
@@ -133,6 +134,36 @@ def test_all():
         s = ev.score(check, "check", steady_answers=check)
         assert s["steady"] is None and s["steady_status"] == "rewordings_not_approved", s
 
+def test_review_gate():
+    import record_round as rr
+    with tempfile.TemporaryDirectory() as tmp:
+        rr.ROUNDS, rr.TSV = Path(tmp) / "rounds", Path(tmp) / "results.tsv"   # never the real record
+        for name in ("006-old", "007-new"):
+            (rr.ROUNDS / name).mkdir(parents=True)
+            (rr.ROUNDS / name / "meta.json").write_text(json.dumps({"no_persona": False}))
+            (rr.ROUNDS / name / "decision.json").write_text(json.dumps({"round": name[:3]}))
+        rr.write([{"round": "006", "kept": "no"}, {"round": "007", "kept": "no", "coach_notes": "Steven: redo round 7"}])
+
+        # from round 7 the next round is refused until a coach reviews the last one; round 6 predates the rule
+        assert "007" in (rr.needs_review() or ""), rr.needs_review()
+
+        # the coach must type both the comment and the improvement
+        try:
+            rr.review("007", "Steven", "continue", " ", "Read papers on answer variety.")
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError("a review with no comment was recorded")
+
+        rr.review("007", "Steven", "continue", "Spread fell\tagain.", "Read papers on\nanswer variety.")
+        got = json.loads((rr.ROUNDS / "007-new" / "decision.json").read_text())["human_review"]
+        assert (got["by"], got["verdict"], got["comment"], got["improvement"]) == (
+            "Steven", "continue", "Spread fell again.", "Read papers on answer variety."), got
+        assert rr.read()[1]["coach_notes"] == (
+            "Steven: redo round 7 Steven: Spread fell again. Next: Read papers on answer variety."), rr.read()
+        assert rr.needs_review() is None
+
 if __name__ == "__main__":
     test_all()
+    test_review_gate()
     print("ok")

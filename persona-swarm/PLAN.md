@@ -58,7 +58,7 @@ Claude Code session following `autoresearch/program.md`.
 | Backend | Persona agents run through the `claude` CLI on the claude.ai plan. Switch to an Anthropic API key, with prompt caching for the repeated given answers, if the team gets one |
 | Keep rule | Noise = per-check difference between two runs of the starting instructions. Keep a change only if at least one check improves by more than its noise and none falls by more than its noise. The number of benchmark marks passed may never fall. From round 7, a round is compared with the mean of the kept round's runs (it and any re-measure) |
 | Loop length | Exactly 10 tuning rounds. Then the final set is scored once |
-| Triggers (stop and ask) | 3 rounds in a row with no kept change · any check jumps by more than 3× its noise · one check rises past its noise while another falls past its noise · a result contradicts a highlighted or annotated paper · the benchmark is passed · logged spend reaches $30 (raised from $10 on 17 Oct, after round 0 measured the cost) |
+| Triggers (stop and ask) | 3 rounds in a row with no kept change · any check jumps by more than 3× its noise · one check rises past its noise while another falls past its noise · a result contradicts a highlighted or annotated paper · the benchmark is passed. Each run's cost is logged in `meta.json` and `results.tsv`; there is no spend trigger (removed 17 Oct) |
 | While waiting | Ideas may be tried on the tuning set only. At most 2 changes may be on trial without sign-off |
 | May change | `instructions.md` and the persona format setting only. Never the scorer, sets, benchmark, rewordings, given answers or the model (`claude-haiku-5-5`, low effort) |
 | Sign-off | A coach types `sign off round NN — <name>` in the researcher session. Knowledge comes through Papiers notes, read at the start of each round. Coaches: Steven and Meet |
@@ -306,7 +306,7 @@ needs, and Task 12 depends on it.
 | Overfitting to the check set | The final set scored once; the held-out puzzle family |
 | Scorer changed mid-loop | The hash in every score (Task 3) |
 | CLI failures or rate limits | Retry once, then mark missing; a round with over 5% missing is invalid (Tasks 3 and 5) |
-| Spend overrun | The $30 trigger, using the per-round cost in `meta.json` |
+| Spend overrun | Nothing stops it since 17 Oct; each run's cost is logged in `meta.json` and `results.tsv` |
 
 ## Decisions settled at plan review (17 Oct)
 
@@ -332,7 +332,7 @@ These were open when the plan was first drafted. They are now reflected in the t
 
 ## Decisions made while starting the loop (17 Oct)
 
-1. **Spend trigger raised to $30.** A measured call costs $0.011 at list price, so $10 would have paused the loop
+1. **Spend trigger raised from $10.** A measured call costs $0.011 at list price, so $10 would have paused the loop
    around round 4. Steven's call.
 2. **Rewordings approved** by Steven, so steady is scored from round 0 and `rewordings.json` is frozen.
 3. **Scorer details fixed before freezing:** right spread caps each item at 1 (being more varied than people earns
@@ -354,3 +354,9 @@ These were open when the plan was first drafted. They are now reflected in the t
 8. **The kept instructions were re-measured** (trigger 1 after round 6, Steven's call). Round 3's group gaps fell
    from 0.852 to 0.790 on a second run, so the bar is now the mean of both runs (right person 0.807, spread 0.869,
    gaps 0.821, steady 0.972, 4 marks). Spend is the logged cost of every run, re-measures included.
+9. **A typed coach review after every round, and failing checks drive paper research** ([ADR
+   0003](./docs/adr/0003-typed-coach-review-and-failure-driven-paper-research.md)). Rounds 4–7 kept nothing, and round 7
+   showed that highlights which only shaped the format, or became a generic cue, had no effect. So Steven revoked round
+   7's interview run, made a typed review (verdict, comment, improvement) a gate before each next round, and made a
+   check that keeps failing trigger targeted paper highlighting before the next edit.
+10. 17 Oct: the $30 spend trigger was removed (team decision).

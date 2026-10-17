@@ -44,8 +44,10 @@ def main(terms, out=ROOT / "autoresearch" / "rounds" / "sources-pending.json"):
         titles = {d["id"]: d.get("title") for d in found["papers"]}
         record["papers"] = [{"id": k, "title": v} for k, v in titles.items()]
         for name in ("highlights", "notes"):
-            record[name] = [{"id": i["id"], "paper": titles.get(i.get("documentId"), i.get("title")),
-                             "document_id": i.get("documentId"), "updated_at": i.get("updatedAt"),
+            # notes keep their paper under metadata; a note's own title is its first line, never the paper's
+            record[name] = [{"id": i["id"], "paper": titles.get(doc := i.get("documentId") or (i.get("metadata") or {}).get("documentId"),
+                                                               (i.get("metadata") or {}).get("attachedTitle") or i.get("title")),
+                             "document_id": doc, "updated_at": i.get("updatedAt"),
                              "text": full_text(i["id"], env)} for i in found[name]]
         failed = [q for q in record["queries"] if q["error"]]
         record["status"] = (f"Papiers failed on {len(failed)} of {len(queries)} queries" if failed else

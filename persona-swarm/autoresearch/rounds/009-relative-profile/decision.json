@@ -1,0 +1,132 @@
+{
+ "round": "009",
+ "decided_at": "2026-10-17T12:41:12+00:00",
+ "check_targeted": "right_spread",
+ "hypothesis": "Steven's Funhouse Mirrors note (nte_d065ced88cfc601fc8e4fdcdd6c33563) proposes exactly this intervention against insufficient individuation, stereotyping and hyper-rationality. Its paper finds twins under-dispersed and shrunk toward the base model (hl_aa7442f770fd4aac6935927509fdf271, hl_e71cbe9877f96e1f9c8b498a41726d03), closer to demographics-only twins than to people (hl_151fb87edf7f1018f60c0e4138291037), and that a summary with percentile ranks works about as well as the full persona (hl_800984ef747ecfb2ea62455a3a06a226); Twin-2K-500 finds twins choose the normative option (hl_f7a275865b8648da2decd12b1dc83025). Explicit relative standing plus the note's evidence order should spread agents apart: spread up.",
+ "change": "Persona format full -> full_relative: the full persona plus a 3-line relative profile computed from given answers against the 240 respondents (spending habits from the tightwad-spendthrift answer, standing in for price sensitivity; 'Is generally trusting'; risk aversion from the lottery choices), worded like the note. Two bullets added to round 3's instructions, quoted closely from the note: evidence order (directly relevant earlier answers; related experiences, preferences and constraints; the relative profile; demographics, party or ideology only as a tiebreaker), percentiles as tendencies not rules, and preserve uncertainty, mistakes, incomplete knowledge, mixed motives and non-normative choices.",
+ "compared_with": {
+  "runs": [
+   "003-spending-habits",
+   "003-spending-habits-repeat"
+  ],
+  "mean": {
+   "right_person": 0.8072331460674157,
+   "right_spread": 0.869222608886088,
+   "right_group_gaps": 0.8209876543209876,
+   "steady": 0.972
+  },
+  "marks_passed": 4
+ },
+ "kept": false,
+ "on_trial": false,
+ "reason": "discard: marks passed fell 4 -> 3; improved beyond noise: right_person +0.016 (noise 0.015)",
+ "deltas": {
+  "right_person": 0.0158005617977528,
+  "right_spread": 0.003424874879432327,
+  "right_group_gaps": -0.043209876543209846,
+  "steady": 0.0010000000000000009
+ },
+ "noise": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ },
+ "check": {
+  "right_person": 0.8230337078651685,
+  "right_spread": 0.8726474837655204,
+  "right_group_gaps": 0.7777777777777778,
+  "steady": 0.973,
+  "marks_passed": 3,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8337028824833703,
+    "right_spread": 0.919668083246593,
+    "right_group_gaps": 0.9444444444444444
+   },
+   "pricing": {
+    "right_person": 0.8201780415430268,
+    "right_spread": 0.8608923338952522,
+    "right_group_gaps": 0.7301587301587301
+   }
+  }
+ },
+ "tuning": {
+  "right_person": 0.7977190876350541,
+  "right_spread": 0.8686038795804248,
+  "right_group_gaps": 0.5916666666666667,
+  "steady": null,
+  "marks_passed": 2,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.7891891891891892,
+    "right_spread": 0.9161325744865285,
+    "right_group_gaps": 0.8888888888888888
+   },
+   "pricing": {
+    "right_person": 0.8001543209876543,
+    "right_spread": 0.8567217058538988,
+    "right_group_gaps": 0.5392156862745098
+   }
+  }
+ },
+ "triggers_fired": [
+  "1: three rounds in a row kept nothing"
+ ],
+ "question": "Trigger 1: rounds 6-9 kept nothing. Round 9 (Funhouse note: relative profile plus evidence order) raised right person past its noise for the first time since round 4 (+0.016, both families) and nudged spread up (+0.004), but gaps fell 0.043, inside its 0.049 noise yet below the 0.80 mark, so marks fell 4 -> 3 and the keep rule discarded it. Round 10 is the last tuning round: run it with suggestion 1, 2 or 3, or decide otherwise (for example re-run round 9 once, since gaps ranged 0.765-0.852 across runs of the same instructions)?",
+ "reply": null,
+ "spend_total_usd": 16.14,
+ "format": "full_relative",
+ "spend_note": "The recorder misses the revoked round 7 run in rounds/_revoked/ ($1.29): true total $17.43.",
+ "subject_note": "The recorder's subject says 'within noise', but right person rose past its noise (+0.016 vs 0.015); the discard comes from the marks rule (gaps 0.778 < 0.80, marks 4 -> 3), with gaps -0.043 inside its 0.049 noise.",
+ "next_suggestions": {
+  "written_at": "2026-10-17T12:41:48+00:00",
+  "context": "Results of rounds 0-9 and the Papiers library: 7 papers, 49 highlights and 3 notes by Steven (sources.json).",
+  "suggestions": [
+   {
+    "rank": 1,
+    "kind": "persona format + instructions",
+    "edit": "Round 9 without the tiebreaker clause: keep full_relative, 'Treat the percentile descriptions as tendencies, not rules' and the preserve-uncertainty line, and use the evidence order (1)-(3) only, with demographics, party and ideology left as ordinary parts of who the person is.",
+    "answers_result": "Round 9 gained right person (+0.016) but lost gaps (-0.043); round 4, the other round that pushed group information down, also cost gaps (0.802 against 0.852 then).",
+    "highlights": [
+     "nte_5fda00df283d4ba21864448ef45d18c0",
+     "hl_d4a1364a7321f8a6ce4a662812f91f50",
+     "hl_345b3838511c9e42293f8eda6402fe0c"
+    ],
+    "why": "The Self-Reports note keeps demographic and party information in context; Funhouse finds full-persona deviations follow human variation; Synthetic Replacements finds that dropping politics inflates errors for politically salient groups.",
+    "expected": "Keep round 9's right person gain while gaps return toward the bar.",
+    "risk": "The tiebreaker clause may not be what moved gaps (gaps' noise is 0.049); without it agents may caricature party again."
+   },
+   {
+    "rank": 2,
+    "kind": "persona format",
+    "edit": "full_relative with round 3's instructions plus only 'Treat the percentile descriptions in the relative profile as tendencies, not rules.'",
+    "answers_result": "Round 9 changed the format and the instructions together, so the profile's own effect is unknown.",
+    "highlights": [
+     "nte_d065ced88cfc601fc8e4fdcdd6c33563",
+     "hl_800984ef747ecfb2ea62455a3a06a226"
+    ],
+    "why": "Funhouse finds percentile summaries carry the persona's information; this isolates whether the profile alone raises right person.",
+    "expected": "Right person up with less change to how agents weigh groups.",
+    "risk": "The Twin-2K-500 note (nte_f1392d2dbcc068218164bc7d4d730434) says format changes are a baseline comparison, not a fix for spread."
+   },
+   {
+    "rank": 3,
+    "kind": "persona format + instructions",
+    "edit": "Round 9 plus a fourth profile line, concern for others from the $5 giving choice ('Gives more to others than approximately N% of respondents').",
+    "answers_result": "Policy right person rose most (check 0.834); policy items on immigration, leave and vouchers still sit far from people.",
+    "highlights": [
+     "nte_d065ced88cfc601fc8e4fdcdd6c33563",
+     "hl_f9cf5b71d8b01335a0f1fee0962f34de"
+    ],
+    "why": "The note's block is open-ended relative information; Out of One, Many finds combining elements predicts best.",
+    "expected": "Policy right person and spread up.",
+    "risk": "Keeps round 9's tiebreaker clause, so gaps may fall again; policy is 10 of 50 items."
+   }
+  ],
+  "chosen": null
+ },
+ "page_store": "datasets/rounds v10 -> /_blob/7829fdae9feb140f8b673125148717a6 (rounds 000-009; old blob 428d508c deleted); next update uses if_version 10."
+}

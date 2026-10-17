@@ -109,6 +109,11 @@ _Avoid_: alert, escalation
 A coach's approval that makes a kept change official. A change without sign-off is still on trial.
 _Avoid_: merge, approval (on its own)
 
+**Round review**:
+A coach's typed verdict (sign off, reject or continue), comment and suggested improvement on a finished tuning round,
+in their own words. The next round can't start without it.
+_Avoid_: feedback, approval
+
 ### Scoring
 
 **Scorecard**:

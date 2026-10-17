@@ -122,6 +122,10 @@ async def run(args):
     problem = None if args.no_persona else scan(instructions, [r["pid"] for r in people])
     if problem:
         sys.exit(f"refused before any model call: {problem}")
+    if not args.dry_run:
+        import record_round
+        if wait := record_round.needs_review():                 # a coach reviews every round before the next (ADR 0003)
+            sys.exit(f"refused before any model call: {wait}")
     ROUNDS.mkdir(exist_ok=True)
     n = args.number if args.number is not None else 1 + max([int(p.name[:3]) for p in ROUNDS.glob("[0-9][0-9][0-9]-*")], default=-1)
     out_dir = ROUNDS / (f"dry-{args.slug}" if args.dry_run else f"{n:03d}-{args.slug}")  # dry runs stay unnumbered

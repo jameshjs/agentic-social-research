@@ -25,6 +25,9 @@ procedure; follow it every round.
    weakest check. Then read the coaches' knowledge: `python3 autoresearch/coach_notes.py "<problem>" ...` saves every
    paper in the Papiers library, every highlight and note in full (with its paper), and any searches, for the runner
    to file as the round's `sources.json`. All of it is the round's context, not just what is new.
+   **When a check keeps failing** (it fell past its noise in two or more rounds; now spread, in rounds 2, 6 and 7 and
+   the revoked round 7), first ask a coach to save and highlight papers about that failure, and wait. Then run
+   `coach_notes.py` and draft the suggestions from those highlights (ADR 0003).
 2. **Suggest.** Steer the next round from the results and the highlights: write up to three suggested edits under
    `next_suggestions` in the last round's `decision.json`. Each gives the edit, the result it answers, the highlight
    or note ids behind it, the expected effect and the risk. Take the first unless a coach picks another, and list
@@ -36,9 +39,14 @@ procedure; follow it every round.
    kept round's runs (the round and any re-measure) with round 0's noise, checks the triggers, writes `decision.json` and the `results.tsv` row, and restores
    the last kept `instructions.md` after a discard. A kept change is **on trial** until a coach signs it off.
 6. **Record.** Add the notes you used to `rounds/NNN-<slug>/sources.json`, and any trigger's question and the
-   coach's reply to `decision.json`. Run `python3 autoresearch/export_record.py`, commit with the subject the recorder
-   printed (`round NN keep (on trial): <change> — <check> +x.xx` or `round NN discard: <change> — within noise`),
-   then re-publish the tuning record page.
+   coach's reply to `decision.json`. Run `python3 autoresearch/export_record.py` and re-publish the tuning record page.
+   Don't commit: leave the round's files for the coach to review, and hand over the subject the recorder printed
+   (`round NN keep (on trial): <change> — <check> +x.xx` or `round NN discard: <change> — within noise`).
+7. **Review.** Stop and send the coach the result, with up to three suggested comments and improvements, each citing
+   highlight ids and clearly marked as suggestions. The coach types the review, and you record only their own words:
+   `python3 autoresearch/record_round.py --review NNN --by <name> --verdict sign-off|reject|continue --comment "..."
+   --improvement "..."`. `run_round.py` refuses the next round until the last one has a review (rounds 0–6 predate
+   this rule).
 
 ## Coach context from round 7 (17 Oct)
 
@@ -66,16 +74,15 @@ of them (step 1) and its suggested edits cite them (step 2).
 3. One check rises past its noise while another falls past its noise.
 4. A result contradicts a paper a coach highlighted or annotated.
 5. The benchmark is passed (rounds still continue to 10).
-6. Logged spend reaches $30.
 
 While waiting you may test ideas on the tuning set only; at most 2 changes may be on trial at once.
 
 ## Sign-off
 
-A coach types `sign off round NN — <name>` (or `reject round NN — <name>`). Record a sign-off with
-`python3 autoresearch/record_round.py --sign-off NNN --by <name>`, which updates `decision.json` and `results.tsv`,
-and commit `round NN signed off: <name>`. A rejection is recorded by hand: `kept` becomes `rejected`, the last
-signed-off instructions are restored, and the commit is `round NN rejected by coach`.
+A coach signs off in the round review (step 7). `--verdict sign-off` on a kept round also records the sign-off in
+`decision.json` and `results.tsv`. `--verdict reject` on a kept round is finished by hand: `kept` becomes `rejected`
+and the last signed-off instructions are restored. `--verdict continue` records the comment without a decision, so a
+kept change stays on trial. Leave every change uncommitted for the coach.
 
 ## After round 10
 

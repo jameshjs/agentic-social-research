@@ -1,8 +1,10 @@
 # Records one tuning round (program.md steps 5-6): applies the keep rule against the last kept round with round 0's
 # noise, checks the triggers, writes decision.json, appends the results.tsv row (and the previous row's commit hash),
-# restores instructions.md after a discard, and prints the commit message. Also records a coach's sign-off.
+# restores instructions.md after a discard, and prints the commit message. Also records a coach's typed review of a
+# round (which run_round.py waits for) and a sign-off.
 # Usage: python3 autoresearch/record_round.py autoresearch/rounds/001-<slug> --targeted right_person \
 #            --label "<short change>" --change "<what changed>" --hypothesis "<why>"
+#        python3 autoresearch/record_round.py --review 007 --by Steven --verdict continue --comment "..." --improvement "..."
 #        python3 autoresearch/record_round.py --sign-off 001 --by Steven
 import argparse, csv, json, shutil, subprocess, sys
 from datetime import datetime, timezone
@@ -12,7 +14,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import evaluate  # noqa: E402
 
-TSV, ROUNDS, SPEND_CAP = HERE / "results.tsv", HERE / "rounds", 30.0
+TSV, ROUNDS = HERE / "results.tsv", HERE / "rounds"
+REVIEW_FROM = 7  # rounds before 7 predate the typed review rule (Steven, 17 Oct; ADR 0003)
 COLUMNS = ["round", "started_at", "ended_at", "check_targeted", "hypothesis", "change", "papiers_ids", "coach_notes",
            "right_person", "right_spread", "right_group_gaps", "steady", "marks_passed", "delta_vs_prev", "cost_usd",
            "kept", "signed_off_by", "signed_off_at", "commit"]
@@ -65,6 +68,40 @@ def sign_off(rnd, by):
     d.write_text(json.dumps(decision, indent=1))
     print(f"round {int(rnd):02d} signed off: {by}")
 
+def needs_review():
+    """Why the next round can't start, or None: the last numbered round needs a coach's typed review (ADR 0003)."""
+    nums = sorted({int(p.name[:3]) for p in ROUNDS.glob("[0-9][0-9][0-9]-*")})
+    if not nums or nums[-1] < REVIEW_FROM:
+        return None
+    last = f"{nums[-1]:03d}"
+    if any("human_review" in json.loads(d.read_text()) for d in ROUNDS.glob(f"{last}-*/decision.json")):
+        return None
+    return (f"round {last} has no human review; a coach types one with: record_round.py --review {last} --by <name> "
+            '--verdict <sign-off|reject|continue> --comment "..." --improvement "..."')
+
+def review(rnd, by, verdict, comment, improvement):
+    """A coach's typed review of a finished round: into its decision.json, and onto its results.tsv coach_notes."""
+    by, comment, improvement = (" ".join(str(t).split()) for t in (by, comment, improvement))  # no tabs or newlines in the tsv
+    if not (by and comment and improvement):
+        sys.exit("a review needs --by, and a --comment and --improvement typed by the coach")
+    table = read()
+    row = next((r for r in table if r["round"] == rnd), None)
+    if row is None:
+        sys.exit(f"round {rnd} is not in results.tsv: record it first")
+    d = folder(rnd) / "decision.json"
+    decision = json.loads(d.read_text())
+    if "human_review" in decision:
+        sys.exit(f"round {rnd} already has a human review")
+    decision["human_review"] = {"by": by, "at": now(), "verdict": verdict, "comment": comment, "improvement": improvement}
+    d.write_text(json.dumps(decision, indent=1))
+    row["coach_notes"] = " ".join(filter(None, [row["coach_notes"], f"{by}: {comment} Next: {improvement}"]))
+    write(table)
+    print(f"round {int(rnd):02d} reviewed by {by}: {verdict}")
+    if verdict == "sign-off" and row["kept"] == "yes":
+        sign_off(rnd, by)
+    elif verdict == "reject" and row["kept"] == "yes":
+        print("record the rejection by hand, as program.md's Sign-off section says")
+
 def record(a):
     out, table = a.folder.resolve(), read()
     rnd = out.name[:3]
@@ -90,9 +127,7 @@ def record(a):
         fired.append(f"3: {', '.join(up)} rose past its noise while {', '.join(down)} fell past its noise")
     if kept and new["marks_passed"] == 4 and all(float(r["marks_passed"] or 0) < 4 for r in table if r["kept"] in ("yes", "baseline")):
         fired.append("5: the kept instructions now pass the benchmark")
-    spend = sum(json.loads(m.read_text())["cost_usd"] for m in ROUNDS.glob("[0-9][0-9][0-9]-*/meta.json"))  # every run, re-measures too
-    if spend >= SPEND_CAP:
-        fired.append(f"6: logged spend ${spend:.2f} reached ${SPEND_CAP:.0f}")
+    spend = sum(json.loads(m.read_text())["cost_usd"] for m in ROUNDS.glob("[0-9][0-9][0-9]-*/meta.json"))  # logged only: no spend trigger since 17 Oct
 
     pick = lambda s: {k: s[k] for k in ("right_person", "right_spread", "right_group_gaps", "steady", "marks_passed",
                                         "missing_share")} | {"by_family": {f: {k: v[k] for k in (
@@ -140,9 +175,16 @@ if __name__ == "__main__":
     ap.add_argument("--papiers-ids", default="")
     ap.add_argument("--coach-notes", default="")
     ap.add_argument("--sign-off", metavar="NNN")
+    ap.add_argument("--review", metavar="NNN", help="record a coach's typed review of a finished round")
+    ap.add_argument("--verdict", choices=("sign-off", "reject", "continue"))
+    ap.add_argument("--comment", default="")
+    ap.add_argument("--improvement", default="")
     ap.add_argument("--by")
     a = ap.parse_args()
-    if a.sign_off:
+    if a.review:
+        review(a.review, a.by or sys.exit("--by <coach> is required"), a.verdict or sys.exit("--verdict is required"),
+               a.comment, a.improvement)
+    elif a.sign_off:
         sign_off(a.sign_off, a.by or sys.exit("--by <coach> is required"))
     elif not (a.folder and a.targeted and a.label and a.change and a.hypothesis):
         sys.exit("give the round folder, --targeted, --label, --change and --hypothesis")

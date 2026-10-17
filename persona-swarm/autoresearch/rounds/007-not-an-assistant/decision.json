@@ -133,5 +133,12 @@
   },
   "chosen": null
  },
- "page_store": "datasets/rounds v8 -> /_blob/cd5b13e5a7fd5b5e15a01c3f5b0d3931 (rounds 000-007; old blob 485a05ef deleted); next update uses if_version 8."
+ "page_store": "datasets/rounds v8 -> /_blob/cd5b13e5a7fd5b5e15a01c3f5b0d3931 (rounds 000-007; old blob 485a05ef deleted); next update uses if_version 8.",
+ "human_review": {
+  "by": "Steven",
+  "at": "2026-10-17T12:23:32+00:00",
+  "verdict": "continue",
+  "comment": "think round 7 lack notes from paper",
+  "improvement": "roung 8 should focus on the notes + highlihghts for bullet poing and finr tune the prompt"
+ }
 }
