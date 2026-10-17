@@ -2,6 +2,8 @@
 
 This is the **second stage** of the project: run a city policy experiment after persona creation and survey-task evaluation. Both prepared questions use one controller in [`runner.js`](./runner.js) and different data in [`fixtures.js`](./fixtures.js). No API key, network service, or package install is needed for the deterministic fallback.
 
+**Current integration target (17 Oct):** Keep these paired/event-derived tests as a migration baseline, but run both fare and cycle-track policies in James's candidate **Bathurst–Spadina** `world/` graph and surface them through the existing `/experience/` website. The current fixtures are still synthetic and do not yet use that map. One canonical event/result contract must replace the two UI trace engines before the public demo can claim a shared world.
+
 ```sh
 node --test experiment/test-runner.js
 node experiment/run.js fare > /tmp/fare-experiment.json

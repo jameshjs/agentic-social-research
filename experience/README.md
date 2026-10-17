@@ -2,6 +2,8 @@
 
 This is the **one public entry point** for the hackathon demo. The cinematic entry, TTC replay, Bloor explorer, impact map, and persona research record live at `/experience/`. Aadit's detailed TTC 3D inspector remains implemented in [`demo-ui/`](../demo-ui/README.md) and is embedded here as the research workbench. Do not build another standalone public front end.
 
+**New integration target (17 Oct):** Update this existing website so both `?demo=fare` and `?demo=bike` use **one detailed Bathurst–Spadina Bloor map**, the same persistent actors, world controller, event log, `RunResult`, renderer and economic dashboard. Keep both policy examples; retire their separate 3D districts/engines after the shared path reaches parity. James's [`world/`](../world/README.md) is the candidate spatial/rule layer and its preview is development-only. The current behavior below describes the still-unconsolidated build, not completion of this target.
+
 ## Run it
 
 From the repository root:
@@ -32,10 +34,10 @@ Before presenting this as a general policy simulator, James/Steven/Meet must rec
 
 ## Integration handoff
 
-- **Aadit:** evolve the detailed TTC inspector in `demo-ui/` but keep `/experience/` as the public route. Its trace message must continue to update the outer charts. Bloor now has an event ledger below the optional branches; drive the city motion from it when the shared engine is ready.
-- **James:** provide `RunResult` with scenario ID, coordinates, actors, `WorldEvent`s, baseline/policy `MetricPoint`s, sector/edge trace IDs and source/assumption IDs. Extend visual cues for bicycle and subway actions, or supply a typed mode/route payload that the renderer can map safely.
-- **Steven:** connect scenario-specific personas and choices to the actor markers and event trail; do not animate a trip or shop sale that did not occur in the authoritative world.
-- **Meet:** own the `trace-adapter.js` boundary, compiler/evidence packet, and Toronto source badges. The arbitrary prompt path intentionally does not claim a backend response.
+- **Aadit:** adapt the existing `/experience/` map, TTC inspector, Bloor ledger and charts to render the same Bathurst–Spadina street graph for both policy selectors. Keep reruns updating outer charts through `counterfactual:result` during migration. Avoid a new public route or a duplicate canvas; `world/preview.html` is a reference/development preview.
+- **James:** connect the `world/` graph and rules to one canonical `RunResult` for both policies, with scenario ID, mapped coordinates/node IDs, actors, `WorldEvent`s, baseline/policy `MetricPoint`s, sector/edge trace IDs and source/assumption IDs. Use mapped subway and streetcar services; do not invent Bloor bus service. Preserve replay from the same seed.
+- **Steven:** connect scenario-specific persistent personas and bounded choices to those same mapped actor markers and event trail; do not animate a trip or shop sale that did not occur in the authoritative world.
+- **Meet:** own the adapter/compiler/evidence boundary and local source badges. Keep UTSC/Scarborough fare data and wider Shaw–Avenue cycling studies labelled as external context; only Bathurst–Spadina observations ground this map. The arbitrary prompt path intentionally does not claim a backend response yet.
 
 ## Local QA already done
 

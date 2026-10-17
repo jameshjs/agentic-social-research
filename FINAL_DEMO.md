@@ -2,6 +2,8 @@
 
 **Updated:** 17 October 2026. **Public route:** `/experience/` (serve from the repository root). This is a live handoff document: verify its status against current `main` before presenting.
 
+**Founder target after this runbook was written:** The two separate city presentations are being consolidated into **one Bathurst–Spadina Bloor map** in `/experience/`; both TTC fare and cycle-track removal stay as policy switches. The walkthrough below is an honest fallback for the **current unconsolidated build**, not the final shared-world pitch. Update it after the common renderer and `RunResult` are connected. See [TEAM_SYNC.md](./TEAM_SYNC.md) for owner handoffs and geography/source limits.
+
 ## What is ready on `main`
 
 | Proof | Open | Present accurately |

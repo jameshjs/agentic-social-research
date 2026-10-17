@@ -4,6 +4,8 @@ A rule-enforcing street environment for **one 619 m section of Bloor St W, from 
 
 **Status: candidate.** This does not change `experiment.v1` or any frozen contract. See the [PRD §17 entry](../prd.md#17-locked-decisions-and-implementation-gaps).
 
+**Current founder target:** Integrate this candidate map/rule layer into the existing [`/experience/`](../experience/README.md) website so the TTC fare and cycle-track policies both run in this same 619 m world. The preview below is for development, not a new public site. Its local observations may ground scene geometry and background counts; persona demographics, spending, fare response and shop outcomes still need explicit source or assumption labels. Preserve existing inspector and chart features while moving them onto one event/result pipeline.
+
 ```sh
 node --test world/test-sandbox.js          # 11 rule and data checks, offline
 python3 -m http.server 4173                # from the repository root
