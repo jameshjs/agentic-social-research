@@ -1,0 +1,25 @@
+{
+  "_how": "Each group picks adult personas whose fields match every key in `where`. A string must match exactly, a list matches any of its values, and age takes [lowest, highest]. Derived labels: region (Northeast, Midwest, South, West) and degree (yes/no). Add a group here or with: python3 scripts/make_groups.py --add <id> \"<label>\" key=value ...",
+  "groups": [
+    {"id": "all_adults", "label": "All adults", "where": {}},
+    {"id": "women", "label": "Women", "where": {"sex": "Female"}},
+    {"id": "men", "label": "Men", "where": {"sex": "Male"}},
+    {"id": "age_18_29", "label": "Ages 18–29", "where": {"age": [18, 29]}},
+    {"id": "age_30_44", "label": "Ages 30–44", "where": {"age": [30, 44]}},
+    {"id": "age_45_64", "label": "Ages 45–64", "where": {"age": [45, 64]}},
+    {"id": "age_65_plus", "label": "Ages 65+", "where": {"age": [65, 120]}},
+    {"id": "no_degree", "label": "No university degree", "where": {"degree": "no"}},
+    {"id": "degree", "label": "University degree", "where": {"degree": "yes"}},
+    {"id": "married", "label": "Married", "where": {"marital_status": "married_present"}},
+    {"id": "never_married", "label": "Never married", "where": {"marital_status": "never_married"}},
+    {"id": "divorced_or_widowed", "label": "Divorced, separated or widowed", "where": {"marital_status": ["divorced", "separated", "widowed"]}},
+    {"id": "northeast", "label": "Northeast US", "where": {"region": "Northeast"}},
+    {"id": "midwest", "label": "Midwest US", "where": {"region": "Midwest"}},
+    {"id": "south", "label": "South US", "where": {"region": "South"}},
+    {"id": "west", "label": "West US", "where": {"region": "West"}},
+    {"id": "women_18_29", "label": "Women 18–29", "where": {"sex": "Female", "age": [18, 29]}},
+    {"id": "women_65_plus", "label": "Women 65+", "where": {"sex": "Female", "age": [65, 120]}},
+    {"id": "men_18_29", "label": "Men 18–29", "where": {"sex": "Male", "age": [18, 29]}},
+    {"id": "men_65_plus", "label": "Men 65+", "where": {"sex": "Male", "age": [65, 120]}}
+  ]
+}

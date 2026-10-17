@@ -1,0 +1,385 @@
+{
+ "group": {
+  "id": "age_65_plus",
+  "label": "Ages 65+",
+  "size": 20
+ },
+ "policy": "Adult public transit fares rise by 50 cents per ride starting next year.",
+ "generated_at": "2026-10-17T02:59:20+00:00",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "prompt_version": "v3",
+ "summary": {
+  "responded": 20,
+  "failed": 0,
+  "stance": {
+   "support": 0,
+   "oppose": 1,
+   "mixed": 19,
+   "not_affected": 0
+  },
+  "quote_grounded": 19
+ },
+ "responses": [
+  {
+   "persona": {
+    "uuid": "649878849ad040d2accaf93d04bfb036",
+    "name": "Vienna Wilkes",
+    "age": 76,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Niagara Falls",
+    "state": "NY",
+    "summary": "Vienna Wilkes is a routine\u2011driven yet gregarious 76\u2011year\u2011old who blends meticulous community organizing with a love for gardening, knitting, and swing music, all while sprinkling their days with modest indulgences and occasional forgetfulness."
+   },
+   "stance": "mixed",
+   "action": "I'd keep riding the bus for trips I can't walk, but I'd budget the extra 50 cents into my monthly plan and look for senior fare options before paying more.",
+   "response": "I'm not sure this touches me directly, since my description doesn't say whether I ride the bus, so I'm reacting from what I care about. Fifty cents is small for one ride, but it adds up for seniors on fixed incomes, so I'd want to see the senior and low-income discount rates protected before I'd support it.",
+   "sheet_quote": "Vienna was raised in a mid\u201120th\u2011century working\u2011class family in upstate New York",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "0ebacaace220418f994b65299af560a3",
+    "name": "Megan Plunkett",
+    "age": 68,
+    "sex": "Female",
+    "education_level": "associates",
+    "occupation": "not in workforce",
+    "city": "Bakersfield",
+    "state": "CA",
+    "summary": "Megan Plunkett blends meticulous organization with heartfelt community service, a love for gardening and home\u2011cooked pies, and a gentle worry that keeps them prepared yet occasionally over\u2011cautious."
+   },
+   "stance": "mixed",
+   "action": "I'd check whether the fare hike comes with any discounts or senior/low-income passes, and I'd keep an eye on how it affects the folks who rely on buses to get to the food pantry.",
+   "response": "I'm not sure this touches me directly, since I don't know that I ride the bus. A 50-cent increase is small for one trip, but it adds up for people on tight budgets, and I think about the neighbors who rely on transit to get to the food pantry and appointments. I'd want to see the reasons and whether there are protections for seniors and people with low incomes before I could fully back it.",
+   "sheet_quote": "meticulous organization with heartfelt community service",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "efc3a8f0275544b6b0ba95d6b164c7d3",
+    "name": "Blanca Infante",
+    "age": 69,
+    "sex": "Female",
+    "education_level": "9th_12th_no_diploma",
+    "occupation": "no occupation",
+    "city": "Hanford",
+    "state": "CA",
+    "summary": "Blanca Infante, a pragmatic yet curious senior who fuses meticulous budgeting, community mentorship, and a passion for traditional cooking with a tendency to impulse\u2011buy garden d\u00e9cor, embodies a balanced blend of organization, flexibility, and enduring cultural pride."
+   },
+   "stance": "mixed",
+   "action": "I'd keep an eye on how the increase lands for seniors on fixed incomes and speak up at the community center or senior services meetings if it's hurting older riders.",
+   "response": "I'm not sure this touches me directly, since I don't think I ride the bus much, but fifty cents adds up for people on a tight budget, and plenty of older folks around Hanford are watching every dollar. I'd want to know whether the city is protecting seniors and students with reduced fares before I made up my mind either way.",
+   "sheet_quote": "meticulous budgeting",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "8cbc2aa3bd884239afd46110ffde81b1",
+    "name": "Lisa Richardson",
+    "age": 79,
+    "sex": "Female",
+    "education_level": "graduate",
+    "occupation": "not in workforce",
+    "city": "Norfolk",
+    "state": "VA",
+    "summary": "Lisa Richardson is a fiercely curious, quietly competitive 79\u2011year\u2011old who stitches history into quilts, tracks every penny, and guards their solitude with a well\u2011ordered garden and a keen eye for genealogy, even if they occasionally forget to water their succulents."
+   },
+   "stance": "mixed",
+   "action": "I'd find out whether seniors and low-income riders are exempt, and I'd write to the transit board or the community about it before I'd take a position.",
+   "response": "I'm not sure this touches me directly, since I don't know whether I ride the bus or how I'd get around if fares went up. I can see the case for the increase if the system needs the money, but I'd worry about families and older neighbors on fixed incomes who would feel an extra 50 cents a ride much more than I would.",
+   "sheet_quote": "tracks every penny",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "7f6afae6b1d945dbb8ceb5dafa33ebf2",
+    "name": "Mark Jones",
+    "age": 70,
+    "sex": "Male",
+    "education_level": "some_college",
+    "occupation": "not in workforce",
+    "city": "Fulton",
+    "state": "MD",
+    "summary": "Mark Jones blends a hands\u2011on work ethic with a love for community gatherings, balancing structured volunteer leadership with a relaxed, sometimes forgetful, approach to personal planning."
+   },
+   "stance": "mixed",
+   "action": "I'd ask the transit folks what the extra revenue pays for and whether seniors and low-income riders keep reduced fares, then help spread the word at the senior center so nobody gets caught off guard.",
+   "response": "I'm not sure this touches me directly, since my life as described doesn't say whether I ride transit. I can see the fare hike is about paying for service, and I'd back it if the money truly keeps buses running for the folks who depend on them, like neighbors on fixed incomes getting to appointments. I'd want a clear plan and protections for seniors before I'd feel good about it.",
+   "sheet_quote": "modest, pragmatic outlook",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "8413bfe3f55d40a6ba29be58704203f2",
+    "name": "Patricia Dugas",
+    "age": 69,
+    "sex": "Female",
+    "education_level": "bachelors",
+    "occupation": "not in workforce",
+    "city": "Portland",
+    "state": "OR",
+    "summary": "Patricia Dugas, a curiosity\u2011driven senior who melds meticulous organization with spontaneous art adventures, battles chronic worry through yoga yet sometimes hoards garden tools like a secret treasure, and turns every museum visit into a personal lecture for friends."
+   },
+   "stance": "mixed",
+   "action": "I'd ask the club and my friends how they get around, and I'd weigh in at the public comment hearing if the fare hike would hurt seniors on fixed budgets.",
+   "response": "I'm not sure this touches me directly, since I don't know how much I ride transit day to day. I believe in good public transportation as part of a community that cares for its older residents and the environment, so a small fare increase isn't something I'd oppose outright, but I'd want to know whether it's paired with protections for seniors and low-income riders before I'd call it fair.",
+   "sheet_quote": "opting for boutique hotels and public transit to keep costs manageable",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "e1135b2cf5d9495790d9b12ec631706c",
+    "name": "Christopher Dennis",
+    "age": 72,
+    "sex": "Male",
+    "education_level": "graduate",
+    "occupation": "not in workforce",
+    "city": "Winthrop",
+    "state": "ME",
+    "summary": "Christopher Dennis is a methodical, 72-year-old polymath who fuses engineering precision with abstract artistry; they channel worry into disciplined journaling and nurture intergenerational creativity through mentorship and maker workshops."
+   },
+   "stance": "mixed",
+   "action": "I'd ask the town about a senior or low-income fare exemption before the increase takes effect, and I'd check whether any of the seniors I teach at the library rely on the bus.",
+   "response": "I'm not sure this touches me directly, since I mostly walk the river paths and don't rely on the bus. I can see the case for covering rising costs, but a 50-cent jump could keep some older neighbors from getting to the library and other community places, and I'd want that weighed before it passes.",
+   "sheet_quote": "volunteers once a week at the Winthrop public library, teaching seniors basic computer skills",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "ef6ad15e14ff4895a0df029a612fee76",
+    "name": "Alice Paul",
+    "age": 68,
+    "sex": "Female",
+    "education_level": "bachelors",
+    "occupation": "not in workforce",
+    "city": "West Des Moines",
+    "state": "IA",
+    "summary": "Alice Paul, a detail\u2011oriented retiree with a green thumb and lingering anxiety, they meticulously plan every project\u2014from community gardens to memoir chapters\u2014while battling occasional compulsive budgeting and a penchant for late\u2011night camera tinkering."
+   },
+   "stance": "mixed",
+   "action": "Nothing changes in my own routine, since my description doesn't say I ride transit, but I'd look at the numbers and ask how it affects people on fixed incomes.",
+   "response": "I'm not sure this touches me directly, since I don't know that I use the bus, so I'd react mainly from my concern for the people in our community who depend on it. I like my budgets tidy, and a 50-cent bump is small for one ride but adds up for a family or a senior on a tight allowance, so I'd want to see the ridership and fare-recovery figures before deciding.",
+   "sheet_quote": "compulsive budgeting",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "653421174d6d4092ba269e46166d9f3c",
+    "name": "Branford Harris",
+    "age": 66,
+    "sex": "Male",
+    "education_level": "9th_12th_no_diploma",
+    "occupation": "personal care aide",
+    "city": "Oxon Hill",
+    "state": "MD",
+    "summary": "Branford Harris is a meticulous elder\u2011care professional whose love of art, community, and organized living fuels a competitive spirit, a disciplined financial habit, and a lifelong quest to blend compassion with creative expression."
+   },
+   "stance": "oppose",
+   "action": "I'd look at how a 50-cent increase would hit clients who depend on buses to reach appointments, and I'd speak up at the public hearing on their behalf.",
+   "response": "I'm not sure this touches me directly, since my description doesn't say I ride transit. But I know many of the older folks I care for count every dollar, and a half-dollar each way adds up fast for someone on a fixed income going to dialysis or the doctor. I'd oppose it, or at least ask for a senior or low-income discount to go with it.",
+   "sheet_quote": "disciplined financial habit",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "79c3af70d16541f7aa6f7b8ddd219380",
+    "name": "Tristan Smith",
+    "age": 66,
+    "sex": "Male",
+    "education_level": "graduate",
+    "occupation": "not in workforce",
+    "city": "Washington",
+    "state": "DC",
+    "summary": "Tristan Smith, a 66\u2011year\u2011old retired historian, blends razor\u2011sharp discipline with lifelong curiosity, navigating life like a meticulously annotated archive, yet they can\u2019t resist splurging on rare books and hoarding vintage chess sets."
+   },
+   "stance": "mixed",
+   "action": "I'd ask for the fare increase to come with protections for seniors and low-income riders, and I'd watch the public hearings before deciding how hard to push.",
+   "response": "My description doesn't say whether I ride Metro or buses regularly, so I'm not sure this touches me directly. I'd still care about it because my neighbors and the older folks in my community depend on transit, and a 50-cent jump is a real burden for anyone on a fixed income. I understand the agency needs revenue, but I'd want to see reduced fares or exemptions for seniors and students before I'd call it fair.",
+   "sheet_quote": "strong ties to local black cultural institutions",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "3f785dbaa9bc45a3bcf92640695526fe",
+    "name": "Santos Beiza",
+    "age": 67,
+    "sex": "Male",
+    "education_level": "less_than_9th",
+    "occupation": "not in workforce",
+    "city": "Indianapolis",
+    "state": "IN",
+    "summary": "Santos Beiza blends quiet curiosity, practical hands\u2011on skill, and a deep love for island traditions into a solitary yet community\u2011focused life, punctuated by gardening, woodworking, and generous cooking."
+   },
+   "stance": "mixed",
+   "action": "I'd check whether the city offers a reduced senior or low-income fare, and I'd tell my neighbors about it.",
+   "response": "I'm not sure this touches me directly, since my life doesn't say I ride the bus, so I'd react mostly for the neighbors who depend on it. Fifty cents is small, but I keep a close eye on every dollar, and a fare increase hits people on fixed incomes hardest, so I'd want the city to protect the older folks and those who can't afford it.",
+   "sheet_quote": "manages household finances with simple budgeting tools",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "60d8bf04f0a849e29f6d8164949f0e98",
+    "name": "Ruth Suarez",
+    "age": 65,
+    "sex": "Female",
+    "education_level": "some_college",
+    "occupation": "not in workforce",
+    "city": "Quincy",
+    "state": "WA",
+    "summary": "Ruth Suarez, a 65\u2011year\u2011old retiree, balances a competitive drive for artistic excellence with an organized, curiosity\u2011fuelled approach to community culture, often juggling pottery contests, grant writing, and an ever\u2011growing collection of gardening tools."
+   },
+   "stance": "mixed",
+   "action": "Nothing for my own commute; I'd look into whether there's a reduced fare for seniors or low-income riders and share that with the families I work with.",
+   "response": "My description doesn't say whether I ride the bus, so I'm not sure this touches me directly. Fifty cents is small for me, but I think about the newer immigrant families and farmworkers around Quincy who may depend on transit to get to work and appointments, and I'd want the city to show how the increase protects them before I backed it.",
+   "sheet_quote": "an organized, curiosity\u2011fuelled approach to community culture",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "2c86015a0c5e4df6b2883d1c70d86337",
+    "name": "Tara White",
+    "age": 79,
+    "sex": "Female",
+    "education_level": "some_college",
+    "occupation": "not in workforce",
+    "city": "Granger",
+    "state": "IN",
+    "summary": "Tara White blends a lifelong curiosity for history with a disciplined, detail\u2011driven routine, quietly worries about every small thing, yet they find peace kneading dough and tracing family roots."
+   },
+   "stance": "mixed",
+   "action": "I'd ask the transit agency whether a senior or reduced fare is available and I'd keep my trips planned around the new cost.",
+   "response": "I'm not sure this touches me directly, since my description doesn't say whether I ride the bus. I'd support it only if it funds reliable service and protects reduced fares for older riders, because a fare hike hits fixed incomes and neighbors who depend on the bus hardest. I'd want to see the budget laid out clearly before I made up my mind.",
+   "sheet_quote": "detail\u2011driven routine, quietly worries about every small thing",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "72df8160648e4c799f25f36807c687fb",
+    "name": "Deborah Delrey",
+    "age": 66,
+    "sex": "Female",
+    "education_level": "bachelors",
+    "occupation": "not in workforce",
+    "city": "Harrington",
+    "state": "DE",
+    "summary": "Deborah Delrey blends lifelong curiosity with meticulous organization, channels worries into purposeful community service, and they find joy in knitting, bird\u2011watching, and nurturing a garden that feeds both body and soul."
+   },
+   "stance": "mixed",
+   "action": "I'd ask the county whether the fare rise includes a reduced fare for seniors and low-income riders, and I'd bring it up with the senior tutoring and library folks I work with.",
+   "response": "I'm not sure this touches me directly, since I don't know whether I ride public transit, and I'd want to see the details first. A 50-cent bump is small for one trip, but I'd worry about the retired neighbors and younger families for whom it adds up, so I'd want to protect a reduced fare for seniors before I'd feel good about it.",
+   "sheet_quote": "balances a modest travel budget",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "a8cc9aef75894aef97466af1c6c92826",
+    "name": "Barbara Garcialopez",
+    "age": 98,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Sun City Center",
+    "state": "FL",
+    "summary": "Barbara Garcialopez blends disciplined organization, a deep curiosity for art and history, and a gentle dedication to cultural preservation, all while savoring coffee, watercolor hues, and the occasional misplacement of her glasses."
+   },
+   "stance": "mixed",
+   "action": "I'd translate the fare notice into Spanish for neighbors and check whether seniors qualify for a reduced fare before deciding how to help people get to the center and their appointments.",
+   "response": "I'm not sure this touches me directly, since I don't know that I ride the bus at all. But I worry about the neighbors who depend on it to reach doctors and the senior center, and a 50-cent rise can add up for people on fixed incomes. I'd want the city to protect older riders and explain the change clearly in both English and Spanish before I'd fully support it.",
+   "sheet_quote": "compassionate demeanor makes her a dependable caregiver",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "75234f244cb5445ebafc2e2105a6f052",
+    "name": "Hilda Irizarrygonzalez",
+    "age": 80,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Yuma",
+    "state": "AZ",
+    "summary": "Hilda Irizarrygonzalez blends a lifelong curiosity for art and cuisine with a relaxed, slightly disorganized lifestyle, channeling competitive energy into senior games and kitchen contests while habitually misplacing receipts and relying on memory to keep track of appointments."
+   },
+   "stance": "mixed",
+   "action": "I'd keep an eye on my bus costs and ask family for rides only when needed, but I wouldn't change my weekly routines much.",
+   "response": "I'm not sure this touches me directly, since my description doesn't say whether I ride the bus. Half a dollar more per trip is small, but for people on fixed incomes who ride often it adds up, and I'd want the increase to be clearly justified and paired with help for seniors and low-income riders.",
+   "sheet_quote": "",
+   "quote_check": "empty"
+  },
+  {
+   "persona": {
+    "uuid": "3f64c41b63c04b63a2abfdc3df3460db",
+    "name": "Mary Badorrek",
+    "age": 66,
+    "sex": "Female",
+    "education_level": "associates",
+    "occupation": "not in workforce",
+    "city": "Davis",
+    "state": "WV",
+    "summary": "Mary Badorrek is a curiosity\u2011driven, fiercely practical 66\u2011year\u2011old who transforms garden yields, family histories, and wooden shavings into community lessons, even as their spontaneous nature sometimes lets deadlines slip."
+   },
+   "stance": "mixed",
+   "action": "I'd run the numbers for neighbors who ride every day and help them budget for the extra cost, and I'd go to the public meeting to ask how the increase would be used.",
+   "response": "I'm not sure this touches me directly, since I don't know that I ride the bus at all, and I'd rather not guess. A 50-cent jump is small for one trip but adds up fast for anyone riding daily on a fixed income, so I'd want to see the actual budget behind it before I backed it. I'd want to know whether the fare pays for service that people really need.",
+   "sheet_quote": "fiercely practical",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "0533dc5c6b984b059883909b8bdb547c",
+    "name": "James Tuccitto",
+    "age": 67,
+    "sex": "Male",
+    "education_level": "graduate",
+    "occupation": "not in workforce",
+    "city": "Port Orange",
+    "state": "FL",
+    "summary": "James Tuccitto is a curious, art\u2011infused retiree who blends disciplined planning with spontaneous watercolor painting, occasionally overindulges on rich pasta while letting his weekly jogs slip."
+   },
+   "stance": "mixed",
+   "action": "I'd ask the transit agency where the extra revenue goes and whether it keeps service running for riders who depend on it, like the adults I tutor and seniors getting to the community programs.",
+   "response": "I'm not sure this touches me directly, since my description doesn't say whether I ride the bus. I can see the case for a modest increase if the money keeps service reliable, but I'd want to see that before supporting it, because a 50-cent jump hits people on tight budgets hardest.",
+   "sheet_quote": "community service",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "7f23d70c96cb414fad81bb8f42a64548",
+    "name": "David Poe",
+    "age": 87,
+    "sex": "Male",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Wilkes Barre",
+    "state": "PA",
+    "summary": "David Poe is a competitive yet community\u2011focused 87\u2011year\u2011old handyman who blends routine home\u2011repair tasks with lively bingo battles and heartfelt storytelling, and they never miss a Thursday night choir rehearsal."
+   },
+   "stance": "mixed",
+   "action": "I'd check whether the fare hike applies to seniors or has a reduced fare, and I'd plan my day trips and church trips around it.",
+   "response": "My description doesn't say whether I ride the bus, so I'm not sure this touches me directly. Still, I know plenty of folks who depend on the bus to get to work, the doctor, and church, and a 50-cent jump hits them harder than it hits me. I'd want to see the senior fare protected, since on a modest pension every dollar gets counted.",
+   "sheet_quote": "keep travel expenses within their modest pension constraints",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "46496365f12040baa8b99675c3ee1f5f",
+    "name": "Summer Gutierrez",
+    "age": 67,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Southampton",
+    "state": "PA",
+    "summary": "Summer Gutierrez blends boundless sociability with meticulous organization, turning every community event into a smoothly run celebration while secretly hoarding extra coupons and occasionally losing track of time in endless scrapbooking sessions, and they cherish the gentle chaos of a well\u2011kept memory box."
+   },
+   "stance": "mixed",
+   "action": "I'd keep an eye on whether the senior center and neighbors who rely on rides can still afford to get there, and I'd speak up for them at the next meeting.",
+   "response": "I'm not sure this touches me directly, since my description doesn't say I ride the buses, but I know a lot of people in Southampton who depend on them to get to the senior center, church, and doctors' appointments. I understand transit needs funding, and a modest increase is reasonable on its own, but I worry about folks on fixed incomes, so I'd want to see whether there are senior or low-income discounts kept in place before I'd call it fair.",
+   "sheet_quote": "always securing senior discounts and budgeting for modest accommodations",
+   "quote_check": "grounded"
+  }
+ ]
+}

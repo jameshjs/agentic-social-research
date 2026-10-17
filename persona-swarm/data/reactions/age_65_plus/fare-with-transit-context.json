@@ -1,0 +1,466 @@
+{
+ "group": {
+  "id": "age_65_plus",
+  "label": "Ages 65+",
+  "size": 20
+ },
+ "policy": "Adult public transit fares rise by 50 cents per ride starting next year.",
+ "run": "fare-with-transit-context",
+ "generated_at": "2026-10-17T03:02:39+00:00",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "prompt_version": "v3",
+ "summary": {
+  "responded": 20,
+  "failed": 0,
+  "stance": {
+   "support": 2,
+   "oppose": 18,
+   "mixed": 0,
+   "not_affected": 0
+  },
+  "quote_grounded": 20
+ },
+ "responses": [
+  {
+   "persona": {
+    "uuid": "649878849ad040d2accaf93d04bfb036",
+    "name": "Vienna Wilkes",
+    "age": 76,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Niagara Falls",
+    "state": "NY",
+    "summary": "Vienna Wilkes is a routine\u2011driven yet gregarious 76\u2011year\u2011old who blends meticulous community organizing with a love for gardening, knitting, and swing music, all while sprinkling their days with modest indulgences and occasional forgetfulness."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd write to the transit board and my council member, and I'd sign up for any senior fare discount I could find before the increase takes effect.",
+   "response": "Fifty cents a ride adds up fast when you're on the bus about ten times a week and money is already tight after rent and bills. I think fares should stay low for the people who depend on the bus most, especially seniors on fixed incomes, so I'd oppose this one.",
+   "sheet_quote": "You don't own a car. You ride public transit about ten times a week to get around",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "0ebacaace220418f994b65299af560a3",
+    "name": "Megan Plunkett",
+    "age": 68,
+    "sex": "Female",
+    "education_level": "associates",
+    "occupation": "not in workforce",
+    "city": "Bakersfield",
+    "state": "CA",
+    "summary": "Megan Plunkett blends meticulous organization with heartfelt community service, a love for gardening and home\u2011cooked pies, and a gentle worry that keeps them prepared yet occasionally over\u2011cautious."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "oppose",
+   "action": "I'd keep driving myself, but I'd let the food pantry folks know so they can pass fare info along to clients who rely on the bus.",
+   "response": "I'd oppose it. Fifty cents doesn't hurt me since I drive almost everywhere and rarely ride, but it's a real cost for people who depend on the bus to get to work, appointments, and the pantry, and the ones who can least afford it are usually the first to feel it.",
+   "sheet_quote": "heartfelt community service",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "efc3a8f0275544b6b0ba95d6b164c7d3",
+    "name": "Blanca Infante",
+    "age": 69,
+    "sex": "Female",
+    "education_level": "9th_12th_no_diploma",
+    "occupation": "no occupation",
+    "city": "Hanford",
+    "state": "CA",
+    "summary": "Blanca Infante, a pragmatic yet curious senior who fuses meticulous budgeting, community mentorship, and a passion for traditional cooking with a tendency to impulse\u2011buy garden d\u00e9cor, embodies a balanced blend of organization, flexibility, and enduring cultural pride."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd write to the city council and the transit board, and I'd ask the senior center to help me track how often I ride so I can show what the increase costs people on fixed incomes.",
+   "response": "I don't think a 50-cent jump is small for me. I ride the bus about ten times a week, so that's roughly five dollars more every week, and with rent and bills I have very little left at the end of the month. I'd rather the city find the money elsewhere or keep fares where they are, especially for the seniors and working people who depend on the bus to get to appointments, errands and work.",
+   "sheet_quote": "You ride public transit about ten times a week to get around",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "8cbc2aa3bd884239afd46110ffde81b1",
+    "name": "Lisa Richardson",
+    "age": 79,
+    "sex": "Female",
+    "education_level": "graduate",
+    "occupation": "not in workforce",
+    "city": "Norfolk",
+    "state": "VA",
+    "summary": "Lisa Richardson is a fiercely curious, quietly competitive 79\u2011year\u2011old who stitches history into quilts, tracks every penny, and guards their solitude with a well\u2011ordered garden and a keen eye for genealogy, even if they occasionally forget to water their succulents."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "oppose",
+   "action": "Nothing much changes for my own driving, but I'd speak up at public hearings for a fare-free or means-tested fare for seniors and low-income riders.",
+   "response": "I don't think raising adult fares by 50 cents is fair to riders who depend on the bus to get to work, the doctor, or the grocery store, even if the cost seems small. I drive almost everywhere and ride transit only a few times a year, so the increase wouldn't hit my wallet in any real way, but I still think the people who can least afford it should not be asked to pay more.",
+   "sheet_quote": "You ride public transit only a few times a year",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "7f6afae6b1d945dbb8ceb5dafa33ebf2",
+    "name": "Mark Jones",
+    "age": 70,
+    "sex": "Male",
+    "education_level": "some_college",
+    "occupation": "not in workforce",
+    "city": "Fulton",
+    "state": "MD",
+    "summary": "Mark Jones blends a hands\u2011on work ethic with a love for community gatherings, balancing structured volunteer leadership with a relaxed, sometimes forgetful, approach to personal planning."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd ask the transit folks about senior or reduced fares and trip-bundling passes, and I'd plan my errands into fewer, longer trips to cut the extra cost.",
+   "response": "I don't support it. I ride the bus about ten times a week, so that's roughly five more dollars every week, and with very little left over after rent and bills, that adds up fast. Transit should be something folks on a budget can count on, and I'd rather see the fare held steady than see it pushed onto the people who can least absorb it.",
+   "sheet_quote": "modest, pragmatic outlook",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "8413bfe3f55d40a6ba29be58704203f2",
+    "name": "Patricia Dugas",
+    "age": 69,
+    "sex": "Female",
+    "education_level": "bachelors",
+    "occupation": "not in workforce",
+    "city": "Portland",
+    "state": "OR",
+    "summary": "Patricia Dugas, a curiosity\u2011driven senior who melds meticulous organization with spontaneous art adventures, battles chronic worry through yoga yet sometimes hoards garden tools like a secret treasure, and turns every museum visit into a personal lecture for friends."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "support",
+   "action": "Nothing much changes for me; I'd keep driving most places and might take the bus to a gallery or museum event now and then.",
+   "response": "I'd support a 50-cent increase. Fares pay for service, and Portland's transit needs to stay reliable for the people who depend on it, especially older riders and those without a car. It barely touches my budget, and I drive most places anyway, but I'd rather see a modest fare rise than cuts to routes.",
+   "sheet_quote": "strong community values",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "e1135b2cf5d9495790d9b12ec631706c",
+    "name": "Christopher Dennis",
+    "age": 72,
+    "sex": "Male",
+    "education_level": "graduate",
+    "occupation": "not in workforce",
+    "city": "Winthrop",
+    "state": "ME",
+    "summary": "Christopher Dennis is a methodical, 72-year-old polymath who fuses engineering precision with abstract artistry; they channel worry into disciplined journaling and nurture intergenerational creativity through mentorship and maker workshops."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd push for a fare structure that protects seniors and low-income riders, and I'd budget more carefully for my weekly trips.",
+   "response": "I'd oppose a flat 50-cent hike on adult fares, since I ride transit about ten times a week and money is already tight after rent and bills. A fare increase falls hardest on people like me who depend on the bus for errands, appointments, and visits, and I'd rather see the system funded in ways that don't push riders off it.",
+   "sheet_quote": "After rent and bills you have very little money left each month.",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "ef6ad15e14ff4895a0df029a612fee76",
+    "name": "Alice Paul",
+    "age": 68,
+    "sex": "Female",
+    "education_level": "bachelors",
+    "occupation": "not in workforce",
+    "city": "West Des Moines",
+    "state": "IA",
+    "summary": "Alice Paul, a detail\u2011oriented retiree with a green thumb and lingering anxiety, they meticulously plan every project\u2014from community gardens to memoir chapters\u2014while battling occasional compulsive budgeting and a penchant for late\u2011night camera tinkering."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "support",
+   "action": "Nothing much would change; I'd keep driving and maybe pay the extra 50 cents on the rare occasions I ride, since a fare that pays for service matters more than the few cents.",
+   "response": "I'd support it. I drive nearly everywhere and ride transit only a few times a year, so fifty cents a trip barely registers in my budget, and I'd rather see a system that can keep its routes and schedules running than one that keeps fares frozen and starves. Better to ask for a small, honest increase than let service slip away for folks who depend on it every day.",
+   "sheet_quote": "budgeting travel expenses within a modest retirement allowance",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "653421174d6d4092ba269e46166d9f3c",
+    "name": "Branford Harris",
+    "age": 66,
+    "sex": "Male",
+    "education_level": "9th_12th_no_diploma",
+    "occupation": "personal care aide",
+    "city": "Oxon Hill",
+    "state": "MD",
+    "summary": "Branford Harris is a meticulous elder\u2011care professional whose love of art, community, and organized living fuels a competitive spirit, a disciplined financial habit, and a lifelong quest to blend compassion with creative expression."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd speak up at the public hearing, ask about reduced senior and low-income fares, and bundle my client visits and errands into fewer trips to hold down the added cost.",
+   "response": "I don't own a car, so I ride the bus and train about ten times a week, and fifty cents more a ride adds up to roughly $5 a week, which is real money when I'm already stretching to cover rent and bills. Transit is how I get to my clients, my classes and my church, and a fare hike hits hardest the folks who have the fewest options, so I'd rather see the agency find the money elsewhere.",
+   "sheet_quote": "very little money left each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "79c3af70d16541f7aa6f7b8ddd219380",
+    "name": "Tristan Smith",
+    "age": 66,
+    "sex": "Male",
+    "education_level": "graduate",
+    "occupation": "not in workforce",
+    "city": "Washington",
+    "state": "DC",
+    "summary": "Tristan Smith, a 66\u2011year\u2011old retired historian, blends razor\u2011sharp discipline with lifelong curiosity, navigating life like a meticulously annotated archive, yet they can\u2019t resist splurging on rare books and hoarding vintage chess sets."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "oppose",
+   "action": "I would submit written comments to the DC Council and WMATA asking for a reduced-fare option for low-income riders before accepting any across-the-board increase.",
+   "response": "I'm against a flat 50-cent hike because it lands hardest on people who have no car and no cushion, including many of the working families in neighborhoods like the ones I grew up in. Fifty cents sounds small, but for someone riding twice a day it adds up fast, and I'd rather see the shortfall covered by a fair funding source than by the riders who can least afford it. It wouldn't change my own daily routine much, since I drive nearly everywhere and ride transit only a few times a year, so the cost to me would be minor.",
+   "sheet_quote": "a deep respect for the legacy of African American resilience and creativity",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "3f785dbaa9bc45a3bcf92640695526fe",
+    "name": "Santos Beiza",
+    "age": 67,
+    "sex": "Male",
+    "education_level": "less_than_9th",
+    "occupation": "not in workforce",
+    "city": "Indianapolis",
+    "state": "IN",
+    "summary": "Santos Beiza blends quiet curiosity, practical hands\u2011on skill, and a deep love for island traditions into a solitary yet community\u2011focused life, punctuated by gardening, woodworking, and generous cooking."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd push back at the next city council or transit board hearing and ask for a senior or low-income fare instead, and I'd budget the extra 50 cents into my monthly plan since I ride about ten times a week.",
+   "response": "I don't support a 50-cent jump. I ride the bus about ten times a week for errands, appointments and visits, and on a fixed budget after rent and bills that adds up to about $5 more a week, which is real money for me. Fares should not push older folks who live on a tight income off the bus; I'd rather see the transit system paid for another way.",
+   "sheet_quote": "After rent and bills you have very little money left each month.",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "60d8bf04f0a849e29f6d8164949f0e98",
+    "name": "Ruth Suarez",
+    "age": 65,
+    "sex": "Female",
+    "education_level": "some_college",
+    "occupation": "not in workforce",
+    "city": "Quincy",
+    "state": "WA",
+    "summary": "Ruth Suarez, a 65\u2011year\u2011old retiree, balances a competitive drive for artistic excellence with an organized, curiosity\u2011fuelled approach to community culture, often juggling pottery contests, grant writing, and an ever\u2011growing collection of gardening tools."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "oppose",
+   "action": "Nothing about my own riding would change much, since I drive nearly everywhere, but I'd push back on the fare hike at the next public comment opportunity.",
+   "response": "I'd oppose a fare increase, even a small one, because transit is how many working families and older neighbors in Quincy get to appointments, jobs and the library, and every bump makes that harder. I drive almost everywhere and ride transit only a few times a year, so a 50-cent rise wouldn't cost me much directly, but I still want the system to stay within reach for people who depend on it.",
+   "sheet_quote": "You own a car and drive almost everywhere.",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "2c86015a0c5e4df6b2883d1c70d86337",
+    "name": "Tara White",
+    "age": 79,
+    "sex": "Female",
+    "education_level": "some_college",
+    "occupation": "not in workforce",
+    "city": "Granger",
+    "state": "IN",
+    "summary": "Tara White blends a lifelong curiosity for history with a disciplined, detail\u2011driven routine, quietly worries about every small thing, yet they find peace kneading dough and tracing family roots."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd plan my errands into fewer, combined trips and check whether a reduced senior fare is available before the increase takes effect.",
+   "response": "I can't support it. At about ten rides a week, that's roughly five dollars more a month, and when there's very little left after rent and bills, that money has to come from somewhere, usually from groceries or the things I'd rather not skip. The people hit hardest are the ones who depend on the bus for appointments and visits, and a fare hike never makes that any easier to bear.",
+   "sheet_quote": "quietly worries about every small thing",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "72df8160648e4c799f25f36807c687fb",
+    "name": "Deborah Delrey",
+    "age": 66,
+    "sex": "Female",
+    "education_level": "bachelors",
+    "occupation": "not in workforce",
+    "city": "Harrington",
+    "state": "DE",
+    "summary": "Deborah Delrey blends lifelong curiosity with meticulous organization, channels worries into purposeful community service, and they find joy in knitting, bird\u2011watching, and nurturing a garden that feeds both body and soul."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "oppose",
+   "action": "I'd write to the county transit board and ask them to protect fares for seniors and low-income riders, and I'd push for a fare freeze or a reduced-fare option.",
+   "response": "I'd oppose a 50-cent bump in adult fares. I drive nearly everywhere and ride transit only a few times a year, so it wouldn't hit my wallet much, but I know plenty of neighbors who depend on the bus to get to work, to the doctor, and to the food bank, and for them an extra fifty cents each way adds up quickly.",
+   "sheet_quote": "You own a car and drive almost everywhere. You ride public transit only a few times a year",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "a8cc9aef75894aef97466af1c6c92826",
+    "name": "Barbara Garcialopez",
+    "age": 98,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Sun City Center",
+    "state": "FL",
+    "summary": "Barbara Garcialopez blends disciplined organization, a deep curiosity for art and history, and a gentle dedication to cultural preservation, all while savoring coffee, watercolor hues, and the occasional misplacement of her glasses."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I would cut back on non-essential trips and ask the transit office about a senior or low-income fare before paying the higher rate.",
+   "response": "I oppose it. I ride the bus about ten times a week and have very little left over each month after rent and bills, so fifty cents a ride adds up to about five dollars a week, which I would feel. Many of my neighbors who help each other and depend on the bus would be hit even harder, and I don't think those who have least should pay the most to get to the doctor and the grocery store.",
+   "sheet_quote": "offering companionship and assistance to fellow residents",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "75234f244cb5445ebafc2e2105a6f052",
+    "name": "Hilda Irizarrygonzalez",
+    "age": 80,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Yuma",
+    "state": "AZ",
+    "summary": "Hilda Irizarrygonzalez blends a lifelong curiosity for art and cuisine with a relaxed, slightly disorganized lifestyle, channeling competitive energy into senior games and kitchen contests while habitually misplacing receipts and relying on memory to keep track of appointments."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "oppose",
+   "action": "I'd keep driving my own car as I do now, but I'd tell the neighbors who ride the bus to speak up at the city meeting.",
+   "response": "I don't think a 50-cent jump is a hardship for me, since I drive myself almost everywhere and my budget is comfortable. But the bus is how plenty of people in Yuma get to work, the doctor, and the grocery store, and a fare hike lands hardest on those who have no other way. I'd rather the city find the money somewhere else.",
+   "sheet_quote": "balancing her budget by staying with family or in modest motels",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "3f64c41b63c04b63a2abfdc3df3460db",
+    "name": "Mary Badorrek",
+    "age": 66,
+    "sex": "Female",
+    "education_level": "associates",
+    "occupation": "not in workforce",
+    "city": "Davis",
+    "state": "WV",
+    "summary": "Mary Badorrek is a curiosity\u2011driven, fiercely practical 66\u2011year\u2011old who transforms garden yields, family histories, and wooden shavings into community lessons, even as their spontaneous nature sometimes lets deadlines slip."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd bundle my errands into fewer trips, check whether a reduced or monthly fare is available, and speak up at the public hearing to ask the county to hold the fare where it is.",
+   "response": "I don't support it. I ride the bus about ten times a week, so an extra 50 cents a ride is roughly five dollars a week, or better than twenty dollars a month, and on my budget that's real money that comes out of food or the gas-free trips I count on. Transit is how many of my neighbors get to work, to the doctor and to the grocery store, and raising the price on them first is the wrong direction for a county that says it cares about folks getting by.",
+   "sheet_quote": "After rent and bills you have very little money left each month.",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "0533dc5c6b984b059883909b8bdb547c",
+    "name": "James Tuccitto",
+    "age": 67,
+    "sex": "Male",
+    "education_level": "graduate",
+    "occupation": "not in workforce",
+    "city": "Port Orange",
+    "state": "FL",
+    "summary": "James Tuccitto is a curious, art\u2011infused retiree who blends disciplined planning with spontaneous watercolor painting, occasionally overindulges on rich pasta while letting his weekly jogs slip."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "oppose",
+   "action": "I'd keep driving myself, but I'd still write to the transit board and say the increase should be avoided or offset for riders who depend on the bus.",
+   "response": "Fifty cents is a small bite for me, since I own a car and drive nearly everywhere, and my budget can absorb it easily. But transit is how many people get to work, school, and appointments, and a fare hike lands hardest on those with the least room. I'd rather see the gap covered another way than pushed onto riders.",
+   "sheet_quote": "community service",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "7f23d70c96cb414fad81bb8f42a64548",
+    "name": "David Poe",
+    "age": 87,
+    "sex": "Male",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Wilkes Barre",
+    "state": "PA",
+    "summary": "David Poe is a competitive yet community\u2011focused 87\u2011year\u2011old handyman who blends routine home\u2011repair tasks with lively bingo battles and heartfelt storytelling, and they never miss a Thursday night choir rehearsal."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride public transit about ten times a week to get around: errands, appointments, visits and any work you do. After rent and bills you have very little money left each month."
+   },
+   "stance": "oppose",
+   "action": "I'd sit down with my budget, work out how many rides I can afford each month, and cut back on errands I can bundle into one trip.",
+   "response": "I don't drive, so the bus is how I get to my appointments, the store, and my visits, about ten times a week, and fifty cents a ride adds up fast on a pension. Working folks and retirees who have no other way to get around shouldn't be the ones paying for the budget gap, and I stood up for that kind of fairness as a union steward.",
+   "sheet_quote": "budgeting carefully to keep travel expenses within their modest pension constraints",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "46496365f12040baa8b99675c3ee1f5f",
+    "name": "Summer Gutierrez",
+    "age": 67,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "not in workforce",
+    "city": "Southampton",
+    "state": "PA",
+    "summary": "Summer Gutierrez blends boundless sociability with meticulous organization, turning every community event into a smoothly run celebration while secretly hoarding extra coupons and occasionally losing track of time in endless scrapbooking sessions, and they cherish the gentle chaos of a well\u2011kept memory box."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You ride public transit only a few times a year, and your budget has comfortable room each month."
+   },
+   "stance": "oppose",
+   "action": "I'd speak up at the next public meeting and urge the transit authority to protect senior and low-income riders from the increase.",
+   "response": "I don't think a fare hike on adult riders is the right move, especially when it lands hardest on people who depend on the bus to get to work, appointments, and the senior center. I drive almost everywhere, so it wouldn't change my own weekly budget much, but I know plenty of neighbors who ride a few times a month and would feel every extra half dollar.",
+   "sheet_quote": "Summer grew up in suburban Bucks County, Pennsylvania, in a family of Irish\u2011American descent that valued hard work, church involvement, and community service.",
+   "quote_check": "grounded"
+  }
+ ]
+}

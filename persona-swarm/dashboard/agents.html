@@ -1,0 +1,263 @@
+<style>
+  .ar { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); }
+  .ar h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+  .ar h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .ar .lede { color: var(--color-fg-muted); margin: var(--cds-gap-xs) 0 0; max-width: 72ch; }
+  .ar .controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); align-items: end; }
+  .ar label { display: grid; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .ar select, .ar input[type=search] { font: inherit; font-size: var(--cds-font-size-body); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); min-width: 12rem; max-width: 100%; }
+  .ar .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--cds-gap-md); }
+  .ar .card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+  .ar .tile .v { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+  .ar .k, .ar .note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .ar .chart { min-height: 120px; position: relative; }
+  .ar .legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .ar .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .ar .tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; }
+  .ar .tip .t { color: var(--cds-text-secondary); }
+  .ar .tablebox { max-height: 36rem; overflow: auto; }
+  .ar table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); }
+  .ar th, .ar td { text-align: left; vertical-align: top; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+  .ar th { position: sticky; top: 0; background: var(--color-panel); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); }
+  .ar tbody tr { cursor: pointer; }
+  .ar tbody tr:hover td { background: var(--color-bg); }
+  .ar tbody tr.sel td { background: var(--color-bg); }
+  .ar td.wide { min-width: 16rem; }
+  .ar .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border-line); white-space: nowrap; }
+  .ar .bad { color: var(--color-bad); }
+  .ar .profile { display: grid; gap: var(--cds-gap-xs); }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="ar">
+  <header>
+    <h1 id="title">Agent responses</h1>
+    <p class="lede" id="takeaway" data-source="run_summary" data-field="takeaway">—</p>
+  </header>
+
+  <section class="controls" id="filters">
+    <label>Run <select id="run-select" aria-label="Run" data-source="run_summary"></select></label>
+    <label>Group <select id="group-select" aria-label="Group" data-source="run_summary"></select></label>
+  </section>
+
+  <section class="tiles" id="headline">
+    <div class="card tile"><div class="k">Agents responding</div><div class="v" data-source="run_summary" data-field="responded">—</div></div>
+    <div class="card tile"><div class="k">Oppose</div><div class="v" data-source="run_summary" data-field="oppose_share">—</div></div>
+    <div class="card tile"><div class="k">Say nothing changes for them</div><div class="v" data-source="run_summary" data-field="nothing_share">—</div></div>
+    <div class="card tile"><div class="k">Quote really on their persona</div><div class="v" data-source="run_summary" data-field="grounded_share">—</div></div>
+  </section>
+
+  <section class="card">
+    <h2 id="by-situation">Stance by situation</h2>
+    <div class="note">Each run can give personas a situation line, such as transit-dependent or driver. If decisions follow the persona, the bars differ by situation.</div>
+    <div class="legend" id="stance-legend" data-source="stance_by_context"></div>
+    <div class="chart" id="stance-chart" data-source="stance_by_context"></div>
+  </section>
+
+  <section class="card">
+    <h2 id="agents">Every agent in this run</h2>
+    <div class="note">Click an agent to see all of their answers across runs below. Search matches any column.</div>
+    <input type="search" id="agent-search" placeholder="Search agents" aria-label="Search agents">
+    <div class="tablebox">
+      <table id="agent-table" data-source="reactions" data-row-key="row_id">
+        <thead><tr><th data-field="name">Agent</th><th data-field="age">Age</th><th data-field="sex">Sex</th><th data-field="occupation">Occupation</th><th data-field="region">Region</th><th data-field="context">Situation</th><th data-field="stance">Stance</th><th data-field="action">What they'd do</th><th data-field="response">Response</th><th data-field="quote_check">Quote check</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" id="agent-detail">
+    <h2 id="detail-title">Pick an agent</h2>
+    <div class="profile note" id="detail-profile">Click a row above to see one agent's answers in every run, so you can check they stay in character.</div>
+    <div class="tablebox">
+      <table id="detail-table" data-source="reactions" data-row-key="row_id">
+        <thead><tr><th data-field="run">Run</th><th data-field="group_label">Group</th><th data-field="situation">Situation given</th><th data-field="stance">Stance</th><th data-field="action">What they'd do</th><th data-field="response">Response</th><th data-field="sheet_quote">Quote cited</th><th data-field="quote_check">Quote check</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+const nothing = (a) => /^\s*nothing/i.test(String(a));
+const share = (rows, f) => (rows.length ? rows.filter(f).length / rows.length : null);
+
+dash.calc("run_summary", {
+  title: "Run summary",
+  description: "Per run and group (plus every group together): agents responding, share opposing, share saying nothing changes for them, share whose quote is on their persona.",
+  inputs: ["reactions"],
+  fn: (reactions) => {
+    const ok = reactions.filter((r) => r.stance);
+    const out = [];
+    for (const run of [...new Set(reactions.map((r) => r.run))].sort()) {
+      const inRun = ok.filter((r) => r.run === run);
+      for (const group of ["all", ...new Set(inRun.map((r) => r.group))]) {
+        const rows = group === "all" ? inRun : inRun.filter((r) => r.group === group);
+        const label = group === "all" ? "All groups in this run" : rows[0].group_label;
+        const opp = share(rows, (r) => r.stance === "oppose");
+        out.push({
+          run, group, group_label: label, policy: rows[0] ? rows[0].policy : "", responded: rows.length,
+          oppose_share: opp, nothing_share: share(rows, (r) => nothing(r.action)),
+          grounded_share: share(rows, (r) => r.quote_check === "grounded"),
+          takeaway: `${label}: ${rows.length} agents reacted to "${rows[0] ? rows[0].policy : ""}" and ${Math.round((opp || 0) * 100)}% opposed it.`,
+        });
+      }
+    }
+    return out;
+  },
+});
+
+dash.calc("stance_by_context", {
+  title: "Stance by situation",
+  description: "Share of each stance within each situation, per run and group (plus every group together).",
+  inputs: ["reactions"],
+  fn: (reactions) => {
+    const ok = reactions.filter((r) => r.stance);
+    const stances = ["oppose", "mixed", "support", "not_affected"];
+    const out = [];
+    for (const run of [...new Set(ok.map((r) => r.run))].sort()) {
+      const inRun = ok.filter((r) => r.run === run);
+      for (const group of ["all", ...new Set(inRun.map((r) => r.group))]) {
+        const rows = group === "all" ? inRun : inRun.filter((r) => r.group === group);
+        for (const context of [...new Set(rows.map((r) => r.context))].sort()) {
+          const sub = rows.filter((r) => r.context === context);
+          for (const stance of stances)
+            out.push({ run, group, context, stance, n: sub.length, share: sub.filter((r) => r.stance === stance).length / sub.length });
+        }
+      }
+    }
+    return out;
+  },
+});
+</script>
+
+<script>
+const pct = d3.format(".0%");
+const label = (s) => String(s).replace(/_/g, " ");
+const STANCES = ["oppose", "mixed", "support", "not_affected"];
+const stanceColor = { oppose: "var(--cds-chart-status-critical)", mixed: "var(--cds-chart-muted)", support: dash.colors[0], not_affected: dash.colors[2] };
+const runSel = document.getElementById("run-select"), groupSel = document.getElementById("group-select");
+let search = "", agent = null;
+
+runSel.addEventListener("change", () => dash.setParams({ run: runSel.value, group: "all" }));
+groupSel.addEventListener("change", () => dash.setParams({ group: groupSel.value }));
+document.getElementById("agent-search").addEventListener("input", (e) => { search = e.target.value.toLowerCase(); draw(); });
+document.getElementById("agent-table").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr[data-key]");
+  if (!tr) return;
+  agent = tr.dataset.persona;
+  draw();
+  document.getElementById("agent-detail").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+function fillTable(table, rows, cols) {
+  const tb = table.querySelector("tbody");
+  tb.textContent = "";
+  for (const r of rows) {
+    const tr = tb.appendChild(document.createElement("tr"));
+    tr.dataset.key = r.row_id;
+    tr.dataset.persona = r.persona;
+    if (r.persona === agent) tr.classList.add("sel");
+    for (const [f, fmt, cls] of cols) {
+      const td = tr.appendChild(document.createElement("td"));
+      const v = r[f];
+      if (f === "stance" && v) {
+        const s = td.appendChild(document.createElement("span"));
+        s.className = "pill"; s.textContent = label(v);
+      } else {
+        td.textContent = v === "" || v === undefined || v === null ? "—" : fmt ? fmt(v, r) : v;
+      }
+      if (cls) td.className = typeof cls === "function" ? cls(r) : cls;
+    }
+  }
+}
+
+function drawStance(rows) {
+  const el = document.getElementById("stance-chart"), legend = document.getElementById("stance-legend");
+  el.textContent = ""; legend.textContent = "";
+  const contexts = [...new Set(rows.map((r) => r.context))];
+  if (!contexts.length) return;
+  STANCES.forEach((s) => {
+    const item = legend.appendChild(document.createElement("span"));
+    item.appendChild(document.createElement("i")).style.background = stanceColor[s];
+    item.appendChild(document.createTextNode(label(s)));
+  });
+  const W = el.clientWidth || 500, barH = 26, gap = 12;
+  const names = contexts.map((c) => `${label(c)} (${(rows.find((r) => r.context === c) || {}).n || 0})`);
+  const probe = d3.select(el).append("svg").attr("width", 0).attr("height", 0);
+  const lw = d3.max(names, (n) => probe.append("text").attr("font-size", 12).text(n).node().getComputedTextLength()) + 12;
+  probe.remove();
+  const H = contexts.length * (barH + gap);
+  const x = d3.scaleLinear([0, 1], [lw, W - 4]);
+  const svg = d3.select(el).append("svg").attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`);
+  const tip = d3.select(el).append("div").attr("class", "tip").style("display", "none");
+  contexts.forEach((c, ci) => {
+    const y = ci * (barH + gap);
+    svg.append("text").attr("x", 0).attr("y", y + barH / 2 + 4).attr("font-size", 12).attr("fill", "var(--color-fg)").text(names[ci]);
+    let x0 = 0;
+    for (const s of STANCES) {
+      const r = rows.find((d) => d.context === c && d.stance === s);
+      if (!r || r.share <= 0) continue;
+      const w = Math.max(0, x(x0 + r.share) - x(x0) - 1);
+      svg.append("rect").attr("x", x(x0)).attr("y", y).attr("width", w).attr("height", barH).attr("rx", 3).attr("fill", stanceColor[s])
+        .on("mousemove", (ev) => {
+          const [mx, my] = d3.pointer(ev, el);
+          tip.style("display", null).style("left", `${Math.min(mx + 12, W - 160)}px`).style("top", `${my + 12}px`).text("");
+          tip.append("div").attr("class", "t").text(`${label(c)} · ${r.n} agents`);
+          tip.append("div").text(`${label(s)}: ${pct(r.share)}`);
+        })
+        .on("mouseleave", () => tip.style("display", "none"));
+      const t = svg.append("text").attr("x", x(x0) + 6).attr("y", y + barH / 2 + 4).attr("font-size", 11).attr("fill", "var(--color-bg)").attr("pointer-events", "none").text(pct(r.share));
+      if (t.node().getComputedTextLength() > w - 10) t.remove();
+      x0 += r.share;
+    }
+  });
+}
+
+function draw() {
+  const sum = dash.data("run_summary"), sbc = dash.data("stance_by_context"), rx = dash.data("reactions");
+  if (sum.status !== "ok") return;
+  const runs = [...new Set(sum.data.map((r) => r.run))];
+  let { run, group } = dash.params();
+  if (!runs.includes(run)) run = runs[runs.length - 1];
+  const groups = sum.data.filter((r) => r.run === run);
+  if (!groups.some((r) => r.group === group)) group = "all";
+  runSel.replaceChildren(...runs.map((r) => new Option(label(r), r)));
+  runSel.value = run;
+  groupSel.replaceChildren(...groups.map((r) => new Option(r.group_label, r.group)));
+  groupSel.value = group;
+
+  const where = `run=${encodeURIComponent(run)}&group=${encodeURIComponent(group)}`;
+  const row = sum.data.find((r) => r.run === run && r.group === group);
+  const fmt = { responded: d3.format(","), oppose_share: pct, nothing_share: pct, grounded_share: pct };
+  document.querySelectorAll('[data-source="run_summary"][data-field]').forEach((el) => {
+    const f = el.dataset.field;
+    el.dataset.where = where;
+    el.textContent = row && row[f] !== null && row[f] !== undefined ? (fmt[f] ? fmt[f](row[f]) : row[f]) : "—";
+  });
+
+  if (sbc.status === "ok") drawStance(sbc.data.filter((r) => r.run === run && r.group === group));
+
+  if (rx.status === "ok") {
+    const inView = rx.data.filter((r) => r.run === run && (group === "all" || r.group === group))
+      .filter((r) => !search || Object.values(r).join(" ").toLowerCase().includes(search));
+    fillTable(document.getElementById("agent-table"), inView, [
+      ["name"], ["age"], ["sex"], ["occupation"], ["region"], ["context", label], ["stance"],
+      ["action", null, "wide"], ["response", null, "wide"],
+      ["quote_check", label, (r) => (r.quote_check && r.quote_check !== "grounded" ? "bad" : "")]]);
+
+    const mine = agent ? rx.data.filter((r) => r.persona === agent) : [];
+    const who = mine[0];
+    document.getElementById("detail-title").textContent = who ? `${who.name || "Agent"} across ${mine.length} runs` : "Pick an agent";
+    document.getElementById("detail-profile").textContent = who
+      ? `${who.age}, ${who.sex.toLowerCase()}, ${label(who.occupation)} in ${who.city}, ${who.state} · ${label(who.education_level)} · ${label(who.marital_status)}`
+      : "Click a row above to see one agent's answers in every run, so you can check they stay in character.";
+    fillTable(document.getElementById("detail-table"), mine, [
+      ["run", label], ["group_label"], ["situation", null, "wide"], ["stance"], ["action", null, "wide"],
+      ["response", null, "wide"], ["sheet_quote", null, "wide"],
+      ["quote_check", label, (r) => (r.quote_check && r.quote_check !== "grounded" ? "bad" : "")]]);
+  }
+}
+dash.onData(draw);
+</script>

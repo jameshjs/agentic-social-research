@@ -1,0 +1,506 @@
+{
+ "group": {
+  "id": "men",
+  "label": "Men",
+  "size": 20
+ },
+ "policy": "Adult public transit fares rise by 50 cents per ride starting next year.",
+ "run": "fare-transit-split",
+ "generated_at": "2026-10-17T03:05:53+00:00",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "prompt_version": "v3",
+ "summary": {
+  "responded": 20,
+  "failed": 0,
+  "stance": {
+   "support": 3,
+   "oppose": 15,
+   "mixed": 1,
+   "not_affected": 1
+  },
+  "quote_grounded": 20
+ },
+ "responses": [
+  {
+   "persona": {
+    "uuid": "22df3b567ef94ccea35ecddcea476a1d",
+    "name": "Marvelis Montero",
+    "age": 35,
+    "sex": "Male",
+    "education_level": "graduate",
+    "marital_status": "divorced",
+    "occupation": "not in workforce",
+    "city": "North Miami Beach",
+    "state": "FL",
+    "region": "South",
+    "summary": "A charismatic cultural connector, Marvelis Montero balances a love for structured planning with impulsive salsa nights, though they habitually overbook their calendar and forget to file receipts."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd plan trips more tightly, bundle errands into fewer rides, and check whether a monthly pass or reduced-fare option would soften the increase before I'd cut out the salsa nights or community events.",
+   "response": "I'd oppose it. Since I don't own a car, the bus and train are how I get to work on my projects, to community events, and to my friends' places, and a 50-cent bump per ride adds up fast when money is already tight, and it hits hardest for people who have the fewest alternatives.",
+   "sheet_quote": "money is tight each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "698612bc366e49469284202877a6ec75",
+    "name": "John Thach",
+    "age": 19,
+    "sex": "Male",
+    "education_level": "some_college",
+    "marital_status": "never_married",
+    "occupation": "not in workforce",
+    "city": "Pacoima",
+    "state": "CA",
+    "region": "West",
+    "summary": "John Thach is a solitary, imagination\u2011driven concept artist who obsessively curates vintage game art, wrestles with anxiety, and channels competitive focus into meticulous freelance projects, all while juggling a modest budget and a penchant for midnight sketch marathons."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "oppose",
+   "action": "I'd keep driving myself, since the increase wouldn't change my routine, but I'd push back on the fare hike at local meetings and with people I know who depend on the bus.",
+   "response": "I'd oppose it. Fifty cents sounds small, but for people in Pacoima who ride every day, it adds up fast and hits the ones who have the least room in their budgets. I drive almost everywhere, so it wouldn't change my own costs much, but I don't think a fare hike should fall hardest on people who have no other way to get to work or school.",
+   "sheet_quote": "juggling a modest budget",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "3ccfca84a53a43d0b4be25017305bfc8",
+    "name": "Isaac Gomez",
+    "age": 69,
+    "sex": "Male",
+    "education_level": "high_school",
+    "marital_status": "married_present",
+    "occupation": "not in workforce",
+    "city": "Lincoln",
+    "state": "NE",
+    "region": "Midwest",
+    "summary": "Isaac Gomez blends seasoned mechanical know\u2011how with a gardener\u2019s curiosity, navigating retirement with a mix of frugal prudence, competitive craftsmanship, and a lively love for Cuban rhythms that sometimes leads to a lingering toolbox mess."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd check whether the monthly pass or a senior reduced fare cuts the increase, and bundle my errands into fewer trips.",
+   "response": "I don't think a 50-cent hike on every ride is small for someone on a fixed retirement income who relies on the bus to get around. It adds up fast over a month, and the people who would feel it most are older folks and families who have no other way to get to the store or the doctor. I'd rather see the city keep fares steady and find the money elsewhere.",
+   "sheet_quote": "frugal prudence",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "a995980fa3bd4882a5369f54340cc103",
+    "name": "Osman Mcgriff",
+    "age": 29,
+    "sex": "Male",
+    "education_level": "high_school",
+    "marital_status": "never_married",
+    "occupation": "construction equipment operator",
+    "city": "De Berry",
+    "state": "TX",
+    "region": "South",
+    "summary": "Osman Mcgriff fuses a construction site\u2019s practicality with an artist\u2019s eye, constantly juggling hydraulic repair manuals and watercolor palettes, habitually misplaces their keys but never their harmonica, and they dream of one day swapping their hard hat for a fleet manager\u2019s clipboard."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "not_affected",
+   "action": "Nothing for my own driving; I'd still speak up at a community meeting for keeping fares low for folks who depend on the bus.",
+   "response": "Fifty cents a ride wouldn't touch me since I drive my own truck everywhere and hardly ride the bus. Still, I'd rather transit stay affordable, because plenty of older folks and people without a car around De Berry need it to get to work and church, and a small hike adds up for them.",
+   "sheet_quote": "a modest travel fund",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "5f4a4e9680f3444ab1848ccc05407825",
+    "name": "Bobby Solich",
+    "age": 51,
+    "sex": "Male",
+    "education_level": "bachelors",
+    "marital_status": "married_present",
+    "occupation": "electrical or electronic engineering technologist or technician",
+    "city": "Southlake",
+    "state": "TX",
+    "region": "South",
+    "summary": "Bobby Solich, 51, blends methodical engineering precision with restless curiosity for art and community, juggling maker\u2011space workshops, guitar gigs, and a disciplined push toward sustainable tech leadership, all while never missing a round of golf or a chance to perfect their brisket rub."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd map out my bus and train trips to combine errands, and I'd push for a fare cap or discount for riders on tight budgets.",
+   "response": "I don't drive, so I ride the bus or train most days, and with money already tight each month, another 50 cents a ride adds up fast and lands hardest on people like me. I'd rather see transit funded another way, because a fare hike quietly pushes the folks who can least afford it off the system.",
+   "sheet_quote": "emphasized hard work, self\u2011reliance, and community involvement",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "ca9400b571c8417cbf8b6728502c8227",
+    "name": "James Landy",
+    "age": 75,
+    "sex": "Male",
+    "education_level": "bachelors",
+    "marital_status": "married_present",
+    "occupation": "not in workforce",
+    "city": "Aiken",
+    "state": "SC",
+    "region": "South",
+    "summary": "James Landy is a curiosity\u2011driven, community\u2011oriented elder whose love of art, gentle anxiety, and penchant for meticulous planning color every facet of his life, from curating galleries to nurturing garden vegetables."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "oppose",
+   "action": "I'd keep driving myself, but I'd push the city to hold fares steady for seniors and to publish a clear plan for how the extra money improves service.",
+   "response": "I don't think a fifty-cent jump is fair to riders who depend on the bus, and I'd rather see the city find the money through better planning than from the people least able to absorb it. I drive almost everywhere, so a fare increase wouldn't hit my own budget much, but I know neighbors who rely on transit to reach doctors, the grocery store, and the senior center, and for them fifty cents a ride adds up quickly.",
+   "sheet_quote": "community-oriented elder",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "00a4f33ed2bf4f00b5150702e01d5bfc",
+    "name": "Peter Dunlap",
+    "age": 52,
+    "sex": "Male",
+    "education_level": "bachelors",
+    "marital_status": "divorced",
+    "occupation": "not in workforce",
+    "city": "Mansfield",
+    "state": "TX",
+    "region": "South",
+    "summary": "Peter Dunlap, a 52\u2011year\u2011old art\u2011savvy business strategist, blends spontaneous creativity with disciplined market insight, yet habitually misplaces deadlines while thriving on community buzz and rarely letting anxiety dim their resilient optimism."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd push back at the next city council or transit board meeting and ask for a reduced fare or income-based option before accepting the hike.",
+   "response": "I'd oppose a 50-cent bump for adult riders. I don't own a car, so the bus and train are how I get around most days, and when money's tight every month, an extra fifty cents a ride adds up faster than people expect. Transit should keep people connected to jobs, galleries and community events, and raising the price on the people who rely on it most works against that.",
+   "sheet_quote": "money is tight each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "527e32d3f1624c6eb1c1e112f92149c5",
+    "name": "Larry Fenwick",
+    "age": 56,
+    "sex": "Male",
+    "education_level": "less_than_9th",
+    "marital_status": "married_present",
+    "occupation": "receptionist or information clerk",
+    "city": "Jefferson City",
+    "state": "MO",
+    "region": "Midwest",
+    "summary": "Larry Fenwick is a quietly diligent front\u2011desk guardian who couples an art\u2011loving soul with methodical service, modest savings, and solitary river walks, yet they habitually forget to log their blood pressure after a crossword puzzle marathon."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "support",
+   "action": "nothing",
+   "response": "Fifty cents is a small ask, and I'd support it so the buses keep running for the seniors and folks without cars who depend on them. I drive almost everywhere, so it wouldn't change my week, and I'd rather see a little more paid in than have routes cut.",
+   "sheet_quote": "a strong sense of responsibility toward neighbors and the broader community",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "0de19bc259d74949bc9af926032b0e99",
+    "name": "Sergey Murrey",
+    "age": 37,
+    "sex": "Male",
+    "education_level": "some_college",
+    "marital_status": "never_married",
+    "occupation": "office or administrative support worker",
+    "city": "Ellettsville",
+    "state": "IN",
+    "region": "Midwest",
+    "summary": "Sergey Murrey is a structured, garden\u2011loving office organizer who balances meticulous work habits with a quiet love of classic rock, nature hikes, and occasional indulgent quirks like late\u2011night puzzle binges and impulsive vinyl purchases."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd map out my trips more carefully, group errands into fewer rides, and check whether a monthly pass would cost less than paying per ride.",
+   "response": "I oppose it. Since I don't have a car, the bus and train are how I get to work and around town, and with money tight each month, an extra 50 cents on every ride is a real cost that falls hardest on people like me who have no other option. Fares should be kept affordable for the folks who depend on transit most, so I'd rather see the city find the money elsewhere.",
+   "sheet_quote": "money is tight each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "ea02dd3dd37247f19af90fcb799cd80f",
+    "name": "Lee Dawson",
+    "age": 77,
+    "sex": "Male",
+    "education_level": "some_college",
+    "marital_status": "married_present",
+    "occupation": "not in workforce",
+    "city": "Saratoga Springs",
+    "state": "NY",
+    "region": "Northeast",
+    "summary": "Lee Dawson merges a quiet, methodical love of history and horticulture with a penchant for meticulous record\u2011keeping\u2014whether cataloguing bird sightings or archival photos\u2014while occasionally neglecting daily stretching in favor of extended woodworking projects."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "mixed",
+   "action": "I'd keep riding my car for most trips, so I'd pay little attention to the fare rise, though I'd still look at whether it hurts seniors and people without cars.",
+   "response": "I don't ride the bus much since I drive almost everywhere, so a 50-cent bump wouldn't change my week. Still, I believe public transit should stay affordable for working people and older residents who depend on it, so I'd want the increase kept modest and paired with a senior or low-income discount.",
+   "sheet_quote": "You own a car and drive almost everywhere.",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "331c871a04a245969bbd972b05eca7e9",
+    "name": "Daniel Sharpe",
+    "age": 51,
+    "sex": "Male",
+    "education_level": "some_college",
+    "marital_status": "married_present",
+    "occupation": "elementary or middle school teacher",
+    "city": "Mims",
+    "state": "FL",
+    "region": "South",
+    "summary": "Daniel Sharpe, a 51-year-old teacher-turn-curriculum-leader, balances relentless curiosity for arts and STEAM with a habit of over-thinking, occasional caffeine binges, and a weekend ritual of fishing the St."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd speak up at the public hearing against the increase and push for a reduced-fare or monthly pass option for students, teachers' aides and low-income riders, and I'd keep track of how the change hits my own monthly budget.",
+   "response": "I don't have a car, so I ride the bus most days, and an extra 50 cents each way adds up fast when money is tight each month. Transit is how working people and kids in our town get to jobs, school and the community center, so I'd rather see the county find the money elsewhere than make the people with the fewest options pay more.",
+   "sheet_quote": "money is tight each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "037a676627764a31baab330c23e2ade8",
+    "name": "Brandon Galley",
+    "age": 23,
+    "sex": "Male",
+    "education_level": "some_college",
+    "marital_status": "never_married",
+    "occupation": "retail salesperson",
+    "city": "Wichita",
+    "state": "KS",
+    "region": "Midwest",
+    "summary": "Brandon Galley is a methodical dreamer who blends prairie\u2011inspired art, meticulous brand ambition, and a disciplined approach to finance while occasionally losing sleep to late\u2011night creativity and spontaneous vinyl hunts."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "support",
+   "action": "Nothing much changes for me since I drive almost everywhere, though I'd still keep an eye on whether the extra revenue actually goes to better routes.",
+   "response": "I'd support a 50-cent bump. I drive nearly everywhere, so it wouldn't cost me much, and if fares help keep bus routes running for neighbors who depend on them, that's the kind of cooperation I think a town should back.",
+   "sheet_quote": "a disciplined approach to finance",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "840ca89f05fc41af96d91632ec39a6a0",
+    "name": "Rasean Williams",
+    "age": 42,
+    "sex": "Male",
+    "education_level": "9th_12th_no_diploma",
+    "marital_status": "married_present",
+    "occupation": "not in workforce",
+    "city": "Jacksonville",
+    "state": "FL",
+    "region": "South",
+    "summary": "Rasean Williams is a gregarious, hands\u2011on mentor who blends a love for grilling, community DJing, and spontaneous basketball with a habit of procrastinating on paperwork and a growing list of side\u2011hustle ideas."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd push back at the next city council or transit meeting, and I'd look at whether a monthly pass or the youth and elder discount could soften the hike before I'd pay full fare.",
+   "response": "I don't drive, so the bus and train are how I get to work jobs, the store, and my kids' stuff, and fifty cents on every ride adds up fast when money is already tight. Fares should not make it harder for working folks in our neighborhoods to get around, and I'd rather see the city find the money somewhere else.",
+   "sheet_quote": "money is tight each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "968234341a2844f38bea583241de169f",
+    "name": "Miguel Rodriguez",
+    "age": 54,
+    "sex": "Male",
+    "education_level": "some_college",
+    "marital_status": "never_married",
+    "occupation": "software developer",
+    "city": "Decatur",
+    "state": "AL",
+    "region": "South",
+    "summary": "Miguel Rodriguez blends a curious, art-infused mind with disciplined engineering practice, planning every project and holiday down to the last detail while indulging in occasional spontaneous camera purchases and a stubborn reluctance to attend large social events, and they consider quiet contemplation their secret source of creativity."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "oppose",
+   "action": "nothing",
+   "response": "I drive almost everywhere, so a 50-cent bump barely touches my budget. I still oppose it, because for the people who depend on the bus to get to work and appointments, that increase adds up every week and falls hardest on those with the least room.",
+   "sheet_quote": "embracing Southern hospitality and community traditions",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "77903a5fb218471daaaf3ae818e7e8ed",
+    "name": "Kai Le",
+    "age": 27,
+    "sex": "Male",
+    "education_level": "graduate",
+    "marital_status": "married_present",
+    "occupation": "entertainment attendant or related worker",
+    "city": "Santa Clara",
+    "state": "CA",
+    "region": "West",
+    "summary": "Kai Le is a curiosity\u2011driven tinkerer who balances spontaneous drone\u2011building sessions and indie concert outings with a chronic habit of forgetting to pay bills on time, all while wrestling with anxiety that fuels both their artistic vision and occasional bouts of sleeplessness."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd check whether a monthly pass or a discount program would cost less than the new fare, and I'd bundle errands and plan rides more tightly to cut the number of trips I pay for.",
+   "response": "I don't own a car, so I'm on the bus or train most days, and a 50-cent bump on every ride adds up fast when money is already tight each month. Transit should be affordable for the people who depend on it most, and I'd rather see the gap covered another way than handed to riders like me.",
+   "sheet_quote": "money is tight each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "3ca72fe1a8014f1080c5e82bed556d2b",
+    "name": "Jonathan Perrone",
+    "age": 21,
+    "sex": "Male",
+    "education_level": "some_college",
+    "marital_status": "never_married",
+    "occupation": "tree trimmer or pruner",
+    "city": "Redwood City",
+    "state": "CA",
+    "region": "West",
+    "summary": "Jonathan Perrone is a 21\u2011year\u2011old aspiring arborist whose competitive spirit drives meticulous tree\u2011care work, weekend rock\u2011climbing, guitar jams, and a disciplined budget, even as they occasionally over\u2011commit to gear upgrades and skip routine dentist visits."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "support",
+   "action": "Nothing much; I'd keep driving since I rarely ride transit, though I might consider the bus for the occasional trip if it's cheaper than parking.",
+   "response": "I'd support it. Fifty cents is a small bump, and good transit keeps cars off the road in a place where we care a lot about the air and the redwoods. I drive almost everywhere, so it wouldn't change my week much, but I'd rather pay a little more to keep the system running than watch service get cut.",
+   "sheet_quote": "environmentally conscious culture",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "0ca7c9e508af4e08be4ad99befe26bef",
+    "name": "Juan Xayaphet",
+    "age": 22,
+    "sex": "Male",
+    "education_level": "high_school",
+    "marital_status": "never_married",
+    "occupation": "stocker or order filler",
+    "city": "Cumming",
+    "state": "GA",
+    "region": "South",
+    "summary": "Juan Xayaphet blends a reserved, detail\u2011obsessed work ethic with a culinary curiosity that fuels nightly experiments, a love of solitary puzzles, and a quiet ambition to turn their love of Southeast Asian flavors into a future import\u2011export venture."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd speak up at a public hearing or to my city council rep asking for fare relief for riders on a tight budget, and I'd budget the extra cost into my monthly spending.",
+   "response": "I don't like a fare hike that lands hardest on people who ride the bus because they don't have a car, and I'm one of them. Fifty cents a ride adds up fast over a month of getting to work and running errands, and money is tight, so I'd feel it. I'd rather see fares held steady or a reduced-fare option for low-income riders.",
+   "sheet_quote": "money is tight each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "365f815f140643f98f76a62f4145c97c",
+    "name": "David Mullett",
+    "age": 31,
+    "sex": "Male",
+    "education_level": "9th_12th_no_diploma",
+    "marital_status": "never_married",
+    "occupation": "production planning or expediting clerk",
+    "city": "Mesa",
+    "state": "AZ",
+    "region": "West",
+    "summary": "David Mullett blends disciplined planning with quiet creativity, obsessively measuring everything from inventory columns to hop grams, yet often forgets to water houseplants; they roll dice on board games for the thrill of controlled chaos."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "oppose",
+   "action": "I'd push back on the fare hike at the city council or transit board comment period and suggest the fare be held or tied to service improvements, though I'd keep driving since I have a car.",
+   "response": "I don't think a 50-cent jump is a catastrophe for me, since I drive nearly everywhere and my budget has some room. But fares that rise without better service make transit harder for people who depend on it, and I believe in reliability and fairness, so I'd oppose it as proposed.",
+   "sheet_quote": "rarely ride public transit",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "fa1adf2518a54d21b0b6bea0c8952152",
+    "name": "Chad Gilstrap",
+    "age": 67,
+    "sex": "Male",
+    "education_level": "less_than_9th",
+    "marital_status": "married_present",
+    "occupation": "not in workforce",
+    "city": "Kranzburg",
+    "state": "SD",
+    "region": "Midwest",
+    "summary": "Chad Gilstrap is a methodical, curiosity\u2011driven retiree who balances gardening, woodworking, and watercolor painting with a habit of hoarding spare parts and a soft spot for late\u2011night crossword puzzles."
+   },
+   "context": {
+    "label": "transit_dependent",
+    "text": "You don't own a car. You ride the bus or train most days to get where you need to go, and money is tight each month."
+   },
+   "stance": "oppose",
+   "action": "I'd bundle my errands and trips into fewer bus rides, and I'd speak up at the next public meeting about keeping fares flat for older riders.",
+   "response": "I don't support a fare hike when so many of us on a fixed income are already stretching every dollar. Fifty cents sounds small, but it adds up over a month of trips to the senior center, the doctor, and the grocery store, and for folks who don't drive, the bus is how we get around. Fares should be kept affordable so everyone can still get to the places they need to be.",
+   "sheet_quote": "money is tight each month",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "757ddf998b33456994c80a114754e82a",
+    "name": "Jose Anglero",
+    "age": 39,
+    "sex": "Male",
+    "education_level": "associates",
+    "marital_status": "divorced",
+    "occupation": "construction laborer",
+    "city": "Houston",
+    "state": "TX",
+    "region": "South",
+    "summary": "Jose Anglero blends a steady work ethic with an artist\u2019s curiosity, casually humming salsa tunes on construction sites, hoarding extra paint cans, and never missing a Sunday soccer match, all while maintaining a calm demeanor that masks an occasional addiction to late\u2011night graffiti\u2011style sketching."
+   },
+   "context": {
+    "label": "driver",
+    "text": "You own a car and drive almost everywhere. You rarely ride public transit, and your monthly budget has some room."
+   },
+   "stance": "oppose",
+   "action": "I'd keep driving my own car, but I'd warn the younger guys I mentor to budget for the higher fare and speak up at the public hearing for lower fares.",
+   "response": "Fifty cents doesn't hit my wallet, since I drive almost everywhere and rarely ride the bus. But a lot of the young guys on my crews and the new immigrants I mentor do ride, and for someone earning a laborer's wages that adds up fast over a week of getting to job sites. Raising fares on the people who can least afford a car is the wrong way to fund the bus system.",
+   "sheet_quote": "mentors younger immigrants",
+   "quote_check": "grounded"
+  }
+ ]
+}

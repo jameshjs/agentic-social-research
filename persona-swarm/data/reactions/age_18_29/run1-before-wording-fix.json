@@ -1,0 +1,385 @@
+{
+ "group": {
+  "id": "age_18_29",
+  "label": "Ages 18\u201329",
+  "size": 20
+ },
+ "policy": "Adult public transit fares rise by 50 cents per ride starting next year.",
+ "generated_at": "2026-10-17T02:58:34+00:00",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "prompt_version": "v3",
+ "summary": {
+  "responded": 20,
+  "failed": 0,
+  "stance": {
+   "support": 0,
+   "oppose": 6,
+   "mixed": 13,
+   "not_affected": 1
+  },
+  "quote_grounded": 12
+ },
+ "responses": [
+  {
+   "persona": {
+    "uuid": "b338c86f515248bd8e5b7117ac44f825",
+    "name": "Carlos Bustamante",
+    "age": 23,
+    "sex": "Male",
+    "education_level": "some_college",
+    "occupation": "cleaner of vehicle or equipment",
+    "city": "Pueblo",
+    "state": "CO",
+    "summary": "Carlos Bustamante blends a competitive, art\u2011infused approach to automotive detailing with relentless social energy, balancing meticulous work, community advocacy, and a love of soccer, street art, and spicy home\u2011cooked meals."
+   },
+   "stance": "oppose",
+   "action": "I'd push back on the hike at public meetings and bring it up with people in the Hispanic Chamber and youth programs, since working families here would feel it most.",
+   "response": "I'd oppose it. I'm still a student on a tight budget, and I think a fare hike hits hardest the people in Pueblo who can least absorb it, like the workers and families I grew up around and mentor. I'd want the city to look at cheaper options for them before adding cost to every ride.",
+   "sheet_quote": "balancing the budget constraints of his student status",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "3ccec452acd0427a84969c73a0bf5bc5",
+    "name": "Pedro Rodriguez",
+    "age": 25,
+    "sex": "Male",
+    "education_level": "less_than_9th",
+    "occupation": "billing or posting clerk",
+    "city": "Bayamon",
+    "state": "PR",
+    "summary": "Pedro Rodriguez blends a sociable, compassionate spirit with disciplined organization, turning everyday billing tasks into opportunities for mentorship while juggling basketball, salsa, and a kitchen full of aromatic island flavors."
+   },
+   "stance": "oppose",
+   "action": "I'd budget the extra 50 cents per ride, speak up at community meetings for lower fares for workers, and keep my modest savings plan on track.",
+   "response": "I don't support it. Fifty cents a ride sounds small, but it adds up fast for working people like my neighbors, and many of them have less room in their budgets than I do. Bayam\u00f3n looks out for its own, so I'd rather see the transit system funded in a way that doesn't hit the people who depend on it most.",
+   "sheet_quote": "balances travel costs with a modest savings plan",
+   "quote_check": "not_on_sheet"
+  },
+  {
+   "persona": {
+    "uuid": "b1aaa24aa70b495882fd06d8e233175c",
+    "name": "William Black",
+    "age": 24,
+    "sex": "Male",
+    "education_level": "bachelors",
+    "occupation": "not in workforce",
+    "city": "Aiken",
+    "state": "SC",
+    "summary": "A blend of quiet curiosity and Southern\u2011rooted hospitality, William Black balances solitary strategic pursuits with community\u2011focused kindness, yet they occasionally procrastinate on certification studies while indulging in late\u2011night snack binges on sweet tea\u2011sweetened cookies."
+   },
+   "stance": "mixed",
+   "action": "I'd budget for the extra 50 cents and ask whether the added revenue goes toward better service.",
+   "response": "Half a dollar a ride is a small increase, but I'm careful with money, so I'd want to see that it pays for real service improvements and not just a bigger budget. I'd back it if it keeps routes running for people who depend on them, since community ties matter to me. I'd rather not guess at how often I'd ride, so I can't say much more than that.",
+   "sheet_quote": "balancing curiosity with financial prudence",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "f947f85f04274f68ab9d64214d8b40d9",
+    "name": "Timothy Weir",
+    "age": 27,
+    "sex": "Male",
+    "education_level": "bachelors",
+    "occupation": "computer network architect",
+    "city": "Wichita Falls",
+    "state": "TX",
+    "summary": "Timothy Weir fuses a tech\u2011savvy, competition\u2011driven mindset with a love for art, basketball, and soulful brunches, often juggling tight project deadlines, impulsive gear purchases, and a relentless curiosity that occasionally leads to over\u2011caffeinated late\u2011night coding sessions."
+   },
+   "stance": "mixed",
+   "action": "I'd still speak up at the public comment for student and low-income riders, and ask for a reduced fare for students and seniors before accepting the full hike.",
+   "response": "Fifty cents is a small bump for me personally, and I get that transit systems need money to keep buses running. But I'd push back on raising adult fares without a discount for students and people who ride every day to get to work, since those are the folks a hike hits hardest. Many of the young people I mentor depend on the bus to get to coding programs and tech classes.",
+   "sheet_quote": "mentors younger Black students interested in STEM",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "016a6016fc3a41199480f7519c190270",
+    "name": "Ali Troxclair",
+    "age": 27,
+    "sex": "Male",
+    "education_level": "high_school",
+    "occupation": "no occupation",
+    "city": "Stearns",
+    "state": "KY",
+    "summary": "Ali Troxclair blends a steady, community\u2011oriented work ethic with a restless curiosity for tools and trails, often trading late\u2011night podcasts for early\u2011morning hikes, while occasionally hoarding spare screws and forgetting to water the garden until the last minute."
+   },
+   "stance": "mixed",
+   "action": "Nothing much changes for me; I'd still keep up my own vehicle and trip planning, and I'd speak up at a county meeting if the fare hike started squeezing riders who have no other way to get to work.",
+   "response": "Fifty cents is a small bump on its own, and I get that buses cost money to run, so I can see both sides. I'd still want to know the increase is going toward keeping routes running and not just padding the budget, because folks around Stearns who depend on the bus for work or groceries can't absorb costs like that easily.",
+   "sheet_quote": "self\u2011reliance",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "ea4616edc2b34aa78800d3dbaef30213",
+    "name": "Lazaro Lopez",
+    "age": 20,
+    "sex": "Male",
+    "education_level": "some_college",
+    "occupation": "not in workforce",
+    "city": "Payson",
+    "state": "UT",
+    "summary": "Lazaro Lopez, a solitary tech\u2011savvy explorer, blends data\u2011driven environmental passion with quiet creative pursuits, often trading social outings for drone flights, guitar riffs, and meticulous budgeting."
+   },
+   "stance": "mixed",
+   "action": "I'd add the extra 50 cents to my monthly budget spreadsheet and look at which trips actually need transit, but I wouldn't change my habits much.",
+   "response": "I care about cleaner air and getting more people out of cars, so I'd back transit as a public good, but I'd want to see where the extra money goes before I'd call a fare hike a clear win. As a student who's not in the workforce yet, 50 cents a ride adds up, and I plan every dollar carefully.",
+   "sheet_quote": "meticulous budgeting",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "4964a531a71d4fc2a76f0c162180c563",
+    "name": "Roshelle Black",
+    "age": 26,
+    "sex": "Female",
+    "education_level": "bachelors",
+    "occupation": "cashier",
+    "city": "Charleston",
+    "state": "SC",
+    "summary": "Roshelle Black is a quietly curious data\u2011driven storyteller who swaps lab coats for watercolor brushes, saves every receipt for a spreadsheet, and they can't resist a midnight snack of hot\u2011sauce\u2011spiked popcorn."
+   },
+   "stance": "mixed",
+   "action": "I'd add the extra 50 cents per ride to my spreadsheet, check who in my community relies on the bus most, and speak up at the public comment session about fare relief for low-income riders.",
+   "response": "I get why the transit system needs the money, but a flat 50-cent bump hits hardest for people earning cashier-level wages, and that's who I'm thinking about first. I'd want to see the ridership and budget numbers before I'd fully back it, and I'd push for reduced fares for low-income and Gullah-community riders.",
+   "sheet_quote": "Adult public transit fares rise by 50 cents per ride starting next year.",
+   "quote_check": "not_on_sheet"
+  },
+  {
+   "persona": {
+    "uuid": "ce652c41ca93492cb145fb3fe55f74b6",
+    "name": "Kimberly Rizwan",
+    "age": 26,
+    "sex": "Female",
+    "education_level": "high_school",
+    "occupation": "janitor or building cleaner",
+    "city": "Youngstown",
+    "state": "FL",
+    "summary": "Kimberly Rizwan, 26, blends a competitive, puzzle\u2011solving mind with a sustainable DIY ethos, juggling coffee\u2011fueled cleaning audits, late\u2011night true\u2011crime podcasts, and a habit of over\u2011organizing her pantry."
+   },
+   "stance": "mixed",
+   "action": "I'd check the fare change against my budget spreadsheet and ask the county whether discounts exist for low-wage workers, but I wouldn't change how I get around unless the hike made transit clearly more expensive than driving.",
+   "response": "I like the idea of keeping transit running for people who need it, and I'd rather see a fare go up a little than see service cut. But fifty cents a ride adds up for someone earning a cleaning job's wages, so I'd want to know where the money is going before I'd call it fair.",
+   "sheet_quote": "prefers eco-friendly hostels and public transit",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "1daaa3b0e5fd4cb5a3c2e35960aea651",
+    "name": "Luis Fuentes",
+    "age": 23,
+    "sex": "Male",
+    "education_level": "high_school",
+    "occupation": "miscellaneous health technologist or technician",
+    "city": "Munford",
+    "state": "TN",
+    "summary": "Luis Fuentes is a competitively\u2011driven health technologist who balances meticulous lab work with a love for soccer, gaming, and spontaneous cooking, yet habitually procrastinates on paperwork and hoards gaming accessories."
+   },
+   "stance": "not_affected",
+   "action": "Nothing changes; I'd keep driving and budget the same.",
+   "response": "I mostly get around by car, so a 50-cent bump on adult transit fares wouldn't touch my day-to-day. If the extra money keeps buses running on time for the folks who depend on them, I'm fine with it, since that's the kind of structure I like to see in a system.",
+   "sheet_quote": "",
+   "quote_check": "empty"
+  },
+  {
+   "persona": {
+    "uuid": "6f9e78e7daa84c15a737135e04921cea",
+    "name": "Rochell Wilcox",
+    "age": 28,
+    "sex": "Female",
+    "education_level": "associates",
+    "occupation": "phlebotomist",
+    "city": "Miami",
+    "state": "FL",
+    "summary": "Rochell Wilcox, a 28-year-old phlebotomist who balances meticulous blood\u2011draw expertise with a laid\u2011back love of spontaneous salsa nights, habitually forgets to refill their water bottle but always remembers to pack a fresh herb sprig for the next culinary experiment."
+   },
+   "stance": "oppose",
+   "action": "I'd speak up at the public hearing for reduced or capped fares for low-income riders, and I'd factor transit access into how we plan the mobile blood-drive sites.",
+   "response": "I'd oppose a flat 50-cent hike because it lands hardest on people who already have the fewest options, and in my neighborhood that often means getting to a clinic or a blood drive takes a bus. A small increase can still be the difference between a patient making an appointment or skipping it, so I'd want to see a low-income discount or fare cap before anything goes up.",
+   "sheet_quote": "health disparities that affect Black and Latino populations",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "bbef06dbbc4c4d27a5887f1094701c37",
+    "name": "Jose Mendoza",
+    "age": 19,
+    "sex": "Male",
+    "education_level": "some_college",
+    "occupation": "no occupation",
+    "city": "Washington",
+    "state": "DC",
+    "summary": "Jose Mendoza, a 19\u2011year\u2011old organized competitor, blends a love for data, basketball, and Latin rhythms into a disciplined yet socially vibrant life, though they can be overly skeptical and occasionally over\u2011commit to projects."
+   },
+   "stance": "oppose",
+   "action": "I'd keep riding transit but budget the extra 50 cents and look harder at monthly passes, student discounts, and bundling trips to stretch the fare.",
+   "response": "As a 19-year-old on a tight budget with no job right now, a 50-cent increase per ride adds up fast across a week of trips to school, the gym courts, and the community center. I'd rather see the fare held steady or targeted at people who can afford it, since students and young adults like me depend on buses and trains to get around.",
+   "sheet_quote": "Adult public transit fares rise by 50 cents per ride starting next year.",
+   "quote_check": "not_on_sheet"
+  },
+  {
+   "persona": {
+    "uuid": "8ed2071b7c42471d81182e8781bb872e",
+    "name": "Annette Hage",
+    "age": 20,
+    "sex": "Female",
+    "education_level": "some_college",
+    "occupation": "cashier",
+    "city": "Griffin",
+    "state": "GA",
+    "summary": "Annette Hage is a disciplined, competitively driven young retailer whose curiosity for innovation and deep\u2011rooted Southern hospitality shape a pragmatic yet adaptable approach to life."
+   },
+   "stance": "mixed",
+   "action": "I'd plan my rides around the higher fare, maybe budget for it in my spreadsheet, and still keep using transit where it's cheaper than driving.",
+   "response": "I can see the case for it, since transit needs funding and a 50-cent bump is modest, but as a cashier on a tight budget I'd feel it on every trip. I'd want to know the fare hike comes with real service improvements before I fully back it.",
+   "sheet_quote": "disciplined",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "7a389febedf043b3bc48bcb8169a6a71",
+    "name": "Christian Colon",
+    "age": 26,
+    "sex": "Male",
+    "education_level": "high_school",
+    "occupation": "network or computer systems administrator",
+    "city": "San Bernardino",
+    "state": "CA",
+    "summary": "Christian Colon is a hands\u2011on tech trouble\u2011shooter who balances an obsessive love for custom\u2011PC building and gaming with a chronic habit of procrastinating paperwork, often juggling stress\u2011induced anxiety while finding calm in hiking trails and spicy salsa."
+   },
+   "stance": "mixed",
+   "action": "I'd keep riding transit but look harder at a monthly pass or fare-capping, and I'd speak up at the public hearing for lower-income riders and students.",
+   "response": "I'm torn on a 50-cent bump: it's small for me personally, but for neighbors who ride every day in San Bernardino it adds up, and I'd want the agency to show where the money goes and protect discounts for seniors and youth. I'd probably still ride, but I'd check whether a monthly pass cuts my per-ride cost and I'd tell my community center contacts so teens and families know about any reduced-fare options.",
+   "sheet_quote": "Adult public transit fares rise by 50 cents per ride starting next year.",
+   "quote_check": "not_on_sheet"
+  },
+  {
+   "persona": {
+    "uuid": "232e723888614a5d824956b302972921",
+    "name": "Nelson Bohorquez",
+    "age": 27,
+    "sex": "Male",
+    "education_level": "high_school",
+    "occupation": "compliance officer",
+    "city": "Tulsa",
+    "state": "OK",
+    "summary": "Nelson Bohorquez, 27, fuses a vivid imagination with compassionate drive, juggling compliance audits by day, avant\u2011garde painting and salsa by night, while his emotional intensity fuels both creative bursts and occasional anxiety\u2011driven coffee binges."
+   },
+   "stance": "mixed",
+   "action": "I'd keep riding transit as I do, but I'd speak up at public hearings for reduced fares for the teens I mentor and for riders who depend on the bus most.",
+   "response": "I can see the case for a modest increase if the money goes straight into better routes and reliability, since transit needs funding. But 50 cents adds up for people who ride every day and have the least room in their budgets, and the Latino families and young people I work with in Tulsa are often the ones who feel that most. I'd want to see the revenue tied to real service improvements before I'd call it a fair trade.",
+   "sheet_quote": "commitment to uplift underrepresented voices within his workplace and the broader Tulsa Latino community",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "bbfd2935e97d4b3496ad74187957f255",
+    "name": "Brenda Beams",
+    "age": 18,
+    "sex": "Female",
+    "education_level": "bachelors",
+    "occupation": "elementary or middle school teacher",
+    "city": "Dunkirk",
+    "state": "IN",
+    "summary": "Brenda Beams is a talkative, community\u2011wired educator\u2011in\u2011training who balances boundless curiosity with a habit of forgetting to file paperwork, thriving on social energy while occasionally letting disorganization slip."
+   },
+   "stance": "mixed",
+   "action": "I'd keep riding the bus for school and errands, maybe watch for fare-capped or monthly pass options so the extra 50 cents doesn't add up.",
+   "response": "As an 18-year-old who doesn't have a lot of spare cash, a 50-cent bump per ride would sting a little, especially on days I'm going back and forth. But I think a modest fare increase can be fair if the money goes toward keeping routes running and buses reliable for folks who rely on them, which matters a lot in a small town like Dunkirk. I'd support it if it comes with real service improvements.",
+   "sheet_quote": "",
+   "quote_check": "empty"
+  },
+  {
+   "persona": {
+    "uuid": "3a9d09a253fb4f8a943c94df99b99159",
+    "name": "Inez Cooper",
+    "age": 29,
+    "sex": "Female",
+    "education_level": "some_college",
+    "occupation": "first line supervisor of non retail sales worker",
+    "city": "Cliffwood",
+    "state": "NJ",
+    "summary": "Inez Cooper merges relentless organization with magnetic sociability, turning every sales report and dinner party into a flawlessly choreographed event, even if it means overbooking their calendar and occasionally skipping lunch."
+   },
+   "stance": "mixed",
+   "action": "Nothing would change in my day-to-day; I'd just fold the extra 50 cents into my budget and keep an eye on whether the fare increase actually pays for better service.",
+   "response": "I can live with a 50-cent bump if the money goes toward reliable service and the people who depend on buses and trains most, though I'd want the numbers shown clearly before I fully back it. For me it's a small line in the budget, and I'd rather pay it than see routes cut, since I care about neighbors who rely on transit to get to work and to the food bank.",
+   "sheet_quote": "balancing budget constraints",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "3836c179f6f54507aab4b52e2e5fb86b",
+    "name": "Shaniqua Ayinde",
+    "age": 23,
+    "sex": "Female",
+    "education_level": "some_college",
+    "occupation": "educational instruction or library worker",
+    "city": "Warrenville",
+    "state": "IL",
+    "summary": "Shaniqua Ayinde, they blend a librarian\u2019s meticulous eye for information with an artist\u2019s restless curiosity, channeling that duality into community\u2011focused programs while occasionally hoarding vintage postcards and forgoing sleep for late\u2011night poetry drafts."
+   },
+   "stance": "mixed",
+   "action": "I'd keep riding transit where I can, budget a little more for fares, and push for discount or fare-capping options for low-income riders rather than cutting back on library or community trips.",
+   "response": "I can see the case for it, since transit systems need revenue and a half-dollar is small per ride, but I'd worry about how it lands on people who ride every day and already run tight on a library-worker budget. I'd want to know whether the increase comes with reduced-fare or youth and student options, because I'd rather see the burden spread fairly than fall hardest on working riders.",
+   "sheet_quote": "",
+   "quote_check": "empty"
+  },
+  {
+   "persona": {
+    "uuid": "aad13be2e1db42c6a3277b3ae6259a34",
+    "name": "Karina Grimes",
+    "age": 22,
+    "sex": "Female",
+    "education_level": "some_college",
+    "occupation": "electrician",
+    "city": "Greeley",
+    "state": "CO",
+    "summary": "Karina Grimes, a calm and curious 22\u2011year\u2011old electrician, balances meticulous code compliance with a habit of ordering extra art supplies online at midnight, weaving her love of renewable tech, mountain trails, and watercolor into a uniquely resilient, creatively driven lifestyle."
+   },
+   "stance": "mixed",
+   "action": "Nothing much changes for me; I'd keep driving my truck to job sites, and I'd only look at the fare hike if I started riding transit more often.",
+   "response": "I'd lean toward supporting a small fare increase if it keeps service reliable and funds cleaner buses, since I care about sustainable infrastructure and a 50-cent bump is modest. I'd still want to see where the money goes before I'd call it a clear yes. It wouldn't really affect me because I drive to job sites with my tools and gear, so I'm not a daily rider.",
+   "sheet_quote": "progressive, environmentally conscious culture of Colorado",
+   "quote_check": "grounded"
+  },
+  {
+   "persona": {
+    "uuid": "246fbbbe7d2d4a91b42dd29e986a22e0",
+    "name": "Joshua Wallace",
+    "age": 20,
+    "sex": "Male",
+    "education_level": "9th_12th_no_diploma",
+    "occupation": "not in workforce",
+    "city": "Osyka",
+    "state": "MS",
+    "summary": "Joshua Wallace is a quietly ambitious 20\u2011year\u2011old who channels a deep\u2011rooted love for blues storytelling into digital art, balances careful budgeting with occasional splurges, and they wrestle with anxiety while nurturing a resilient, community\u2011focused spirit."
+   },
+   "stance": "oppose",
+   "action": "I'd count my rides ahead of time and cut back on any trips that aren't necessary, and I'd push for a reduced fare for people like me who aren't working yet.",
+   "response": "I'd oppose it. Fifty cents sounds small, but when I'm budgeting every dollar and I'm not in the workforce yet, a daily or weekly cost adds up fast, and it lands hardest on people who can least afford it. I'd still want to hear what the transit money pays for before I made up my mind completely.",
+   "sheet_quote": "Adult public transit fares rise by 50 cents per ride starting next year.",
+   "quote_check": "not_on_sheet"
+  },
+  {
+   "persona": {
+    "uuid": "9812044a4edb4469a3dd169f01a6dacc",
+    "name": "Alfred Duckworth",
+    "age": 28,
+    "sex": "Male",
+    "education_level": "bachelors",
+    "occupation": "postsecondary teacher",
+    "city": "Albuquerque",
+    "state": "NM",
+    "summary": "Alfred Duckworth blends a tech\u2011savvy, solitary mindset with a deep\u2011rooted urge to nurture community spaces, while they navigate a constantly humming undercurrent of anxiety."
+   },
+   "stance": "oppose",
+   "action": "I'd speak up at public comment for reduced fares for students, adjuncts, and low-income riders, and I'd plan my budget for the extra cost instead of letting it slip.",
+   "response": "Fifty cents a ride is small for me personally, but it lands hardest on people with tight budgets, and I think transit should stay open to them, so I'd oppose it as written. I'd still want to see the money go toward reliable service, and I'd push for discounts for students and people with low incomes.",
+   "sheet_quote": "community cooperation",
+   "quote_check": "grounded"
+  }
+ ]
+}
