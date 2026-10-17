@@ -54,3 +54,25 @@ all three changes were improvements:
   of 15 real experiment effects in sign.
 - Staples such as milk and coffee stayed near certain yes after the edits aimed at them (rounds 7–8).
 - The followed respondent is from the tuning set. Twin-2K-500 measures what people say on a survey, not what they do.
+
+## Live demo
+
+Run from `persona-swarm/`. Rehearsed on 17 Oct: 42 s for the Papiers read, 36 s for the scratch run (40 calls, 0
+failed, $0.42).
+
+```bash
+set -a; . ./.env; set +a
+python3 autoresearch/coach_notes.py "persona variety"
+python3 autoresearch/run_round.py --scratch --slug live --concurrency 16
+```
+
+1. The first line loads the Papiers token. Never echo it.
+2. `coach_notes.py` reads every paper, highlight and note in the library and prints the count (7 papers, 49
+   highlights, 3 notes).
+3. The scratch run sends 40 real Haiku calls with round 9's instructions and the `full_relative` format, on the
+   tuning set only. It writes `rounds/demo-live/` (a rerun replaces it), outside the record: round numbering, the
+   review gate, `results.tsv` and the page all ignore it. It then prints the tuning-set checks beside round 9's,
+   overall and for policy against pricing.
+
+Since the instructions are round 9's own, the printed changes are run-to-run variation on 40 people. The rehearsal
+moved right person by +0.025, which shows why a change must beat noise. Steady isn't measured on the tuning set.
