@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#07131c" />
     <meta name="description" content="Counterfactual Lab — explore how a city might respond to a policy change through a living simulation and connected impact map." />
     <title>Counterfactual Lab — Ask a city what if</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=shared-section-1" />
   </head>
   <body data-phase="intro" data-scenario="fare">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -96,10 +96,12 @@
           </aside>
 
           <div class="simulation-viewport" id="simulationViewport">
+            <canvas id="bloorMapMain" class="bloor-map-canvas" hidden aria-hidden="true"></canvas>
             <div class="viewport-upper"><span class="viewport-corner">CITY VIEW / <b id="viewportArea">UTSC DISTRICT</b></span><span class="viewport-legend" id="viewportLegend"><i class="legend-dot legend-dot--policy"></i> POLICY <i class="legend-dot legend-dot--baseline"></i> BASELINE</span></div>
             <button class="focus-marker focus-marker--a" id="focusMarkerA" type="button" aria-label="Inspect mobility impact"><span class="focus-ring"></span><span class="focus-label" id="focusLabelA">01 / RIDER DECISION</span></button>
             <button class="focus-marker focus-marker--b" id="focusMarkerB" type="button" aria-label="Inspect local business impact"><span class="focus-ring"></span><span class="focus-label" id="focusLabelB">02 / LOCAL BUSINESS</span></button>
-            <div class="world-caption"><span>ILLUSTRATIVE CITY</span><span class="caption-line"></span><span id="worldCaption">People choose. The city changes.</span></div>
+            <div class="world-caption"><span>MAPPED CONTEXT</span><span class="caption-line"></span><span id="worldCaption">People choose. The city changes.</span></div>
+            <div id="mapAttribution" class="map-attribution" hidden>Map data: City of Toronto · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a></div>
             <div class="viewport-bottom">
               <div class="view-toggle" id="viewToggle" role="group" aria-label="Compare city state"><button id="baselineView" type="button" aria-pressed="false">Baseline</button><button id="policyView" class="selected" type="button" aria-pressed="true">With policy</button></div>
               <div id="cityStateNote" class="city-state-note" hidden>No policy world computed yet</div>
@@ -128,7 +130,7 @@
       <section id="ttcWorkbench" class="ttc-workbench" hidden aria-label="TTC agent replay and research workbench">
         <div class="ttc-workbench-head">
           <div><span class="ttc-workbench-kicker">01 / INSIDE THE SIMULATION</span><h2>Follow a choice.<br /><em>Challenge the assumption.</em></h2></div>
-          <p>This is the trace-backed TTC replay. Select a person to see their decisions, inspect supporting evidence, then edit an assumption and rerun. The city above is a schematic flyover; the detailed world and charts below share this run's event trace.</p>
+          <p>This is the trace-backed TTC replay. Select a person to see their decisions, inspect supporting evidence, then edit an assumption and rerun. The map above shows Bathurst–Spadina context; this inspector still uses its earlier synthetic district. Its own replay and charts share one event trace.</p>
         </div>
         <div class="ttc-workbench-frame">
           <div class="ttc-workbench-bar"><span><i class="live-pulse"></i> <b id="ttcWorkbenchStatus">PREPARING SEEDED TRACE</b></span><span id="ttcWorkbenchMeta">SYNTHETIC SAMPLE · NOT A FORECAST</span></div>
@@ -140,7 +142,7 @@
       <section id="bikeLab" class="bike-lab" hidden aria-label="Bloor bike lane scenario explorer">
         <div class="bike-lab-head">
           <div>
-            <div class="bike-lab-kicker"><span>02 / A STREET IN QUESTION</span><span>TORONTO · SHAW ST TO AVENUE RD</span></div>
+            <div class="bike-lab-kicker"><span>02 / A STREET IN QUESTION</span><span>TORONTO · BATHURST TO SPADINA</span></div>
             <h2 class="bike-lab-title">One street.<br /><em>Four possible paths.</em></h2>
           </div>
             <p class="bike-lab-deck">A protected cycle track connects a person to more than a route. Compare a seeded synthetic run, then explore other possible responses. The street visuals are schematic; the event ledger and charts use recorded choices.</p>
@@ -150,7 +152,7 @@
           <aside class="bike-workbench-pipeline" aria-label="How this scenario is framed">
             <div class="bike-inspector-head"><strong>Run pipeline</strong><span>PREVIEW</span></div>
             <ol class="bike-pipeline-list">
-              <li><span>01</span><div><strong>Define the change</strong><small>Remove the protected Bloor West track between Shaw Street and Avenue Road.</small></div></li>
+              <li><span>01</span><div><strong>Define the change</strong><small>Remove the protected Bloor track between Bathurst Street and Spadina Avenue.</small></div></li>
               <li><span>02</span><div><strong>Load people and places</strong><small>Follow a cyclist, a delivery trip, and a local shop through possible decisions.</small></div></li>
               <li><span>03</span><div><strong>Check the evidence</strong><small>Toronto counts and retail research set context; neither gives a removal coefficient.</small></div></li>
               <li><span>04</span><div><strong>Compare branches</strong><small>Select a response and inspect what must be measured before estimating impact.</small></div></li>
@@ -160,11 +162,12 @@
           </aside>
 
           <div class="bike-workbench-city">
-            <div class="bike-inspector-head"><strong>Living district</strong><span>SCHEMATIC / MOVING CITY</span></div>
-            <div class="bike-world" aria-label="Animated isometric Bloor district illustration">
+              <div class="bike-inspector-head"><strong>Mapped Bloor section</strong><span>OBSERVED STREETS / SYNTHETIC RESULTS</span></div>
+              <div class="bike-world" aria-label="Mapped Bathurst to Spadina street context">
               <canvas id="bikeWorldCanvas" data-fit="parent" aria-hidden="true"></canvas>
+              <canvas id="bloorMapBike" class="bloor-map-canvas" hidden aria-hidden="true"></canvas>
               <div class="bike-world-hud"><span><i></i> BLOOR STREET WEST</span><strong id="bikeWorldState">HYPOTHETICAL REMOVAL</strong></div>
-              <div class="bike-world-caption">People · bikes · cars · shops <span>ILLUSTRATIVE MOTION</span></div>
+              <div class="bike-world-caption">Bathurst · Bloor · Spadina <span id="bikeMapCredit" hidden>City of Toronto · © OpenStreetMap contributors</span></div>
             </div>
             <div class="bike-section-label"><span>STREET SECTION / COMPARE THE LAYOUT</span><span>02 / 02</span></div>
         <div class="bike-stage" id="bikeStage" data-view="policy">
@@ -281,14 +284,15 @@
 
     <dialog id="evidenceDialog" class="evidence-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close evidence panel">×</button></form><div class="eyebrow"><span class="eyebrow-line"></span> WHAT WE KNOW, WHAT WE ASSUME</div><h2 id="evidenceDialogTitle">Evidence has a boundary.</h2><p id="evidenceDialogText"></p><div id="evidenceLinks" class="evidence-links"></div><div class="evidence-warning">The figures in this visual prototype are simulated examples. They are not calibrated Toronto forecasts, causal estimates, or a prediction that a shop will close.</div></dialog>
 
-    <script defer src="./scenarios.js"></script>
+    <script defer src="./scenarios.js?v=shared-section-1"></script>
     <script defer src="../demo-ui/sim.js"></script>
-    <script defer src="./trace-adapter.js"></script>
+    <script defer src="./trace-adapter.js?v=shared-section-1"></script>
     <script defer src="../experiment/runner.js"></script>
     <script defer src="../experiment/fixtures.js"></script>
     <script defer src="./experiment-adapter.js"></script>
     <script defer src="./city.js?v=bloor-workbench"></script>
-    <script defer src="./app.js?v=cinematic-inspector-2"></script>
+    <script defer src="./bloor-map.js?v=shared-section-1"></script>
+    <script defer src="./app.js?v=shared-section-1"></script>
     <script defer src="./persona-lab.js?v=1"></script>
   </body>
 </html>
