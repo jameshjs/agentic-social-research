@@ -1206,8 +1206,8 @@ async function runScenario(scenario, promptOverride = null) {
   $('#personaLab').hidden = false;
   setPhase('lab');
   requestAnimationFrame(() => {
-    // The demo view always lands on the 3D lab; the 100-agent panel is the last beat, further down.
-    $(demoView() || $('#agentPoll').hidden ? '#lab' : '#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+    // When the 100 persona agents are online, their panel and its rating animation come first (it sits above the lab); then the 3D lab.
+    $($('#agentPoll').hidden ? '#lab' : '#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
     startReplay();
   });
 }
