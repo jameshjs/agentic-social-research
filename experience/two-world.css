@@ -11,6 +11,8 @@ body.demo-view #agentsNote{display:none!important}
 
 /* ---------- prompt page: the question, one Run button and the two prepared questions ---------- */
 .composer-heading h2{margin-bottom:26px}
+.hypothesis-card{max-width:600px;margin-left:auto;margin-right:auto}   /* a narrower prompt bar */
+.globe-caption{display:none!important}                                  /* no street-name caption on the landing */
 
 
 /* ---------- lab (demo view): the 3D view, then the decision brief ---------- */

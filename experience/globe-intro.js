@@ -208,6 +208,11 @@
     for (const id of ['boundary_country_z0-4', 'boundary_country_z5-']) set(id, 'line-color', '#8fc7c4');
     set('boundary_state', 'line-color', '#6c9ea0');
     for (const layer of map.getStyle().layers) {
+      // No street, road or building-number labels on the landing; place and water names stay.
+      if (layer.type === 'symbol' && /transportation_name|road|highway|street|housenumber|poi/.test(layer.id)) {
+        try { map.setLayoutProperty(layer.id, 'visibility', 'none'); } catch (error) { /* layer gone */ }
+        continue;
+      }
       if (layer.type === 'symbol' && /^place_|water_name/.test(layer.id)) {
         set(layer.id, 'text-color', '#d7ecec');
         set(layer.id, 'text-halo-color', '#0b2028');
