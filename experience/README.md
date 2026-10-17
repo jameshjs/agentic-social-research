@@ -26,7 +26,7 @@ Scrolling the landing flies from the whole Earth to Toronto, then down to a tilt
   - the page has `?globe=off`
   - reduced motion is on
   - there is no WebGL
-  - MapLibre or the tiles fail to load within 12 s, which also covers being offline
+  - MapLibre or the map style fail to load within 12 s, which also covers being offline. Slower tiles do not trigger the fallback: the dark stage stays until the globe fades in. `index.html` preloads MapLibre and the style and preconnects to the tile host.
 - **Once a run starts:** the globe hides, and it comes back when you return to the landing.
 
 ## Run it

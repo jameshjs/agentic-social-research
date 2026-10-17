@@ -1,6 +1,6 @@
 // Landing globe: scrolling the intro flies from the whole Earth down to Bloor St W, Bathurst to Spadina.
 // It reads the same scroll progress as app.js updateReveal() (0 = top, ~.32 = the composer slide) and never
-// touches run state. Without WebGL, with reduced motion, with ?globe=off, or if the tiles do not load,
+// touches run state. Without WebGL, with reduced motion, with ?globe=off, or if the map style does not load,
 // it removes itself and the drawn landing stays as it was.
 (function () {
   'use strict';
@@ -31,7 +31,6 @@
     console.warn('[globe] drawn landing kept:', reason || 'unavailable');
     if (map) { try { map.remove(); } catch (error) { /* already gone */ } }
     stage.remove();
-    document.body.classList.remove('globe-on');
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);
   }
@@ -64,11 +63,15 @@
     const travel = smooth(span(t, 0, 0.4));        // spin the globe round to Toronto before zooming past z≈7
     const tilt = smooth(span(t, 0.6, 1));          // then tilt and level Bloor
     const wide = window.innerWidth > 760;
+    // On wide screens the Earth sits right of the headline (left padding moves the centre right by half of it),
+    // then recentres as it spins round to Toronto.
+    const shift = wide ? window.innerWidth * 0.24 * (1 - travel) : 0;
     return {
       center: [lerp(-52, CENTER[0], travel), lerp(28, CENTER[1], travel)],
       zoom: lerp(z0, z1, smooth(t)),
       pitch: lerp(0, wide ? 58 : 50, tilt),
       bearing: lerp(0, BLOOR_BEARING, tilt),
+      padding: { left: shift, right: 0, top: 0, bottom: 0 },
     };
   }
 
@@ -91,12 +94,6 @@
   }
 
   function onResize() { if (map) { map.resize(); onScroll(); } }
-
-  // Only shown on the landing; the replay keeps its own city views.
-  function syncPhase() {
-    const phase = document.body.dataset.phase;
-    stage.classList.toggle('is-off', phase !== 'intro' && phase !== 'composer');
-  }
 
   // The dark base style is near-black; lift land, water, borders and labels so the Earth reads at globe scale,
   // then let them settle darker as the camera reaches street level.
@@ -157,7 +154,7 @@
   function start() {
     const maplibregl = window.maplibregl;
     if (!maplibregl) return giveUp('MapLibre did not load');
-    const timer = setTimeout(() => giveUp('map did not load within 12 s'), 12000);
+    const timer = setTimeout(() => giveUp('map style did not load within 12 s'), 12000);
     try {
       map = new maplibregl.Map({
         container: stage.querySelector('.globe-map'),
@@ -171,6 +168,7 @@
       });
     } catch (error) { clearTimeout(timer); return giveUp(error.message); }
     map.on('style.load', () => {
+      clearTimeout(timer);   // the network works; slow tiles just bring the globe in later, never the drawn city
       try { map.setProjection({ type: 'globe' }); } catch (error) { /* flat map still zooms */ }
       try { brighten(); } catch (error) { /* keeps the dark base colours */ }
       try { addLayers(); } catch (error) { /* the zoom works without the highlight */ }
@@ -182,12 +180,9 @@
       current = target = scrollProgress();
       render();
       stage.classList.add('is-ready');
-      document.body.classList.add('globe-on');   // the globe replaces the drifting clouds
     });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
-    new MutationObserver(syncPhase).observe(document.body, { attributes: true, attributeFilter: ['data-phase'] });
-    syncPhase();
   }
 
   const script = document.createElement('script');
