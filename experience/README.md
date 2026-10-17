@@ -19,7 +19,7 @@ The default demo view now runs landing → prompt → 3D. The changes live in `t
 
 ## Landing globe
 
-Scrolling the landing flies from the whole Earth to Toronto, then down to a tilted 3D view of Bloor St W from Bathurst to Spadina. The 619 m section is drawn as a mint line, and the camera lands behind the question box. It is `globe-intro.js` and `globe-intro.css`, with no change to `app.js`: the script reads the same scroll progress as `updateReveal()`.
+One wheel, key or swipe on the landing plays the whole flight: the page scrolls itself for about 8 s, from the whole Earth to Toronto, then down to a tilted 3D view of Bloor St W from Bathurst to Spadina. Zoom is capped at 2.2 levels per second, so a fast flick cannot skip it. The 619 m section is drawn as a mint line and lands as the underline of "Watch everything else move." Street tiles are fetched into the browser cache while the globe is at rest, and buildings rise in over one zoom level. It is `globe-intro.js` and `globe-intro.css`, with no change to `app.js`: the script reads the same scroll progress as `updateReveal()`.
 
 - **Map and tiles:** MapLibre GL 5.6.0 from jsdelivr, with dark OpenFreeMap vector tiles (no key, OpenStreetMap data, attribution shown). `api/server.js` allows `tiles.openfreemap.org` in `connect-src` and `img-src` for this.
 - **What is shown:** the street and building shapes are OpenStreetMap context only. The world the runs use is still `data/world/`.
@@ -28,7 +28,7 @@ Scrolling the landing flies from the whole Earth to Toronto, then down to a tilt
   - reduced motion is on
   - there is no WebGL
   - MapLibre or the map style fail to load within 12 s, which also covers being offline. Slower tiles do not trigger the fallback: the dark stage stays until the globe fades in. `index.html` preloads MapLibre and the style and preconnects to the tile host.
-- **Clouds and the drawn city:** the clouds stay over the globe and part as it zooms. The isometric city canvas is hidden while the globe is up, and it returns only if the globe cannot load.
+- **Clouds and the drawn city:** the clouds stay over the globe and part as it zooms. Over the globe they draw without blur or blending (a full-screen filter on every frame made the flight stutter) and are removed at street level. The isometric city canvas is hidden while the globe is up, and it returns only if the globe cannot load.
 - **Once a run starts:** the globe hides, and it comes back when you return to the landing.
 
 ## Run it

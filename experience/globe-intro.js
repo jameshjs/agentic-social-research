@@ -13,15 +13,17 @@
   const BLOOR_BEARING = -16;      // Bloor runs at azimuth ~74°, so this lays it level on screen
   const SECTION_M = 619;
   const ARRIVE = 0.62;            // progress at which the camera lands: the composer is fully shown by ~.68
-  const GLIDE = 0.35;             // seconds the camera takes to cover ~63% of the gap to the scroll position
   const STREET_Y = 0.32;          // at street level, Bloor sits 32% of the height below centre, under the composer
+  const FLIGHT_S = 8;             // one scroll plays the whole landing; the page and the globe take this long
+  const MAX_ZOOM_PER_S = 2.2;     // a fast flick cannot skip Earth → Toronto → Bloor
 
   const stage = document.getElementById('globeStage');
   const params = new URLSearchParams(window.location.search);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!stage || params.get('globe') === 'off' || reduced || !webgl()) { if (stage) stage.remove(); return; }
 
-  let map = null, target = 0, current = 0, frame = 0, last = 0, ready = false, captionTimer = 0;
+  let map = null, target = 0, frame = 0, lastStamp = 0, ready = false, captionTimer = 0, live = null;
+  let flightDir = 0, flightFrame = 0, flightLast = 0;
   const caption = stage.querySelector('.globe-caption');
 
   function webgl() {
@@ -35,6 +37,8 @@
     stage.remove();
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);
+    window.removeEventListener('wheel', onWheel);
+    window.removeEventListener('keydown', onKey);
   }
 
   // Mirrors app.js updateReveal().
@@ -50,13 +54,25 @@
   const ease = (t) => t * t * t * (t * (t * 6 - 15) + 10);   // smootherstep: no jolt where a phase starts or ends
   const span = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
 
+  // Where the composer's "Watch everything else move." ends up once it has slid in (reveal = 1), so the
+  // Bloor section can land as its underline. Measured from layout, not the current transform.
+  let underline = null;
+  function measureUnderline() {
+    const composer = document.getElementById('composerScene');
+    const em = composer && composer.querySelector('h2 em');
+    if (!em) return (underline = null);
+    const box = composer.getBoundingClientRect(), mark = em.getBoundingClientRect();
+    const top = composer.offsetTop - 0.43 * composer.offsetHeight;   // translateY(-43%) at reveal = 1
+    underline = { y: top + (mark.bottom - box.top) + 12, width: mark.width };
+  }
+
   function zoomRange() {
     const w = window.innerWidth, h = window.innerHeight;
     // Globe diameter ≈ 512·2^z / π px; start at ~66% of the shorter side so it fits beside the headline.
     const start = Math.log2(Math.min(w, h) * 0.66 * Math.PI / 512);
-    // End with the 619 m section across ~50% of the width (metres per px at this latitude = 113 250 / 2^z).
-    const end = Math.log2(113250 * (0.5 * w) / SECTION_M);
-    return [start, clamp(end - 0.8, 14, 16.7)];   // −0.8: the tilt makes the near street look larger
+    // End with the 619 m section as wide as the headline it underlines (metres per px = 56 614 / 2^z here).
+    const span = underline ? underline.width * 0.98 : 0.5 * w;
+    return [start, clamp(Math.log2(56614 * span / SECTION_M), 14, 16.7)];
   }
 
   function camera(p) {
@@ -70,31 +86,99 @@
     // headline, then the street lands in the band under the composer.
     const aside = 1 - ease(span(t, 0.35, 0.8));
     const below = ease(span(t, 0.55, 1));
+    const streetY = underline ? clamp(underline.y / h, 0.3, 0.85) : 0.5 + STREET_Y;
     const fx = 0.5 + (wide ? 0.2 : 0) * aside;
-    const fy = 0.5 + (wide ? 0 : 0.2) * aside + STREET_Y * below;
+    const fy = lerp(0.5 + (wide ? 0 : 0.2) * aside, streetY, below);
     return {
       center: [lerp(-52, CENTER[0], travel), lerp(28, CENTER[1], travel)],
       zoom: lerp(z0, z1, ease(t)),
-      pitch: lerp(0, wide ? 58 : 50, tilt),
+      // A lower tilt keeps the horizon (and its pile of distant tiles) out of the street view.
+      pitch: lerp(0, wide ? 48 : 42, tilt),
       bearing: lerp(0, BLOOR_BEARING, tilt),
-      padding: { left: Math.max(0, (2 * fx - 1) * w), top: Math.max(0, (2 * fy - 1) * h), right: 0, bottom: 0 },
+      padding: {
+        left: Math.max(0, (2 * fx - 1) * w), right: Math.max(0, (1 - 2 * fx) * w),
+        top: Math.max(0, (2 * fy - 1) * h), bottom: Math.max(0, (1 - 2 * fy) * h),
+      },
     };
   }
 
+  function introTravel() {
+    const section = document.getElementById('intro');
+    return section ? Math.max(1, section.offsetHeight - window.innerHeight) : 1;
+  }
+
+  // One wheel, key, or swipe starts the landing. The page then scrolls itself. The size of the
+  // gesture does not matter, so a fast flick cannot jump to the street.
+  function play(dir) {
+    flightDir = dir;
+    if (!flightFrame) { flightLast = 0; flightFrame = requestAnimationFrame(drive); }
+  }
+
+  function drive(now) {
+    flightFrame = 0;
+    const dt = flightLast ? Math.min(0.05, (now - flightLast) / 1000) : 0.016;
+    flightLast = now;
+    const max = introTravel();
+    const y = clamp(window.scrollY + flightDir * (max / FLIGHT_S) * dt, 0, max);
+    // The page uses smooth scrolling. A per-frame scrollTo would restart that animation and crawl.
+    window.scrollTo({ top: y, left: 0, behavior: 'instant' });
+    if ((flightDir > 0 && y >= max) || (flightDir < 0 && y <= 0)) flightDir = 0;
+    if (flightDir !== 0) flightFrame = requestAnimationFrame(drive);
+  }
+
+  function onLanding(down) {
+    const max = introTravel();
+    if (window.scrollY > max + 48) return false;
+    if (down && window.scrollY >= max - 1) return false;
+    if (!down && window.scrollY <= 0) return false;
+    return true;
+  }
+
+  function onWheel(event) {
+    if (event.target instanceof Element && event.target.closest('textarea, input, select')) return;
+    const down = event.deltaY >= 0;
+    if (!onLanding(down)) return;
+    event.preventDefault();
+    play(down ? 1 : -1);
+  }
+
+  function onKey(event) {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.target instanceof Element && event.target.closest('textarea, input, select')) return;
+    const down = event.key === 'ArrowDown' || event.key === 'PageDown' || event.key === ' ';
+    const up = event.key === 'ArrowUp' || event.key === 'PageUp';
+    if (!down && !up) return;
+    if (!onLanding(down)) return;
+    event.preventDefault();
+    play(down ? 1 : -1);
+  }
+
   function render(now) {
-    // Time-based easing toward the scroll position, so the camera glides between wheel steps at any frame rate.
-    const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60;
-    last = now;
-    current += (target - current) * (1 - Math.exp(-dt / GLIDE));
-    if (Math.abs(target - current) < 0.0004) current = target;
-    if (map && ready) {
-      map.jumpTo(camera(current));
-      const t = clamp(current / ARRIVE, 0, 1);
-      stage.dataset.stage = t < 0.4 ? 'earth' : t < 0.92 ? 'city' : 'street';
-      setCaption(t < 0.78 ? 'TORONTO, ONTARIO · 43.67° N 79.41° W' : 'BLOOR ST W · BATHURST → SPADINA · 619 m');
-    }
-    if (current !== target) frame = requestAnimationFrame(render);
-    else frame = last = 0;
+    frame = 0;
+    if (!map || !ready) return;
+    const dt = lastStamp ? Math.min(0.032, (now - lastStamp) / 1000) : 0.016;
+    lastStamp = now;
+    const goal = camera(target);
+    if (!live) live = { center: [goal.center[0], goal.center[1]], zoom: goal.zoom, pitch: goal.pitch, bearing: goal.bearing, padding: { ...goal.padding } };
+    const k = 1 - Math.exp(-dt / 0.55);
+    const maxZoom = MAX_ZOOM_PER_S * dt;
+    live.zoom += clamp((goal.zoom - live.zoom) * k, -maxZoom, maxZoom);
+    live.center[0] += (goal.center[0] - live.center[0]) * k;
+    live.center[1] += (goal.center[1] - live.center[1]) * k;
+    live.pitch += (goal.pitch - live.pitch) * k;
+    live.bearing += (goal.bearing - live.bearing) * k;
+    for (const side of ['left', 'right', 'top', 'bottom']) live.padding[side] += (goal.padding[side] - live.padding[side]) * k;
+    map.jumpTo({ center: live.center, zoom: live.zoom, pitch: live.pitch, bearing: live.bearing, padding: live.padding });
+    const [z0, z1] = zoomRange();
+    const u = clamp((live.zoom - z0) / Math.max(0.01, z1 - z0), 0, 1);
+    const stageName = u < 0.35 ? 'earth' : u < 0.82 ? 'city' : 'street';
+    if (stage.dataset.stage !== stageName) stage.dataset.stage = stageName;
+    setCaption(u < 0.72 ? 'TORONTO, ONTARIO · 43.67° N 79.41° W' : 'BLOOR ST W · BATHURST → SPADINA · 619 m');
+    const settled = Math.abs(goal.zoom - live.zoom) < 0.03
+      && Math.abs(goal.pitch - live.pitch) < 0.4
+      && Math.abs(goal.center[0] - live.center[0]) < 0.08;
+    if (!settled) frame = requestAnimationFrame(render);
+    else lastStamp = 0;
   }
 
   // Cross-fades the caption instead of swapping it mid-frame.
@@ -111,7 +195,7 @@
     if (!frame) frame = requestAnimationFrame(render);
   }
 
-  function onResize() { if (map) { map.resize(); onScroll(); } }
+  function onResize() { measureUnderline(); if (map) { map.resize(); onScroll(); } }
 
   // The dark base style is near-black; lift land, water, borders and labels so the Earth reads at globe scale,
   // then let them settle darker as the camera reaches street level.
@@ -145,13 +229,14 @@
         { type: 'Feature', properties: { pin: 1 }, geometry: { type: 'Point', coordinates: CENTER } },
       ] },
     });
+    // Buildings rise and fade in over a zoom level rather than popping in when zoom 14 is crossed.
     map.addLayer({
-      id: 'section-buildings', type: 'fill-extrusion', source: 'openmaptiles', 'source-layer': 'building', minzoom: 14,
+      id: 'section-buildings', type: 'fill-extrusion', source: 'openmaptiles', 'source-layer': 'building', minzoom: 13.2,
       paint: {
         'fill-extrusion-color': '#21434b',
-        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 8],
-        'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-        'fill-extrusion-opacity': 0.88,
+        'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 13.2, 0, 14.8, ['coalesce', ['get', 'render_height'], 8]],
+        'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 13.2, 0, 14.8, ['coalesce', ['get', 'render_min_height'], 0]],
+        'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 13.2, 0, 14.2, 0.88],
       },
     });
     map.addLayer({
@@ -169,9 +254,40 @@
     });
   }
 
+  // Warm the browser cache with the street-level tiles around the section while the globe is at rest, so the
+  // buildings are already there when the camera lands. Tiles are versioned and served with a 10-year max-age.
+  function prefetchStreetTiles() {
+    const source = map.getSource('openmaptiles');
+    const template = source && source.tiles && source.tiles[0];
+    if (!template) return;
+    const tileAt = (z) => {
+      const n = 2 ** z, lat = CENTER[1] * Math.PI / 180;
+      return [Math.floor((CENTER[0] + 180) / 360 * n), Math.floor((1 - Math.asinh(Math.tan(lat)) / Math.PI) / 2 * n)];
+    };
+    const urls = [];
+    const block = (z, xs, ys) => {
+      const [cx, cy] = tileAt(z), cells = [];
+      for (let dy = ys[0]; dy <= ys[1]; dy++) for (let dx = xs[0]; dx <= xs[1]; dx++) cells.push([dx, dy]);
+      cells.sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]));
+      for (const [dx, dy] of cells) urls.push(template.replace('{z}', z).replace('{x}', cx + dx).replace('{y}', cy + dy));
+    };
+    block(13, [-1, 1], [-1, 1]);
+    block(14, [-2, 2], [-3, 1]);   // the tilted street view looks north, so more rows above the section than below
+    let next = 0;
+    const pump = () => {
+      if (next >= urls.length) return;
+      fetch(urls[next++], { credentials: 'same-origin', priority: 'low' })
+        .then((response) => response.arrayBuffer())   // read the body so the response is stored in the cache
+        .catch(() => {}).finally(pump);
+    };
+    for (let i = 0; i < 4; i++) pump();
+  }
+
   function start() {
     const maplibregl = window.maplibregl;
     if (!maplibregl) return giveUp('MapLibre did not load');
+    measureUnderline();
+    if (document.fonts) document.fonts.ready.then(() => { measureUnderline(); onScroll(); });
     const timer = setTimeout(() => giveUp('map style did not load within 12 s'), 12000);
     try {
       map = new maplibregl.Map({
@@ -179,9 +295,10 @@
         style: STYLE,
         interactive: false,
         attributionControl: false,
-        fadeDuration: 0,
-        maxPitch: 60,
-        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        fadeDuration: 180,
+        antialias: false,
+        maxPitch: 55,
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25),
         ...camera(scrollProgress()),
       });
     } catch (error) { clearTimeout(timer); return giveUp(error.message); }
@@ -195,12 +312,17 @@
     map.once('load', () => {
       clearTimeout(timer);
       ready = true;
-      current = target = scrollProgress();
-      render(performance.now());
+      target = scrollProgress();
+      live = null;
+      lastStamp = 0;
+      frame = requestAnimationFrame(render);
       stage.classList.add('is-ready');
+      map.once('idle', prefetchStreetTiles);
     });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('keydown', onKey);
   }
 
   const script = document.createElement('script');

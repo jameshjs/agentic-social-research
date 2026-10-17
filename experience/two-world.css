@@ -25,8 +25,9 @@ body.demo-view #peopleStrip,body.demo-view #labCredit,body.demo-view #runLedger,
 body.demo-view #impact,body.demo-view #personaLab,body.demo-view #about{display:none!important}
 @media(max-width:760px){body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{height:72vh;min-height:420px}}
 
-/* ---------- header: no separator line, no "Enter the city" ---------- */
-.site-header{border-bottom:0!important}
+/* ---------- header: transparent, no separator line, no "Enter the city" ---------- */
+.site-header{border-bottom:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.site-header .brand-word{text-shadow:0 1px 14px #07131c}
 #enterButton{display:none!important}
 
 /* ---------- decision brief under the 3D view. Figures come from two-world.js. ---------- */

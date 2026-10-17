@@ -8,8 +8,12 @@ body:has(.globe-stage) .city-stage{visibility:hidden}
 .globe-map .maplibregl-canvas{position:absolute;left:0;top:0}
 .globe-map .maplibregl-canvas-container,.globe-map .maplibregl-control-container{display:contents}
 /* A light vignette keeps the headline and composer readable without dimming the centred globe. */
-.globe-stage::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#07131c99 0%,transparent 22%);opacity:calc(1 - var(--reveal,0)*1.8)}
-body:has(.globe-stage) .cloud{filter:blur(14px)}
+.globe-stage::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#07131c99 0%,transparent 22%);opacity:calc(1 - var(--reveal,0)*1.8);transition:opacity .9s ease}
+/* Blurred, screen-blended clouds over a moving WebGL canvas cost a full-screen filter pass per frame.
+   The gradient is already soft, so over the globe they draw plainly, clear by the composer, then leave the tree. */
+body:has(.globe-stage) .cloud-field{filter:none;opacity:clamp(0,calc(.8 - var(--reveal)*2.2),.8)}
+body:has(.globe-stage) .cloud{filter:none;mix-blend-mode:normal;will-change:auto}
+.globe-stage[data-stage=street] ~ .cloud-field{display:none}
 .globe-stage[data-stage=street]::after{opacity:.6;background:radial-gradient(ellipse at 50% 48%,#07131c99 0%,#07131c33 55%,#07131c99 100%)}
 .globe-caption{position:absolute;z-index:2;left:50%;bottom:34px;transform:translateX(-50%);font-size:9px;font-weight:700;letter-spacing:1.6px;color:#8affd5;white-space:nowrap;text-shadow:0 1px 10px #07131c;transition:opacity .28s ease}
 .globe-caption.is-swapping{opacity:0}
