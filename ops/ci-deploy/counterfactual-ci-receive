@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# SSH forced command for the ci-deploy account (installed at /usr/local/sbin/counterfactual-ci-receive).
+# Every connection with the CI key runs this instead of a shell. It accepts exactly two requests:
+#   deploy <40-hex sha>   stream the release tarball on stdin to the root-owned activation script
+#   status                print the deployed VERSION file
+# Anything else, including scp, sftp, port forwarding and interactive logins, is refused.
+set -euo pipefail
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+request="${SSH_ORIGINAL_COMMAND:-}"
+logger -t counterfactual-ci -- "request from ${SSH_CLIENT%% *}: ${request:0:60}" || true
+case "$request" in
+  status)
+    exec cat /srv/counterfactual/VERSION ;;
+  "deploy "*)
+    sha="${request#deploy }"
+    [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo 'ci-deploy: expected deploy <40-hex sha>' >&2; exit 2; }
+    exec /usr/bin/sudo -n /usr/local/sbin/counterfactual-activate "$sha" ;;
+  *)
+    echo "ci-deploy: only 'deploy <sha>' and 'status' are allowed" >&2
+    exit 2 ;;
+esac

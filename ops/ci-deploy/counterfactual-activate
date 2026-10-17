@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Root-owned release activation for CI. Installed at /usr/local/sbin/counterfactual-activate by
+# ops/ci-deploy/install-on-vm.sh; the ci-deploy account may run only this, through one sudo rule.
+#
+#   counterfactual-activate <40-hex git sha>  < release.tar.gz
+#
+# It reads one release tarball from stdin into a root-only directory, validates and unpacks it with
+# release-check.py, then swaps /srv/counterfactual exactly as ops/deploy.sh leaves it (root:root,
+# u=rwX,go=rX). It never touches /etc/counterfactual.env, the systemd unit or Caddy. A failed health or
+# smoke check restores the previous release. CI cannot edit this file; changes need a root reinstall.
+set -euo pipefail
+umask 022
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+PUBLIC_URL=https://twotwosmyworld.select
+CURRENT=/srv/counterfactual
+CHECK=/usr/local/lib/counterfactual-ci/release-check.py
+MAX_BYTES=$((120 * 1024 * 1024))   # compressed upload cap; release-check.py caps the unpacked size
+
+sha="${1:-}"
+[ "$#" -eq 1 ] && [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo 'usage: counterfactual-activate <40-hex sha> < release.tar.gz' >&2; exit 2; }
+[ "$(id -u)" = 0 ] || { echo 'must run as root (through sudo)' >&2; exit 2; }
+test -f /etc/counterfactual.env
+test -d "$CURRENT"
+
+# Serialises CI deploys. A manual ops/deploy.sh (root) does not take this lock, so do not run both at once.
+exec 9>/run/counterfactual-ci.lock
+flock -n 9 || { echo 'another CI deploy is running' >&2; exit 75; }
+
+work="$(mktemp -d /root/counterfactual-ci.XXXXXX)"
+stage="/srv/counterfactual.stage-${sha:0:12}-$(date -u +%Y%m%d%H%M%S)-$$"
+cleanup() { rm -rf "$work"; [ ! -d "$stage" ] || rm -rf "$stage"; }
+trap cleanup EXIT
+
+head -c $((MAX_BYTES + 1)) > "$work/release.tar.gz"
+size="$(stat -c %s "$work/release.tar.gz")"
+[ "$size" -gt 0 ] || { echo 'empty upload' >&2; exit 3; }
+[ "$size" -le "$MAX_BYTES" ] || { echo "upload is larger than $((MAX_BYTES / 1024 / 1024)) MB" >&2; exit 3; }
+echo "Received release $sha ($((size / 1024)) KiB)"
+
+mkdir -m 0755 "$stage"
+/usr/bin/python3 -I "$CHECK" extract "$work/release.tar.gz" "$stage"
+printf '{"git_sha":"%s","dirty":false,"deployed_at":"%s","deployed_by":"ci-deploy"}\n' \
+  "$sha" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$stage/VERSION"
+chown -R root:root "$stage"
+chmod -R u=rwX,go=rX "$stage"
+if find "$stage" \( -name '.env*' -o -type l \) -print -quit | grep -q .; then
+  echo 'staged release contains an environment file or a link' >&2
+  exit 1
+fi
+
+backup="/srv/counterfactual.rollback-$(date -u +%Y%m%d%H%M%S)-$$"
+rollback() {
+  echo "Deploy failed; restoring previous release $backup" >&2
+  if [ -d "$backup" ]; then
+    [ ! -d "$CURRENT" ] || mv "$CURRENT" "${stage}.failed"
+    mv "$backup" "$CURRENT"
+    systemctl restart counterfactual 9>&- || true
+  fi
+}
+trap rollback ERR
+mv "$CURRENT" "$backup"
+mv "$stage" "$CURRENT"
+systemctl restart counterfactual 9>&-   # the service must not inherit the deploy lock
+
+ready=0
+for attempt in $(seq 1 30); do
+  if curl -fsS --max-time 3 http://127.0.0.1:8080/api/health | grep -q "\"git_sha\":\"$sha\""; then ready=1; break; fi
+  sleep 2
+done
+[ "$ready" = 1 ] || { echo 'new service did not report the deployed SHA' >&2; false; }
+curl -fsS -o /dev/null --max-time 10 http://127.0.0.1:8080/experience/
+for scenario in fare bike; do
+  curl -fsS --max-time 60 -H 'Content-Type: application/json' \
+    -d "{\"scenario\":\"$scenario\",\"seed\":42}" http://127.0.0.1:8080/api/run \
+    | /usr/bin/node -e 'let s="";process.stdin.on("data",x=>s+=x);process.stdin.on("end",()=>{const x=JSON.parse(s);if(x.result?.schema_version!=="experiment.v2"||!x.result?.runs?.baseline||!x.result?.runs?.intervention)process.exit(1)})'
+  echo "Smoke test passed: $scenario paired run"
+done
+curl -fsS --max-time 15 "$PUBLIC_URL/api/health" | grep -q "\"git_sha\":\"$sha\""
+curl -fsS -o /dev/null --max-time 15 "$PUBLIC_URL/experience/"
+trap - ERR
+# Keep the five newest rollback copies (about 10 MB each).
+ls -1dt /srv/counterfactual.rollback-* 2>/dev/null | tail -n +6 | xargs -r rm -rf --
+echo "Deployed $sha to $PUBLIC_URL/experience/ (previous release: $backup)"

@@ -33,7 +33,12 @@ jobs:
       - name: Persona runtime tests
         run: npm --prefix persona-swarm/runtime test
       - name: Check deploy scripts
-        run: bash -n ops/deploy.sh ops/deploy-ci.sh ops/deploy-paths.sh
+        run: >-
+          bash -n ops/deploy.sh ops/deploy-ci.sh ops/deploy-paths.sh
+          ops/ci-deploy/counterfactual-activate ops/ci-deploy/counterfactual-ci-receive
+          ops/ci-deploy/vm-setup.sh ops/ci-deploy/install-on-vm.sh ops/ci-deploy/e2e-docker.sh
+      - name: CI deploy account guards (release allowlist, forced command, sudo rule)
+        run: python3 -m unittest -v ops/ci-deploy/test_release_check.py
 
   deploy:
     name: Production deploy
@@ -48,14 +53,27 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
-      - name: Install pinned SSH host key and deploy credential
+      # The secret is the private half of the restricted ci-deploy key (ops/ci-deploy/README.md),
+      # stored as a `production` environment secret. It is never Meet's root key.
+      - name: Load the ci-deploy key
+        id: key
         env:
-          VULTR_DEPLOY_SSH_KEY: ${{ secrets.VULTR_DEPLOY_SSH_KEY }}
+          VULTR_CI_DEPLOY_KEY: ${{ secrets.VULTR_CI_DEPLOY_KEY }}
         run: |
-          test -n "$VULTR_DEPLOY_SSH_KEY" || { echo 'Set VULTR_DEPLOY_SSH_KEY in repository Actions secrets'; exit 1; }
-          install -d -m 700 "$HOME/.ssh"
-          install -m 600 ops/known_hosts "$HOME/.ssh/known_hosts"
-          printf '%s\n' "$VULTR_DEPLOY_SSH_KEY" > "$HOME/.ssh/vultr_htv_ed25519"
-          chmod 600 "$HOME/.ssh/vultr_htv_ed25519"
-      - name: Deploy and smoke test both policy runs
+          if [ -z "$VULTR_CI_DEPLOY_KEY" ]; then
+            echo '::warning title=Deploy skipped::VULTR_CI_DEPLOY_KEY is not set for the production environment. Tests passed; the VM was not changed. See ops/ci-deploy/README.md.'
+            echo '### Deploy skipped: `VULTR_CI_DEPLOY_KEY` is not configured. The VM was not changed.' >> "$GITHUB_STEP_SUMMARY"
+            echo configured=false >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          umask 077
+          printf '%s\n' "$VULTR_CI_DEPLOY_KEY" > "$RUNNER_TEMP/ci_deploy_key"
+          echo configured=true >> "$GITHUB_OUTPUT"
+      - name: Deploy through the restricted account and smoke test both policy runs
+        if: steps.key.outputs.configured == 'true'
+        env:
+          DEPLOY_SSH_KEY: ${{ runner.temp }}/ci_deploy_key
         run: bash ops/deploy-ci.sh
+      - name: Remove the key from the runner
+        if: always() && steps.key.outputs.configured == 'true'
+        run: rm -f "$RUNNER_TEMP/ci_deploy_key"
