@@ -353,7 +353,7 @@ class CityScene {
     requestAnimationFrame(this.frame);
     if (document.hidden) return;
     // The landing globe covers this canvas. Drawing the isometric city under it is what made the scroll stutter.
-    if (document.body.classList.contains('globe-on') || document.body.classList.contains('globe-pending')) return;
+    if (document.getElementById('globeStage')) return;
     if (this.lastFrame && now - this.lastFrame < (this.w < 650 ? 27 : 15)) return;
     const dt = this.lastFrame ? Math.min(.05, (now - this.lastFrame) / 1000) : .016;
     this.lastFrame = now;

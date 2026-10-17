@@ -1429,23 +1429,26 @@ const optionText = (o) => (typeof o === 'string' ? (CHOICE[o] || o) : `${CHOICE[
 function describePersona(pid) {
   const p = personaById(pid); if (!p) return null;
   const run = runOf();
+  const role = ROLE[p.role] || p.role.replace(/_/g, ' ');
   const who = p.mapped
-    ? `${esc(ROLE[p.role] || p.role.replace(/_/g, ' '))} · ${esc(p.neighbourhood)}`
+    ? `${esc(role)}${p.neighbourhood && !role.includes(p.neighbourhood) ? ` · ${esc(p.neighbourhood)}` : ''}`
     : `${esc(p.age_band || '')} ${esc(p.sex || '')} · ${esc(ROLE[p.role] || p.role)} · ${esc(p.neighbourhood)}`;
   return { title: p.name, kind: who, live: true, persona: pid,
     rows: () => {
       const r = [];
-      const cash = p.mapped ? `$${p.budget}/day budget` : `$${p.disposable_cash_weekly_cad}/week spare cash`;
-      r.push(['About', `${cash} · ${p.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare'} · ${p.has_car ? 'car' : 'no car'} · ${p.has_bike ? 'bike' : 'no bike'}`]);
-      if (p.traits.length) r.push(['Traits', p.traits.slice(0, 2).map(esc).join('<br>')]);
+      if (!EMBED) {   // inside /experience/ the card keeps only who they are and what changed
+        const cash = p.mapped ? `$${p.budget}/day budget` : `$${p.disposable_cash_weekly_cad}/week spare cash`;
+        r.push(['About', `${cash} · ${p.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare'} · ${p.has_car ? 'car' : 'no car'} · ${p.has_bike ? 'bike' : 'no bike'}`]);
+        if (p.traits.length) r.push(['Traits', p.traits.slice(0, 2).map(esc).join('<br>')]);
+      }
       const fixed = r.length;
       if (run) {
         const wk = state.week;
         for (const trip of (p.routine || []).map((x) => x.id)) {
           const k = `${wk}:${pid}:${trip}`, b = run.choices.baseline[k], i = run.choices.intervention[k];
           if (!b || !i || b.chosen === i.chosen) continue;
-          const why = p.mapped ? `options: ${(i.options || []).map(optionText).join(' · ')}` : `“${esc(i.reason)}”`;
-          r.push([esc(trip), `<b class="chgtxt">${esc(CHOICE[b.chosen] || b.chosen)} → ${esc(CHOICE[i.chosen] || i.chosen)}</b><br><span class="note">${why}</span>`]);
+          const why = EMBED ? '' : `<br><span class="note">${p.mapped ? `options: ${(i.options || []).map(optionText).join(' · ')}` : `“${esc(i.reason)}”`}</span>`;
+          r.push([esc(trip), `<b class="chgtxt">${esc(CHOICE[b.chosen] || b.chosen)} → ${esc(CHOICE[i.chosen] || i.chosen)}</b>${why}`]);
         }
         if (r.length === fixed) r.push(['This period', 'same choices with and without the policy']);
       }

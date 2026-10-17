@@ -21,17 +21,16 @@
     .simulation-viewport.is-3d .viewport-bottom{left:auto;bottom:auto;top:14px;right:14px;gap:8px}
     .view3d-toggle{border:1px solid #a8f4d13b;border-radius:40px;background:#0b212af0;color:var(--mint,#a8f4d1);padding:8px 14px;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer}
     .view3d-toggle[aria-pressed="true"]{background:var(--mint,#a8f4d1);color:#0c2a2a}
+    /* The button sits 10px under the Baseline / With policy toggle: top 16px, ~54px tall (~48px on phones). */
     .impact-tour{position:absolute;z-index:7;inset:0;display:none;color:#ecfff6;font-family:'Space Grotesk',sans-serif;pointer-events:none}
     .simulation-viewport.is-3d .impact-tour.is-ready{display:block}
-    .impact-tour button{position:absolute;top:63px;left:16px;pointer-events:auto;border:1px solid #a8f4d1;background:#a8f4d1;color:#102b27;border-radius:999px;padding:10px 16px;font:700 11px 'Space Grotesk',sans-serif;letter-spacing:.04em;box-shadow:0 8px 30px #0009;cursor:pointer}
+    .impact-tour button{position:absolute;top:80px;left:16px;pointer-events:auto;border:1px solid #a8f4d1;background:#a8f4d1;color:#102b27;border-radius:999px;padding:10px 16px;font:700 11px 'Space Grotesk',sans-serif;letter-spacing:.04em;box-shadow:0 8px 30px #0009;cursor:pointer}
     .impact-tour button:hover{background:#d6ffe9;transform:translateY(-2px)}
     .impact-tour-card{position:absolute;left:50%;bottom:69px;transform:translateX(-50%);width:min(610px,calc(100% - 28px));padding:11px 16px;border:1px solid #a8f4d180;border-radius:13px;background:#09232ce3;box-shadow:0 12px 36px #0008;backdrop-filter:blur(12px);pointer-events:none;text-align:center}
     .impact-tour-card[hidden]{display:none}
     .impact-tour-phase{display:block;font:700 9px 'Space Grotesk',sans-serif;letter-spacing:.15em;color:#a8f4d1;text-transform:uppercase}
     .impact-tour-card strong{display:block;margin:2px 0;font-size:16px;line-height:1.2}
-    .impact-tour-card p{margin:0;color:#c6dcda;font-size:11px;line-height:1.35}
-    .impact-tour-card small{display:block;margin-top:4px;color:#91afb0;font:9px/1.25 'Space Grotesk',sans-serif}
-    @media(max-width:760px){.impact-tour button{top:62px;left:10px;padding:8px 11px;font-size:10px}.impact-tour-card{bottom:58px;padding:8px 10px}.impact-tour-card strong{font-size:13px}.impact-tour-card p{font-size:10px}.impact-tour-card small{display:none}}`;
+    @media(max-width:760px){.impact-tour button{top:75px;padding:8px 11px;font-size:10px}.impact-tour-card{bottom:58px;padding:8px 10px}.impact-tour-card strong{font-size:13px}}`;
   document.head.appendChild(style);
 
   const button = document.createElement('button');
@@ -44,15 +43,13 @@
   tour.innerHTML = '<button type="button" aria-label="Play the policy impact tour">▶ See policy impact</button><div class="impact-tour-card" aria-live="polite" hidden></div>';
   viewport.appendChild(tour);
   const tourButton = tour.querySelector('button'), tourCard = tour.querySelector('.impact-tour-card');
-  let tourTimer = null, finalTimer = null;
+  let tourTimer = null;
   const stopTour = () => {
     if (tourTimer) clearTimeout(tourTimer);
-    if (finalTimer) clearTimeout(finalTimer);
-    tourTimer = finalTimer = null;
+    tourTimer = null;
     tourCard.hidden = true;
   };
   const escape = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const sum = (r, armName, metric) => r.runs[armName].metrics.by_tick.filter((p) => p.tick >= r.scenario.policy_start).reduce((n, p) => n + (p[metric] || 0), 0);
   const bikeRun = (r) => Object.hasOwn(r.scenario.levers.intervention || {}, 'bloor_cycle_track');
   const choiceText = (s) => ({ transit: 'takes TTC', drive: 'drives', bike_bloor: 'cycles on Bloor', bike_side_street: 'cycles via side streets', walk: 'walks', shop_elsewhere: 'shops elsewhere', defer: 'defers the trip' }[s] || `chooses ${s}`);
   function highlight(r) {
@@ -73,32 +70,55 @@
     const person = r.personas.find((p) => p.id === d.actor);
     const name = escape(person?.name || d.actor);
     const action = baseline ? d.baseline.action : d.intervention.action;
-    const b = Math.round(sum(r, 'baseline', bike ? 'bloor_bike_trips' : 'transit_trips'));
-    const a = Math.round(sum(r, 'intervention', bike ? 'bloor_bike_trips' : 'transit_trips'));
-    const shared = Math.round(sum(r, 'intervention', 'bloor_shared_cycling_m'));
     const label = baseline ? '01 / BASELINE' : bike ? '02 / POLICY · FOLLOW THE CHANGED ROUTE' : focus === 'stop' ? '02 / POLICY · SAME SCHEDULE' : '03 / FOLLOW THE CHANGED CHOICE';
     const title = bike ? action === 'bike_bloor' ? `${name} rides in the protected track.`
       : action === 'bike_side_street' ? `${name} rides beside traffic on a side street.` : `${name} ${escape(choiceText(action))}.`
       : focus === 'stop' ? baseline ? 'Route 7 arrives at Bathurst.' : 'Same bus. A different trip mix.'
         : `${name} ${escape(choiceText(action))}.`;
-    const fact = bike ? `Bloor cycling trips ${b} → ${a} · cycling beside cars ${shared.toLocaleString()} m across the sample.`
-      : focus === 'stop' ? `Sample TTC trips ${b} → ${a}. The stop queue illustrates this ratio; it is not a measured boarding count.`
-        : `Recorded trip: ${escape(choiceText(d.baseline.action))} → ${escape(choiceText(d.intervention.action))}. Sample TTC trips ${b} → ${a}.`;
-    tourCard.innerHTML = `<span class="impact-tour-phase">${label}</span><strong>${title}</strong><p>${fact}</p><small>Same seed and mapped world · ${r.scenario.ticks - r.scenario.policy_start + 1} simulated weekdays · not a Toronto forecast</small>`;
+    tourCard.innerHTML = `<span class="impact-tour-phase">${label}</span><strong>${title}</strong>`;
     tourCard.hidden = false;
     send({ type: 'viewer3d:impact-phase', arm: phase === 'baseline' ? 'baseline' : 'policy', actor: d.actor, trip: d.trip_id, tick: d.tick, kind: bike ? 'bike' : 'fare', focus });
+  }
+  // Up to three more people whose choice changed, each a different shift from the lead's and each other's
+  // (Bloor → TTC, Bloor → shops elsewhere, …), starting with the mode the policy touches.
+  function others(r, lead) {
+    const mode = bikeRun(r) ? 'bike_bloor' : 'transit';
+    const shift = (d) => `${d.baseline.action}>${d.intervention.action}`;
+    const shifts = new Set([shift(lead)]), out = [];
+    const changed = r.changed_decisions.filter((d) => d.tick >= r.scenario.policy_start && d.actor !== lead.actor)
+      .sort((a, b) => (b.baseline.action === mode) - (a.baseline.action === mode));
+    for (const d of changed) {
+      if (shifts.has(shift(d)) || out.some((x) => x.actor === d.actor)) continue;
+      shifts.add(shift(d)); out.push(d);
+      if (out.length === 3) break;
+    }
+    return out;
+  }
+  // Same follow shot as the lead. A trip that leaves Bloor under the policy (shops elsewhere, stays home)
+  // has nothing to follow there, so it is shown on Baseline.
+  function showOther(r, list, i) {
+    const d = list[i], name = r.personas.find((p) => p.id === d.actor)?.name || d.actor;
+    const gone = ['shop_elsewhere', 'defer'].includes(d.intervention.action);
+    tourCard.innerHTML = `<span class="impact-tour-phase">Also changed · ${i + 1} / ${list.length} · ${escape(name)}${gone ? ' · baseline' : ''}</span><strong>${escape(choiceText(d.baseline.action))} → ${escape(choiceText(d.intervention.action))}</strong>`;
+    tourCard.hidden = false;
+    send({ type: 'viewer3d:impact-phase', arm: gone ? 'baseline' : 'policy', actor: d.actor, trip: d.trip_id, tick: d.tick, kind: bikeRun(r) ? 'bike' : 'fare', focus: 'person' });
   }
   tourButton.addEventListener('click', () => {
     const r = isMapped(last) ? last : window.CounterfactualCurrentRun;
     if (!ready || !isMapped(r)) return;
     stopTour();
     const d = highlight(r); if (!d) return;
-    showPhase(r, d, 'baseline', bikeRun(r) ? 'person' : 'stop');
+    const bike = bikeRun(r), more = others(r, d);
+    const beats = [[() => showPhase(r, d, 'baseline', bike ? 'person' : 'stop'), 7600], [() => showPhase(r, d, 'policy', bike ? 'person' : 'stop'), bike ? 7000 : 5900]];
+    if (!bike) beats.push([() => showPhase(r, d, 'policy', 'person'), 7000]);
+    more.forEach((x, i) => beats.push([() => showOther(r, more, i), 6500]));
     tourButton.textContent = '↻ Replay policy impact';
-    tourTimer = setTimeout(() => {
-      showPhase(r, d, 'policy', bikeRun(r) ? 'person' : 'stop'); tourTimer = null;
-      if (!bikeRun(r)) finalTimer = setTimeout(() => { showPhase(r, d, 'policy', 'person'); finalTimer = null; }, 5900);
-    }, 7600);
+    const step = (i) => {
+      if (i === beats.length) { stopTour(); return; }
+      beats[i][0]();
+      tourTimer = setTimeout(() => step(i + 1), beats[i][1]);
+    };
+    step(0);
   });
 
   let frame = null, ready = false, last = null;
@@ -111,7 +131,7 @@
     if (open && !frame) {
       frame = document.createElement('iframe');
       frame.className = 'view3d-frame'; frame.title = '3D view of the mapped run';
-      frame.src = '../world/viewer3d/?embed=1&v=street-tour-6';
+      frame.src = '../world/viewer3d/?embed=1&v=street-tour-7';
       viewport.appendChild(frame);
     }
     viewport.classList.toggle('is-3d', open);

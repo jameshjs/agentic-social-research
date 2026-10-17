@@ -2,18 +2,16 @@
  * 1. The 100-agent panel sits right after the prompt, above the 3D view.
  * 2. The decision brief sits under the 3D view. Every figure is reduced from the
  *    current experiment.v2 run (metrics.by_tick, metrics.by_group, events).
- *    Nothing in the brief is a typed result. Researcher view keeps its own ledger. */
+ *    Nothing in the brief is a typed result. */
 (function () {
   'use strict';
 
   function place() {
     const poll = document.getElementById('agentPoll'), intro = document.getElementById('intro');
-    const demo = !window.CounterfactualView || window.CounterfactualView.isDemo();
-    if (demo && poll && intro && intro.nextElementSibling !== poll) intro.after(poll);
+    if (poll && intro && intro.nextElementSibling !== poll) intro.after(poll);
   }
   place();
   document.addEventListener('DOMContentLoaded', place);
-  window.addEventListener('counterfactual:view', place);
 
   const box = document.createElement('section');
   box.className = 'tw-brief';
