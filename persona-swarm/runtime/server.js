@@ -221,8 +221,16 @@ function createServer(config, deps = {}) {
     try {
       const r = await fetchImpl(`${config.remoteUrl}${url.pathname}${url.search}`, { method: req.method, body: req.method === 'POST' ? body : undefined,
         headers: { authorization: `Bearer ${env().CONSOLE_ACCESS_KEY || ''}`, 'content-type': 'application/json' } });
-      res.writeHead(r.status, { 'content-type': r.headers.get('content-type') || 'application/json', 'cache-control': 'no-cache' });
-      if (r.body) Readable.fromWeb(r.body).pipe(res); else res.end();
+      // A 401 from the agent server is about this server's key, not the browser's: say which file to fix.
+      if (r.status === 401) { json(res, 502, { error: `${config.remoteUrl} refused this server's access key: check CONSOLE_ACCESS_KEY in persona-swarm/.env`, replay: Boolean(latestSave()) }); return; }
+      const type = r.headers.get('content-type') || 'application/json';
+      res.writeHead(r.status, { 'content-type': type, 'cache-control': 'no-cache' });
+      if (!r.body) { res.end(); return; }
+      // If the agent server stops mid-stream, end with an error event the page can show, instead of crashing this server.
+      Readable.fromWeb(r.body).on('error', () => {
+        if (!type.includes('event-stream')) { res.destroy(); return; }
+        res.end(`event: error\ndata: ${JSON.stringify({ message: 'the agent server stopped responding; reload the page for the saved replays', replay: Boolean(latestSave()) })}\n\n`);
+      }).pipe(res);
     } catch (e) {
       const local = url.pathname === '/replay/latest' ? latestSave(url.searchParams.get('kind'), url.searchParams.get('policy')) : null;
       if (local) json(res, 200, local); else json(res, 502, { error: `remote agent server unreachable: ${e.message}`, replay: Boolean(latestSave()) });
@@ -280,7 +288,8 @@ function createServer(config, deps = {}) {
     if (req.method === 'GET' && url.pathname === '/usage') { json(res, 200, { requests_by_key: state.usage }); return; }
     if (remoteRoute) { await forward(req, res, url, body); return; }
     if (req.method === 'GET' && url.pathname === '/health') {
-      json(res, 200, { ok: true, backend: config.backend, agent_model: cd.AGENT, orchestrator_model: cd.ORCHESTRATOR, agents: roster.length,
+      // ok means live agents can answer now: false in replay mode or after the plan limit, so the site shows its offline state.
+      json(res, 200, { ok: Boolean(call) && !state.limited, backend: config.backend, agent_model: cd.AGENT, orchestrator_model: cd.ORCHESTRATOR, agents: roster.length,
         deciders: roster.filter((a) => a.decider).length, concurrency: config.concurrency, limited: Boolean(state.limited), requires_key: requireKey });
       return;
     }

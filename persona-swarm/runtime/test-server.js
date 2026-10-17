@@ -75,7 +75,7 @@ test('replay mode serves the latest save, labelled, and makes no model calls', a
   const base = await listen(server);
   try {
     const health = await (await fetch(`${base}/health`)).json();
-    assert.deepEqual([health.backend, health.agents, health.deciders, health.requires_key], ['replay', 100, 40, false]);
+    assert.deepEqual([health.ok, health.backend, health.agents, health.deciders, health.requires_key], [false, 'replay', 100, 40, false]);
     const evs = await events(await fetch(`${base}/ask`, { method: 'POST', body: JSON.stringify({ question: 'anything?' }) }));
     assert.equal(evs[0].event, 'replay');
     assert.match(evs[0].data.label, /^replay of a live run at \d\d:\d\d$/);
@@ -144,6 +144,56 @@ test('remote mode forwards /ask, /run and /chat with the access key and streams 
   } finally { await close(server); await close(upstream); }
 });
 
+test('remote mode: the agent server stopping mid-poll ends the stream with an error, and a refused key is named', async () => {
+  let refuse = false;
+  const upstream = http.createServer((req, res) => {
+    if (refuse) { res.writeHead(401, { 'content-type': 'application/json' }); res.end('{"error":"access key required","requires_key":true}'); return; }
+    res.writeHead(200, { 'content-type': 'text/event-stream' });
+    res.write('event: start\ndata: {"kind":"poll"}\n\n');
+    setTimeout(() => res.destroy(), 20);                                   // the agent server dies mid-poll
+  });
+  const upstreamUrl = await listen(upstream);
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, '2026-10-17T15-04-00-000Z-poll.json'), JSON.stringify(sample));
+  const server = createServer({ backend: 'remote', host: '127.0.0.1', concurrency: 16, remoteUrl: upstreamUrl }, { liveDir: dir, env: () => ({ CONSOLE_ACCESS_KEY: 'k' }) });
+  const base = await listen(server);
+  try {
+    const evs = await events(await fetch(`${base}/ask`, { method: 'POST', body: JSON.stringify({ question: 'q?' }) }));
+    assert.deepEqual(evs.map((e) => e.event), ['start', 'error']);
+    assert.match(evs[1].data.message, /agent server stopped responding/);
+    assert.equal(evs[1].data.replay, true);
+    refuse = true;
+    const r = await fetch(`${base}/health`);                               // this server is still up
+    assert.equal(r.status, 502);
+    assert.match((await r.json()).error, /refused this server's access key: check CONSOLE_ACCESS_KEY/);
+  } finally { await close(server); upstream.closeAllConnections(); await close(upstream); }
+});
+
+test('a plan limit from the CLI: one call, a limit event, then replays with no further calls', async () => {
+  const { EventEmitter } = require('node:events');
+  const cd = require('./claude-decision');
+  let spawns = 0;
+  const child = () => {
+    spawns++;
+    const c = new EventEmitter(); c.stdout = new EventEmitter(); c.stderr = new EventEmitter(); c.kill = () => {};
+    setImmediate(() => { c.stdout.emit('data', JSON.stringify({ is_error: true, result: 'Claude AI usage limit reached|1792300000' })); c.emit('close', 0); });
+    return c;
+  };
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, '2026-10-17T15-04-00-000Z-poll.json'), JSON.stringify(sample));
+  const server = createServer({ backend: 'local', host: '127.0.0.1', concurrency: 1 }, { liveDir: dir, env: () => ({}), call: cd.cliBackend({ spawnImpl: child }) });
+  const base = await listen(server);
+  try {
+    const first = await events(await fetch(`${base}/ask`, { method: 'POST', body: JSON.stringify({ question: 'q?', options: [1, 2, 3, 4, 5], ids: ['a001', 'a002', 'a003'], summarise: false }) }));
+    assert.ok(first.some((e) => e.event === 'limit' && e.data.message === 'agent backend limit reached'));
+    assert.equal(spawns, 1, 'no retry and no further calls after the limit');
+    const next = await events(await fetch(`${base}/ask`, { method: 'POST', body: JSON.stringify({ question: 'again?' }) }));
+    assert.deepEqual(next.map((e) => e.event), ['limit', 'replay']);
+    assert.equal(spawns, 1);
+    assert.equal((await (await fetch(`${base}/health`)).json()).ok, false, 'the site shows its offline state');
+  } finally { await close(server); }
+});
+
 test('remote mode with the remote down: a 502 for live calls, a local save for replay', async () => {
   const dir = tmp();
   fs.writeFileSync(path.join(dir, '2026-10-17T15-04-00-000Z-poll.json'), JSON.stringify(sample));
@@ -200,7 +250,7 @@ test('agents-client.js streams a poll; the experience site may call cross-origin
     assert.deepEqual(answers.map((a) => a.agent.id).sort(), ['a001', 'a002', 'a003']);
     assert.ok(answers.every((a) => a.agent.name && a.agent.role));
     assert.equal(done.aggregate.choices.Yes.count, 3);
-    assert.equal((await client.health()).agents, 100);
+    assert.deepEqual([(await client.health()).ok, (await client.health()).agents], [true, 100]);
     const node = client.create({ serverUrl: base, accessKey: 'site-key-not-real' });           // a Node caller may hold a key
     assert.equal((await node.health()).backend, 'local');
     const js = await fetch(`${base}/agents-client.js`);
