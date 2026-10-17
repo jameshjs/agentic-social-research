@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>if (new URLSearchParams(location.search).get('embedded') === '1') document.documentElement.dataset.embedded = 'true';</script>
 <style>[hidden]{display:none !important}body{margin:0}</style>
 <title>Counterfactual Lab</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: control-room triptych. Pipeline on the left, the living district in the middle, assumptions and evidence on the right; timeline docked under the city. */
 :root {
@@ -283,6 +284,65 @@ button { cursor: pointer; }
   .dash { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .stage[data-state="running"] .stage-dot { animation: none; } .banner { transition: none; } }
+html[data-embedded="true"] .top, html[data-embedded="true"] .dash { display: none; }
+html[data-embedded="true"] .grid { height: auto; }
+@media (min-width: 1000px) {
+  html[data-embedded="true"] .grid { grid-template-columns: 250px minmax(0, 1fr) 310px; height: max(640px, calc(100dvh - 36px)); }
+  html[data-embedded="true"] .left { grid-column: 1; grid-row: 1; }
+  html[data-embedded="true"] .stage-col { grid-column: 2; grid-row: 1; height: auto; }
+  html[data-embedded="true"] .panel.right { grid-column: 3; grid-row: 1; max-height: none; }
+}
+@media (min-width: 761px) and (max-width: 999px) { html[data-embedded="true"] .stage-col, html[data-embedded="true"] .left { height: 640px; max-height: 640px; } }
+@media (max-width: 760px) { html[data-embedded="true"] .city { height: 560px; } html[data-embedded="true"] .left { height: 650px; max-height: 650px; } html[data-embedded="true"] .right { height: 700px; max-height: 700px; } }
+/* Embedded mode is part of the cinematic experience; standalone keeps Aadit's original theme. */
+:root[data-embedded="true"] {
+  --bg: #0b1c24; --panel: #102b34; --panel-2: #173942;
+  --ink: #e9f7ef; --muted: #a9c8c2; --line: #668f8459;
+  --accent: #a8f4d1; --accent-soft: #285d50; --accent-ink: #12322d; --focus: #dfffb6;
+  --ev-observed: #8ab8ff; --ev-transferred: #67dbc4; --ev-assumption: #f0bd6a;
+  --ev-simulated: #c7a9fa; --ev-speculation: #abbdb9; --ev-scenario: #ff987e;
+  --good: #a8f4d1; --bad: #ff987e;
+  --scene-sky: #1b3b46; --scene-night: #08151d; --scene-ground: #214445;
+  --scene-road: #1b3642; --scene-walk: #537374; --scene-lane: #b5e3ce;
+  --scene-wall-a: #c0a997; --scene-wall-b: #81a8b1; --scene-roof: #b17864;
+  --scene-glass: #75a6b6; --scene-ware: #8da4a4; --scene-park: #468672;
+  --scene-tree: #55a181; --scene-water: #428a9b;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --r: 12px;
+  color-scheme: dark;
+}
+html[data-embedded="true"] body { padding: 0; }
+html[data-embedded="true"] .grid { gap: 10px; }
+html[data-embedded="true"] .panel { background: linear-gradient(150deg, #15343ce8, #0d2630); }
+html[data-embedded="true"] .panel-head { padding: 16px 17px 10px; }
+html[data-embedded="true"] .panel-head h2 { font-size: 16px; letter-spacing: -.04em; }
+html[data-embedded="true"] .panel-body { padding-inline: 17px; }
+html[data-embedded="true"] .stage-head:hover,
+html[data-embedded="true"] .person-btn:hover { background: #225046; }
+html[data-embedded="true"] .city { border-color: #8dc7ad70; }
+html[data-embedded="true"] .stage[data-state="done"] .stage-dot,
+html[data-embedded="true"] .person-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+html[data-embedded="true"] .viewbar { min-height: 42px; padding: 3px 5px; }
+html[data-embedded="true"] .seg { background: #102b34; border-color: #a8f4d14d; }
+html[data-embedded="true"] .seg button[aria-pressed="true"],
+html[data-embedded="true"] .speed button[aria-pressed="true"],
+html[data-embedded="true"] .versions button[aria-pressed="true"],
+html[data-embedded="true"] .asm-actions button[aria-pressed="true"] {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+}
+html[data-embedded="true"] .play { background: var(--accent); color: var(--accent-ink); }
+html[data-embedded="true"] .track .fill { background: var(--accent); opacity: 1; }
+html[data-embedded="true"] .knob { border-color: var(--accent); }
+html[data-embedded="true"] .timeline { background: #102b34; border-color: #a8f4d14d; }
+html[data-embedded="true"] .city { box-shadow: inset 0 0 80px #07131c4d; }
+html[data-embedded="true"] .city canvas { filter: saturate(1.16) contrast(1.04); }
+html[data-embedded="true"] .hud-title,
+html[data-embedded="true"] .hud-stats { background: #0b2631e8; border-color: #a8f4d159; box-shadow: 0 8px 24px #06131a55; }
+html[data-embedded="true"] .hud-stat { border-color: #a8f4d133; }
+html[data-embedded="true"] .tabs button[aria-selected="true"] { color: var(--accent); }
+html[data-embedded="true"] .tabs { border-color: #a8f4d145; }
+html[data-embedded="true"] .rerun { background: #102b34; }
 </style>
 
 </head>
@@ -1343,6 +1403,7 @@ function renderAll() { renderStages(); renderAssumptions(); renderEvidence(); re
 function publishResult() {
   window.CF = { trace: trace(), versions: state.versions.map(v => v.trace) };
   window.dispatchEvent(new CustomEvent('counterfactual:result', { detail: trace() }));
+  if (window.parent !== window) window.parent.postMessage({ type: 'counterfactual:result', trace: trace() }, window.location.origin);
   $('#dash-status').textContent = 'run v' + trace().version + ' sent';
 }
 

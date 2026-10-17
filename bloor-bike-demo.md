@@ -1,5 +1,7 @@
 # Bloor bike-lane removal — second Toronto MVP demo
 
+> **Geography update, 17 Oct:** The final prepared cycle-track question is now scoped to **Bloor St W, Bathurst St to Spadina Ave**, in the *same* detailed world and existing `/experience/` website as the TTC fare question. This brief studies the broader Shaw–Avenue corridor and historical installation evidence; retain it as research context. Do not relabel a wider count, merchant survey or installation effect as an observed removal response in the 619 m mapped section. See [`world/README.md`](./world/README.md) and the current [PRD](./prd.md).
+
 **Status:** source-backed scenario design, 17 October 2026. This is a hypothetical intervention and a research fixture, not a measured removal outcome or a calibrated forecast. The [machine-readable fixture](./data/bloor_bike_demo.json) separates observed facts from model choices.
 
 The independently prepared [11-source Bloor evidence pack](./bike-lane-papers.md), [observed Toronto baseline](./data/bloor_bike_lane_baseline.json), [evidence index](./data/bike_lane_evidence.json), and [offline EvidencePacket](./data/bike_lane_evidence_packet.json) add detailed intersection, census, and contrasting business evidence. The `B01`-style IDs in that pack and this brief refer to different local indexes; reconcile them by source URL and claim before joining them into a production packet.

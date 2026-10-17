@@ -74,13 +74,15 @@ class CityScene {
   }
 
   resize() {
-    this.w = window.innerWidth;
-    this.h = window.innerHeight;
+    const bounds = this.canvas.dataset.fit === 'parent' ? this.canvas.parentElement.getBoundingClientRect() : null;
+    this.w = bounds ? Math.max(1, Math.round(bounds.width)) : window.innerWidth;
+    this.h = bounds ? Math.max(1, Math.round(bounds.height)) : window.innerHeight;
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
     this.canvas.width = Math.round(this.w * this.dpr);
     this.canvas.height = Math.round(this.h * this.dpr);
     this.canvas.style.width = `${this.w}px`;
     this.canvas.style.height = `${this.h}px`;
+    this.updateCamera();
   }
 
   setPhase(phase) { this.phase = phase; this.updateCamera(); }
