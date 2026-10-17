@@ -13,7 +13,7 @@ This is the **one public entry point** for the hackathon demo. The cinematic ent
 The default demo view now runs landing → prompt → 3D. The changes live in `two-world.css` and `two-world.js`, plus text edits in `index.html` and one routing function in `app.js`. Researcher view (`?detail=1`) still shows every section.
 - **Landing:** the drawn city under drawn clouds that part as you scroll. It uses no photos, so it needs no credit line. The brand is "Two Worlds", with a shorter hero and prompt.
 - **Prepared questions:** a typed question about the TTC fare or the Bloor bike lane opens the prepared run (`preparedIntent` in `app.js`). Other prompts use the compiler path. The prepared cases are not listed as frontend choices.
-- **Lab:** shows only the 3D view, made larger and with no 2D toggle, under a single timeline. Below it is one row of metric tiles, baseline → with policy, summed by `two-world.js` from the run's own `metrics.by_tick`. Everything else below (people strip, report, ledger, footer) is hidden in the demo view.
+- **Lab:** shows the 3D view, made larger and with no 2D toggle. Directly under it, `two-world.js` renders a decision brief from the same `experiment.v2` run: sample receipts, household and shop ledgers, adult versus Fair Pass, mode substitution, three trajectories, the lever-to-ledger chain, and the metrics the run cannot estimate. People strip, the older report, ledger and footer stay in Researcher view.
 - **Impact tour:** [`viewer3d-bridge.js`](./viewer3d-bridge.js) selects one changed decision from the current `experiment.v2` result and sends its actor, trip, tick, arm and camera beat to [`world/viewer3d/viewer.js`](../world/viewer3d/viewer.js). The bike tour follows Leila's logged protected-track versus side-street route at human scale; the fare tour compares the same scheduled Route 7 arrival in both arms, then follows Hawa's changed trip. The 3D stop queue is **illustrative** and scaled from the district-sample TTC trip ratio, not a measured stop queue or boarding count. The bus's curb position is snapped schematically to Bathurst because the GTFS station stop point lies inside a building in this simplified road mesh. Trees, parked cars, lane highlights and the shelter are scenic detail, not event-log actors or observed Toronto objects. Moving persona agents and all metric tiles still read the paired result. The impact camera loops its selected travel segment so the person does not vanish during the pitch.
 - **The 100-agent panel:** sits right after the prompt, unchanged. When the agents are online, the page scrolls to it first, so its rating animation plays before the 3D lab.
 
@@ -28,6 +28,7 @@ Scrolling the landing flies from the whole Earth to Toronto, then down to a tilt
   - reduced motion is on
   - there is no WebGL
   - MapLibre or the tiles fail to load within 12 s, which also covers being offline
+- **Clouds and the drawn city:** the clouds stay over the globe and part as it zooms. The isometric city canvas is hidden while the globe is up, and it returns only if the globe cannot load.
 - **Once a run starts:** the globe hides, and it comes back when you return to the landing.
 
 ## Run it

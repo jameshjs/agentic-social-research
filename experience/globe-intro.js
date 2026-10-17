@@ -18,8 +18,9 @@
   const params = new URLSearchParams(window.location.search);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!stage || params.get('globe') === 'off' || reduced || !webgl()) { if (stage) stage.remove(); return; }
+  document.body.classList.add('globe-pending');
 
-  let map = null, target = 0, current = 0, frame = 0, ready = false;
+  let map = null, target = 0, frame = 0, ready = false, live = null, lastStamp = 0;
   const caption = stage.querySelector('.globe-caption');
 
   function webgl() {
@@ -31,7 +32,7 @@
     console.warn('[globe] drawn landing kept:', reason || 'unavailable');
     if (map) { try { map.remove(); } catch (error) { /* already gone */ } }
     stage.remove();
-    document.body.classList.remove('globe-on');
+    document.body.classList.remove('globe-on', 'globe-pending');
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);
   }
@@ -72,22 +73,41 @@
     };
   }
 
-  function render() {
+  // Scroll sets a target. The camera eases toward it in zoom-space and never jumps more than
+  // a few zoom levels per second, so the globe keeps flying instead of stepping between tiles.
+  function render(now) {
     frame = 0;
-    current += (target - current) * 0.2;
-    if (Math.abs(target - current) < 0.0005) current = target;
-    if (map && ready) {
-      map.jumpTo(camera(current));
-      const t = clamp(current / ARRIVE, 0, 1);
-      stage.dataset.stage = t < 0.4 ? 'earth' : t < 0.92 ? 'city' : 'street';
-      if (caption) caption.textContent = t < 0.78 ? 'TORONTO, ONTARIO · 43.67° N 79.41° W' : 'BLOOR ST W · BATHURST → SPADINA · 619 m';
+    if (!map || !ready) return;
+    const dt = lastStamp ? Math.min(0.032, (now - lastStamp) / 1000) : 0.016;
+    lastStamp = now;
+    const goal = camera(target);
+    if (!live) live = { center: [goal.center[0], goal.center[1]], zoom: goal.zoom, pitch: goal.pitch, bearing: goal.bearing };
+    const k = 1 - Math.exp(-dt / 0.45);
+    const maxZoom = 2.6 * dt;
+    live.zoom += clamp((goal.zoom - live.zoom) * k, -maxZoom, maxZoom);
+    live.center[0] += (goal.center[0] - live.center[0]) * k;
+    live.center[1] += (goal.center[1] - live.center[1]) * k;
+    live.pitch += (goal.pitch - live.pitch) * k;
+    live.bearing += (goal.bearing - live.bearing) * k;
+    map.jumpTo({ center: live.center, zoom: live.zoom, pitch: live.pitch, bearing: live.bearing });
+    const [z0, z1] = zoomRange();
+    const u = clamp((live.zoom - z0) / Math.max(0.01, z1 - z0), 0, 1);
+    const stageName = u < 0.35 ? 'earth' : u < 0.82 ? 'city' : 'street';
+    if (stage.dataset.stage !== stageName) stage.dataset.stage = stageName;
+    if (caption) {
+      const label = u < 0.72 ? 'TORONTO, ONTARIO · 43.67° N 79.41° W' : 'BLOOR ST W · BATHURST → SPADINA · 619 m';
+      if (caption.textContent !== label) caption.textContent = label;
     }
-    if (current !== target) frame = requestAnimationFrame(render);
+    const settled = Math.abs(goal.zoom - live.zoom) < 0.02
+      && Math.abs(goal.pitch - live.pitch) < 0.25
+      && Math.abs(goal.center[0] - live.center[0]) < 0.04
+      && Math.abs(goal.center[1] - live.center[1]) < 0.04;
+    if (!settled) frame = requestAnimationFrame(render);
   }
 
   function onScroll() {
     target = scrollProgress();
-    if (!frame) frame = requestAnimationFrame(render);
+    if (!frame) { lastStamp = 0; frame = requestAnimationFrame(render); }
   }
 
   function onResize() { if (map) { map.resize(); onScroll(); } }
@@ -164,9 +184,11 @@
         style: STYLE,
         interactive: false,
         attributionControl: false,
-        fadeDuration: 0,
+        fadeDuration: 180,
+        antialias: false,
         maxPitch: 60,
-        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25),
+        refreshExpiredTiles: false,
         ...camera(scrollProgress()),
       });
     } catch (error) { clearTimeout(timer); return giveUp(error.message); }
@@ -179,10 +201,13 @@
     map.once('load', () => {
       clearTimeout(timer);
       ready = true;
-      current = target = scrollProgress();
-      render();
+      target = scrollProgress();
+      live = null;
+      lastStamp = 0;
+      frame = requestAnimationFrame(render);
       stage.classList.add('is-ready');
-      document.body.classList.add('globe-on');   // the globe replaces the drifting clouds
+      document.body.classList.add('globe-on');
+      document.body.classList.remove('globe-pending');
     });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
