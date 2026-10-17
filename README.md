@@ -12,6 +12,7 @@ A general, human-guided social simulation and policy decision product. Enter **a
 ## Confirmed direction
 
 - **Primary prize:** [Papiers Autoresearch](https://hack-the-valley-11.devpost.com/) — agents must use human research notes and judgment, ask for expertise, and show a human-guided revision.
+- **Papiers integration:** The research orchestrator will read a curated library of analogous papers and human annotations through [Papiers' documented read-only CLI](https://wiki.papiers.ai/docs/agents), propose cited assumptions, and ask a person before changing the experiment. The live path needs a token; a local cited fixture backs up the demo.
 - **Secondary prize:** [U of T School of Cities](https://hack-the-valley-11.devpost.com/) — one demo must address a concrete Toronto urban issue using Toronto data. [Sponsor data guide](https://docs.google.com/document/u/0/d/1xkrJwUTqOOMaujorvh12dRXWtdL35bOf27dxgRnNuFY/mobilebasic#heading=h.hvv5c04l3mzk).
 - **Additional category:** sustainable FinTech & Economic Inclusion, if the demo actually explains household/business economic effects.
 - **Generality proof:** two different live hypotheses pass through one system, plus an unprepared prompt exercises the speculative fallback.
