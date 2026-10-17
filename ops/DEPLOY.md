@@ -5,12 +5,14 @@
 | Piece | Where | Notes |
 | --- | --- | --- |
 | `api/server.js` (site + API, zero deps) | Vultr Cloud Compute `vc2-1c-2gb`, Toronto (`yto`), Ubuntu 24.04, `155.138.141.130`, instance `ed20bd3a-c885-4874-96ef-302e4b6fe946` | systemd `counterfactual.service`, user `app`, `127.0.0.1:8080`, code read-only in `/srv/counterfactual` (owned by root) |
-| HTTPS | Caddy (official apt repo) on the same VM | `https://155-138-141-130.sslip.io` → `127.0.0.1:8080`; Let's Encrypt cert via Caddy; `http://` and the bare IP redirect to HTTPS |
+| HTTPS | Caddy (official apt repo) on the same VM | `https://twotwosmyworld.select`, `https://www.twotwosmyworld.select`, and the original `https://155-138-141-130.sslip.io` → `127.0.0.1:8080`; automatic certificates via Caddy; bare IP redirects to the root custom domain |
 | Paired runs and sweeps | 2 worker threads inside the service | warmed with both prepared runs at start; 30 s hard timeout per run, LRU cache |
 | Hypothesis compiler | Vultr Serverless Inference `glm-5.3-flash` (`/v1/chat/completions`), called by the VM | Needs `VULTR_INFERENCE_API_KEY` in `/etc/counterfactual.env` (root:app 0640). Without it, `/api/compile` uses the offline rules and says so (`compiler.live:false`) |
 | Clef second opinion | Vultr Serverless Inference `clef` (`/v1/systemone`), run offline from a laptop | `experiment/run-world-clef.js`; results are static files served at `/api/clef/fare` and `/api/clef/bike` |
 
-Public URL: <https://155-138-141-130.sslip.io/experience/>. Health: `/api/health` (shows `git_sha`, `git_dirty`, and whether inference is configured).
+Public URL: <https://twotwosmyworld.select/experience/>. Health: `/api/health` (shows `git_sha`, `git_dirty`, and whether inference is configured). The original `sslip.io` link remains an alias.
+
+Porkbun DNS (verified 17 Oct 2026): root `A → 155.138.141.130` and `www CNAME → twotwosmyworld.select`, both TTL 600. The root, `www`, and legacy HTTPS URLs each returned 200 with a valid certificate; `http://155.138.141.130/experience/` returned 301 to the custom root. Porkbun still has its default wildcard parking CNAME, which does not override the explicit `www` record. [`deploy.sh`](./deploy.sh) keeps all three hostnames in Caddy on future manual redeploys. The CI script still probes the legacy HTTPS alias, so that alias must remain reachable.
 
 ## Automatic deployment from GitHub
 

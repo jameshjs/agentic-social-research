@@ -8,7 +8,7 @@
 #   ops/deploy.sh --key-only    only refresh /etc/counterfactual.env and restart the service
 #   ops/deploy.sh --plain-http  serve plain HTTP on :80 only (no TLS)
 #
-# Env overrides: DEPLOY_HOST (155.138.141.130), DEPLOY_DOMAIN (<ip-with-dashes>.sslip.io),
+# Env overrides: DEPLOY_HOST (155.138.141.130), DEPLOY_DOMAIN (primary public hostname),
 # DEPLOY_SSH_KEY (~/.ssh/vultr_htv_ed25519), VULTR_COMPILER_MODEL (glm-5.3-flash).
 # The inference key is fetched in memory by ops/vultr.js and streamed over SSH stdin;
 # it never appears in argv, logs, this repo or the synced tree.
@@ -16,7 +16,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 HOST="${DEPLOY_HOST:-155.138.141.130}"
-DOMAIN="${DEPLOY_DOMAIN:-${HOST//./-}.sslip.io}"
+LEGACY_DOMAIN="${HOST//./-}.sslip.io"
+DOMAIN="${DEPLOY_DOMAIN:-twotwosmyworld.select}"
 SSH_KEY="${DEPLOY_SSH_KEY:-$HOME/.ssh/vultr_htv_ed25519}"
 COMPILER_MODEL="${VULTR_COMPILER_MODEL:-glm-5.3-flash}"
 REMOTE=/srv/counterfactual
@@ -38,6 +39,16 @@ done
 [[ "$DOMAIN" =~ ^[A-Za-z0-9.-]+$ ]] || { echo "DEPLOY_DOMAIN has unexpected characters" >&2; exit 2; }
 [[ "$COMPILER_MODEL" =~ ^[A-Za-z0-9._:-]+$ ]] || { echo "VULTR_COMPILER_MODEL has unexpected characters" >&2; exit 2; }
 [ -f "$SSH_KEY" ] || { echo "SSH key $SSH_KEY not found" >&2; exit 2; }
+
+# Keep the original sslip.io link working when a custom domain becomes primary.
+# A custom root also serves www; DNS must point both names at this VM.
+# The primary name is still the URL verified at the end of this deploy.
+SITE_NAMES="$DOMAIN"
+PLAIN_SITE_NAMES="http://$DOMAIN, http://$HOST"
+if [ "$DOMAIN" != "$LEGACY_DOMAIN" ]; then
+  SITE_NAMES="$SITE_NAMES, www.$DOMAIN, $LEGACY_DOMAIN"
+  PLAIN_SITE_NAMES="$PLAIN_SITE_NAMES, http://www.$DOMAIN, http://$LEGACY_DOMAIN"
+fi
 
 SSH_OPTS=(-i "$SSH_KEY" -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15)
 ssh_root() { ssh "${SSH_OPTS[@]}" "root@$HOST" "$@"; }
@@ -179,7 +190,7 @@ write_caddy() {  # $1 = tls | plain
   if [ "$1" = tls ]; then
     # @@AGENTS@@ becomes the persona-agent tunnel routes (ops/agents-tunnel.md) when the VM has
     # /etc/caddy/agents.env; otherwise it is dropped. Secrets stay on the VM.
-    conf="$DOMAIN {
+    conf="$SITE_NAMES {
 	header {
 		Strict-Transport-Security \"max-age=86400\"
 		-Server
@@ -195,7 +206,7 @@ http://$HOST {
 }
 "
   else
-    conf="http://$DOMAIN, http://$HOST {
+    conf="$PLAIN_SITE_NAMES {
 	header -Server
 	reverse_proxy 127.0.0.1:8080
 }
