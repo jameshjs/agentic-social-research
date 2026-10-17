@@ -2,7 +2,9 @@
 
 100 persona agents, shared by both policies, answer polls; 40 of them make the trip decisions in Meet's paired experiment
 ([`experiment/runner.js`](../experiment/runner.js), unchanged). Each agent is a Twin-2K-500 respondent's real given
-answers, packaged exactly as tuned (round 9), placed in a synthetic Toronto role. A local Node server streams everything
+answers, packaged exactly as tuned (round 9), placed in a synthetic Toronto role. On the canonical mapped engine
+([`experiment/world-runner.js`](../experiment/world-runner.js), unchanged), the 19 world-fixture people decide every
+trip as persona agents (`runtime/mapped.js`, `POST /mapped/fare|bike`). A local Node server streams everything
 to a console page, and a dependency-free client lets other pages use it.
 
 ## Commands
@@ -12,7 +14,7 @@ From the repository root:
 ```bash
 npm --prefix persona-swarm/runtime start            # the site and the agents: http://127.0.0.1:4174/experience/ (and /console)
 npm --prefix persona-swarm/runtime start -- --lan   # share on the LAN (needs CONSOLE_ACCESS_KEY)
-npm --prefix persona-swarm/runtime test             # 38 offline tests, no model calls
+npm --prefix persona-swarm/runtime test             # 60 offline tests, no model calls
 python3 persona-swarm/runtime/build_agents.py       # rebuild data/city/agents.json (needs data/twin; not needed at runtime)
 node persona-swarm/runtime/run.js both --backend local   # CLI world runs → data/city/run-<scenario>.json (git-ignored)
 node persona-swarm/runtime/evaluate.js both         # evaluate those CLI runs
@@ -36,12 +38,13 @@ Server flags:
 | `runtime/city-addendum.md` | The city addendum, the same for decisions and polls |
 | `runtime/orchestrator.js` | The Opus 5.5 router and summariser, with the number check |
 | `runtime/run.js` | World runs: concurrent passes over the unchanged runner, per-week settling |
+| `runtime/mapped.js` | Mapped runs: each of the 19 people in `experiment/world-fixtures.js` speaks through one Twin donor bundle (same fare category; income band from the synthetic daily budget; seeded, no donor twice) with the donor's situation block replaced by the fixture person's, and the world runner's requests rendered as the prompt. A prompt shows only the levers its person faces (their own fare with a Line 2 option; the cycle track with a bike or car option). Answers are keyed by a hash of the agent model, effort and exact prompt, so an unchanged request keeps its baseline answer and a shared answer map gives fare and bike one baseline |
 | `runtime/evaluate.js` | Rates, consistency, fare elasticity, Bloor shares, variety, latency, cost |
 | `runtime/server.js`, `runtime/config.js` | The HTTP/SSE server, backends, startup checks, access key, CORS, saves, replay, remote forwarding |
 | `runtime/console.html` | The console page |
 | `runtime/agents-client.js` | The drop-in client for other pages |
 | `data/city/live/` | Auto-saves of every live poll and run, and `access.log` (git-ignored) |
-| `data/city/live/samples/` | 3 committed saves for replay on a fresh checkout |
+| `data/city/live/samples/` | 5 committed saves for replay on a fresh checkout, including one mapped run per policy |
 
 ## Contract
 
@@ -96,6 +99,7 @@ user message is one of:
 | `GET /health`, `GET /agents` | Backend, models, roster summaries (no sheets). `ok` is true only while live agents can answer (false in replay mode or after the limit) |
 | `POST /ask` `{question, options?, filter?, ids?, concurrency?, orchestrate?, summarise?}` | With `orchestrate`, Opus turns typed text into one neutral poll. Events: `plan`, `start`, `answer` (`{id, agent: {id, name, role, mode, neighbourhood, fare_category, has_car, has_bike, age_band, sex, income_band, decider, shop}, answer}`), `limit`, `done`, then `summary` |
 | `POST /run/fare`, `/run/bloor` (alias `/run/bike`) | Events: `start`, `decision` (per call, with its arm), `tick` (per settled week, both arms' metrics), `done` (event-derived totals, checks, and the full experiment.v1 `result`) |
+| `POST /mapped/fare`, `/mapped/bike` | The 19 mapped people as persona agents (provider `persona_agent`; a missing or illegal answer leaves the fixture rule to decide, with a warning). Events: `start`, `decision` (per call), `done` (totals, `meta` with the donor map, calls and `fallback_warnings`, and the experiment.v2 `result`). Saved as `<time>-mapped-<policy>.json` with every known `answers` entry. All mapped runs share one answer map, seeded from the newest mapped save, so a prompt already answered is reused (`meta.reused_answers`), not sampled again; a rerun with unchanged prompts replays. `/replay/latest` returns mapped saves only for `kind=mapped`. Blocked under `--demo-guard`. |
 | `POST /chat` `{message}` | Opus picks a poll (it writes the question and options, and picks agents by role or attribute), a run, or a reply. It then streams as above, plus `plan` and `summary`. |
 | `GET /replay/latest?kind=&policy=`, `GET /saves/<file>[?part=result]` | The newest save, labelled "replay of a live run at HH:MM", and any save or its RunResult |
 | `GET /usage` | Requests per key fingerprint |

@@ -3,7 +3,8 @@
  *   node persona-swarm/runtime/server.js [--lan | --host <address>] [--port 4174] [--backend local|token|api|remote|replay]
  *        [--concurrency 32] [--env-file path] [--require-key] [--demo-guard]        (or: npm --prefix persona-swarm/runtime start)
  * Serves /console and streams (SSE) POST /ask (a poll of up to 100 agents), POST /run/:policy (a live world run of the 40
- * deciders, fare or bloor) and POST /chat (the orchestrator picks one of those and summarises). GET /replay/latest serves
+ * deciders, fare or bloor), POST /mapped/:policy (the 19 mapped people as persona agents on the canonical Bathurst–Spadina
+ * engine, fare or bike) and POST /chat (the orchestrator picks a poll or a /run and summarises). GET /replay/latest serves
  * the newest save. Every live poll and run is saved to data/city/live/. With no usable backend, or at the plan's limit,
  * the console offers the labelled replay. Beyond loopback every API call needs CONSOLE_ACCESS_KEY as a bearer token. */
 'use strict';
@@ -15,6 +16,7 @@ const cd = require('./claude-decision');
 const orch = require('./orchestrator');
 const cfg = require('./config');
 const { runWorld } = require('./run');
+const { runMapped } = require('./mapped');
 const { evaluateRun } = require('./evaluate');
 
 const REPO = fs.realpathSync(path.resolve(__dirname, '..', '..'));
@@ -41,6 +43,8 @@ function staticFile(pathname, loopback = true) {
 const SCENARIO = { fare: 'fare', bloor: 'bike' };
 const POLICY_TEXT = { fare: 'Adult TTC fare +$0.50, Fair Pass unchanged', bloor: 'Bloor St W cycle track loses its protection' };
 const RUN_LABEL = 'live world run: synthetic agents in a schematic world, not a forecast';
+const MAPPED_TEXT = { fare: 'Adult TTC fare +$0.50, Fair Pass unchanged', bike: 'Protected Bloor cycle track removed, Bathurst to Spadina' };
+const MAPPED_LABEL = 'mapped run: 19 synthetic people as persona agents on the Bathurst–Spadina map, not a forecast';
 const clock = (iso) => new Date(iso).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false });
 const pct = (n, d) => (d ? `${Math.round((100 * n) / d)}%` : 'n/a');
 
@@ -138,7 +142,8 @@ function createServer(config, deps = {}) {
   function latestSave(kind, policy) {
     const list = (dir) => (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort().reverse().map((f) => path.join(dir, f)) : []);
     const match = (f) => (!kind || f.includes(`-${kind}`)) && (!policy || f.endsWith(`-${policy}.json`));
-    const files = [...list(liveDir), ...list(path.join(liveDir, 'samples'))];
+    // Mapped saves only when asked for: the console renders polls and /run saves.
+    const files = [...list(liveDir), ...list(path.join(liveDir, 'samples'))].filter((f) => kind === 'mapped' || !f.includes('-mapped-'));
     const file = files.find(match) || files.find((f) => !kind || f.includes(`-${kind}`)) || files[0];
     if (!file) return null;
     const record = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -187,6 +192,25 @@ function createServer(config, deps = {}) {
       result };
     record.file = save(record);
     send('done', { totals: record.totals, checks: record.checks, sample_changes: record.sample_changes, meta, file: record.file, result });
+    return record;
+  }
+
+  /* The 19 mapped people decide every trip on the canonical engine; the save carries the experiment.v2 RunResult and every
+   * known answer. All mapped runs share one answer map, seeded from the newest mapped save, so fare and bike share one
+   * baseline and a prompt already answered is never sampled again. */
+  let mappedAnswers = null;
+  async function mappedRun(send, policy, { concurrency }) {
+    send('start', { kind: 'mapped', policy, policy_text: MAPPED_TEXT[policy], label: MAPPED_LABEL, concurrency, backend: config.backend });
+    if (!mappedAnswers) {
+      const prior = latestSave('mapped');                     // with no mapped save, latestSave falls back to another kind
+      mappedAnswers = new Map(prior?.record.kind === 'mapped' ? prior.record.answers || [] : []);
+    }
+    const { result, meta, calls, answers } = await runMapped(policy, { call, backend: config.backend, concurrency, agents, answers: mappedAnswers, onCall: (row) => send('decision', row) });
+    if (meta.limited && !state.limited) { state.limited = 'agent backend limit reached'; send('limit', { message: state.limited, replay: Boolean(latestSave('mapped', policy)) }); }
+    const record = { kind: 'mapped', policy, policy_text: MAPPED_TEXT[policy], saved_at: new Date().toISOString(), backend: config.backend, label: MAPPED_LABEL,
+      meta: { ...meta, call_log: calls }, totals: { baseline: result.runs.baseline.metrics.totals, intervention: result.runs.intervention.metrics.totals }, answers, result };
+    record.file = save(record);
+    send('done', { totals: record.totals, meta, file: record.file, result });
     return record;
   }
 
@@ -282,7 +306,7 @@ function createServer(config, deps = {}) {
 
   async function handler(req, res) {
     const url = new URL(req.url, 'http://console');
-    // The public demo serves health, the roster and replays, and polls through admit(); never /run*, /usage or the console.
+    // The public demo serves health, the roster and replays, and polls through admit(); never /run*, /mapped*, /usage or the console.
     if (guard && !(req.method === 'GET' && /^\/(health|agents|replay\/latest|saves\/.*)$/.test(url.pathname)) && !(req.method === 'POST' && ['/ask', '/chat'].includes(url.pathname))) {
       json(res, 403, { error: 'not available in the public demo' }); return;
     }
@@ -348,9 +372,10 @@ function createServer(config, deps = {}) {
       json(res, 200, url.searchParams.get('part') === 'result' ? record.result ?? null : record);
       return;
     }
-    const routes = { '/ask': 'poll', '/chat': 'chat', '/run/fare': 'run', '/run/bloor': 'run', '/run/bike': 'run' };
+    const routes = { '/ask': 'poll', '/chat': 'chat', '/run/fare': 'run', '/run/bloor': 'run', '/run/bike': 'run', '/mapped/fare': 'mapped', '/mapped/bike': 'mapped' };
     if (req.method !== 'POST' || !routes[url.pathname]) { json(res, 404, { error: 'not found' }); return; }
-    const policy = url.pathname.startsWith('/run/') ? url.pathname.slice(5).replace(/^bike$/, 'bloor') : null;   // bike: the fixture's name
+    const policy = url.pathname.startsWith('/run/') ? url.pathname.slice(5).replace(/^bike$/, 'bloor')   // bike: the fixture's name
+      : url.pathname.startsWith('/mapped/') ? url.pathname.slice(8) : null;
     let admitted = false;
     if (guard && url.pathname === '/chat' && !(Array.isArray(params.modes) && params.modes.length && params.modes.every((m) => m === 'poll'))) {
       json(res, 403, { error: "the public demo runs polls only: modes must be ['poll']" }); return;
@@ -390,7 +415,8 @@ function createServer(config, deps = {}) {
             if (params.summarise) await addSummary(send, typed, record, pollData(record));
           }
         }
-      } else if (policy) await liveRun(send, policy, { concurrency });
+      } else if (routes[url.pathname] === 'mapped') await mappedRun(send, policy, { concurrency });
+      else if (policy) await liveRun(send, policy, { concurrency });
       else if (!params.message) send('error', { message: 'a message is required' });
       else {
         // modes limits what the orchestrator may choose, e.g. ['poll', 'reply'] so a page never starts a world run.
@@ -425,7 +451,7 @@ async function main() {
       + `${config.requireKey ? '  (access key required)' : ''}\n`);
     const g = server.guard;
     if (g) process.stdout.write(`demo guard on: ${g.concurrent} at a time, ${g.perIp} per IP per ${g.windowMin} min, ${g.maxChars}-char ideas; `
-      + `${Math.max(0, g.maxTotal - g.total)} of ${g.maxTotal} polls left (${g.file.startsWith(REPO) ? path.relative(REPO, g.file) : g.file}); /run*, /usage and the console are blocked\n`);
+      + `${Math.max(0, g.maxTotal - g.total)} of ${g.maxTotal} polls left (${g.file.startsWith(REPO) ? path.relative(REPO, g.file) : g.file}); /run*, /mapped*, /usage and the console are blocked\n`);
   });
 }
 

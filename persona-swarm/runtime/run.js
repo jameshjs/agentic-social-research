@@ -24,8 +24,9 @@ const decisionsByArm = (result) => new Map(['baseline', 'intervention'].flatMap(
  * choice, and fetches all at once the requests whose history is settled (nothing unanswered earlier in that person's
  * week or in an earlier week). The last pass is an ordinary run in which every request is a cache hit, so the result
  * equals a sequential run. A fallback's real choice (the fixture rule's) is read from the previous pass. After each
- * pass, onSettled(result, week) reports the weeks whose results are final. */
-async function runCity(spec, { personas, seed = 42, ask, cache = new Map(), onPass = () => {}, onSettled = () => {} }) {
+ * pass, onSettled(result, week) reports the weeks whose results are final. run and createMemory swap in another runner
+ * (runtime/mapped.js: the mapped world runner and its memory). */
+async function runCity(spec, { personas, seed = 42, ask, cache = new Map(), onPass = () => {}, onSettled = () => {}, run = runExperiment, createMemory = cd.createRunMemory }) {
   const personIds = personas.map((p) => p.id);
   let previous = null;
   for (let pass = 1; ; pass++) {
@@ -33,8 +34,8 @@ async function runCity(spec, { personas, seed = 42, ask, cache = new Map(), onPa
     const personMiss = new Set();
     let missTick = Infinity;
     const prior = previous;
-    const memory = cd.createRunMemory({ personIds, resolve: prior && ((a, week, person, trip) => prior.get(`${a}|${week}|${person}|${trip}`)) });
-    const result = await runExperiment(spec, { seed, personas, decide: async (request) => {
+    const memory = createMemory({ personIds, resolve: prior && ((a, week, person, trip) => prior.get(`${a}|${week}|${person}|${trip}`)) });
+    const result = await run(spec, { seed, personas, decide: async (request) => {
       const lastChoice = memory.lastChoice(request);
       const key = `${JSON.stringify(request)}\n${lastChoice}`;
       let answer = null;                                      // a placeholder on a miss; this pass's result is discarded

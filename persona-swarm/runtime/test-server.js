@@ -290,6 +290,36 @@ test('a live /run streams weeks and saves a RunResult the client can fetch', asy
   } finally { await close(server); }
 });
 
+test('a live /mapped run: the 19 mapped people decide as persona agents, saved as experiment.v2; replayed only when asked for', async () => {
+  const dir = tmp();
+  let n = 0;
+  const call = async ({ schema }) => { const e = schema.properties.action.enum; n++; return { output: { action: e[n % e.length], reason: `r${n}` }, meta: {} }; };
+  const server = createServer({ backend: 'local', host: '127.0.0.1', concurrency: 32 }, { liveDir: dir, env: () => ({}), call });
+  const base = await listen(server);
+  try {
+    const evs = await events(await fetch(`${base}/mapped/bike`, { method: 'POST', body: '{}' }));
+    const done = evs.at(-1);
+    assert.equal(done.event, 'done');
+    assert.ok(evs.some((e) => e.event === 'decision'));
+    assert.equal(done.data.result.schema_version, 'experiment.v2');
+    assert.equal(done.data.result.scenario_id, 'bike');
+    assert.equal(done.data.meta.fallback_warnings, 0);
+    assert.equal(done.data.meta.agent_decisions, done.data.meta.decisions);
+    assert.match(done.data.file, /-mapped-bike\.json$/);
+    assert.equal((await (await fetch(`${base}/replay/latest?kind=mapped&policy=bike`)).json()).record.kind, 'mapped');
+    assert.equal((await fetch(`${base}/replay/latest`)).status, 404, 'the console\'s replay never picks a mapped save');
+    assert.equal((await fetch(`${base}/mapped/bloor`, { method: 'POST', body: '{}' })).status, 404);
+    // After a restart, fare reuses the saved bike run's answers: one shared baseline.
+    const again = createServer({ backend: 'local', host: '127.0.0.1', concurrency: 32 }, { liveDir: dir, env: () => ({}), call });
+    const base2 = await listen(again);
+    try {
+      const fare = (await events(await fetch(`${base2}/mapped/fare`, { method: 'POST', body: '{}' }))).at(-1).data;
+      assert.deepEqual(fare.result.runs.baseline.decisions, done.data.result.runs.baseline.decisions);
+      assert.ok(fare.meta.reused_answers > 0);
+    } finally { await close(again); }
+  } finally { await close(server); }
+});
+
 test('--require-key enforces the key on loopback; config reads --env-file', () => {
   const dir = tmp();
   const file = path.join(dir, 'teammate.env');
@@ -566,7 +596,7 @@ test('demo guard: health, roster and replays are public; /run*, /usage, the cons
   try {
     for (const ok of ['/health', '/agents', '/replay/latest', '/saves/2026-10-17T15-04-00-000Z-poll.json']) assert.equal((await get(ok)).status, 200, ok);
     for (const bad of ['/usage', '/console', '/agents-client.js', '/experience/', '/persona-swarm/runtime/agents-client.js', '/']) assert.equal((await get(bad)).status, 403, bad);
-    for (const route of ['/run/fare', '/run/bloor', '/run/bike']) assert.equal((await post(base, route, {})).status, 403, route);
+    for (const route of ['/run/fare', '/run/bloor', '/run/bike', '/mapped/fare', '/mapped/bike']) assert.equal((await post(base, route, {})).status, 403, route);
     for (const modes of [undefined, ['poll', 'run'], ['reply'], []]) assert.equal((await post(base, '/chat', { message: 'hi', modes })).status, 403, JSON.stringify(modes));
     assert.equal(server.guard.total, 0, 'nothing above counts');
     assert.equal((await (await get('/health')).json()).ok, true);

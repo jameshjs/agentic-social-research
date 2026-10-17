@@ -12,6 +12,9 @@ const cd = require('./claude-decision');
 const orch = require('./orchestrator');
 const { runCity, runWorld, specFor, sameDecisions } = require('./run');
 const { evaluateRun } = require('./evaluate');
+const mapped = require('./mapped');
+const { runWorldExperiment } = require('../../experiment/world-runner');
+const PEOPLE = require('../../experiment/world-fixtures').population.personas;
 
 const SCENARIOS = ['fare', 'bike'];
 const A = cd.loadAgents();
@@ -315,4 +318,114 @@ test('the evaluation reports rates, consistency, elasticity, Bloor responses and
   const bike = await evaluateRun((await runCity(specFor('bike'), { personas: A.deciders, ask: provider('bike').ask })).result);
   const b = bike.bloor_cyclists.agents;
   assert.ok(b.cyclist_trips > 0 && Math.abs(b.stay + b.reroute + b.switch_mode + b.defer - 1) < 0.01);
+});
+
+/* ---------- the mapped world: the 19 fixture people as persona agents ---------- */
+
+test('mapped: each of the 19 fixture people gets a distinct, seeded Twin donor of the same fare category and income band', () => {
+  const donors = mapped.matchDonors(PEOPLE, A.bundles);
+  assert.equal(donors.size, 19);
+  assert.equal(new Set([...donors.values()].map((b) => b.id)).size, 19);
+  for (const p of PEOPLE) {
+    assert.equal(donors.get(p.id).fare_category, p.fare_category, p.id);
+    assert.equal(donors.get(p.id).match_keys.income_band, mapped.bandOf(p), p.id);
+  }
+  assert.deepEqual([...mapped.matchDonors(PEOPLE, A.bundles)].map(([id, b]) => [id, b.id]), [...donors].map(([id, b]) => [id, b.id]));
+  const nadia = PEOPLE.find((p) => p.id === 'nadia'), donor = donors.get('nadia');
+  const sheet = mapped.mappedSheet(nadia, donor, { osm_n310146977: 'Bulk Barn' });
+  const head = '\nYour situation in Toronto';
+  assert.equal(sheet.slice(0, sheet.lastIndexOf(head)), donor.persona_sheet.slice(0, donor.persona_sheet.lastIndexOf(head)), 'the Twin answers stay as tuned');
+  const situation = sheet.slice(sheet.lastIndexOf(head));
+  assert.equal(sheet.split(head).length, 2);
+  // The fare line may repeat: donors are matched on fare category.
+  assert.ok(donor.situation.filter((line) => !line.includes('TTC fare')).every((line) => !situation.includes(line)), "the donor bundle's own situation is replaced");
+  for (const text of ['You live on Lippincott St', 'Fair Pass discount', 'shopping at Bulk Barn about 18:40']) assert.ok(situation.includes(text), text);
+  assert.doesNotMatch(situation, /sensitivity|preference/);
+});
+
+test('mapped: persona agents choose every trip of both policies from legal options; same seed, same run; replay is exact', async () => {
+  for (const scenario of mapped.SCENARIOS) {
+    const rows = [], prompts = [];
+    const call = async (prompt) => { prompts.push(prompt); return fakeCall(prompt); };
+    const { result, meta } = await mapped.runMapped(scenario, { call, agents: A, onCall: (r) => rows.push(r) });
+    assert.equal(result.schema_version, 'experiment.v2');
+    assert.equal(meta.people, 19);
+    assert.equal(meta.fallback_warnings, 0);
+    assert.equal(meta.agent_decisions, meta.decisions);
+    const choices = ['baseline', 'intervention'].flatMap((arm) => result.runs[arm].events.filter((e) => e.action === 'choose_trip'));
+    assert.equal(new Set(choices.map((e) => e.actor)).size, 19);
+    for (const e of choices) {
+      assert.equal(e.provider, 'persona_agent', e.id);
+      assert.ok(e.options.some((o) => o.action === e.chosen), `${e.id} chose a legal option`);
+      assert.deepEqual(e.assumption_ids, ['external_agent_choice']);
+    }
+    const p = prompts.find((x) => x.user.includes(scenario === 'fare' ? 'Adult TTC fare $3.80, up $0.50 (+15%) from $3.30' : 'removed: cyclists share the road with cars (it was protected)'));
+    assert.ok(p, 'the policy change is stated');
+    assert.deepEqual(p.system.slice(0, 2), [cd.INSTRUCTIONS, cd.ADDENDUM]);
+    assert.ok(p.schema.properties.action.enum.includes('defer'));
+    // Each call's previous choice is the person's own decision for that trip the day before, in its arm.
+    const made = new Map(['baseline', 'intervention'].flatMap((arm) => result.runs[arm].decisions.map((d) => [`${arm}|${d.tick}|${d.actor}|${d.trip_id}`, d.action])));
+    for (const r of rows.filter((x) => x.tick > 1)) assert.equal(r.last_choice, mapped.LABEL[made.get(`${r.arm === 'policy' ? 'intervention' : 'baseline'}|${r.tick - 1}|${r.person}|${r.trip}`)], `${r.person} ${r.tick}`);
+    assert.deepEqual((await mapped.runMapped(scenario, { call: fakeCall, agents: A })).result, result);
+    assert.deepEqual(await mapped.replayMapped(result), result);
+  }
+});
+
+test('mapped: fare and bike share one baseline; an unchanged request reuses its answer, a changed one is asked again', async () => {
+  // Answers depend on a counter, not on the prompt, so equal answers below come from reuse, not from a deterministic stub.
+  let n = 0;
+  const prompts = [];
+  const call = async (prompt) => { prompts.push(prompt); const e = prompt.schema.properties.action.enum; n++; return { output: { action: e[n % e.length], reason: `answer ${n}` }, meta: {} }; };
+  const answers = new Map(), rows = { fare: [], bike: [] }, runs = {};
+  for (const scenario of mapped.SCENARIOS) runs[scenario] = await mapped.runMapped(scenario, { call, agents: A, answers, onCall: (r) => rows[scenario].push(r) });
+  const { fare, bike } = runs;
+  assert.deepEqual(bike.result.runs.baseline.decisions, fare.result.runs.baseline.decisions);
+  assert.deepEqual(bike.result.runs.baseline.metrics, fare.result.runs.baseline.metrics);
+  assert.ok(rows.bike.length > 0 && rows.bike.every((r) => r.arm === 'policy'), 'bike asks only what its policy changed');
+  assert.equal(new Set(prompts.map((p) => cd.sha256(JSON.stringify(p)))).size, prompts.length, 'no prompt is asked twice');
+  // Each person sees only the levers they face: their own fare with a Line 2 option, the cycle track with a bike or car option.
+  for (const { system, user } of prompts) {
+    const fair = system[2].includes('You pay the Fair Pass discount TTC fare.');
+    assert.equal(user.includes(fair ? 'Fair Pass fare $' : 'Adult TTC fare $'), user.includes('\n- transit:'));
+    assert.ok(!user.includes(fair ? 'Adult TTC fare' : 'Fair Pass fare'));
+    assert.equal(user.includes('Bloor St W cycle track between'), /\n- (bike_\w+|drive):/.test(user));
+  }
+  const fairPass = new Set(PEOPLE.filter((p) => p.fare_category === 'fair_pass').map((p) => p.id));
+  const faces = { fare: (e) => !fairPass.has(e.actor) && e.options.some((o) => o.action === 'transit'), bike: (e) => e.options.some((o) => /^(bike_|drive$)/.test(o.action)) };
+  for (const scenario of mapped.SCENARIOS) {
+    const { result, meta } = runs[scenario];
+    const choices = (arm) => result.runs[arm].events.filter((e) => e.action === 'choose_trip' && e.tick >= result.scenario.policy_start);
+    const key = (e) => `${e.tick}|${e.actor}|${e.trip_id}`;
+    const base = new Map(choices('baseline').map((e) => [key(e), e]));
+    const asked = new Set(rows[scenario].filter((r) => r.arm === 'policy').map((r) => `${r.tick}|${r.person}|${r.trip}`));
+    const facing = choices('intervention').filter(faces[scenario]);
+    assert.ok(facing.length > 0 && meta.reused_answers > 0, scenario);
+    for (const e of facing) assert.ok(asked.has(key(e)), `${scenario}: ${e.actor} day ${e.tick} faces the change and is asked`);
+    for (const e of choices('intervention').filter((x) => !asked.has(key(x)))) {
+      assert.deepEqual([e.chosen, e.reason], [base.get(key(e)).chosen, base.get(key(e)).reason], `${scenario}: ${key(e)} keeps the baseline answer`);
+    }
+  }
+});
+
+test('mapped: an illegal or missing answer leaves the fixture rule to decide, with a warning', async () => {
+  const plain = await runWorldExperiment(mapped.mappedSpec('fare'), { world: mapped.WORLD });
+  for (const call of [async () => ({ output: { action: 'teleport', reason: 'x' }, meta: {} }), async () => ({ output: null, meta: {} })]) {
+    const { result, meta } = await mapped.runMapped('fare', { call, agents: A });
+    assert.equal(meta.agent_decisions, 0);
+    assert.equal(meta.fallback_warnings, meta.decisions);
+    for (const arm of ['baseline', 'intervention']) {
+      assert.deepEqual(result.runs[arm].events, plain.runs[arm].events);
+      assert.deepEqual(result.runs[arm].decisions, plain.runs[arm].decisions);
+    }
+  }
+});
+
+test('mapped: committed mapped samples replay exactly from their decisions, with no model calls', async () => {
+  const dir = path.join(__dirname, '..', 'data', 'city', 'live', 'samples');
+  for (const f of fs.readdirSync(dir).filter((x) => x.includes('-mapped-'))) {
+    const { result, meta } = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+    assert.equal(meta.fallback_warnings, 0, f);
+    assert.equal(meta.agent_decisions, meta.decisions, f);
+    assert.ok(sameDecisions(result, await mapped.replayMapped(result)), f);
+  }
 });

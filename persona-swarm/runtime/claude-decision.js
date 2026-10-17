@@ -115,7 +115,7 @@ function schemaFor(request) {
 
 function buildPrompt(request, sheet, opts = {}) {
   if (!sheet) throw new Error(`No persona sheet for ${request.person.id}`);
-  return { system: [INSTRUCTIONS, ADDENDUM, sheet], user: situation(request, opts), schema: schemaFor(request) };
+  return { system: [INSTRUCTIONS, ADDENDUM, sheet], user: (opts.render || situation)(request, opts), schema: schemaFor(request) };
 }
 
 const tidy = (reason) => String(reason || '').replace(/\s+/g, ' ').trim().slice(0, 280) || 'No reason given.';
@@ -308,8 +308,9 @@ function makeBackend(mode, { token, apiKey, timeoutMs, spawnImpl, client } = {})
 /* Returns decide(request) for runExperiment(spec, { personas, decide }), with its own per-arm memory (decide.reset()
  * before another run). decide.ask(request, lastChoice) is one world call, for run.js's passes; decide.poll(id, question,
  * options) is one ask() call; decide.state() says whether the backend is down or at its limit. */
+// render(request, opts) replaces situation() for another runner's requests (runtime/mapped.js).
 function createClaudeDecisionProvider({ sheets, baseline, places, personIds, backend = 'local', token, apiKey, concurrency = 16, retries = 1,
-  timeoutMs = 30000, onCall = () => {}, warn = (m) => process.stderr.write(`${m}\n`), call } = {}) {
+  timeoutMs = 30000, onCall = () => {}, warn = (m) => process.stderr.write(`${m}\n`), call, render } = {}) {
   let down = null;
   let limited = null;
   if (!call) { try { call = makeBackend(backend, { token, apiKey, timeoutMs }); } catch (e) { down = e.message; } }
@@ -349,7 +350,7 @@ function createClaudeDecisionProvider({ sheets, baseline, places, personIds, bac
 
   function ask(request, lastChoice) {
     let prompt;
-    try { prompt = buildPrompt(request, sheets.get(request.person.id), { baseline, places, lastChoice }); }
+    try { prompt = buildPrompt(request, sheets.get(request.person.id), { baseline, places, lastChoice, render }); }
     catch (e) { onCall({ request, lastChoice, ok: false, error: e.message }); return Promise.resolve(null); }
     return attempt(prompt, (output) => readAnswer(output, request), { request, lastChoice });
   }
@@ -378,5 +379,5 @@ function createClaudeDecisionProvider({ sheets, baseline, places, personIds, bac
 }
 
 module.exports = { AGENT, ORCHESTRATOR, ROUTER, PROVIDER, ROUND, INSTRUCTIONS, ADDENDUM, PRICE, LABEL, STANCES, AFFECTED, POLL_LABEL, CLI_FLAGS, AGENTS_FILE, sha256,
-  loadAgents, placesFrom, situation, schemaFor, buildPrompt, readAnswer, normalizeOptions, askPrompt, readAsk, consistency, FIVE_LABELS, createRunMemory, readDotEnv, cliEnv, cliArgs,
+  loadAgents, placesFrom, change, situation, schemaFor, buildPrompt, readAnswer, normalizeOptions, askPrompt, readAsk, consistency, FIVE_LABELS, createRunMemory, readDotEnv, cliEnv, cliArgs,
   cliBackend, apiBackend, makeBackend, createClaudeDecisionProvider };
