@@ -6,7 +6,8 @@ A general, human-guided social simulation and policy decision product. Enter **a
 
 1. [Product requirements](./prd.md) — final product scope, user flow, P0 acceptance criteria, architecture, data contracts, visual requirements, named team workstreams, demo, and implementation gaps.
 2. [Research and source dossier](./research.md) — sponsor briefs, event rules/deadline conflicts, hacker package, Toronto dataset catalogue, and modelling evidence. Teammates and coding agents should read this before researching from scratch.
-3. [Coding-agent instructions](./AGENTS.md) — concise shared implementation contract so agents do not revert to a single fare scenario.
+3. [Locked Toronto MVP demo and ranked data](./demo-data.md) — UTSC-area fare scenario, verified observed facts, multi-agent causal chain, dataset gaps, and first-hour owner handoffs. [Machine-readable source fixture](./data/toronto_demo_baseline.json).
+4. [Coding-agent instructions](./AGENTS.md) — concise shared implementation contract so agents do not revert to a single fare scenario.
 
 ## Confirmed direction
 
@@ -16,7 +17,7 @@ A general, human-guided social simulation and policy decision product. Enter **a
 - **Generality proof:** two different live hypotheses pass through one system, plus an unprepared prompt exercises the speculative fallback.
 - **Visual proof:** buses, cars, people, homes, shops, and workplaces react to logged agent decisions. Visual changes and metrics come from the same run result.
 - **Decision proof:** A city action links to a charted economic effect; the dashboard compares status quo and proposal, affected groups, future scenario paths, assumptions, and missing evidence. Unsupported forecasts are marked not estimable.
-- **Demo pair:** Toronto transit fare change and a hypothetical Ontario minimum wage change affecting Toronto; an unprepared prompt tests the generic speculative path.
+- **Demo pair:** A $0.50 adult TTC fare increase illustrated in Morningside–Highland Creek near UTSC, and a hypothetical Ontario minimum wage change affecting Toronto; an unprepared prompt tests the generic speculative path. The first demo must show branching consequences for riders, a synthetic shop, a worker, and sample fare revenue, with assumptions visible.
 - **Owners:** Aadit — city and dashboard frontend; Steven — personas and AI decisions; James — world engine, metric computation, orchestrator, and backend; Meet — hypothesis compiler, metric definitions, evidence and human research loop, integration, pitch, and submission.
 
 ## Event-critical facts

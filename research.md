@@ -107,6 +107,18 @@ The sponsor guide suggests R5/r5py with GTFS and street networks for travel-time
 
 The guide also lists [Ontario election results](https://results.elections.on.ca/en/results-overview), [federal election results](https://www.elections.ca/content.aspx?section=res&dir=rep/off&document=index&lang=e), [Open Government Canada](https://search.open.canada.ca/opendata/), [CANUE](https://canue.ca/), [Google Dataset Search](https://datasetsearch.research.google.com/), [ArcGIS Hub](https://hub.arcgis.com/search), and [Native Land Digital](https://native-land.ca/) as additional discovery/context sources.
 
+### Additional City sources verified for the locked demo
+
+The best MVP subset and checked values are documented in [demo-data.md](./demo-data.md) and [data/toronto_demo_baseline.json](./data/toronto_demo_baseline.json). Beyond the sponsor guide's general catalogue, these City sources improve the multi-effect fare case:
+
+| Source | Verified availability | Appropriate use |
+| --- | --- | --- |
+| [Toronto traffic volumes at intersections, all modes](https://open.toronto.ca/dataset/traffic-volumes-at-intersections-for-all-modes/) | CKAN resource `tmc_most_recent_summary_data` exposes count date, location, vehicles, pedestrians, bicycles; Morningside/Ellesmere has a 14-hour count dated 3 July 2025 | Observed local scene/activity context; not fare-induced mode response |
+| [Municipal Licensing and Standards business licences](https://open.toronto.ca/dataset/municipal-licensing-and-standards-business-licences-and-permits/) | CKAN datastore exposes business category/address, issued date, cancel date; refreshed daily | Seed anonymized nearby shop types/positions. No visits, sales, profit, or causal closure inference |
+| [2026 TTC operating budget report](https://secure.toronto.ca/council/agenda-item.do?item=2026.TTC12.1) | Published ridership, fare cap/freeze, affordability, revenue and funding context | Specify real decision criteria; cannot scale a district agent run into the agency budget |
+
+The **2021 Toronto neighbourhood profile workbook** was inspected directly: column DP is Highland Creek, DQ is Morningside. The commuter-mode and income numbers in the demo fixture come from different rows/universes; they are not linked individual observations. The **merged TTC GTFS** resource was confirmed as a September 2026 ZIP; route selection still needs an implementation-time extract. The City traffic-count documentation states that counts from September 2023 onward cover a continuous 14-hour period.
+
 ## Modelling evidence and boundaries
 
 ### What a policy/economic decision dashboard needs

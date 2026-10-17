@@ -1,0 +1,84 @@
+{
+  "purpose": "Observed source facts for the Morningside–Highland Creek fare demo; no simulated results or behavioral coefficients",
+  "checked_date": "2026-10-16",
+  "sources": {
+    "ttc_fares": {
+      "url": "https://www.ttc.ca/en/Fares-and-passes",
+      "publisher": "Toronto Transit Commission",
+      "source_type": "current_rule_page"
+    },
+    "neighbourhood_profile": {
+      "url": "https://open.toronto.ca/dataset/neighbourhood-profiles/",
+      "resource_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/6e19a90f-971c-46b3-852c-0c48c436d1fc/resource/19d4a806-7385-4889-acf2-256f1e079060/download/nbhd_2021_census_profile_full_158model.xlsx",
+      "resource_name": "neighbourhood-profiles-2021-158-model",
+      "publisher": "City of Toronto / Statistics Canada",
+      "source_type": "2021_census_aggregate"
+    },
+    "intersection_count": {
+      "url": "https://open.toronto.ca/dataset/traffic-volumes-at-intersections-for-all-modes/",
+      "resource_id": "6afa3b1f-f6a5-4235-8bd6-7568411c19f4",
+      "resource_name": "tmc_most_recent_summary_data",
+      "publisher": "City of Toronto Transportation Services",
+      "source_type": "short_term_observed_count"
+    }
+  },
+  "fare_rules": {
+    "source_id": "ttc_fares",
+    "currency": "CAD",
+    "adult_presto_or_contactless_single_paid_fare": 3.30,
+    "fair_pass_presto_single_paid_fare": 2.10,
+    "monthly_cap_eligible_paid_fares": 47,
+    "cap_period": "calendar_month",
+    "cap_requires_same_eligible_payment_method": true,
+    "cash_and_presto_tickets_excluded_from_cap": true,
+    "two_hour_transfer_does_not_create_second_paid_fare": true
+  },
+  "neighbourhoods": [
+    {
+      "name": "Highland Creek",
+      "neighbourhood_number": 134,
+      "workbook_column": "DP",
+      "source_id": "neighbourhood_profile",
+      "commuting_reference_year": 2021,
+      "commuting_sample_note": "2021 Census 25% sample; usual place of work and commuting-mode universe",
+      "all_mode_commuters": 4085,
+      "public_transit_commuters": 640,
+      "income_reference_year": 2020,
+      "median_after_tax_household_income_cad": 105000,
+      "low_income_lim_at_prevalence_pct": 6.4,
+      "designation": "Not an NIA or Emerging Neighbourhood"
+    },
+    {
+      "name": "Morningside",
+      "neighbourhood_number": 135,
+      "workbook_column": "DQ",
+      "source_id": "neighbourhood_profile",
+      "commuting_reference_year": 2021,
+      "commuting_sample_note": "2021 Census 25% sample; usual place of work and commuting-mode universe",
+      "all_mode_commuters": 5795,
+      "public_transit_commuters": 1495,
+      "income_reference_year": 2020,
+      "median_after_tax_household_income_cad": 76500,
+      "low_income_lim_at_prevalence_pct": 12.4,
+      "designation": "Neighbourhood Improvement Area"
+    }
+  ],
+  "intersections": [
+    {
+      "location": "Ellesmere Rd / Morningside Ave",
+      "source_id": "intersection_count",
+      "latest_count_date": "2025-07-03",
+      "count_duration_hours": 14,
+      "observed_vehicles": 29600,
+      "observed_pedestrians": 3815,
+      "observed_bicycles": 96,
+      "use_limit": "Background intersection context; not TTC boardings, a daily total, or a post-fare prediction"
+    }
+  ],
+  "global_limits": [
+    "Neighbourhood income and mode counts are separate margins, not individual joint records",
+    "2021 commuting may reflect pandemic-era travel patterns",
+    "No route-level TTC ridership, business revenue, fare elasticity, or emissions effect is established by this fixture",
+    "Do not scale district outcomes to Toronto without representative weights and validation"
+  ]
+}

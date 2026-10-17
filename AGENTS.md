@@ -1,6 +1,6 @@
 # Working instructions for coding agents
 
-Read [README.md](./README.md), [prd.md](./prd.md), and [research.md](./research.md) before proposing architecture or writing features. Those files contain the founder's decisions, hackathon requirements, sponsor descriptions, source links, and deadline conflicts. Do not ask teammates to paste those links again.
+Read [README.md](./README.md), [prd.md](./prd.md), [research.md](./research.md), and [demo-data.md](./demo-data.md) before proposing architecture or writing features. Those files contain the founder's decisions, hackathon requirements, sponsor descriptions, source links, verified demo data, and deadline conflicts. Do not ask teammates to paste those links again.
 
 ## Product contract
 
@@ -12,6 +12,7 @@ Read [README.md](./README.md), [prd.md](./prd.md), and [research.md](./research.
 - The economic dashboard is a core product surface: baseline/proposal metrics for households, firms, public budget, and access where applicable; subgroup comparison; scenario sensitivity; units, time horizon, calculation, and provenance. Unsupported projections, NPV, GDP, or city-wide totals must be explicitly not estimable.
 - Human research notes, a question/challenge from agents, and a versioned rerun are required for the primary Papiers track.
 - One demo scenario must use actual Toronto urban data for the School of Cities track. See [research.md](./research.md) for the sponsor's data catalogue and direct links.
+- The locked Toronto demo uses the observed [data fixture](./data/toronto_demo_baseline.json) and the source/assumption boundaries in [demo-data.md](./demo-data.md). Treat census income and commuting as separate neighbourhood marginals. Do not invent the joint distribution or claim a simulated shop closure, City-wide TTC outcome, or emissions reduction as observed fact.
 
 ## Build decisions
 

@@ -19,7 +19,7 @@ Counterfactual Lab accepts a freeform hypothesis such as “What if bus fares ro
 
 **Founder decision:** The input is truly unrestricted. Every submitted hypothesis produces an interactive run, including when relevant public data or a causal model is missing. Such a run is labeled **speculative exploration** and asks the user to inspect the generated assumptions. The product never silently refuses a hypothesis or substitutes a static research plan. It cannot truthfully produce a calibrated quantitative forecast for every hypothesis; its output label varies by evidence quality.
 
-**Hackathon proof of generality:** Run **two different hypotheses through the same textbox, scenario compiler, persona generator, world engine, result schema, and UI**. Locked demo pair: a TTC fare change and a hypothetical **Ontario minimum-wage change affecting Toronto**. Include a third unprepared audience prompt in rehearsal to test the generic fallback. Every run must create relevant stakeholders, actions, metrics, and causal pathways. The UI must not be a disguised fare calculator.
+**Hackathon proof of generality:** Run **two different hypotheses through the same textbox, scenario compiler, persona generator, world engine, result schema, and UI**. Locked demo pair: a TTC adult-fare change in the UTSC-area Morningside–Highland Creek district and a hypothetical **Ontario minimum-wage change affecting Toronto**. Include a third unprepared audience prompt in rehearsal to test the generic fallback. Every run must create relevant stakeholders, actions, metrics, and causal pathways. The UI must not be a disguised fare calculator. The exact fare demo, ranked datasets, observed fixture, and multi-hop pass/fail test are in [demo-data.md](./demo-data.md).
 
 ### Track eligibility and demo obligations
 
@@ -282,6 +282,8 @@ The sponsor's [Toronto Civic Data Starter Guide](https://docs.google.com/documen
 
 The guide specifically warns that the public 311 dataset covers only part of the system and that categories/geographies changed over time. Do not treat it as a complete record of resident need. It also mentions R5/r5py for travel-time accessibility analysis, but that is a later integration unless a teammate already knows it.
 
+**Locked Toronto MVP data stack:** TTC fare rules; 2021 Morningside/Highland Creek neighbourhood profiles; current TTC GTFS for 38 Highland Creek and 116 Morningside; the 2025 Morningside/Ellesmere pedestrian/vehicle/bicycle count; optionally local business licence locations; TTC 2026 budget as policy context. The [verified baseline fixture](./data/toronto_demo_baseline.json) includes real fare, census, and intersection values with source IDs. [Demo-data dossier](./demo-data.md) records what each source grounds and where the agent simulation must rely on explicit assumptions.
+
 | Source | Product role | Limitation |
 | --- | --- | --- |
 | [Toronto 2021 neighbourhood profiles](https://open.toronto.ca/dataset/neighbourhood-profiles/) | Population, income, commute-mode or other available margins for selected neighbourhoods | Historical aggregates; no individual records or joint distributions |
@@ -300,13 +302,13 @@ The guide specifically warns that the public 311 dataset covers only part of the
 
 ### Study A — Toronto fare increase (grounded or partly grounded)
 
-**Input:** “What if adult TTC fare rises by $0.50 next year, with Fair Pass unchanged?”
+**Input:** “What if the adult TTC fare rises by $0.50 next year, with Fair Pass unchanged? Show the effects around UTSC.”
 **Compiled operators:** Change transit cost for eligible riders; preserve specified discount.
 **Generated stakeholders:** Low-income transit rider, frequent commuter, occasional rider, car-owning worker, local retailer, TTC budget planner, employer.
-**Interactions:** Households choose trips/modes; shop visits shift; retailer sees customer-flow change; TTC receives changed paid rides/revenue under assumptions.
-**Metrics:** Fare burden, trips by mode, missed/deferred trips, simulated local spending, gross fare revenue sensitivity.
+**Interactions:** Households choose essential versus discretionary trips and transit, walking, driving, or deferral; shop visits shift; a synthetic shop owner changes staffing after its simulated margin changes; another worker sees changed hours next tick. TTC receives changed **sample** paid rides/revenue under assumptions. At least one cause chain spans three decisions and two agents.
+**Metrics:** Fare burden, trips by mode, missed/deferred trips, simulated local spending, shop margin and staffing, and **local-sample** fare revenue sensitivity. Show emissions only if vehicle-kilometre and fleet assumptions justify it.
 **Decision view:** Household transport-cost distribution versus TTC fare revenue; scenario range when ridership response changes; visible access and shop-visit consequences. The [TTC's 2026 operating budget](https://secure.toronto.ca/council/agenda-item.do?item=2026.TTC12.1) explicitly assesses fare changes against ridership, revenue, equity, and customer experience, so these are the relevant decision dimensions. Its approved fare freeze and fare cap are baseline context, not evidence that a hypothetical fare rise would work.
-**Claim limit:** Changes in shopping/revenue are exploratory unless supported by data; no store-closure prediction.
+**Claim limit:** Toronto sources ground fares, geography, neighbourhood margins, routes, businesses' possible locations, and baseline intersection activity. They do **not** observe fare-induced mode switches, store sales, or closures. Label those mechanisms assumption-driven; never name a real business as likely to fail or present the local sample as a TTC-wide forecast.
 
 ### Study B — Minimum wage increase (exploratory)
 
@@ -449,7 +451,7 @@ Target one run at **≤90 seconds**, with a visible progress stage after each st
 | **Aadit — city and dashboard frontend** | React UI, Three.js/isometric district, animation, controls, inspection, baseline/intervention presentation, linked economic charts | Render a fixture `RunResult` with moving people, bus, car, home, shop, tick scrubber, and at least one chart linked to an event | Scene consumes `WorldEvent.visual_cue` and metric points; works with both demo scenarios; polished 4-minute projector view |
 | **Steven — persona AI swarm** | Scenario-specific role discovery, unique persona generation, memory, deep-agent decision prompts, lightweight-agent choice rules, coverage report | `generatePersonas(ScenarioSpec, WorldSpec) -> PersonaSpec[]` and one valid decision batch for two different prompts | Personas differ by hypothesis, persist across ticks, and return bounded action JSON that James's engine can validate; no fabricated aggregate results |
 | **James — world engine and orchestrator** | Backend/API, world state, turn/tick scheduler, action validation, interactions, baseline/proposal runs, event log, metric computation, caching/replay | `runScenario(ScenarioSpec, PersonaSpec[], seed) -> RunResult` using fixture personas; `POST /scenario/run` stub | Deterministic replay from fixed seed/model responses; event-derived metric points drive Aadit's charts and scene; two domains use one runner; latency and call budget measured |
-| **Meet — product, compiler, economics/evidence, integration** | Freeform prompt → `ScenarioSpec`, generic fallback schema, metric definitions and evidence gates, Toronto source fixture, human-note/evidence ledger, sponsor fit, integration checks, pitch and Devpost | Two prompt-to-ScenarioSpec fixtures (fare + Ontario wage), metric registry, source/assumption cards, agreed contracts committed | Unknown prompts still yield a speculative run; economic claims pass provenance/unit checks; human note changes a run; full demo and submission verified |
+| **Meet — product, compiler, economics/evidence, integration** | Freeform prompt → `ScenarioSpec`, generic fallback schema, metric definitions and evidence gates, Toronto source fixture, human-note/evidence ledger, sponsor fit, integration checks, pitch and Devpost | Two prompt-to-ScenarioSpec fixtures (fare + Ontario wage), metric registry, source/assumption cards, agreed contracts committed; verify [demo-data.md](./demo-data.md) | Unknown prompts still yield a speculative run; economic claims pass provenance/unit checks; human note changes a run; full demo and submission verified |
 
 **Meet is integration owner and Devpost owner.** James owns the backend contract, Aadit owns frontend visual quality, and Steven owns agent quality. Meet should not become the emergency implementer for every stream; each owner must publish a fixture and interface early. Pair Meet+James on schemas, James+Steven on action JSON, and James+Aadit on the event/visual contract in the first hour.
 
@@ -529,6 +531,7 @@ An unrestricted prompt plus autonomous agents plus a polished living city is amb
 - [Hack the Valley 11 written rules](https://hack-the-valley-11.devpost.com/rules), [Devpost dates](https://hack-the-valley-11.devpost.com/details/dates), and [live schedule](https://hackthevalley.io/schedule)
 - [HTV hacker package](https://app.notion.com/p/hackthevalley11/Hack-the-Valley-11-Hacker-Package-3f1c354d5236804e94e9fe0dff81eb82) and [package schedule](https://app.notion.com/p/hackthevalley11/Schedule-3f1c354d5236800598ddc2e313567b3c?pvs=25)
 - [School of Cities Toronto Civic Data Starter Guide](https://docs.google.com/document/u/0/d/1xkrJwUTqOOMaujorvh12dRXWtdL35bOf27dxgRnNuFY/mobilebasic#heading=h.hvv5c04l3mzk) and this repo's [research dossier](./research.md)
+- [Locked Toronto demo, dataset shortlist, evidence limits, and observed baseline fixture](./demo-data.md)
 - [Papiers product description](https://papiers.ai/); city and modelling sources linked in §§8–12
 
 **Revision rule:** Update §17 when implementation gaps are settled and record any changed product decision, acceptance criterion, demo study, or owner here. Preserve unresolved assumptions explicitly; do not quietly turn the PRD back into a single-domain transit plan.
