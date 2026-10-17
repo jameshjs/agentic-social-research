@@ -1,0 +1,560 @@
+<!-- Persona tuning record: a Dashboard page. Datasets it reads: "rounds" (data/record/rounds.json) and "final" (data/record/final.json),
+     both written by autoresearch/export_record.py. Every figure on the page comes from those rows or from the "tuning_summary" calc below. -->
+<style>
+  .tn { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); color: var(--color-fg); min-width: 0; }
+  .tn-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+  .tn-lede { margin: var(--cds-gap-xs) 0 0; font-size: var(--cds-font-size-heading); max-width: 64ch; }
+  .tn-h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .tn-h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .tn-k, .tn-note, .tn-status, .tn-msg { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .tn-status { margin-top: var(--cds-gap-xs); }
+  .tn-status:empty { display: none; }
+  .tn-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+  .tn-sec { display: grid; gap: var(--cds-gap-md); min-width: 0; }
+
+  .tn-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); grid-template-columns: repeat(auto-fit, minmax(max(9.5rem, 30%), 1fr)); gap: var(--cds-gap-md); }
+  .tn-tile { border-left: 3px solid var(--color-border-line); }
+  .tn-tile.tn-passed { border-left-color: var(--color-ok); }
+  .tn-v { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .tn-of { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); color: var(--color-fg-muted); }
+  .tn-state { font-weight: var(--cds-font-weight-medium); }
+  .tn-passed .tn-state { color: var(--color-ok); }
+
+  .tn-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .tn-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .tn-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+  .tn-legend i.tn-key-dot { border-radius: 50%; background: var(--color-fg-muted); }
+  .tn-legend i.tn-key-hollow { border-radius: 50%; border: 2px solid var(--color-fg-muted); background: var(--color-panel); box-sizing: border-box; }
+  .tn-legend i.tn-key-dash { width: 16px; height: 0; border-radius: 0; border-top: 2px dashed var(--color-fg-muted); }
+  .tn-chart { position: relative; min-height: 120px; }
+  .tn-chart svg { display: block; }
+  .tn-grid line { stroke: var(--color-border-line); stroke-width: 1; }
+  .tn-axis { color: var(--color-fg-muted); font-family: var(--font-anthropic-sans); font-size: 10px; }
+  .tn-axis .domain, .tn-axis .tick line { stroke: var(--color-border-line); }
+  .tn-axis-title { fill: var(--color-fg-muted); font-size: 11px; font-family: var(--font-anthropic-sans); }
+  .tn-bench line { stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 5 5; opacity: .9; }
+  .tn-bench line.tn-bench-b { stroke-dashoffset: 5; }
+  .tn-bench text { fill: var(--color-fg-muted); font-size: 10px; font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
+  .tn-path { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .tn-dot-kept { fill: var(--c); stroke: var(--color-panel); stroke-width: 1.5; }
+  .tn-dot-hollow { fill: var(--color-panel); stroke: var(--c); stroke-width: 2; }
+  .tn-guide { stroke: var(--color-fg-muted); stroke-width: 1; stroke-dasharray: 2 3; }
+  .tn-tip { position: absolute; pointer-events: none; z-index: 2; max-width: 15rem; background: var(--cds-surface-popover, var(--color-panel)); border: 1px solid var(--cds-border, var(--color-border-line)); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover, 0 2px 8px rgba(0, 0, 0, .18)); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg); }
+  .tn-tip-h { font-weight: var(--cds-font-weight-medium); }
+  .tn-tip-t { color: var(--color-fg-muted); margin-bottom: 2px; }
+  .tn-tip-row { display: flex; align-items: center; gap: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tn-tip-row i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+
+  .tn-tablebox { max-height: 34rem; overflow: auto; }
+  .tn-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: var(--cds-font-size-caption); }
+  .tn-table th, .tn-table td { text-align: left; vertical-align: top; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); overflow-wrap: break-word; }
+  .tn-table th { position: sticky; top: 0; z-index: 1; background: var(--color-panel); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); }
+  .tn-table th:first-child, .tn-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--color-panel); }
+  .tn-table th:first-child { z-index: 2; }
+  .tn-table td.tn-num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tn-table td.tn-when { min-width: 4.5rem; font-variant-numeric: tabular-nums; }
+  .tn-table td.tn-wide { min-width: 12rem; }
+  .tn-table td.tn-dim { color: var(--color-fg-muted); }
+  .tn-table td.tn-pos { color: var(--color-ok); }
+  .tn-table td.tn-neg { color: var(--color-bad); }
+  .tn-table td.tn-msg { padding: var(--cds-pad-lg) var(--cds-pad-sm); }
+  .tn-pick tbody tr { cursor: pointer; }
+  .tn-pick tbody tr:hover td, .tn-pick tbody tr.tn-sel td { background: var(--color-bg); }
+  .tn-pick tbody tr:focus-visible { outline: 2px solid var(--color-fg-muted); outline-offset: -2px; }
+  .tn-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border-line); white-space: nowrap; }
+  .tn-pill-kept { color: var(--color-ok); border-color: currentColor; }
+  .tn-pill-other { color: var(--color-warn); border-color: currentColor; }
+  .tn-pill-discarded { color: var(--color-fg-muted); }
+
+  .tn-label { display: grid; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .tn-select { font: inherit; font-size: var(--cds-font-size-body); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); width: 100%; max-width: 20rem; }
+  .tn-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--cds-gap-md); margin: 0; }
+  .tn-meta > div { display: grid; gap: 2px; align-content: start; min-width: 0; }
+  .tn-meta > .tn-full { grid-column: 1 / -1; }
+  .tn-mv { font-size: var(--cds-font-size-body); overflow-wrap: anywhere; }
+  .tn-diff { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); max-height: 28rem; overflow: auto; font-size: var(--cds-font-size-caption); line-height: 1.45; }
+  .tn-diff:empty { display: none; }
+  .tn-line { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); min-height: 1.45em; border-left: 3px solid transparent; }
+  .tn-line > span:first-child { text-align: center; color: var(--color-fg-muted); user-select: none; }
+  .tn-line > span:last-child { white-space: pre-wrap; overflow-wrap: anywhere; padding: 1px var(--cds-pad-sm) 1px 0; }
+  .tn-same { color: var(--color-fg-muted); }
+  .tn-add, .tn-del { color: var(--color-fg); }
+  .tn-add { border-left-color: var(--color-ok); background: color-mix(in srgb, var(--color-ok) 16%, transparent); }
+  .tn-del { border-left-color: var(--color-bad); background: color-mix(in srgb, var(--color-bad) 16%, transparent); }
+
+  .tn-empty { display: grid; gap: var(--cds-gap-sm); justify-items: center; text-align: center; padding: var(--cds-pad-lg); border: 1px dashed var(--color-border-line); border-radius: var(--cds-radius); }
+  .tn-empty .tn-note { max-width: 44ch; }
+  .tn-empty-h { margin: 0; font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); color: var(--color-fg); }
+  .tn-skel { display: grid; gap: 8px; width: min(100%, 18rem); margin-bottom: var(--cds-gap-xs); }
+  .tn-skel i { display: block; height: 8px; border-radius: 4px; background: var(--color-border-line); opacity: .7; }
+  .tn-skel i:nth-child(1) { width: 100%; }
+  .tn-skel i:nth-child(2) { width: 82%; }
+  .tn-skel i:nth-child(3) { width: 91%; }
+  .tn-skel i:nth-child(4) { width: 64%; }
+
+  .tn [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow, .3s); }
+</style>
+
+<div class="tn">
+  <header>
+    <h1 class="tn-title">Persona tuning record</h1>
+    <p class="tn-lede" data-source="tuning_summary" data-field="takeaway">—</p>
+    <p class="tn-status" id="tn-status" role="status"></p>
+  </header>
+
+  <section class="tn-sec" aria-labelledby="tn-h-latest">
+    <div>
+      <h2 class="tn-h2" id="tn-h-latest">Latest kept instructions</h2>
+      <p class="tn-note">Scores from round <span data-source="tuning_summary" data-field="latest_kept_round">—</span>, the latest kept round.</p>
+    </div>
+    <div class="tn-tiles">
+      <div class="tn-card tn-tile" id="tn-tile-right_person">
+        <div class="tn-k">Right person</div>
+        <div class="tn-v" data-source="tuning_summary" data-field="right_person">—</div>
+        <div class="tn-note">Share of human consistency. Pass mark <span data-source="tuning_summary" data-field="pass_right_person">—</span>. <span class="tn-state" id="tn-state-right_person"></span></div>
+      </div>
+      <div class="tn-card tn-tile" id="tn-tile-right_spread">
+        <div class="tn-k">Right spread</div>
+        <div class="tn-v" data-source="tuning_summary" data-field="right_spread">—</div>
+        <div class="tn-note">Answers vary across people as much as respondents' do. Pass mark <span data-source="tuning_summary" data-field="pass_right_spread">—</span>. <span class="tn-state" id="tn-state-right_spread"></span></div>
+      </div>
+      <div class="tn-card tn-tile" id="tn-tile-right_group_gaps">
+        <div class="tn-k">Right group gaps</div>
+        <div class="tn-v" data-source="tuning_summary" data-field="right_group_gaps">—</div>
+        <div class="tn-note">Group differences point the same way. Pass mark <span data-source="tuning_summary" data-field="pass_right_group_gaps">—</span>. <span class="tn-state" id="tn-state-right_group_gaps"></span></div>
+      </div>
+      <div class="tn-card tn-tile">
+        <div class="tn-k">Steady</div>
+        <div class="tn-v" data-source="tuning_summary" data-field="steady">—</div>
+        <div class="tn-note">Same answer when a question is reworded. Reported and protected by the keep rule, with no pass mark.</div>
+      </div>
+      <div class="tn-card tn-tile">
+        <div class="tn-k">Benchmark marks passed</div>
+        <div class="tn-v"><span data-source="tuning_summary" data-field="marks_passed">—</span> <span class="tn-of">of <span data-source="tuning_summary" data-field="marks_total">—</span></span></div>
+        <div class="tn-note">The three pass marks above, and beating every baseline on right person.</div>
+      </div>
+      <div class="tn-card tn-tile">
+        <div class="tn-k">Cost so far</div>
+        <div class="tn-v" data-source="tuning_summary" data-field="cost_total">—</div>
+        <div class="tn-note">Spent on model calls across all rounds, kept and discarded.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tn-card" aria-labelledby="tn-h-chart">
+    <h2 class="tn-h2" id="tn-h-chart">Scores by round</h2>
+    <p class="tn-note">Lines follow the kept rounds. Hollow points are discarded trials. Dashed lines are the pass marks. Point at a round for its scores.</p>
+    <div class="tn-legend" id="tn-legend" data-source="rounds"></div>
+    <div class="tn-chart" id="tn-chart" data-source="rounds"></div>
+  </section>
+
+  <section class="tn-card" aria-labelledby="tn-h-table">
+    <h2 class="tn-h2" id="tn-h-table">Every round</h2>
+    <p class="tn-note">Select a round to compare its instructions with the last kept ones.</p>
+    <div class="tn-tablebox">
+      <table class="tn-table tn-pick" id="tn-table" data-source="rounds" data-row-key="round">
+        <thead><tr>
+          <th data-field="round">Round</th>
+          <th data-field="started_at">Started</th>
+          <th data-field="ended_at">Ended</th>
+          <th data-field="check_targeted">Check targeted</th>
+          <th data-field="hypothesis">Hypothesis</th>
+          <th data-field="change">Change</th>
+          <th data-field="right_person">Right person</th>
+          <th data-field="right_spread">Right spread</th>
+          <th data-field="right_group_gaps">Right group gaps</th>
+          <th data-field="steady">Steady</th>
+          <th data-field="marks_passed">Marks passed</th>
+          <th data-field="delta_vs_prev">Change vs previous</th>
+          <th data-field="cost_usd">Cost</th>
+          <th data-field="kept">Decision</th>
+          <th data-field="signed_off_by">Signed off by</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="tn-card" id="tn-diff-card" aria-labelledby="tn-h-diff">
+    <h2 class="tn-h2" id="tn-h-diff">Instructions diff</h2>
+    <label class="tn-label">Round
+      <select class="tn-select" id="tn-pick" aria-label="Round" data-source="rounds"></select>
+    </label>
+    <div class="tn-meta">
+      <div><div class="tn-k">Decision</div><div class="tn-mv" data-source="rounds" data-field="kept">—</div></div>
+      <div><div class="tn-k">Check targeted</div><div class="tn-mv" data-source="rounds" data-field="check_targeted">—</div></div>
+      <div class="tn-full"><div class="tn-k">Hypothesis</div><div class="tn-mv" data-source="rounds" data-field="hypothesis">—</div></div>
+      <div class="tn-full"><div class="tn-k">Change</div><div class="tn-mv" data-source="rounds" data-field="change">—</div></div>
+      <div class="tn-full"><div class="tn-k">Papiers sources</div><div class="tn-mv" data-source="rounds" data-field="papiers_ids">—</div></div>
+      <div class="tn-full"><div class="tn-k">Coach notes</div><div class="tn-mv" data-source="rounds" data-field="coach_notes">—</div></div>
+    </div>
+    <p class="tn-note" id="tn-diff-note"></p>
+    <div class="tn-diff" id="tn-diff" data-source="rounds" data-field="instructions_after"></div>
+  </section>
+
+  <section class="tn-card" aria-labelledby="tn-h-final">
+    <h2 class="tn-h2" id="tn-h-final">Final results</h2>
+    <div class="tn-sec" id="tn-final" data-source="final"></div>
+  </section>
+</div>
+
+<script>
+dash.calc("tuning_summary", {
+  title: "Tuning summary",
+  description: "One row: the latest kept round's scores, changes kept and discarded, total cost and the takeaway sentence, plus the fixed pass marks and the round and mark counts from the plan.",
+  inputs: ["rounds"],
+  fn: (rounds) => {
+    const TOTAL = 10, MARKS = 4, PASS = { right_person: 0.7, right_spread: 0.8, right_group_gaps: 0.8 };
+    const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
+    const kind = (r) => String(r.kept == null ? "" : r.kept).trim().toLowerCase();
+    const f2 = (v) => (v === null ? "—" : v.toFixed(2));
+    const rows = rounds.filter((r) => num(r.round) !== null).sort((a, b) => num(a.round) - num(b.round));
+    const first = rows[0], last = rows[rows.length - 1];
+    const kept = rows.filter((r) => kind(r) === "yes" || kind(r) === "baseline");
+    const cur = kept[kept.length - 1];
+    const costs = rows.map((r) => num(r.cost_usd)).filter((v) => v !== null);
+    const nYes = rows.filter((r) => kind(r) === "yes").length, nNo = rows.filter((r) => kind(r) === "no").length;
+    const from = first ? num(first.right_person) : null, to = cur ? num(cur.right_person) : null;
+    const n = last ? num(last.round) : 0;
+    const takeaway = !last ? "No rounds recorded yet. The record fills in as the loop runs."
+      : n === 0 ? `Round 0 of ${TOTAL}: the starting instructions score ${f2(from)} on right person; no changes tried yet.`
+      : `Round ${n} of ${TOTAL}: right person ${f2(from)} → ${f2(to)} since round 0; ${nYes} ${nYes === 1 ? "change" : "changes"} kept, ${nNo} discarded.`;
+    const pick = (k) => (cur ? num(cur[k]) : null);
+    return [{
+      takeaway, latest_kept_round: cur ? cur.round : null,
+      right_person: pick("right_person"), right_spread: pick("right_spread"), right_group_gaps: pick("right_group_gaps"),
+      steady: pick("steady"), marks_passed: pick("marks_passed"), kept_n: nYes, discarded_n: nNo,
+      cost_total: costs.length ? costs.reduce((a, b) => a + b, 0) : null,
+      rounds_total: TOTAL, marks_total: MARKS,
+      pass_right_person: PASS.right_person, pass_right_spread: PASS.right_spread, pass_right_group_gaps: PASS.right_group_gaps,
+    }];
+  },
+});
+</script>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const root = document.querySelector(".tn");
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  // cells may arrive as text, and blank must stay blank (Number("") is 0)
+  const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
+  const text = (v) => (v == null || String(v).trim() === "" ? "—" : String(v).trim());
+  const label = (v) => text(v).replace(/_/g, " ");
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const f2 = (v) => { const n = num(v); return n === null ? "—" : n.toFixed(2); };
+  const whole = (v) => { const n = num(v); return n === null ? "—" : String(Math.round(n)); };
+  const money = (v) => { const n = num(v); return n === null ? "—" : "$" + n.toFixed(2); };
+  const signed = (v) => { const n = num(v); if (n === null) return "—"; const s = Math.abs(n).toFixed(2); return s === "0.00" ? s : (n > 0 ? "+" : "−") + s; };
+  const when = d3.timeFormat("%b %-d, %-I:%M %p");
+  const stamp = (v) => { const s = text(v); const d = new Date(s); return s === "—" || isNaN(d) ? s : when(d); };
+  const key = (r) => String(r.round).trim();
+  const kind = (r) => String(r.kept == null ? "" : r.kept).trim().toLowerCase();
+  const isKept = (r) => kind(r) === "yes" || kind(r) === "baseline";
+  const KINDS = { yes: "kept", no: "discarded", baseline: "baseline" };
+  const pillText = (r) => KINDS[kind(r)] || kind(r) || "pending";
+  const pill = (r) => el("span", "tn-pill tn-pill-" + (KINDS[kind(r)] || "other"), pillText(r));
+  const msg = (t) => el("p", "tn-msg", t);
+  const statusNote = (status, what) => ({
+    loading: `Loading ${what}…`,
+    connect: `Connect ${what} to see this.`,
+    declined: `Access to ${what} was declined.`,
+    error: `Could not load ${what}.`,
+    missing: `Waiting for ${what}: it has not been set up yet.`,
+  }[status] || `${cap(what)} is not available (${status}).`);
+
+  const CHECKS = [["right_person", "Right person"], ["right_spread", "Right spread"], ["right_group_gaps", "Right group gaps"], ["steady", "Steady"]];
+  let rows = [];        // the rounds dataset, in round order
+  let picked = null;    // the round open in the diff viewer; survives redraws
+  let blank = "";       // what to say where there is nothing to draw
+  let hideTip = () => {};   // hides the chart tooltip of the latest draw
+
+  // ---- tiles and the takeaway: every element bound to the tuning_summary calc
+  const SUM = { takeaway: text, latest_kept_round: text, right_person: f2, right_spread: f2, right_group_gaps: f2, steady: f2,
+    marks_passed: whole, marks_total: whole, rounds_total: whole, cost_total: (v) => money(v),
+    pass_right_person: f2, pass_right_spread: f2, pass_right_group_gaps: f2 };
+  function fillSummary(sum) {
+    root.querySelectorAll('[data-source="tuning_summary"][data-field]').forEach((e) => {
+      const f = e.dataset.field;
+      e.textContent = sum ? (SUM[f] || text)(sum[f]) : "—";
+    });
+    for (const k of ["right_person", "right_spread", "right_group_gaps"]) {
+      const v = sum ? num(sum[k]) : null, pass = sum ? num(sum["pass_" + k]) : null;
+      const ok = v !== null && pass !== null && v >= pass;
+      $("tn-tile-" + k).classList.toggle("tn-passed", ok);
+      $("tn-state-" + k).textContent = v === null ? "" : ok ? "Passed." : "Not yet.";
+    }
+  }
+
+  // ---- line chart of the four checks
+  function drawChart(sum) {
+    const box = $("tn-chart"), legend = $("tn-legend"), colors = dash.colors;
+    box.textContent = ""; legend.textContent = "";
+    if (!rows.length) { box.appendChild(msg(blank)); return; }
+    CHECKS.forEach(([, name], i) => {
+      const s = legend.appendChild(el("span"));
+      s.appendChild(el("i")).style.background = colors[i];
+      s.appendChild(document.createTextNode(name));
+    });
+    [["tn-key-dot", "Kept or baseline"], ["tn-key-hollow", "Discarded"], ["tn-key-dash", "Pass mark"]].forEach(([cls, name]) => {
+      const s = legend.appendChild(el("span"));
+      s.appendChild(el("i", cls));
+      s.appendChild(document.createTextNode(name));
+    });
+
+    const W = Math.max(260, box.clientWidth || 360), H = Math.round(Math.min(300, Math.max(230, W * 0.62)));
+    const m = { t: 12, r: 40, b: 40, l: 34 };
+    const maxRound = Math.max(10, d3.max(rows, (r) => num(r.round)));
+    const top = Math.max(1, Math.ceil(d3.max(rows, (r) => d3.max(CHECKS, ([k]) => num(r[k]) ?? 0)) * 10) / 10);
+    const x = d3.scaleLinear([0, maxRound], [m.l + 8, W - m.r - 6]);
+    const y = d3.scaleLinear([0, top], [H - m.b, m.t]);
+    const svg = d3.select(box).append("svg").attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
+      .attr("role", "img").attr("aria-label", "Line chart of the four checks by tuning round");
+
+    svg.append("g").attr("class", "tn-grid").selectAll("line").data(y.ticks(5)).join("line")
+      .attr("x1", m.l).attr("x2", W - m.r).attr("y1", (d) => y(d)).attr("y2", (d) => y(d));
+    svg.append("g").attr("class", "tn-axis").attr("transform", `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).ticks(maxRound).tickFormat(d3.format("d")).tickSize(4));
+    svg.append("g").attr("class", "tn-axis").attr("transform", `translate(${m.l},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".1f")).tickSize(0).tickPadding(6))
+      .call((g) => g.select(".domain").remove());
+    svg.append("text").attr("class", "tn-axis-title").attr("x", (m.l + W - m.r) / 2).attr("y", H - 6).attr("text-anchor", "middle").text("Tuning round");
+
+    const bench = svg.append("g").attr("class", "tn-bench"), marked = new Set();
+    CHECKS.forEach(([k], i) => {
+      const p = sum ? num(sum["pass_" + k]) : null;
+      if (p === null) return;
+      // two marks at the same height alternate their colours instead of hiding each other
+      bench.append("line").attr("class", marked.has(p) ? "tn-bench-b" : null).style("--c", colors[i])
+        .attr("x1", m.l).attr("x2", W - m.r).attr("y1", y(p)).attr("y2", y(p));
+      if (!marked.has(p)) bench.append("text").attr("x", W - m.r + 5).attr("y", y(p) + 3).text(p.toFixed(2));
+      marked.add(p);
+    });
+
+    const path = d3.line().defined((d) => d.v !== null).x((d) => x(d.r)).y((d) => y(d.v));
+    CHECKS.forEach(([k], i) => {
+      const series = rows.map((r) => ({ r: num(r.round), v: num(r[k]), kept: isKept(r) }));
+      svg.append("path").datum(series.filter((d) => d.kept)).attr("class", "tn-path").style("--c", colors[i]).attr("d", path);
+      svg.append("g").selectAll("circle").data(series.filter((d) => d.v !== null)).join("circle")
+        .attr("class", (d) => (d.kept ? "tn-dot-kept" : "tn-dot-hollow")).style("--c", colors[i])
+        .attr("cx", (d) => x(d.r)).attr("cy", (d) => y(d.v)).attr("r", 4);
+    });
+
+    const guide = svg.append("line").attr("class", "tn-guide").attr("y1", m.t).attr("y2", H - m.b).style("display", "none");
+    const tip = d3.select(box).append("div").attr("class", "tn-tip").style("display", "none");
+    const byRound = new Map(rows.map((r) => [num(r.round), r]));
+    const hide = () => { guide.style("display", "none"); tip.style("display", "none"); };
+    hideTip = hide;
+    const show = (ev) => {
+      const r = byRound.get(Math.max(0, Math.min(maxRound, Math.round(x.invert(d3.pointer(ev, svg.node())[0])))));
+      if (!r) return hide();
+      const rd = num(r.round);
+      guide.style("display", null).attr("x1", x(rd)).attr("x2", x(rd));
+      tip.style("display", null).text("");
+      tip.append("div").attr("class", "tn-tip-h").text(`Round ${key(r)} · ${pillText(r)}`);
+      if (text(r.check_targeted) !== "—") tip.append("div").attr("class", "tn-tip-t").text(`Targeted: ${label(r.check_targeted)}`);
+      CHECKS.forEach(([k, name], i) => {
+        const line = tip.append("div").attr("class", "tn-tip-row");
+        line.append("i").style("background", colors[i]);
+        line.append("span").text(`${name} ${f2(r[k])}`);
+      });
+      const [px, py] = d3.pointer(ev, box), w = tip.node().offsetWidth, h = tip.node().offsetHeight;
+      tip.style("left", `${Math.max(0, Math.min(px + 14, box.clientWidth - w))}px`).style("top", `${Math.max(0, Math.min(py - h / 2, H - h))}px`);
+    };
+    svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b)
+      .attr("fill", "transparent").style("touch-action", "pan-y")
+      .on("pointermove", show).on("pointerdown", show).on("pointerleave", (ev) => { if (ev.pointerType === "mouse") hide(); });
+  }
+
+  document.addEventListener("pointerdown", (e) => { if (!$("tn-chart").contains(e.target)) hideTip(); });
+
+  // ---- table of every round
+  const NUMERIC = new Set(["round", "right_person", "right_spread", "right_group_gaps", "steady", "marks_passed", "delta_vs_prev", "cost_usd"]);
+  const WHEN = new Set(["started_at", "ended_at"]);
+  const WIDE = new Set(["hypothesis", "change"]);
+  const CELL = {
+    started_at: (r) => stamp(r.started_at), ended_at: (r) => stamp(r.ended_at), check_targeted: (r) => label(r.check_targeted),
+    right_person: (r) => f2(r.right_person), right_spread: (r) => f2(r.right_spread), right_group_gaps: (r) => f2(r.right_group_gaps), steady: (r) => f2(r.steady),
+    marks_passed: (r) => whole(r.marks_passed), delta_vs_prev: (r) => signed(r.delta_vs_prev), cost_usd: (r) => money(r.cost_usd),
+    // a kept change nobody has signed off yet is still on trial
+    signed_off_by: (r) => (text(r.signed_off_by) !== "—" ? text(r.signed_off_by) : kind(r) === "yes" ? "on trial" : "—"),
+  };
+  function markRows() {
+    $("tn-table").querySelectorAll("tbody tr[data-key]").forEach((tr) => tr.classList.toggle("tn-sel", tr.dataset.key === picked));
+  }
+  function drawTable() {
+    const table = $("tn-table"), tb = table.querySelector("tbody");
+    const fields = [...table.querySelectorAll("th")].map((th) => th.dataset.field);
+    tb.textContent = "";
+    if (!rows.length) { tb.appendChild(el("tr")).appendChild(el("td", "tn-msg", blank)).colSpan = fields.length; return; }
+    for (const r of rows) {
+      const tr = tb.appendChild(el("tr"));
+      tr.dataset.key = key(r); tr.tabIndex = 0;
+      for (const f of fields) {
+        const td = tr.appendChild(el("td", NUMERIC.has(f) ? "tn-num" : WHEN.has(f) ? "tn-when" : WIDE.has(f) ? "tn-wide" : null));
+        if (f === "kept") { td.appendChild(pill(r)); continue; }
+        td.textContent = (CELL[f] || ((x) => text(x[f])))(r);
+        if (f === "signed_off_by" && td.textContent === "on trial") td.classList.add("tn-dim");
+        if (f === "delta_vs_prev" && td.textContent !== "—" && td.textContent !== "0.00") td.classList.add(td.textContent[0] === "+" ? "tn-pos" : "tn-neg");
+      }
+    }
+    markRows();
+  }
+
+  // ---- instructions diff
+  const lines = (s) => { const t = String(s == null ? "" : s).replace(/\r\n?/g, "\n").replace(/\s+$/, ""); return t ? t.split("\n") : []; };
+  // shortcut: line-level only, so a one-word edit flags its whole line; add word marks if instructions turn into long paragraphs
+  function diff(a, b) {
+    const n = a.length, m = b.length, same = (i, j) => a[i].trimEnd() === b[j].trimEnd();
+    if (n * m > 4e6) return [...a.map((t) => ["del", t]), ...b.map((t) => ["add", t])];   // too long for the table below
+    const L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = same(i, j) ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+    const out = []; let i = 0, j = 0;
+    while (i < n && j < m) {
+      if (same(i, j)) { out.push(["same", b[j]]); i++; j++; }
+      else if (L[i + 1][j] >= L[i][j + 1]) out.push(["del", a[i++]]);
+      else out.push(["add", b[j++]]);
+    }
+    while (i < n) out.push(["del", a[i++]]);
+    while (j < m) out.push(["add", b[j++]]);
+    return out;
+  }
+  function drawDiff() {
+    const sel = $("tn-pick"), box = $("tn-diff"), note = $("tn-diff-note");
+    const r = rows.find((x) => key(x) === picked);
+    const where = r ? "round=" + encodeURIComponent(key(r)) : null;
+    sel.replaceChildren(...rows.map((x) => new Option(`Round ${key(x)} · ${pillText(x)}`, key(x))));
+    sel.disabled = !rows.length;
+    if (r) sel.value = picked;
+    $("tn-diff-card").querySelectorAll(".tn-mv").forEach((e) => {
+      const f = e.dataset.field;
+      if (where) e.setAttribute("data-where", where); else e.removeAttribute("data-where");
+      e.textContent = "";
+      if (!r) e.textContent = "—";
+      else if (f === "kept") e.appendChild(pill(r));
+      else e.textContent = f === "check_targeted" ? label(r[f]) : text(r[f]);
+    });
+    if (where) box.setAttribute("data-where", where); else box.removeAttribute("data-where");
+    box.textContent = "";
+    if (!r) { note.textContent = blank; return; }
+    const before = lines(r.instructions_before), after = lines(r.instructions_after);
+    let ops;
+    if (!after.length) { note.textContent = "No instructions are on record for this round."; return; }
+    if (!before.length) { note.textContent = "There are no earlier instructions to compare with, so these are shown as they are."; ops = after.map((t) => ["same", t]); }
+    else {
+      ops = diff(before, after);
+      note.textContent = before.join("\n") === after.join("\n") ? "These instructions are unchanged from the last kept round."
+        : "Compared with the last kept instructions: removed lines are red, added lines are green.";
+    }
+    for (const [op, t] of ops) {
+      const line = box.appendChild(el("div", "tn-line tn-" + op));
+      line.appendChild(el("span", null, op === "add" ? "+" : op === "del" ? "−" : ""));
+      line.appendChild(el("span", null, t));
+    }
+  }
+
+  function choose(round, scroll) {
+    picked = round;
+    markRows(); drawDiff();
+    if (scroll) $("tn-diff-card").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  $("tn-pick").addEventListener("change", (e) => choose(e.target.value, false));
+  $("tn-table").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-key]"); if (tr) choose(tr.dataset.key, true); });
+  $("tn-table").addEventListener("keydown", (e) => {
+    const tr = e.target.closest("tr[data-key]");
+    if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); choose(tr.dataset.key, true); }
+  });
+
+  // ---- final results: one table per section, columns taken from the rows
+  const SECTIONS = {
+    scorecard: ["Scorecard", "The best signed-off instructions, scored once on the final set."],
+    baselines: ["Baselines and human consistency", "Simple ways of answering that the agents must beat, and how often people repeat their own answers."],
+    held_out: ["Held-out decision puzzles", "A question family never used in tuning, scored only here."],
+    experiment_effects: ["Experiment effects", "The difference in answers between two conditions of a puzzle, among respondents and among their persona agents."],
+    given_size: ["Given answers", "How the scores change with the number of given answers each persona agent reads."],
+    follow_one: ["Follow one respondent", "One respondent followed question by question."],
+  };
+  const isNum = (v) => typeof v === "number" || (typeof v === "string" && /^-?(0|[1-9]\d*)(\.\d+)?$/.test(v.trim()));
+  function finalTable(part) {
+    const cols = [];
+    for (const r of part) for (const k of Object.keys(r)) if (k !== "section" && k !== "row_id" && !cols.includes(k)) cols.push(k);
+    const table = el("table", "tn-table");
+    table.dataset.source = "final"; table.dataset.rowKey = "row_id";
+    const head = table.appendChild(el("thead")).appendChild(el("tr"));
+    const tb = table.appendChild(el("tbody"));
+    const fmt = cols.map((c) => {
+      const vals = part.map((r) => r[c]).filter((v) => v != null && v !== "");
+      const all = vals.length > 0 && vals.every(isNum);
+      const int = all && vals.every((v) => Number.isInteger(Number(v)));
+      const dp = vals.some((v) => { const a = Math.abs(Number(v)); return a > 0 && a < 0.01; }) ? 3 : 2;
+      return { num: all, show: (v) => (v == null || v === "" ? "—" : !all ? String(v) : int ? String(Number(v)) : Number(v).toFixed(dp)) };
+    });
+    cols.forEach((c) => { head.appendChild(el("th", null, cap(c.replace(/_/g, " ")))).dataset.field = c; });
+    for (const r of part) {
+      const tr = tb.appendChild(el("tr"));
+      tr.dataset.key = r.row_id;
+      cols.forEach((c, i) => tr.appendChild(el("td", fmt[i].num ? "tn-num" : null, fmt[i].show(r[c]))));
+    }
+    const wrap = el("div", "tn-tablebox");
+    wrap.appendChild(table);
+    return wrap;
+  }
+  function emptyFinal(sum) {
+    const box = el("div", "tn-empty");
+    const skel = box.appendChild(el("div", "tn-skel"));
+    skel.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 4; i++) skel.appendChild(el("i"));
+    box.appendChild(el("p", "tn-empty-h", "Not scored yet"));
+    const p = box.appendChild(el("p", "tn-note"));
+    const total = sum ? num(sum.rounds_total) : null;
+    if (total === null) p.appendChild(document.createTextNode("The final set is scored once, after the last tuning round."));
+    else {
+      p.appendChild(document.createTextNode("The final set is scored once, after round "));
+      const n = p.appendChild(el("span", null, whole(total)));
+      n.dataset.source = "tuning_summary"; n.dataset.field = "rounds_total";
+      p.appendChild(document.createTextNode("."));
+    }
+    p.appendChild(document.createTextNode(" No change was chosen using it, so these scores will show whether the gains hold for people the loop never saw."));
+    return box;
+  }
+  function drawFinal(F, sum) {
+    const box = $("tn-final");
+    box.textContent = "";
+    if (F.status !== "ok") { box.appendChild(msg(statusNote(F.status, "the final results"))); return; }
+    const parts = new Map();
+    for (const r of F.data || []) {
+      if (!r || typeof r !== "object") continue;
+      const s = text(r.section) === "—" ? "results" : String(r.section);
+      if (!parts.has(s)) parts.set(s, []);
+      parts.get(s).push(r);
+    }
+    if (!parts.size) { box.appendChild(emptyFinal(sum)); return; }
+    const order = [...Object.keys(SECTIONS).filter((s) => parts.has(s)), ...[...parts.keys()].filter((s) => !(s in SECTIONS))];
+    for (const s of order) {
+      const [title, about] = SECTIONS[s] || [cap(s.replace(/_/g, " ")), ""];
+      const sec = box.appendChild(el("div", "tn-sec"));
+      const head = sec.appendChild(el("div"));
+      head.appendChild(el("h3", "tn-h3", title));
+      if (about) head.appendChild(el("p", "tn-note", about));
+      sec.appendChild(finalTable(parts.get(s)));
+    }
+  }
+
+  // ---- redraw everything from the datasets
+  function render() {
+    const R = dash.data("rounds"), S = dash.data("tuning_summary"), F = dash.data("final");
+    const ok = R.status === "ok";
+    rows = ok ? (R.data || []).filter((r) => r && num(r.round) !== null).sort((a, b) => num(a.round) - num(b.round)) : [];
+    blank = ok ? "No rounds recorded yet. They appear here as each tuning round ends." : statusNote(R.status, "the tuning record");
+    const sum = ok && S.status === "ok" && S.data && S.data[0] ? S.data[0] : null;
+    $("tn-status").textContent = !ok ? blank : S.status === "error" ? "The summary could not be computed." : "";
+    if (!rows.some((r) => key(r) === picked)) picked = rows.length ? key(rows[rows.length - 1]) : null;
+    fillSummary(sum);
+    drawChart(sum);
+    drawTable();
+    drawDiff();
+    drawFinal(F, sum);
+  }
+  dash.onData(render);
+})();
+</script>

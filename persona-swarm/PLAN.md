@@ -47,7 +47,7 @@ Claude Code session following `autoresearch/program.md`.
 
 | Area | Exact rule |
 |---|---|
-| Order | Runtime first: Tasks 1–12 start only after the runtime persona slice (Task 0) is pushed |
+| Order | Tasks 1–11 start straight away. The runtime gate (Task 0) was dropped on 17 Oct at Steven's call; Task 12 still needs the runtime |
 | Data source | `wave_split` only. Never read `full_persona` or `persona_summary` (ADR 0001) |
 | Sets | Tuning 40 · Check 100 · Final 100, non-overlapping, drawn with a fixed seed and balanced across age band × sex × income band × region |
 | Locked files | The raw parquet, and the check and final answer sheets and consistency keys, live in `~/.cache/persona-swarm/`, never in the repo. The researcher may read only tuning-set answer sheets (ADR 0002) |
@@ -58,7 +58,7 @@ Claude Code session following `autoresearch/program.md`.
 | Backend | Persona agents run through the `claude` CLI on the claude.ai plan. Switch to an Anthropic API key, with prompt caching for the repeated given answers, if the team gets one |
 | Keep rule | Noise = per-check difference between two runs of the starting instructions. Keep a change only if at least one check improves by more than its noise and none falls by more than its noise. The number of benchmark marks passed may never fall |
 | Loop length | Exactly 10 tuning rounds. Then the final set is scored once |
-| Triggers (stop and ask) | 3 rounds in a row with no kept change · any check jumps by more than 3× its noise · one check rises past its noise while another falls past its noise · a result contradicts an annotated paper · the benchmark is passed · logged spend reaches $10 |
+| Triggers (stop and ask) | 3 rounds in a row with no kept change · any check jumps by more than 3× its noise · one check rises past its noise while another falls past its noise · a result contradicts an annotated paper · the benchmark is passed · logged spend reaches $30 (raised from $10 on 17 Oct, after round 0 measured the cost) |
 | While waiting | Ideas may be tried on the tuning set only. At most 2 changes may be on trial without sign-off |
 | May change | `instructions.md` and the persona format setting only. Never the scorer, sets, benchmark, rewordings, given answers or the model (`claude-haiku-5-5`, low effort) |
 | Sign-off | A coach types `sign off round NN — <name>` in the researcher session. Knowledge comes through Papiers notes, read at the start of each round. Coaches: Steven and Meet |
@@ -66,9 +66,10 @@ Claude Code session following `autoresearch/program.md`.
 | Page | A dashboard artifact, re-published at the end of every round |
 | Adoption | Tuned instructions go into the city's deep agents if they beat the starting instructions by more than the noise and the city's own checks pass. Label them "benchmark not yet reached" if they don't pass it |
 
-## Task 0: Gate. Runtime persona slice, built with James
+## Task 0: Runtime persona slice, built with James (no longer a gate)
 
-Not built by this plan; it must exist before Task 1 starts.
+Dropped as a gate on 17 Oct at Steven's call: the tuning loop starts without it. It remains the runtime work the city
+needs, and Task 12 depends on it.
 
 - **Produces:** persona JSON agreed with James in the shape of `replay-trace-spec.md`, and bounded JSON decisions
   for the TTC and Bloor prompts, pushed to `main` with the hash shared (TEAM_SYNC.md integration step 1).
@@ -240,7 +241,8 @@ Not built by this plan; it must exist before Task 1 starts.
   - the measured round time and cost
 - **Acceptance checks:**
   - Noise is recorded per check.
-  - A round costs at most about $0.60 at list price: the estimate is 240 persona calls of about 24k tokens, 140 for
+  - Measured before round 0: one `full`-format call is about 18k words, 18 s and $0.011 at list price, so a round
+    is about $1.80, not the $0.60 first estimated, and the loop about $25. Original estimate: 240 persona calls of about 24k tokens, 140 for
     tuning and check plus 100 for steady. If a round takes over 15 minutes, raise `CONCURRENCY` from 8 to 16 and
     re-measure.
 
@@ -301,7 +303,7 @@ Not built by this plan; it must exist before Task 1 starts.
 | Overfitting to the check set | The final set scored once; the held-out puzzle family |
 | Scorer changed mid-loop | The hash in every score (Task 3) |
 | CLI failures or rate limits | Retry once, then mark missing; a round with over 5% missing is invalid (Tasks 3 and 5) |
-| Spend overrun | The $10 trigger, using the per-round cost in `meta.json` |
+| Spend overrun | The $30 trigger, using the per-round cost in `meta.json` |
 
 ## Decisions settled at plan review (17 Oct)
 
@@ -324,3 +326,16 @@ These were open when the plan was first drafted. They are now reflected in the t
 - Twin measures what US respondents **say** on a survey. City use still needs the scenario checks: persona fidelity,
   the engine's rules, and the direction of the team's papers.
 - Costs and timings are estimates until round 0 measures them.
+
+## Decisions made while starting the loop (17 Oct)
+
+1. **Spend trigger raised to $30.** A measured call costs $0.011 at list price, so $10 would have paused the loop
+   around round 4. Steven's call.
+2. **Rewordings approved** by Steven, so steady is scored from round 0 and `rewordings.json` is frozen.
+3. **Scorer details fixed before freezing:** right spread caps each item at 1 (being more varied than people earns
+   no credit); the one final scoring also reports each question family and the puzzle experiment effects, since
+   the final set can't be scored twice; and the 10 / 30 / 158 given-answers comparison runs on the check set.
+4. **Sets re-balanced:** the 2:5:5 cycle starts at its most balanced rotation, which keeps every set within 7 points
+   of the pool (the first draw had the tuning set 11 points short on the South).
+5. **Papiers:** the CLI is installed and Steven's token works, but the library is empty, so rounds record no coach
+   notes until papers are saved and annotated.

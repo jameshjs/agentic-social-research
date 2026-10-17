@@ -1,0 +1,5 @@
+# Twin-2K-500 given answers and exams: regenerable with autoresearch/twin_loader.py (CC BY 4.0, large)
+data/twin/
+__pycache__/
+# dry runs of the round runner (random answers, no model calls)
+autoresearch/rounds/dry-*/
