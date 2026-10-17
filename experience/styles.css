@@ -671,3 +671,5 @@ main{position:relative;z-index:4}.intro-chapter{height:190vh;min-height:1280px;p
 .map-motion-note{position:absolute;z-index:4;top:52px;left:27px;max-width:min(360px,calc(100% - 54px));margin:0;padding:10px 12px;border:1px solid #a8f4d14d;border-radius:9px;background:#0a2029e0;color:#c9dcda;font-size:10px;line-height:1.5}.map-motion-note strong{display:block;color:var(--mint)}
 .map-motion-legend{display:block;margin-top:6px;color:#9fbdb8;font-size:9px}.map-motion-legend i{display:inline-block;width:7px;height:7px;margin:0 4px 0 9px;border-radius:50%}.map-motion-legend i:first-child{margin-left:0}
 .map-actor-card{margin:8px 0 0;padding-top:8px;border-top:1px solid #a8f4d133;color:#f0f8ec}
+/* Event-driven Bloor map: clickable only once a RunResult is attached (bloor-map.js toggles these classes). */
+.bloor-map-canvas.bloor-map-canvas--interactive{pointer-events:auto}.bloor-map-canvas.bloor-map-canvas--hover{cursor:pointer}
