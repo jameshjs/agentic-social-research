@@ -1,0 +1,177 @@
+{
+ "summary": {
+  "model": "clef",
+  "paired_people": 8,
+  "calls": 16,
+  "errors": 0,
+  "median_latency_ms": 188,
+  "p95_latency_ms": 393,
+  "reported_input_tokens": 8274,
+  "note": "Action probabilities and directional checks are face-validity diagnostics, not observed travel responses or policy effect estimates.",
+  "run_at": "2026-10-17T16:15Z",
+  "provider": "Vultr Serverless Inference /v1/systemone",
+  "runner": "experiment.v1 paired fixture (8 people)"
+ },
+ "rows": [
+  {
+   "scenario": "fare",
+   "person": "nadia",
+   "focal_action": "bus",
+   "baseline": {
+    "action": "bus",
+    "focal_probability": 0.9846346974372864,
+    "model_confidence": 0.9692693948745728,
+    "input_tokens": 436,
+    "latency_ms": 393
+   },
+   "proposal": {
+    "action": "bus",
+    "focal_probability": 0.9845160245895386,
+    "model_confidence": 0.9690320491790771,
+    "input_tokens": 436,
+    "latency_ms": 356
+   },
+   "focal_probability_delta": 0
+  },
+  {
+   "scenario": "fare",
+   "person": "maria",
+   "focal_action": "bus",
+   "baseline": {
+    "action": "bus",
+    "focal_probability": 0.9787938594818115,
+    "model_confidence": 0.957587718963623,
+    "input_tokens": 441,
+    "latency_ms": 182
+   },
+   "proposal": {
+    "action": "bus",
+    "focal_probability": 0.9752018451690674,
+    "model_confidence": 0.9504036903381348,
+    "input_tokens": 441,
+    "latency_ms": 159
+   },
+   "focal_probability_delta": -0.004
+  },
+  {
+   "scenario": "fare",
+   "person": "ravi",
+   "focal_action": "bus",
+   "baseline": {
+    "action": "drive",
+    "focal_probability": 0.40570268034935,
+    "model_confidence": 0.36662065982818604,
+    "input_tokens": 513,
+    "latency_ms": 180
+   },
+   "proposal": {
+    "action": "drive",
+    "focal_probability": 0.1650640070438385,
+    "model_confidence": 0.7282687127590179,
+    "input_tokens": 513,
+    "latency_ms": 177
+   },
+   "focal_probability_delta": -0.241
+  },
+  {
+   "scenario": "fare",
+   "person": "jun",
+   "focal_action": "bus",
+   "baseline": {
+    "action": "bus",
+    "focal_probability": 0.9837225079536438,
+    "model_confidence": 0.9674450159072876,
+    "input_tokens": 441,
+    "latency_ms": 166
+   },
+   "proposal": {
+    "action": "bus",
+    "focal_probability": 0.9818056225776672,
+    "model_confidence": 0.9636112451553345,
+    "input_tokens": 441,
+    "latency_ms": 315
+   },
+   "focal_probability_delta": -0.002
+  },
+  {
+   "scenario": "bike",
+   "person": "leila",
+   "focal_action": "bike_bloor",
+   "baseline": {
+    "action": "bike_bloor",
+    "focal_probability": 0.6970821619033813,
+    "model_confidence": 0.5961095492045084,
+    "input_tokens": 606,
+    "latency_ms": 278
+   },
+   "proposal": {
+    "action": "bike_bloor",
+    "focal_probability": 0.6379216313362122,
+    "model_confidence": 0.5172288417816162,
+    "input_tokens": 606,
+    "latency_ms": 245
+   },
+   "focal_probability_delta": -0.059
+  },
+  {
+   "scenario": "bike",
+   "person": "priya",
+   "focal_action": "bike_bloor",
+   "baseline": {
+    "action": "bike_bloor",
+    "focal_probability": 0.9523188471794128,
+    "model_confidence": 0.9364251295725504,
+    "input_tokens": 600,
+    "latency_ms": 188
+   },
+   "proposal": {
+    "action": "bike_bloor",
+    "focal_probability": 0.9541188478469849,
+    "model_confidence": 0.9388251304626465,
+    "input_tokens": 600,
+    "latency_ms": 180
+   },
+   "focal_probability_delta": 0.002
+  },
+  {
+   "scenario": "bike",
+   "person": "theo",
+   "focal_action": "bike_bloor",
+   "baseline": {
+    "action": "bike_bloor",
+    "focal_probability": 0.831133246421814,
+    "model_confidence": 0.7748443285624186,
+    "input_tokens": 601,
+    "latency_ms": 310
+   },
+   "proposal": {
+    "action": "bike_bloor",
+    "focal_probability": 0.8148353695869446,
+    "model_confidence": 0.7531138261159261,
+    "input_tokens": 601,
+    "latency_ms": 179
+   },
+   "focal_probability_delta": -0.016
+  },
+  {
+   "scenario": "bike",
+   "person": "marta",
+   "focal_action": "bike_bloor",
+   "baseline": {
+    "action": "drive",
+    "focal_probability": null,
+    "model_confidence": 0.947333037853241,
+    "input_tokens": 499,
+    "latency_ms": 209
+   },
+   "proposal": {
+    "action": "drive",
+    "focal_probability": null,
+    "model_confidence": 0.951116293668747,
+    "input_tokens": 499,
+    "latency_ms": 197
+   },
+   "focal_probability_delta": null
+  }
+ ]
+}

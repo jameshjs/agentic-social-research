@@ -1,0 +1,331 @@
+const assert = require('node:assert/strict');
+const test = require('node:test');
+const { runWorldExperiment, reduceWorldMetrics, leversFor, validateWorldSpec, METRIC_DEFINITIONS, NOT_ESTIMABLE } = require('./world-runner');
+const { createSandbox } = require('../world/sandbox.js');
+const { fare, bike } = require('./world-fixtures');
+const world = require('../data/world/bloor_spadina_bathurst.json');
+const savedFare = require('./sample-world-fare.json');
+const savedBike = require('./sample-world-bike.json');
+
+const run = (spec, options = {}) => runWorldExperiment(spec, { world, ...options });
+let pair;
+const prepared = () => (pair ||= Promise.all([run(fare), run(bike)]));
+const ARMS = ['baseline', 'intervention'];
+const eventsOf = (result, arm, action) => result.runs[arm].events.filter((e) => e.action === action);
+const choice = (d) => ({ action: d.action, route: d.route, destination: d.destination });
+const legKey = (e) => `${e.tick}|${e.actor}|${e.trip_id}|${e.leg}`;
+const minutes = (e) => (e.arrive_t - e.depart_t) / 60;
+const graph = createSandbox(world).graph;   // protected layout holds every node either layout uses
+const persona = (result, id) => result.personas.find((p) => p.id === id);
+
+test('fare and bike share one population, map and initial state', async () => {
+  const [f, b] = await prepared();
+  assert.equal(f.schema_version, 'experiment.v2');
+  assert.deepEqual(f.personas, b.personas);
+  assert.deepEqual(f.initial_state, b.initial_state);
+  assert.deepEqual(f.population, b.population);
+  assert.deepEqual(f.places, b.places);
+  assert.deepEqual(f.world, b.world);
+  assert.equal(f.population.shared_across_scenarios, true);
+  assert.equal(f.population.representative, false);
+  assert.equal(f.population.residents + f.population.visitors, f.population.count);
+  for (const p of f.personas) {
+    if (p.home.kind === 'mapped') { assert.ok(Number.isFinite(p.home.x) && Number.isFinite(p.home.y), p.id); assert.ok(p.home.street); }
+    else assert.ok(p.home.label);
+  }
+  // Both baselines run the same levers on the same people, so they are the same world.
+  assert.deepEqual(f.runs.baseline.metrics, b.runs.baseline.metrics);
+  assert.deepEqual(f.runs.baseline.decisions.map(choice), b.runs.baseline.decisions.map(choice));
+  assert.equal(f.scenario_id, 'fare');
+  assert.equal(b.scenario_id, 'bike');
+});
+
+test('same seed replays exactly and pre-policy ticks match across arms', async () => {
+  for (const spec of [fare, bike]) {
+    const first = await run(spec);
+    assert.deepEqual(first, await run(spec));
+    const pre = (arm) => first.runs[arm].decisions.filter((d) => d.tick < spec.policy_start).map(choice);
+    assert.deepEqual(pre('intervention'), pre('baseline'));
+    for (let tick = 1; tick < spec.policy_start; tick++) assert.deepEqual(first.runs.intervention.metrics.by_tick[tick - 1], first.runs.baseline.metrics.by_tick[tick - 1]);
+    const policy = eventsOf(first, 'intervention', 'policy_change');
+    assert.equal(policy.length, 1);
+    assert.equal(policy[0].tick, spec.policy_start);
+    assert.deepEqual(policy[0].source_ids, spec.policy_source_ids);
+    for (const e of eventsOf(first, 'intervention', 'choose_trip')) assert.equal(e.caused_by.includes(policy[0].id), e.tick >= spec.policy_start);
+    for (const change of first.changed_decisions) assert.ok(change.tick >= spec.policy_start);
+    for (const arm of ARMS) assert.deepEqual(first.runs[arm].metrics, reduceWorldMetrics(first.runs[arm].events, spec.ticks, first.personas));
+  }
+});
+
+test('an empty intervention yields identical arms', async () => {
+  const result = await run({ ...fare, intervention: [] });
+  assert.deepEqual(result.changed_decisions, []);
+  assert.deepEqual(result.runs.baseline.metrics, result.runs.intervention.metrics);
+  assert.equal(eventsOf(result, 'intervention', 'policy_change').length, 0);
+});
+
+test('every leg is a Game Master move that starts where the last one ended', async () => {
+  const ruleIds = new Set(world.rules.map((r) => r.id));
+  const cue = { walk: 'walk', bike: 'ride_bike', car: 'drive', transit: 'ride_subway' };
+  for (const result of await prepared()) {
+    for (const arm of ARMS) {
+      const r = result.runs[arm];
+      assert.equal(r.game_master.rejected_actions, 0);
+      assert.ok(r.game_master.accepted_moves > 0);
+      assert.equal(r.warnings.length, 0);
+      const seen = new Set();
+      for (const e of r.events) {
+        for (const parent of e.caused_by) assert.ok(seen.has(parent), `${e.id} cites ${parent} before it exists`);
+        seen.add(e.id);
+        assert.equal(e.run_id, r.run_id);
+        assert.equal(e.evidence, 'simulated');
+        assert.ok(e.visual_cue);
+      }
+      const legs = new Map();
+      for (const e of eventsOf(result, arm, 'travel')) {
+        assert.equal(e.visual_cue, cue[e.mode]);
+        const from = graph.nodes.get(e.from_node), to = graph.nodes.get(e.to_node);
+        // `+ 0` folds the sandbox's -0 coordinates; results are plain JSON.
+        assert.deepEqual(e.path[0], [from.x + 0, from.y + 0, e.depart_t]);
+        assert.deepEqual(e.path.at(-1), [to.x + 0, to.y + 0, e.arrive_t]);
+        for (let i = 1; i < e.path.length; i++) {
+          assert.ok(e.path[i][2] >= e.path[i - 1][2], `${e.id} path runs backwards in time`);
+          assert.notDeepEqual(e.path[i], e.path[i - 1]);
+        }
+        assert.ok(e.steps.length > 0);
+        assert.equal(e.steps[0].t, e.depart_t);
+        for (const id of e.rule_ids) assert.ok(ruleIds.has(id));
+        assert.ok(e.rule_ids.includes('mode_edges') && e.rule_ids.includes('no_teleport'));
+        if (e.steps.some((s) => s.edge.startsWith('line2'))) assert.ok(e.rule_ids.includes('board_scheduled_only'));
+        if (e.steps.some((s) => s.crosswalk)) assert.ok(e.rule_ids.includes('cross_at_crosswalks'));
+        if (e.uses_bloor) assert.ok(['bike', 'car'].includes(e.mode));
+        for (const s of e.steps) assert.ok(graph.edges.has(s.edge) || s.edge.startsWith('car_'), s.edge);
+        legs.set(legKey(e), e);
+      }
+      for (const e of legs.values()) {
+        if (e.leg === 0) continue;
+        const prev = legs.get(legKey({ ...e, leg: e.leg - 1 }));
+        assert.ok(prev, `${e.id} has no previous leg`);
+        assert.equal(e.from_node, prev.to_node, `${e.id} teleported`);
+        assert.equal(e.depart_t, prev.arrive_t);
+        assert.deepEqual(e.path[0], prev.path.at(-1));
+      }
+      // Every completed in-map errand at a focal shop was entered at its door.
+      for (const visit of eventsOf(result, arm, 'enter_business')) {
+        const door = graph.nodes.get(visit.node);
+        assert.equal(door.kind, 'door');
+        assert.ok(door.business_ids.includes(visit.business_id));
+      }
+    }
+  }
+});
+
+test('fare: adult fare rises 50 cents from policy_start while Fair Pass stays at $2.10', async () => {
+  const [result] = await prepared();
+  const fairPass = new Set(result.personas.filter((p) => p.fare_category === 'fair_pass').map((p) => p.id));
+  let fairPolicy = 0, adultPolicy = 0;
+  for (const arm of ARMS) {
+    const r = result.runs[arm];
+    const byId = new Map(r.events.map((e) => [e.id, e]));
+    for (const pay of eventsOf(result, arm, 'pay_fare')) {
+      const ride = byId.get(pay.caused_by[0]);
+      assert.equal(ride.action, 'travel');
+      assert.ok(ride.steps.some((s) => s.edge === pay.edge && s.fare_cad === pay.amount_cad));
+      assert.equal(pay.recipient, 'ttc');
+      if (fairPass.has(pay.actor)) {
+        assert.equal(pay.amount_cad, 2.1);
+        assert.equal(pay.fare_product, 'fair_pass');
+        if (arm === 'intervention' && pay.tick >= fare.policy_start) fairPolicy++;
+      } else {
+        const policyTick = arm === 'intervention' && pay.tick >= fare.policy_start;
+        assert.equal(pay.amount_cad, policyTick ? 3.8 : 3.3);
+        assert.equal(pay.fare_product, 'adult');
+        if (policyTick) adultPolicy++;
+      }
+    }
+    for (const point of r.metrics.by_tick) {
+      assert.equal(point.fare_revenue_cad, point.household_fare_spend_cad);
+      assert.equal(point.shop_sales_cad, point.household_shopping_spend_cad);
+      assert.ok(point.household_transport_spend_cad >= point.household_fare_spend_cad);
+      const groups = Object.values(r.metrics.by_group).map((g) => g.by_tick[point.tick - 1]);
+      assert.equal(Math.round(groups.reduce((s, g) => s + g.household_fare_spend_cad, 0) * 100) / 100, point.household_fare_spend_cad);
+      assert.equal(groups.reduce((s, g) => s + g.transit_trips, 0), point.transit_trips);
+    }
+    assert.equal(r.metrics.totals.fare_revenue_cad, r.metrics.totals.household_fare_spend_cad);
+    assert.equal(r.metrics.totals.shop_sales_cad, r.metrics.totals.household_shopping_spend_cad);
+  }
+  assert.ok(fairPolicy > 0 && adultPolicy > 0, 'both fare products are exercised after the change');
+  assert.deepEqual(Object.keys(result.runs.baseline.metrics.by_group), ['adult', 'fair_pass']);
+  // The fare lever does not touch the road: any car leg made in both arms takes the same time,
+  // and in ticks where the same car legs exist the driver metric is identical.
+  const cars = (arm) => new Map(eventsOf(result, arm, 'travel').filter((e) => e.mode === 'car').map((e) => [legKey(e), e]));
+  const base = cars('baseline'), policy = cars('intervention');
+  for (const [key, e] of base) if (policy.has(key)) {
+    assert.equal(minutes(policy.get(key)), minutes(e));
+    assert.deepEqual(policy.get(key).steps, e.steps);
+  }
+  for (let tick = 1; tick <= fare.ticks; tick++) {
+    const keys = (m) => [...m.keys()].filter((k) => k.startsWith(`${tick}|`)).sort();
+    if (JSON.stringify(keys(base)) === JSON.stringify(keys(policy))) {
+      assert.equal(result.runs.intervention.metrics.by_tick[tick - 1].driver_mapped_minutes, result.runs.baseline.metrics.by_tick[tick - 1].driver_mapped_minutes);
+    }
+  }
+});
+
+test('bike: removal moves Bloor cyclists into car lanes without driver gains or injury estimates', async () => {
+  const [, result] = await prepared();
+  let shared = 0;
+  for (const arm of ARMS) {
+    for (const e of eventsOf(result, arm, 'travel').filter((x) => x.mode === 'bike')) {
+      const removed = arm === 'intervention' && e.tick >= bike.policy_start;
+      if (!removed) { assert.equal(e.shared_with_cars_m, 0); assert.ok(!e.steps.some((s) => s.shared_with_cars)); }
+      else if (e.uses_bloor) { assert.ok(e.shared_with_cars_m > 0, e.id); assert.ok(!e.steps.some((s) => s.edge.startsWith('trk_'))); shared++; }
+    }
+  }
+  assert.ok(shared > 0, 'some cyclist still rides Bloor after removal');
+  for (const point of result.runs.baseline.metrics.by_tick) assert.equal(point.bloor_shared_cycling_m, 0);
+  // Removing the track adds no car lane: identical car legs, identical driver minutes.
+  const cars = (arm) => eventsOf(result, arm, 'travel').filter((e) => e.mode === 'car').map((e) => [legKey(e), minutes(e), e.steps]);
+  assert.deepEqual(cars('intervention'), cars('baseline'));
+  assert.deepEqual(result.runs.intervention.metrics.by_tick.map((p) => p.driver_mapped_minutes), result.runs.baseline.metrics.by_tick.map((p) => p.driver_mapped_minutes));
+  for (const id of ['injuries', 'business_closures', 'driver_time_gain_beyond_section', 'emissions_kg', 'gdp_cad', 'citywide_totals']) {
+    const item = result.not_estimable.find((m) => m.id === id);
+    assert.ok(item && item.value === null && item.status === 'not_estimable' && item.reason, id);
+  }
+  // A removal never makes a safety-sensitive cyclist start riding Bloor.
+  for (const change of result.changed_decisions) {
+    if (change.intervention.action === 'bike_bloor') assert.ok(persona(result, change.actor).bike_safety_sensitivity < 1.4, change.key);
+  }
+  assert.equal(result.scenario.levers.intervention.bloor_cycle_track, 'none');
+});
+
+test('external decisions are bounded, cached for identical states, and replayable', async () => {
+  let calls = 0;
+  const decide = async (request) => {
+    calls++;
+    assert.equal('arm' in request, false);
+    assert.ok(!JSON.stringify(request).includes('baseline') && !JSON.stringify(request).includes('intervention'));
+    assert.ok(request.options.some((o) => o.action === 'defer'));
+    return { action: request.person.id === 'nadia' ? 'teleport' : request.options[0].action, provider: 'test_agent', reason: 'first listed option' };
+  };
+  const result = await run(fare, { decide });
+  for (const arm of ARMS) {
+    assert.ok(result.runs[arm].warnings.some((w) => w.code === 'invalid_agent_action' && w.proposed === 'teleport'));
+    assert.ok(result.runs[arm].decisions.some((d) => d.provider === 'test_agent'));
+    assert.ok(result.runs[arm].decisions.filter((d) => d.actor === 'nadia').every((d) => d.provider === 'fixture_rule'));
+    assert.equal(result.runs[arm].game_master.rejected_actions, 0);
+  }
+  assert.ok(calls < result.runs.baseline.decisions.length + result.runs.intervention.decisions.length, 'identical pre-policy states reuse one answer');
+  assert.equal(calls, result.decision_replay.length);
+  const replay = await run(fare, { replay_decisions: result.decision_replay });
+  for (const arm of ARMS) {
+    assert.deepEqual(replay.runs[arm].decisions, result.runs[arm].decisions);
+    assert.deepEqual(replay.runs[arm].metrics, result.runs[arm].metrics);
+  }
+  const failing = await run(fare, { decide: async () => { throw new Error('model offline'); } });
+  assert.ok(failing.runs.baseline.warnings.every((w) => w.code === 'agent_error'));
+  assert.deepEqual(failing.runs.baseline.decisions.map(choice), (await prepared())[0].runs.baseline.decisions.map(choice));
+});
+
+test('sensitivity overrides are validated and recorded', async () => {
+  const [result] = await prepared();
+  assert.deepEqual(result.assumption_values, { cost_weight: 1, unprotected_cycling_discomfort_per_km: 4, shop_staffing_response: true });
+  assert.deepEqual(result.assumption_overrides, {});
+  const off = await run(fare, { overrides: { shop_staffing_response: false } });
+  assert.equal(off.assumption_values.shop_staffing_response, false);
+  assert.deepEqual(off.assumption_overrides, { shop_staffing_response: false });
+  for (const arm of ARMS) for (const point of off.runs[arm].metrics.by_tick) assert.equal(point.shops_reduced_hours, 0);
+  for (const e of eventsOf(off, 'baseline', 'set_shop_hours')) assert.equal(e.reduced, false);
+  await assert.rejects(run(fare, { overrides: { retail_elasticity: -0.3 } }), /Unknown sensitivity override/);
+  await assert.rejects(run(fare, { overrides: { cost_weight: 'high' } }), /Invalid value/);
+});
+
+test('unsupported interventions and broken specs are rejected before running', async () => {
+  await assert.rejects(run({ ...fare, intervention: [{ operator: 'run_code', script: 'noop' }] }), /Unsupported intervention operator/);
+  await assert.rejects(run({ ...fare, intervention: [{ operator: 'set_lever', lever: 'free_parking_everywhere', value: true }] }), /Unsupported intervention lever/);
+  await assert.rejects(run({ ...fare, intervention: [{ operator: 'set_lever', lever: 'bloor_cycle_track', value: 'hovering' }] }), /Invalid value/);
+  await assert.rejects(runWorldExperiment(fare, {}), /needs the parsed world/);
+  const v = (patch) => () => validateWorldSpec({ ...fare, ...patch }, world);
+  assert.throws(v({ intervention: [{ operator: 'change_cost', lever: 'adult_fare_cad', delta_cad: -5 }] }), /negative adult fare/);
+  assert.throws(v({ environment: { adult_fare_cad: -1, fair_pass_fare_cad: 2.1 } }), /non-negative/);
+  assert.throws(v({ ticks: 0 }), /1–12 ticks/);
+  assert.throws(v({ ticks: 13 }), /1–12 ticks/);
+  assert.throws(v({ policy_start: 5 }), /policy_start/);
+  assert.throws(v({ policy_start: 0 }), /policy_start/);
+  assert.throws(v({ population: { personas: [] } }), /population/);
+  assert.throws(() => validateWorldSpec(fare, { ...world, id: 'somewhere-else' }), /does not match/);
+  const people = fare.population.personas;
+  assert.throws(v({ population: { personas: [people[0], people[0]] } }), /duplicate persona/);
+  assert.throws(v({ shops: [...fare.shops, { business_id: 'osm_missing', closes_at: '21:00', reduced_closes_at: '18:00', receipt_floor_cad: 1 }] }), /no door node/);
+  const lost = { ...people[0], routine: [{ ...people[0].routine[0], options: [{ ...people[0].routine[0].options[0], legs: [{ mode: 'walk', to: 'nowhere' }] }] }] };
+  assert.throws(v({ population: { personas: [lost] } }), /unknown node nowhere/);
+  const jumper = { ...people[0], routine: [{ ...people[0].routine[0], options: [{ ...people[0].routine[0].options[0], legs: [{ mode: 'transit', ride: 'line2_eb' }] }] }] };
+  assert.throws(v({ population: { personas: [jumper] } }), /no teleporting/);
+  assert.equal(validateWorldSpec(fare, world), true);
+  assert.equal(validateWorldSpec(bike, world), true);
+});
+
+test('levers: baseline keeps sandbox defaults, the intervention applies from policy_start', () => {
+  assert.deepEqual(leversFor(fare, 'baseline', 3), { adult_fare_cad: 3.3 });
+  assert.deepEqual(leversFor(fare, 'intervention', 1), { adult_fare_cad: 3.3 });
+  assert.deepEqual(leversFor(fare, 'intervention', 2), { adult_fare_cad: 3.8 });
+  assert.deepEqual(leversFor(bike, 'intervention', 4), { adult_fare_cad: 3.3, bloor_cycle_track: 'none' });
+  assert.deepEqual(leversFor({ ...fare, intervention: [] }, 'intervention', 4), { adult_fare_cad: 3.3 });
+  assert.throws(() => leversFor(fare, 'policy', 2), /Unknown arm/);
+});
+
+test('a compiled set_lever spec runs: halving Line 2 frequency lengthens platform waits', async () => {
+  const spec = { ...fare, id: 'bloor-section-line2-headway-x2', scenario_id: 'custom', question: 'What if Line 2 ran half as often?', intervention: [{ operator: 'set_lever', lever: 'line2_headway_multiplier', value: 2 }] };
+  const result = await run(spec);
+  assert.equal(result.scenario.levers.intervention.line2_headway_multiplier, 2);
+  const meanWait = (arm) => {
+    const waits = eventsOf(result, arm, 'travel').filter((e) => e.tick >= spec.policy_start).flatMap((e) => e.steps.filter((s) => s.edge.startsWith('line2')).map((s) => s.wait_s));
+    assert.ok(waits.length > 0);
+    return waits.reduce((s, w) => s + w, 0) / waits.length;
+  };
+  assert.ok(meanWait('intervention') > meanWait('baseline'));
+  for (const arm of ARMS) assert.equal(result.runs[arm].game_master.rejected_actions, 0);
+});
+
+test('metric definitions and points come from committed events', async () => {
+  for (const def of METRIC_DEFINITIONS) {
+    assert.ok(['sum', 'mean'].includes(def.aggregation), def.id);
+    assert.equal(def.status, 'assumption_driven');
+    assert.ok(def.label && def.unit && def.calculation);
+  }
+  assert.ok(NOT_ESTIMABLE.every((m) => m.value === null && m.status === 'not_estimable'));
+  for (const result of await prepared()) {
+    for (const arm of ARMS) {
+      const r = result.runs[arm];
+      const ids = new Set(r.events.map((e) => e.id));
+      assert.equal(r.metric_points.length, METRIC_DEFINITIONS.length * result.scenario.ticks);
+      for (const point of r.metric_points) {
+        assert.equal(point.value, r.metrics.by_tick[point.tick - 1][point.metric_id]);
+        assert.equal(point.run_id, r.run_id);
+        assert.equal(point.arm, arm);
+        for (const id of point.event_ids) assert.ok(ids.has(id));
+        if (point.value === null) assert.equal(point.event_ids.length, 0);
+      }
+      const completed = eventsOf(result, arm, 'trip_completed').length;
+      assert.equal(r.metrics.totals.completed_trips, completed);
+      assert.equal(completed + eventsOf(result, arm, 'defer_trip').length, r.decisions.length);
+    }
+  }
+});
+
+test('loads as browser globals (no require) and reproduces the same run', async () => {
+  const vm = require('node:vm');
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const context = vm.createContext({});
+  context.window = context;
+  for (const file of ['../world/sandbox.js', './world-fixtures.js', './world-runner.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, file), 'utf8'), context, { filename: file });
+  const result = await context.CounterfactualWorldExperiment.runWorldExperiment(context.CounterfactualWorldFixtures.bike, { world });
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), savedBike);
+});
+
+test('checked-in offline snapshots match fresh runs', async () => {
+  const [f, b] = await prepared();
+  assert.deepEqual(f, savedFare);
+  assert.deepEqual(b, savedBike);
+});

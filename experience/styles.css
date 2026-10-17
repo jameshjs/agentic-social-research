@@ -661,3 +661,5 @@ main{position:relative;z-index:4}.intro-chapter{height:190vh;min-height:1280px;p
 .persona-boundary{margin-top:19px;padding:13px 17px;border-left:3px solid #e4f692;background:#e4f69215;color:#c1d6cc;font-size:11px;line-height:1.6}
 @media(max-width:1050px){.persona-research-grid{grid-template-columns:1fr}.persona-research-aside{display:grid;grid-template-columns:1fr 1fr}.persona-deep-link{grid-column:1/-1}}
 @media(max-width:760px){.persona-lab-head{display:block}.persona-lab-head>p{margin-top:20px}.persona-rounds-panel{padding:13px}.persona-rounds{grid-template-columns:repeat(5,minmax(0,1fr))}.persona-round-detail{padding:15px}.persona-score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.persona-research-aside{display:flex}.persona-reaction-head{display:block}.persona-reaction-head>p{margin-top:12px}.persona-reaction-cards{grid-template-columns:1fr}.persona-reaction-action{min-height:0}}
+/* Event-driven Bloor map: clickable only once a RunResult is attached (bloor-map.js toggles these classes). */
+.bloor-map-canvas.bloor-map-canvas--interactive{pointer-events:auto}.bloor-map-canvas.bloor-map-canvas--hover{cursor:pointer}
