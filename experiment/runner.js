@@ -10,13 +10,16 @@
     ['completed_trips', 'Completed sample trips', 'trips'],
     ['bus_trips', 'Sample TTC trips', 'trips'],
     ['bike_trips', 'Sample cycling trips', 'trips'],
+    ['bloor_route_trips', 'Sample Bloor main-route cycling trips', 'trips'],
     ['car_trips', 'Sample car trips', 'trips'],
     ['walk_trips', 'Sample walking trips', 'trips'],
     ['deferred_trips', 'Deferred sample trips', 'trips'],
     ['local_shop_visits', 'Local shop visits', 'visits'],
+    ['plaza_arrivals', 'Alternate plaza arrivals', 'arrivals'],
     ['shop_sales_cad', 'Local shop receipts', 'CAD'],
     ['fare_revenue_cad', 'Sample TTC receipts', 'CAD'],
     ['household_fare_spend_cad', 'Household fare spending', 'CAD'],
+    ['household_transport_spend_cad', 'Household recorded transport spending', 'CAD'],
     ['household_shopping_spend_cad', 'Household local shopping', 'CAD'],
     ['shop_open_hours', 'Local shop hours for the next period', 'hours'],
   ].map(([id, label, unit]) => ({ id, label, unit, status: 'assumption_driven' }));
@@ -123,7 +126,7 @@
   function reduceMetrics(events, ticks) {
     const byTick = [];
     for (let tick = 1; tick <= ticks; tick++) {
-      const point = { tick, completed_trips: 0, bus_trips: 0, bike_trips: 0, car_trips: 0, walk_trips: 0, deferred_trips: 0, local_shop_visits: 0, shop_sales_cad: 0, fare_revenue_cad: 0, household_fare_spend_cad: 0, household_shopping_spend_cad: 0, shop_open_hours: 0 };
+      const point = { tick, completed_trips: 0, bus_trips: 0, bike_trips: 0, bloor_route_trips: 0, car_trips: 0, walk_trips: 0, deferred_trips: 0, local_shop_visits: 0, plaza_arrivals: 0, shop_sales_cad: 0, fare_revenue_cad: 0, household_fare_spend_cad: 0, household_transport_spend_cad: 0, household_shopping_spend_cad: 0, shop_open_hours: 0 };
       for (const event of events) {
         if (event.tick !== tick) continue;
         if (event.action === 'defer_trip') point.deferred_trips++;
@@ -131,15 +134,18 @@
           point.completed_trips++;
           if (event.mode === 'bus') point.bus_trips++;
           if (event.mode === 'bicycle') point.bike_trips++;
+          if (event.mode === 'bicycle' && event.route_id === 'bloor_main') point.bloor_route_trips++;
           if (event.mode === 'car') point.car_trips++;
           if (event.mode === 'walk') point.walk_trips++;
+          if (event.to === 'plaza') point.plaza_arrivals++;
         }
         if (event.action === 'enter_shop') point.local_shop_visits++;
-        if (event.action === 'pay_fare') { point.fare_revenue_cad += event.amount_cad; point.household_fare_spend_cad += event.amount_cad; }
+        if (event.action === 'pay_fare') { point.fare_revenue_cad += event.amount_cad; point.household_fare_spend_cad += event.amount_cad; point.household_transport_spend_cad += event.amount_cad; }
+        if (event.action === 'pay_travel_cost') point.household_transport_spend_cad += event.amount_cad;
         if (event.action === 'purchase') { point.shop_sales_cad += event.amount_cad; point.household_shopping_spend_cad += event.amount_cad; }
         if (event.action === 'set_shop_hours') point.shop_open_hours = event.hours;
       }
-      for (const field of ['shop_sales_cad', 'fare_revenue_cad', 'household_fare_spend_cad', 'household_shopping_spend_cad']) point[field] = round(point[field]);
+      for (const field of ['shop_sales_cad', 'fare_revenue_cad', 'household_fare_spend_cad', 'household_transport_spend_cad', 'household_shopping_spend_cad']) point[field] = round(point[field]);
       byTick.push(point);
     }
     const totals = Object.fromEntries(Object.keys(byTick[0]).filter((key) => key !== 'tick' && key !== 'shop_open_hours').map((key) => [key, round(byTick.reduce((sum, point) => sum + point[key], 0))]));

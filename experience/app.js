@@ -1,6 +1,9 @@
 const { preparedScenarios, exploratoryScenario } = window.CounterfactualScenarios;
 const CityScene = window.CityScene;
 const traceAdapter = window.CounterfactualTraceAdapter;
+const experimentRunner = window.CounterfactualExperiment;
+const experimentFixtures = window.CounterfactualExperimentFixtures;
+const experimentAdapter = window.CounterfactualExperimentAdapter;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -15,7 +18,9 @@ let investigationToken = 0;
 let activeSector = 'mobility';
 let activeBikeRole = 'cyclist';
 let activeBikePath = 'stay';
+let activeBikeDecisionKey = null;
 let fareTrace = null;
+let bikeExperiment = null;
 
 function useFareTrace(trace) {
   if (!traceAdapter.isFareTrace(trace)) return;
@@ -63,6 +68,76 @@ const bikeStories = {
     ],
   },
 };
+
+function eventDescendants(events, startId) {
+  const reached = new Set([startId]);
+  const chain = [];
+  for (const event of events) {
+    if (event.id === startId || (event.caused_by || []).some((id) => reached.has(id))) {
+      chain.push(event);
+      reached.add(event.id);
+    }
+  }
+  return chain;
+}
+
+function eventText(event) {
+  if (event.action === 'choose_trip') return `Chose ${event.chosen.replaceAll('_', ' ')}`;
+  if (event.action === 'change_destination') return `Changed destination: ${event.from.replaceAll('_', ' ')} → ${event.to.replaceAll('_', ' ')}`;
+  if (event.action === 'travel') return `${event.mode} via ${event.route_id.replaceAll('_', ' ')} → ${event.to.replaceAll('_', ' ')}`;
+  if (event.action === 'enter_shop') return 'Entered the local shop';
+  if (event.action === 'purchase') return `Bought ${event.amount_cad.toFixed(2)} CAD at the local shop`;
+  if (event.action === 'pay_fare') return `Paid ${event.amount_cad.toFixed(2)} CAD TTC fare`;
+  if (event.action === 'pay_travel_cost') return `Paid ${event.amount_cad.toFixed(2)} CAD travel cost`;
+  if (event.action === 'defer_trip') return 'Deferred the trip';
+  if (event.action === 'set_shop_hours') return `Local shop set next-period hours to ${event.hours}`;
+  return event.action.replaceAll('_', ' ');
+}
+
+function renderBikeExperiment(result) {
+  if (!result) return;
+  const changes = result.changed_decisions.filter((change) => change.tick >= result.scenario.policy_start);
+  if (!changes.some((change) => change.key === activeBikeDecisionKey)) activeBikeDecisionKey = changes.find((change) => change.trip_id === 'shop')?.key || changes[0]?.key;
+  const buttons = $('#bikeExperimentChoices');
+  buttons.replaceChildren(...changes.slice(0, 8).map((change) => {
+    const person = result.personas.find((item) => item.id === change.actor);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'experiment-choice';
+    button.setAttribute('aria-pressed', String(change.key === activeBikeDecisionKey));
+    const label = document.createElement('strong'); label.textContent = `${person?.name || change.actor} · ${change.trip_id} · P${change.tick}`;
+    const route = document.createElement('span'); route.textContent = `${change.baseline.action.replaceAll('_', ' ')} → ${change.intervention.action.replaceAll('_', ' ')}`;
+    button.append(label, route);
+    button.addEventListener('click', () => { activeBikeDecisionKey = change.key; renderBikeExperiment(result); });
+    return button;
+  }));
+  const change = changes.find((item) => item.key === activeBikeDecisionKey);
+  const path = $('#bikeExperimentPath');
+  path.replaceChildren();
+  if (!change) return;
+  const person = result.personas.find((item) => item.id === change.actor);
+  const heading = document.createElement('div'); heading.className = 'experiment-path-heading';
+  const title = document.createElement('strong'); title.textContent = `${person?.name || change.actor}'s ${change.trip_id} trip · period ${change.tick}`;
+  const note = document.createElement('span'); note.textContent = 'SYNTHETIC DECISION / TRACEABLE EVENTS';
+  heading.append(title, note); path.append(heading);
+  const columns = document.createElement('div'); columns.className = 'experiment-path-columns';
+  for (const [arm, startId, label] of [['baseline', change.baseline_event_id, 'BASELINE'], ['intervention', change.intervention_event_id, 'WITH REMOVAL']]) {
+    const column = document.createElement('div'); column.className = 'experiment-path-column';
+    const armLabel = document.createElement('span'); armLabel.textContent = label; column.append(armLabel);
+    const events = eventDescendants(result.runs[arm].events, startId);
+    for (const event of events) {
+      const row = document.createElement('p');
+      const index = document.createElement('small'); index.textContent = event.id.split(':').at(-1);
+      const description = document.createElement('span'); description.textContent = eventText(event);
+      row.append(index, description); column.append(row);
+    }
+    columns.append(column);
+  }
+  path.append(columns);
+  const caveat = document.createElement('p'); caveat.className = 'experiment-path-caveat';
+  caveat.textContent = 'The policy starts in period 2. Route preferences, safety sensitivity and basket values are explicit synthetic assumptions. These are sampled choices, not observed Toronto behavior.';
+  path.append(caveat);
+}
 
 function setPhase(value) {
   phase = value;
@@ -123,7 +198,12 @@ async function runScenario(scenario, promptOverride = null) {
     current = traceAdapter.toFareScenario(fareTrace, preparedScenarios.fare);
     useFareTrace(fareTrace);
     ensureFareInspector();
-  } else current = scenario === 'custom' ? exploratoryScenario(promptOverride || '') : preparedScenarios[scenario];
+  } else if (scenario === 'bike') {
+    if (!bikeExperiment) bikeExperiment = await experimentRunner.runExperiment(experimentFixtures.bike);
+    if (token !== investigationToken) return;
+    window.CounterfactualCurrentExperiment = bikeExperiment;
+    current = experimentAdapter.toBikeScenario(bikeExperiment, preparedScenarios.bike);
+  } else current = exploratoryScenario(promptOverride || '');
   document.body.dataset.scenario = current.id;
   scene.setScenario(current.id);
   const overlay = $('#investigation');
@@ -154,13 +234,14 @@ function renderLab() {
     bikeScene.resize();
     bikeScene.setPhase('lab');
     bikeScene.setMotion(true);
+    renderBikeExperiment(current.experiment);
   } else bikeScene.setMotion(false);
   $('#bikeLabButton').hidden = current.id !== 'bike';
   $('#ttcWorkbench').hidden = current.id !== 'fare';
   $('#ttcInspectorButton').hidden = current.id !== 'fare';
   $('#scenarioBreadcrumb').textContent = current.breadcrumb;
-  $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : current.id === 'fare' ? 'SEEDED EVENT REPLAY' : 'PREPARED DEMO REPLAY';
-  $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT' : current.id === 'fare' ? `SYNTHETIC v${current.trace.version}` : 'ILLUSTRATIVE SAMPLE';
+  $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : current.id === 'fare' ? 'SEEDED EVENT REPLAY' : 'PAIRED EVENT REPLAY';
+  $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT' : current.id === 'fare' ? `SYNTHETIC v${current.trace.version}` : `SYNTHETIC v${current.experiment.version}`;
   $('#studyTitle').textContent = current.title;
   $('#studySummary').textContent = current.summary;
   $('#viewportArea').textContent = current.viewport;
@@ -173,18 +254,18 @@ function renderLab() {
   $('#insightNarrative').textContent = current.narrative;
   $('#sourceRibbon').textContent = current.sourceRibbon;
   $('#impactScenarioTag').textContent = current.mapTag;
-  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : current.id === 'fare' ? `SCENARIO OUTPUTS / SHARED TRACE v${current.trace.version}` : 'SCENARIO OUTPUTS / PREPARED REPLAY';
+  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : current.id === 'fare' ? `SCENARIO OUTPUTS / SHARED TRACE v${current.trace.version}` : `SCENARIO OUTPUTS / PAIRED TRACE v${current.experiment.version}`;
   const custom = current.id === 'custom';
   $('#chainLabel').textContent = custom ? 'WHAT A CONNECTED ENGINE WOULD DO' : 'WATCH THE CHAIN';
   $('#impactButtonHint').textContent = custom ? 'Inspect missing evidence' : 'See the connected effects';
-  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : current.id === 'fare' ? 'This is a seeded rule-engine result, not a Toronto forecast. Open the living run to inspect people, events, evidence and reruns.' : 'Simulated decisions are illustrative, not a validated policy forecast. Click an impact to inspect its assumptions.';
+  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : current.id === 'fare' ? 'This is a seeded rule-engine result, not a Toronto forecast. Open the living run to inspect people, events, evidence and reruns.' : 'Eight synthetic people make bounded route choices. The charts and decision ledger use one event trace; city motion is schematic. This is not a Toronto forecast.';
   $('#impactHeadingLine').textContent = custom ? 'One question.' : 'One decision.';
   $('#impactHeadingEm').textContent = custom ? 'Open outcomes.' : 'Many futures.';
-  $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : current.id === 'fare' ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : 'Choose a connected sector to inspect its illustrative comparison and evidence boundary.';
-  $('#boardCaption').textContent = custom ? 'NO RUN RESULT ATTACHED' : current.id === 'fare' ? `SEEDED TRACE v${current.trace.version} · NOT A FORECAST` : 'ILLUSTRATIVE RUN · NOT A FORECAST';
+  $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : current.id === 'fare' ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : 'Each Bloor chart reduces the same committed events shown in the decision ledger.';
+  $('#boardCaption').textContent = custom ? 'NO RUN RESULT ATTACHED' : current.id === 'fare' ? `SEEDED TRACE v${current.trace.version} · NOT A FORECAST` : 'PAIRED SYNTHETIC TRACE · NOT A FORECAST';
   $('#boardAction').textContent = custom ? '✳ INSPECT AN OPEN QUESTION' : '✳ TRACE A CONNECTION';
   $('#overviewTitle').textContent = custom ? 'What remains to measure.' : 'Every signal in view.';
-  $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : current.id === 'fare' ? 'Five linked views of one seeded run. Change an assumption in the TTC inspector and every chart updates.' : 'Five connected sectors, one illustrative comparison. Choose any chart to inspect its mechanism and evidence boundary.';
+  $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : current.id === 'fare' ? 'Five linked views of one seeded run. Change an assumption in the TTC inspector and every chart updates.' : 'Five event-derived views of one paired Bloor sample. Choose a chart to inspect its assumption boundary.';
   $('#viewToggle').hidden = custom;
   $('#viewportLegend').hidden = custom;
   $('#cityStateNote').hidden = !custom;
@@ -240,7 +321,7 @@ function renderChart(data) {
     ? 'No modelled series or numeric effect is attached to this question.'
     : current.id === 'fare'
       ? `Seeded model values, weeks 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed change compares the average after the policy starts: ${data.delta}. Not a Toronto forecast.`
-      : `Illustrative values, periods 1–4. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed change uses period 4: ${data.delta}.`;
+      : `Paired synthetic event totals, periods 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed value compares period 4: ${data.delta}. Not a Toronto forecast.`;
   chart.setAttribute('aria-label', `${data.chartTitle}. ${summary}`);
   $('#chartSummary').textContent = summary;
   const ns = 'http://www.w3.org/2000/svg';

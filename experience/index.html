@@ -120,7 +120,7 @@
 
         <div class="timeline-bar">
           <div class="timeline-heading"><span>ILLUSTRATIVE CITY REPLAY</span><strong id="timelineLabel">MOTION FRAME 03 / 04</strong></div>
-          <div class="timeline-controls"><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub illustrative city animation; no event log attached" /><span>END</span></div>
+          <div class="timeline-controls"><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub schematic city animation; recorded decisions appear in the experiment ledger below" /><span>END</span></div>
           <div class="timeline-time"><span>00</span><span>01</span><span>02</span><span>03</span><span>04</span></div>
         </div>
       </section>
@@ -143,7 +143,7 @@
             <div class="bike-lab-kicker"><span>02 / A STREET IN QUESTION</span><span>TORONTO · SHAW ST TO AVENUE RD</span></div>
             <h2 class="bike-lab-title">One street.<br /><em>Four possible paths.</em></h2>
           </div>
-          <p class="bike-lab-deck">A protected cycle track connects a person to more than a route. Explore how a hypothetical redesign could change a trip, a stop at a shop, and the curb outside. This is a schematic, illustrative replay.</p>
+            <p class="bike-lab-deck">A protected cycle track connects a person to more than a route. Compare a seeded synthetic run, then explore other possible responses. The street visuals are schematic; the event ledger and charts use recorded choices.</p>
         </div>
 
         <div class="bike-workbench" aria-label="Bloor scenario workbench">
@@ -156,7 +156,7 @@
               <li><span>04</span><div><strong>Compare branches</strong><small>Select a response and inspect what must be measured before estimating impact.</small></div></li>
             </ol>
             <div class="bike-pipeline-context"><span>OBSERVED TORONTO CONTEXT</span><strong>3,524 <small>passages / day</small></strong><p>At one Bloor counter west of Huron in 2025. A scale cue only; the proposed removal has no measured response here.</p></div>
-            <div class="bike-pipeline-note"><span>◇ EVIDENCE BOUNDARY</span><p>This is an interactive mechanism storyboard. No Bloor agent event trace or numeric policy forecast is attached.</p></div>
+            <div class="bike-pipeline-note"><span>◇ EVIDENCE BOUNDARY</span><p>A seeded synthetic event trace is attached below. Its choices and shop responses are assumptions, not a Bloor removal forecast.</p></div>
           </aside>
 
           <div class="bike-workbench-city">
@@ -183,7 +183,7 @@
           </div>
 
         <div class="bike-trace">
-          <div class="bike-trace-head"><div><span>FOLLOW THE DECISION</span><h3>Who moves differently?</h3></div><p>Choose a person, then choose a possible response. These branches demonstrate mechanisms; they are not decisions from a connected agent event log.</p></div>
+          <div class="bike-trace-head"><div><span>EXPLORE AN ALTERNATIVE</span><h3>What else could happen?</h3></div><p>These selectable branches show additional mechanisms that are not choices in the seeded run. The recorded decisions and their event paths are directly below.</p></div>
           <div class="bike-role-switch" role="group" aria-label="Choose a Bloor stakeholder">
             <button type="button" data-bike-role="cyclist" class="selected" aria-pressed="true"><span>01</span> Cyclist</button>
             <button type="button" data-bike-role="delivery" aria-pressed="false"><span>02</span> Driver + delivery</button>
@@ -200,6 +200,12 @@
             </div>
           </div>
         </div>
+        </div>
+
+        <div class="experiment-ledger" id="bikeExperimentLedger" aria-live="polite">
+          <div class="experiment-ledger-head"><div><span>PAIRED WORLD / SEED 42</span><h3>What the people in this run did.</h3></div><p>Choose a changed decision to follow its committed events. All figures below are for eight synthetic people over four model periods.</p></div>
+          <div id="bikeExperimentChoices" class="experiment-ledger-choices"></div>
+          <div id="bikeExperimentPath" class="experiment-ledger-path"></div>
         </div>
 
         <div class="bike-evidence-grid">
@@ -278,6 +284,9 @@
     <script defer src="./scenarios.js"></script>
     <script defer src="../demo-ui/sim.js"></script>
     <script defer src="./trace-adapter.js"></script>
+    <script defer src="../experiment/runner.js"></script>
+    <script defer src="../experiment/fixtures.js"></script>
+    <script defer src="./experiment-adapter.js"></script>
     <script defer src="./city.js?v=bloor-workbench"></script>
     <script defer src="./app.js?v=cinematic-inspector-2"></script>
     <script defer src="./persona-lab.js?v=1"></script>

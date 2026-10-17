@@ -567,6 +567,24 @@ main{position:relative;z-index:4}.intro-chapter{height:190vh;min-height:1280px;p
 .bike-workbench .bike-step-flow{gap:5px;margin:15px 0 12px}
 .bike-workbench .bike-step-flow .bike-step{min-height:40px;padding:7px;font-size:9px}
 .bike-workbench .bike-trace-card-bottom strong{font-size:11px}
+.experiment-ledger{max-width:1480px;margin:18px auto 0;padding:22px;border:1px solid #a8f4d14f;border-radius:14px;background:linear-gradient(145deg,#14343bea,#0a222de8);box-shadow:0 24px 65px #0004;color:#e8f6ed}
+.experiment-ledger-head{display:flex;justify-content:space-between;align-items:end;gap:20px;border-bottom:1px solid #a8f4d12e;padding-bottom:17px}
+.experiment-ledger-head span,.experiment-path-heading span{color:var(--bike-lemon);font-size:9px;font-weight:700;letter-spacing:.13em}
+.experiment-ledger-head h3{margin:8px 0 0;font:600 clamp(22px,2.3vw,34px)/1.1 'Space Grotesk',sans-serif;letter-spacing:-.05em}
+.experiment-ledger-head p{max-width:400px;margin:0;color:#b9d5ca;font-size:12px;line-height:1.55}
+.experiment-ledger-choices{display:flex;gap:8px;overflow-x:auto;padding:16px 0}
+.experiment-choice{flex:0 0 auto;display:flex;flex-direction:column;align-items:start;gap:6px;min-width:140px;padding:11px 13px;border:1px solid #a8f4d13d;border-radius:9px;background:#102c34;color:#d8efe1;text-align:left;cursor:pointer}
+.experiment-choice:hover,.experiment-choice[aria-pressed="true"]{border-color:var(--bike-lemon);background:#29493d}
+.experiment-choice strong{font-size:12px}.experiment-choice span{color:#b9d5ca;font-size:10px;text-transform:capitalize}
+.experiment-ledger-path{border:1px solid #a8f4d130;border-radius:10px;background:#09232c;padding:16px}
+.experiment-path-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;padding-bottom:12px;border-bottom:1px solid #a8f4d12a}
+.experiment-path-heading strong{font:600 16px 'Space Grotesk',sans-serif}
+.experiment-path-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:13px}
+.experiment-path-column{padding:14px;border:1px solid #a8f4d12e;border-radius:8px;background:#14343b}
+.experiment-path-column>span{display:block;margin-bottom:10px;color:var(--bike-lemon);font-size:9px;font-weight:700;letter-spacing:.12em}
+.experiment-path-column p{display:flex;gap:11px;align-items:baseline;margin:0;padding:8px 0;border-top:1px solid #a8f4d118;color:#e4f2e8;font-size:11px;line-height:1.4}
+.experiment-path-column p small{flex:none;color:#8eb5aa;font:500 9px 'JetBrains Mono',monospace}
+.experiment-path-caveat{margin:13px 0 0;color:#a9c6bd;font-size:10px;line-height:1.5}
 
 @media(max-width:1210px){
   .bike-workbench{grid-template-columns:minmax(190px,.55fr) minmax(0,1.45fr)}
@@ -583,6 +601,7 @@ main{position:relative;z-index:4}.intro-chapter{height:190vh;min-height:1280px;p
   .bike-workbench .bike-stage-overlay{max-width:calc(100% - 30px)}
 }
 @media(max-width:430px){.bike-workbench .bike-view-toggle button span{display:none}.bike-workbench .bike-role-switch{overflow-x:auto;flex-wrap:nowrap}.bike-workbench .bike-role-switch button{flex:none}.bike-world{height:320px}}
+@media(max-width:650px){.experiment-ledger{padding:16px}.experiment-ledger-head{display:block}.experiment-ledger-head p{margin-top:10px}.experiment-path-heading{display:block}.experiment-path-heading span{display:block;margin-top:6px}.experiment-path-columns{grid-template-columns:1fr}}
 
 /* Keep the lab readable while letting the city remain the primary visual. */
 .lab-shell{background:linear-gradient(#07131c8c,#07131c29 12%,#07131c46 82%,#07131cb8)}
