@@ -1,15 +1,5 @@
 # Two Worlds mark
 
-**Current logo (17 Oct, evening):** two linked city circles, a night city and a day city joined by one bridge, with people crossing between them. The source is `assets/two-worlds-logo-redesign.png` (1355×1161, transparent). It is used as:
-
-- `two-worlds-emblem.png` (240×128): the circles only, in the site header next to the "Two Worlds" text. The full lockup is not used there, because its navy "TWO" disappears on the dark header.
-- `two-worlds-favicon-32.png`, `-64.png`, `-180.png`: the circles centred on a transparent square, used for the browser icon and the Apple touch icon.
-- `two-worlds-logo.png` (640×421): the full lockup with the wordmark, for light backgrounds such as slides, Devpost and README.
-
-The SVG marks below are the earlier "branching street" design. They are kept for reference and are no longer referenced by `/experience/`.
-
-## Earlier mark
-
 The symbol is a shared street branching into two small, isometric city blocks. It expresses the core product: hold the starting world constant, change one policy, then inspect two outcomes. It avoids a globe, sparkles, arrows, and chart bars because the product already has a concrete place and a causal split.
 
 ## Assets
