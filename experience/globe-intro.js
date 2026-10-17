@@ -13,13 +13,15 @@
   const BLOOR_BEARING = -16;      // Bloor runs at azimuth ~74°, so this lays it level on screen
   const SECTION_M = 619;
   const ARRIVE = 0.62;            // progress at which the camera lands: the composer is fully shown by ~.68
+  const GLIDE = 0.35;             // seconds the camera takes to cover ~63% of the gap to the scroll position
+  const STREET_Y = 0.32;          // at street level, Bloor sits 32% of the height below centre, under the composer
 
   const stage = document.getElementById('globeStage');
   const params = new URLSearchParams(window.location.search);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!stage || params.get('globe') === 'off' || reduced || !webgl()) { if (stage) stage.remove(); return; }
+  if (!stage || params.get('globe') === 'off' || reduced || !webgl()) { if (stage) stage.remove(); document.documentElement.classList.remove('globe-pending'); return; }
 
-  let map = null, target = 0, current = 0, frame = 0, ready = false;
+  let map = null, target = 0, current = 0, frame = 0, last = 0, ready = false, captionTimer = 0;
   const caption = stage.querySelector('.globe-caption');
 
   function webgl() {
@@ -32,6 +34,7 @@
     if (map) { try { map.remove(); } catch (error) { /* already gone */ } }
     stage.remove();
     document.body.classList.remove('globe-on');
+    document.documentElement.classList.remove('globe-pending');
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);
   }
@@ -46,43 +49,63 @@
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
-  const smooth = (t) => t * t * (3 - 2 * t);
+  const ease = (t) => t * t * t * (t * (t * 6 - 15) + 10);   // smootherstep: no jolt where a phase starts or ends
   const span = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
 
   function zoomRange() {
     const w = window.innerWidth, h = window.innerHeight;
-    // Globe diameter ≈ 512·2^z / π px; start at ~78% of the shorter side.
-    const start = Math.log2(Math.min(w, h) * 0.78 * Math.PI / 512);
+    // Globe diameter ≈ 512·2^z / π px; start at ~66% of the shorter side so it fits beside the headline.
+    const start = Math.log2(Math.min(w, h) * 0.66 * Math.PI / 512);
     // End with the 619 m section across ~50% of the width (metres per px at this latitude = 113 250 / 2^z).
     const end = Math.log2(113250 * (0.5 * w) / SECTION_M);
-    return [start, clamp(end - 0.7, 14, 16.8)];   // −0.7: the tilt makes the near street look larger
+    return [start, clamp(end - 0.8, 14, 16.7)];   // −0.8: the tilt makes the near street look larger
   }
 
   function camera(p) {
     const t = clamp(p / ARRIVE, 0, 1);
     const [z0, z1] = zoomRange();
-    const travel = smooth(span(t, 0, 0.4));        // spin the globe round to Toronto before zooming past z≈7
-    const tilt = smooth(span(t, 0.6, 1));          // then tilt and level Bloor
-    const wide = window.innerWidth > 760;
+    const w = window.innerWidth, h = window.innerHeight, wide = w > 760;
+    // Overlapping phases so one motion hands over to the next: spin to Toronto, zoom, then tilt and level Bloor.
+    const travel = ease(span(t, 0, 0.5));
+    const tilt = ease(span(t, 0.45, 1));
+    // Keep the map out from under the text: the globe and the Toronto pin sit right of (on phones, below) the
+    // headline, then the street lands in the band under the composer.
+    const aside = 1 - ease(span(t, 0.35, 0.8));
+    const below = ease(span(t, 0.55, 1));
+    const fx = 0.5 + (wide ? 0.2 : 0) * aside;
+    const fy = 0.5 + (wide ? 0 : 0.2) * aside + STREET_Y * below;
     return {
       center: [lerp(-52, CENTER[0], travel), lerp(28, CENTER[1], travel)],
-      zoom: lerp(z0, z1, smooth(t)),
+      zoom: lerp(z0, z1, ease(t)),
       pitch: lerp(0, wide ? 58 : 50, tilt),
       bearing: lerp(0, BLOOR_BEARING, tilt),
+      padding: { left: Math.max(0, (2 * fx - 1) * w), top: Math.max(0, (2 * fy - 1) * h), right: 0, bottom: 0 },
     };
   }
 
-  function render() {
-    frame = 0;
-    current += (target - current) * 0.2;
-    if (Math.abs(target - current) < 0.0005) current = target;
+  function render(now) {
+    // Time-based easing toward the scroll position, so the camera glides between wheel steps at any frame rate.
+    const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60;
+    last = now;
+    current += (target - current) * (1 - Math.exp(-dt / GLIDE));
+    if (Math.abs(target - current) < 0.0004) current = target;
     if (map && ready) {
       map.jumpTo(camera(current));
       const t = clamp(current / ARRIVE, 0, 1);
       stage.dataset.stage = t < 0.4 ? 'earth' : t < 0.92 ? 'city' : 'street';
-      if (caption) caption.textContent = t < 0.78 ? 'TORONTO, ONTARIO · 43.67° N 79.41° W' : 'BLOOR ST W · BATHURST → SPADINA · 619 m';
+      setCaption(t < 0.78 ? 'TORONTO, ONTARIO · 43.67° N 79.41° W' : 'BLOOR ST W · BATHURST → SPADINA · 619 m');
     }
     if (current !== target) frame = requestAnimationFrame(render);
+    else frame = last = 0;
+  }
+
+  // Cross-fades the caption instead of swapping it mid-frame.
+  function setCaption(text) {
+    if (!caption || caption.dataset.text === text) return;
+    caption.dataset.text = text;
+    caption.classList.add('is-swapping');
+    clearTimeout(captionTimer);
+    captionTimer = setTimeout(() => { caption.textContent = text; caption.classList.remove('is-swapping'); }, 280);
   }
 
   function onScroll() {
@@ -180,9 +203,10 @@
       clearTimeout(timer);
       ready = true;
       current = target = scrollProgress();
-      render();
+      render(performance.now());
       stage.classList.add('is-ready');
       document.body.classList.add('globe-on');   // the globe replaces the drifting clouds
+      document.documentElement.classList.remove('globe-pending');
     });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);

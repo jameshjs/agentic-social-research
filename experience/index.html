@@ -7,9 +7,14 @@
     <meta name="description" content="Two Worlds — see a policy change play out on a real Toronto street, with and without it." />
     <title>Two Worlds — Ask a city what if</title>
     <link rel="icon" href="./brand/two-world-favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=demo-view-1" />
+    <link rel="stylesheet" href="./styles.css?v=demo-view-3" />
     <link rel="stylesheet" href="./two-world.css?v=6" />
-    <link rel="stylesheet" href="./globe-intro.css?v=3" />
+    <link rel="stylesheet" href="./globe-intro.css?v=5" />
+    <!-- Opens on the globe, never the drawn city: hides the old landing before the first paint. globe-intro.js clears it either way. -->
+    <script>(function () { try {
+      var c = document.createElement('canvas');
+      if (new URLSearchParams(location.search).get('globe') !== 'off' && !matchMedia('(prefers-reduced-motion: reduce)').matches && (c.getContext('webgl2') || c.getContext('webgl'))) document.documentElement.classList.add('globe-pending');
+    } catch (error) { /* drawn landing */ } })();</script>
   </head>
   <body data-phase="intro" data-scenario="fare">
     <!-- Sets body.demo-view (default) or Researcher view before the first paint. -->
@@ -392,6 +397,6 @@
     <script defer src="./persona-lab.js?v=2"></script>
     <script defer src="./viewer3d-bridge.js?v=demo-view-1"></script>
     <script defer src="./two-world.js?v=6"></script>
-    <script defer src="./globe-intro.js?v=4"></script>
+    <script defer src="./globe-intro.js?v=6"></script>
   </body>
 </html>
