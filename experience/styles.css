@@ -587,3 +587,51 @@ main{position:relative;z-index:4}.intro-chapter{height:190vh;min-height:1280px;p
 /* Keep the lab readable while letting the city remain the primary visual. */
 .lab-shell{background:linear-gradient(#07131c8c,#07131c29 12%,#07131c46 82%,#07131cb8)}
 .simulation-viewport{background:linear-gradient(145deg,#192e3e2b,#0d1f2b12);box-shadow:inset 0 0 45px #05131e2c,0 20px 65px #0003}
+
+/* Research record uses the same control-room language as both city workbenches. */
+.research-entry{display:flex;align-items:center;gap:12px;width:100%;min-height:57px;margin-top:10px;padding:11px 14px;border:1px solid #a8f4d15b;border-radius:9px;background:#102d34c9;color:#e8f9ee;text-align:left;font:700 12px 'DM Sans',sans-serif;cursor:pointer;transition:background .2s,transform .2s}
+.research-entry:hover,.research-entry:focus-visible{background:#245044;transform:translateY(-2px)}
+.research-entry>span:first-child{color:var(--mint);font-size:23px}.research-entry>span:nth-child(2){flex:1}.research-entry>span:last-child{color:var(--mint);font-size:18px}.research-entry small{display:block;margin-top:4px;color:#acc9be;font-size:9px;font-weight:500}
+.persona-lab{position:relative;z-index:5;padding:clamp(72px,8vw,125px) clamp(18px,5vw,82px);background:radial-gradient(circle at 82% 2%,#254c4b6b,transparent 40%),linear-gradient(155deg,#071720,#102d32 62%,#071720);color:#e7f8ef}
+#personaLab[hidden]{display:none}
+.persona-lab-head,.persona-research-grid,.persona-reaction-head,.persona-reaction-cards,.persona-boundary{max-width:1480px;margin-left:auto;margin-right:auto}
+.persona-lab-head{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.65fr);align-items:end;gap:35px;margin-bottom:32px}
+.persona-kicker,.persona-reaction-head span{color:var(--mint);font-size:10px;font-weight:700;letter-spacing:.18em}
+.persona-lab-head h2{margin:14px 0 0;font:500 clamp(44px,5.8vw,87px)/.98 'Space Grotesk',sans-serif;letter-spacing:-.075em}
+.persona-lab-head h2 em{color:var(--mint);font:italic 400 1em Georgia,serif}
+.persona-lab-head>p,.persona-reaction-head>p{max-width:450px;margin:0;color:#bed2ca;font-size:13px;line-height:1.65}
+.persona-research-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(250px,.7fr);gap:12px}
+.persona-rounds-panel,.persona-research-aside>*{border:1px solid #a8f4d14a;border-radius:12px;background:linear-gradient(150deg,#173b40,#0b232d);box-shadow:0 24px 70px #0003}
+.persona-rounds-panel{padding:22px}
+.persona-panel-top{display:flex;justify-content:space-between;gap:15px;color:#ade6cd;font-size:9px;font-weight:700;letter-spacing:.15em}
+.persona-panel-top span:last-child{color:#e4f692}
+.persona-rounds{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;margin:20px 0 22px}
+.persona-round{height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px solid #a8f4d144;border-radius:8px;background:#0a2630;color:#bdd4ca;cursor:pointer}
+.persona-round small{font:700 10px 'DM Sans',sans-serif}.persona-round span{font-size:17px;line-height:1}
+.persona-round--kept{border-color:#e4f6929c;color:#e4f692}.persona-round[aria-pressed=true]{background:#a8f4d1;color:#082d29;border-color:#a8f4d1}.persona-round:hover{border-color:#a8f4d1}
+.persona-round-detail{min-height:355px;padding:22px;border:1px solid #a8f4d12c;border-radius:9px;background:#081f29a8}
+.persona-detail-kicker{color:#e4f692;font-size:9px;font-weight:700;letter-spacing:.15em}
+.persona-round-detail h3{max-width:850px;margin:10px 0 14px;font:500 clamp(18px,2vw,28px)/1.2 'Space Grotesk',sans-serif;letter-spacing:-.035em}
+.persona-detail-change,.persona-coach-note{color:#c2d9d0;font-size:11px;line-height:1.6}.persona-detail-change{margin:0 0 18px}.persona-detail-change b{color:#a8f4d1}
+.persona-score-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.persona-score{min-width:0;padding:11px;border:1px solid #a8f4d12d;border-radius:7px;background:#15303a}
+.persona-score span{display:block;color:#a9c7bd;font-size:9px}.persona-score strong{display:block;margin:7px 0;color:#f0f8ec;font:500 23px 'Space Grotesk',sans-serif;letter-spacing:-.04em}
+.persona-score-bar{display:block;height:3px;border-radius:5px;background:#45635d;overflow:hidden}.persona-score-bar:before{content:"";display:block;width:var(--score-width);height:100%;background:#a8f4d1}
+.persona-detail-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px;margin-top:18px;color:#e4f692;font-size:9px;font-weight:700;letter-spacing:.04em}
+.persona-coach-note{margin:12px 0 0;padding-top:12px;border-top:1px solid #a8f4d128}
+.persona-research-aside{display:flex;flex-direction:column;gap:12px}
+.persona-holdout,.persona-human{padding:22px}.persona-holdout>span,.persona-human>span{color:#e4f692;font-size:9px;font-weight:700;letter-spacing:.15em}
+.persona-holdout strong,.persona-human strong{display:block;margin:15px 0;color:#f0f8ec;font:500 clamp(25px,2.5vw,38px)/1.08 'Space Grotesk',sans-serif;letter-spacing:-.045em}
+.persona-holdout p,.persona-human p{margin:0;color:#b7d2c6;font-size:11px;line-height:1.6}
+.persona-human{flex:1}.persona-deep-link{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:17px 20px;color:#092b27;background:#a8f4d1;border:0;border-radius:10px;text-align:left;font-size:11px;font-weight:700;cursor:pointer}.persona-deep-link:hover{background:#e4f692}.persona-deep-link span{font-size:20px}
+.persona-reaction-head{display:flex;justify-content:space-between;align-items:end;gap:25px;margin-top:75px;margin-bottom:20px}
+.persona-reaction-head h3{margin:11px 0 0;font:500 clamp(26px,3vw,42px)/1.1 'Space Grotesk',sans-serif;letter-spacing:-.05em}
+.persona-reaction-head>p{max-width:430px;font-size:11px}
+.persona-reaction-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.persona-reaction-card{min-width:0;padding:22px;border:1px solid #a8f4d14a;border-radius:11px;background:#10303a}
+.persona-reaction-top{display:flex;justify-content:space-between;gap:10px;color:#b1d7c7;font-size:9px;font-weight:700;letter-spacing:.1em}.persona-stance{color:#ffb29d}.persona-stance--support{color:#e4f692}
+.persona-reaction-card h4{margin:32px 0 5px;font:500 27px 'Space Grotesk',sans-serif;letter-spacing:-.05em}
+.persona-reaction-context{text-transform:uppercase;color:#a8f4d1;font-size:9px;letter-spacing:.08em}.persona-reaction-action{min-height:60px;margin:22px 0 12px;color:#f0f8ec;font-size:13px;line-height:1.45}.persona-reaction-quote{margin:0;padding-top:13px;border-top:1px solid #a8f4d139;color:#b8d3c8;font-size:11px;line-height:1.55}
+.persona-boundary{margin-top:19px;padding:13px 17px;border-left:3px solid #e4f692;background:#e4f69215;color:#c1d6cc;font-size:11px;line-height:1.6}
+@media(max-width:1050px){.persona-research-grid{grid-template-columns:1fr}.persona-research-aside{display:grid;grid-template-columns:1fr 1fr}.persona-deep-link{grid-column:1/-1}}
+@media(max-width:760px){.persona-lab-head{display:block}.persona-lab-head>p{margin-top:20px}.persona-rounds-panel{padding:13px}.persona-rounds{grid-template-columns:repeat(5,minmax(0,1fr))}.persona-round-detail{padding:15px}.persona-score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.persona-research-aside{display:flex}.persona-reaction-head{display:block}.persona-reaction-head>p{margin-top:12px}.persona-reaction-cards{grid-template-columns:1fr}.persona-reaction-action{min-height:0}}

@@ -101,6 +101,7 @@ function resetToIntro() {
   bikeScene.setMotion(false);
   $('#ttcWorkbench').hidden = true;
   $('#impact').hidden = true;
+  $('#personaLab').hidden = true;
   scene.setSector(null);
   scene.setScenario('fare');
   setPhase('intro');
@@ -142,6 +143,7 @@ async function runScenario(scenario, promptOverride = null) {
   renderLab();
   $('#lab').hidden = false;
   $('#impact').hidden = false;
+  $('#personaLab').hidden = false;
   setPhase('lab');
   requestAnimationFrame(() => $('#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
 }
@@ -457,6 +459,7 @@ $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', 
 $('#impactMapButton').addEventListener('click', () => { $('#impact').hidden = false; setPhase('impact'); scene.setSector(activeSector); $('#impact').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' }); });
 $('#bikeLabButton').addEventListener('click', () => $('#bikeLab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
 $('#ttcInspectorButton').addEventListener('click', () => $('#ttcWorkbench').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
+$('#personaLabButton').addEventListener('click', () => $('#personaLab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
 $('#bikeImpactButton').addEventListener('click', () => {
   const sector = activeBikeRole === 'merchant' ? 'commerce' : activeBikeRole === 'delivery' ? 'public' : 'mobility';
   chooseSector(sector);

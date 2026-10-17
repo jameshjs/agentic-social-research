@@ -1,6 +1,6 @@
 # Counterfactual Lab experience — canonical front end
 
-This is the **one public entry point** for the hackathon demo. The cinematic entry, TTC replay, Bloor explorer, and impact map live at `/experience/`. Aadit's detailed TTC 3D inspector remains implemented in [`demo-ui/`](../demo-ui/README.md) and is embedded here as the research workbench. Do not build another standalone public front end.
+This is the **one public entry point** for the hackathon demo. The cinematic entry, TTC replay, Bloor explorer, impact map, and persona research record live at `/experience/`. Aadit's detailed TTC 3D inspector remains implemented in [`demo-ui/`](../demo-ui/README.md) and is embedded here as the research workbench. Do not build another standalone public front end.
 
 ## Run it
 
@@ -22,6 +22,7 @@ Open `http://127.0.0.1:4173/experience/`. Add `?demo=fare` or `?demo=bike` to op
 6. **Responsive and accessible:** keyboard reachable controls, dialog semantics, visible focus, mobile layout, a reduced-motion path, frame-rate throttling on smaller screens, and capped device pixel ratio.
 7. **Bloor street workbench:** a matching three-column control room with scenario pipeline, a moving isometric district, before/after street section, and clickable cyclist, driver/delivery and merchant branches. The city and street section share the baseline/proposal toggle. Observed-data and research cards and explicit decision gaps remain below. Every branch is an **illustrative storyboard**, not a `WorldEvent` or measured response.
 8. **Unified visual language:** the embedded TTC inspector uses the main experience's mint, dark glass, typography and three-column frame, while its standalone route keeps Aadit's original theme.
+9. **Persona research record:** the new panel reads Steven's committed `data/record/rounds.json`, `final.json`, and saved fare reaction files. Judges can inspect all 10 check-set trials, the retained and discarded proposals, human review, Papiers reference counts, the pending final holdout, and three examples of context-conditioned agent responses. The panel keeps this survey research separate from the TTC event trace.
 
 ## Truth in the demo
 

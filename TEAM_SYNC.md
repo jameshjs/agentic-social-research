@@ -1,6 +1,6 @@
 # Team sync — 17 October 2026
 
-This is the short handoff for Meet, Aadit, Steven, James, and their coding agents. Read [AGENTS.md](./AGENTS.md) and [prd.md](./prd.md) for the product contract. This snapshot includes the TTC front-end consolidation after Aadit's merged `ff429e7`; teammates may have additional work in progress elsewhere.
+This is the short handoff for Meet, Aadit, Steven, James, and their coding agents. Read [AGENTS.md](./AGENTS.md) and [prd.md](./prd.md) for the product contract. This snapshot includes Steven's `steven/persona-tuning-loop` merge and its research-panel integration in the canonical experience; teammates may have additional work in progress elsewhere.
 
 ## Pull now
 
@@ -10,7 +10,7 @@ git status -sb
 git pull --ff-only origin main  # only on a clean, non-diverged main
 ```
 
-**One public route:** `http://127.0.0.1:4173/experience/` after starting the repository-root server in [experience/README.md](./experience/README.md). `?demo=fare` opens the TTC seeded trace and Aadit's embedded 3D inspector; `?demo=bike` opens the schematic Bloor explorer. The TTC inspector remains implemented under `demo-ui/` as a module and debug route. Its reruns send `counterfactual:result` to the outer experience, where `trace-adapter.js` updates the headline and five sector charts. Do not fork a new public UI. TTC is a synthetic, deterministic stand-in in a schematic west-end district; Bloor branches and percentages are illustrative. Neither is a calibrated Toronto forecast or the shared AI swarm. Steven's persona reaction prototype and Twin autoresearch plan are in [persona-swarm](./persona-swarm/README.md).
+**One public route:** `http://127.0.0.1:4173/experience/` after starting the repository-root server in [experience/README.md](./experience/README.md). `?demo=fare` opens the TTC seeded trace and Aadit's embedded 3D inspector; `?demo=bike` opens the schematic Bloor explorer. The TTC inspector remains under `demo-ui/` as a module and debug route. Its reruns send `counterfactual:result` to the outer experience, where `trace-adapter.js` updates the headline and five sector charts. The new **persona research** panel reads Steven's committed trial record and saved reactions. TTC is a synthetic, deterministic stand-in in a schematic west-end district; Bloor branches and percentages are illustrative. Neither is a calibrated Toronto forecast or the shared AI swarm. Do not fork a new public UI.
 
 ## One product, one proof chain
 
@@ -25,10 +25,10 @@ The same service and `RunResult` shape must drive the TTC fare and Bloor cases. 
 | Surface on `main` | Present | Next connection |
 | --- | --- | --- |
 | Canonical public UI | `experience/` now includes the TTC trace-backed inspector and updated outer charts; the outer flyover and Bloor explorer remain illustrative | Aadit + James: make the hero city, Bloor branch choices, timeline and charts read one authoritative `RunResult`. Preserve the TTC rerun bridge while replacing its rule-engine stand-in. |
-| Persona work | Steven's reaction scripts and saved examples in `persona-swarm/` | Steven + James: produce persistent `PersonaSpec[]` and bounded JSON decisions accepted by the world engine for both prompts. The planned Twin tuning gym is separate from this runtime path. |
+| Persona work | Steven's Twin autoresearch loop, 10 recorded check-set trials, Papiers-informed trials, saved reactions, and `/experience/` research panel are merged. Offline tests pass. Final holdout is pending. | Steven + James: produce persistent `PersonaSpec[]` and bounded JSON decisions accepted by the world engine for both prompts. The Twin survey benchmark is separate from the runtime path. |
 | World simulation and economic ledger | Aadit's `demo-ui/sim.js` generates one deterministic TTC event trace and metrics; no executable **general shared runner** is committed on `main` in this snapshot | James: implement same-seed baseline/proposal, validated actions, `WorldEvent`s and event-derived `MetricPoint`s for both prepared prompts; publish a replay fixture immediately. |
 | Research and Papiers | Cited fare/Bloor packs and offline `EvidencePacket` fixtures; CLI installed on Meet's machine | Meet: verify a real Papiers passage plus teammate-authored note. James + Aadit: preserve source IDs and show the note, agent challenge, human decision and changed run. |
-| Arbitrary prompts | Composer accepts input; unprepared UI marks results unavailable | Meet + James: compile into typed `ScenarioSpec`; start a generic JSON-action run or explicitly speculative result through the same API. |
+| Arbitrary prompts | Composer accepts input; unprepared UI marks results unavailable. Steven's `scripts/plan.py` can plan a prompt and collect group reactions, but its ignored Nemotron pool/groups are absent and this computer has no Anthropic SDK or `.env`; it does not produce world events. | Meet + James + Steven: compile into typed `ScenarioSpec`; connect the planner to the world engine only after generating hypothesis-specific personas and validating actions. Keep missing outcomes marked not estimable. |
 
 ## Critical integration order
 
@@ -40,7 +40,7 @@ The same service and `RunResult` shape must drive the TTC fare and Bloor cases. 
 
 ## Scope decision
 
-The strongest judge story is the **event-backed policy experiment with a real human research intervention**. The Twin autoresearch gym could improve persona quality, but its evaluation loop is currently planned rather than built. Keep it as a measured supporting result only if it produces a usable persona instruction and score without delaying the shared runtime. The Papiers prize proof should stay attached to the policy experiment so judges can see its effect on the same city and economic output.
+The strongest judge story is the **event-backed policy experiment with a real human research intervention**. The Twin autoresearch gym is now built and has a signed-off check-set instruction plus Papiers-informed attempts, but the final holdout remains pending and its instructions have not yet been connected to the city. Present it as a measured supporting result. The Papiers prize proof should stay attached to the policy experiment so judges can see its effect on the same city and economic output.
 
 Prize fit: the Bloor/TTC cases address a concrete Toronto issue with local source context for the [School of Cities challenge](https://hack-the-valley-11.devpost.com/); household travel costs, shop transactions and public receipts make the economic-inclusion angle only when they are reconciled from events. The [Papiers challenge](https://hack-the-valley-11.devpost.com/) asks for visible human-agent research collaboration, so a real note and versioned rerun matter more than a paper-search screenshot alone.
 

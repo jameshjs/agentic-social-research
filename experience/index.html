@@ -91,6 +91,7 @@
             <button id="bikeLabButton" class="bike-lab-entry" type="button" hidden><span>◇</span><span>Explore the Bloor street change <small>Compare the street and follow a person</small></span><span aria-hidden="true">↗</span></button>
             <button id="ttcInspectorButton" class="bike-lab-entry" type="button" hidden><span>✳</span><span>Inspect the living TTC run <small>Follow people, assumptions and reruns</small></span><span aria-hidden="true">↗</span></button>
             <button id="impactMapButton" class="impact-cta" type="button"><span class="impact-cta-icon">✳</span><span>Open the impact map <small id="impactButtonHint">See the connected effects</small></span><span class="cta-arrow">↗</span></button>
+            <button id="personaLabButton" class="research-entry" type="button"><span>◉</span><span>Inspect the persona research <small>Trials, human review, and saved reactions</small></span><span aria-hidden="true">↗</span></button>
             <p class="rail-note"><span>ⓘ</span><span id="railNoteText">Simulated decisions are illustrative, not a validated policy forecast. Click an impact to inspect its assumptions.</span></p>
           </aside>
 
@@ -243,6 +244,28 @@
         </div>
       </section>
 
+      <section id="personaLab" class="persona-lab" hidden aria-label="Persona research and human review">
+        <div class="persona-lab-head">
+          <div><span class="persona-kicker">03 / THE PEOPLE BEHIND THE MODEL</span><h2>Test the agent.<br /><em>Then trust the question.</em></h2></div>
+          <p>Steven's research loop compares synthetic persona answers with a held-out survey check set. Every trial and the human decision are recorded. This measures survey-answer likeness, not whether a Toronto policy prediction is correct.</p>
+        </div>
+        <div class="persona-research-grid">
+          <div class="persona-rounds-panel">
+            <div class="persona-panel-top"><span>RESEARCH LOG / TWIN-2K-500</span><span id="personaRoundCount">LOADING</span></div>
+            <div id="personaRounds" class="persona-rounds" role="group" aria-label="Select persona tuning trial"></div>
+            <div id="personaRoundDetail" class="persona-round-detail" aria-live="polite"><p>Loading the recorded trials…</p></div>
+          </div>
+          <aside class="persona-research-aside">
+            <div class="persona-holdout"><span>FINAL HOLDOUT</span><strong id="personaFinalStatus">Pending</strong><p>The final set is scored only after tuning ends. Check-set results cannot be presented as a final benchmark pass.</p></div>
+            <div class="persona-human"><span>HUMAN + AGENT LOOP</span><strong>Review changes the next experiment.</strong><p>Steven signed off the retained round. Later Papiers notes informed new trials, which the scorecard rejected. The record keeps both human guidance and counterevidence.</p></div>
+            <button id="personaLatestTrial" class="persona-deep-link" type="button">Inspect the Papiers-informed trial <span aria-hidden="true">↗</span></button>
+          </aside>
+        </div>
+        <div class="persona-reaction-head"><div><span>EARLIER PERSONA PROTOTYPE</span><h3>One fare proposal. Different lived context.</h3></div><p id="personaReactionSummary">Loading saved agent reactions…</p></div>
+        <div id="personaReactionCards" class="persona-reaction-cards"></div>
+        <p class="persona-boundary">These saved reactions are from synthetic US persona cards with assigned transit contexts. They are separate from the TTC city's seeded actors and are not Toronto survey data, observed behaviour, or inputs to its event trace. Their near-uniform opposition motivated the later persona evaluation.</p>
+      </section>
+
       <section id="about" class="about-strip"><div>EVERY FUTURE BEGINS<br /><em>WITH A BETTER QUESTION.</em></div><p>Counterfactual Lab is a research prototype. Our city is a way to inspect assumptions, mechanisms and tradeoffs—not to certify a real-world prediction.</p><a id="askAnother" href="#intro">ASK ANOTHER QUESTION ↗</a></section>
     </main>
 
@@ -257,5 +280,6 @@
     <script defer src="./trace-adapter.js"></script>
     <script defer src="./city.js?v=bloor-workbench"></script>
     <script defer src="./app.js?v=cinematic-inspector-2"></script>
+    <script defer src="./persona-lab.js?v=1"></script>
   </body>
 </html>
