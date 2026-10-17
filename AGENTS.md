@@ -45,4 +45,10 @@ When implementation choices differ from the PRD, update the decision log in `prd
 
 ## Team sync
 
-Four people are implementing concurrently. Fetch at least every 30 minutes during long work, and sync before touching shared schemas or pushing. On a clean `main`, use `git pull --ff-only origin main`; on a dirty or diverged checkout, integrate deliberately without reset, force push, or automatic stash. Claude Code's committed hook performs the safe fetch/fast-forward check before each prompt; see [CLAUDE.md](./CLAUDE.md). Share a pushed commit hash and any changed contract with the other owners.
+Four people are implementing concurrently. **Pull whenever anyone commits:**
+
+- **Before every commit:** run `git fetch origin`. If `origin/main` has new commits, integrate them first.
+- **Right after every commit:** run `git fetch origin` again and integrate anything that landed meanwhile, then push.
+- **At the start of each task:** run `git fetch origin` and integrate if `git status -sb` shows `behind`. Do the same before reading or editing files a teammate may have changed.
+
+Git cannot notify you of a teammate's push. The repository has no `post-commit` hook installed, and no `post-merge` hook either. So keep checking: fetch at least every 30 minutes during long work, and sync before touching shared schemas or pushing. On a clean `main`, use `git pull --ff-only origin main`; on a dirty or diverged checkout, integrate deliberately without reset, force push, or automatic stash. Claude Code's committed hook performs the safe fetch/fast-forward check before each prompt; see [CLAUDE.md](./CLAUDE.md). Share a pushed commit hash and any changed contract with the other owners.
