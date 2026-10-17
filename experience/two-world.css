@@ -123,3 +123,6 @@ body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:80px
   .tw-bar-label{grid-column:1 / -1}
   .tw-limits li{grid-template-columns:1fr;gap:2px}
 }
+/* Two Worlds emblem (brand/two-worlds-emblem.png): two linked city circles; the 240×128 file is drawn at 2–4× density. */
+.brand-emblem{display:block;flex:none;width:64px;height:34px}
+@media(max-width:760px){.brand-emblem{width:56px;height:30px}}
