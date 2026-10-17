@@ -56,7 +56,7 @@ Claude Code session following `autoresearch/program.md`.
 | Scorecard | Right person, right spread, right group gaps, steady (definitions in Task 3), plus 4 baselines |
 | Benchmark (check set) | Right person ≥ 0.70 of human consistency · right spread ≥ 0.80 · right group gaps ≥ 0.80 · beats every baseline on right person. Steady is reported and protected by the keep rule, but has no pass mark |
 | Backend | Persona agents run through the `claude` CLI on the claude.ai plan. Switch to an Anthropic API key, with prompt caching for the repeated given answers, if the team gets one |
-| Keep rule | Noise = per-check difference between two runs of the starting instructions. Keep a change only if at least one check improves by more than its noise and none falls by more than its noise. The number of benchmark marks passed may never fall |
+| Keep rule | Noise = per-check difference between two runs of the starting instructions. Keep a change only if at least one check improves by more than its noise and none falls by more than its noise. The number of benchmark marks passed may never fall. From round 7, a round is compared with the mean of the kept round's runs (it and any re-measure) |
 | Loop length | Exactly 10 tuning rounds. Then the final set is scored once |
 | Triggers (stop and ask) | 3 rounds in a row with no kept change · any check jumps by more than 3× its noise · one check rises past its noise while another falls past its noise · a result contradicts a highlighted or annotated paper · the benchmark is passed · logged spend reaches $30 (raised from $10 on 17 Oct, after round 0 measured the cost) |
 | While waiting | Ideas may be tried on the tuning set only. At most 2 changes may be on trial without sign-off |
@@ -351,3 +351,6 @@ These were open when the plan was first drafted. They are now reflected in the t
    Papiers papers, highlights and notes in full. It also writes up to three suggested edits for the next round,
    each tied to a result and to the highlight ids behind it; the first is run unless a coach picks another. The
    suggestions for round 7 are in `rounds/006-necessities/decision.json`.
+8. **The kept instructions were re-measured** (trigger 1 after round 6, Steven's call). Round 3's group gaps fell
+   from 0.852 to 0.790 on a second run, so the bar is now the mean of both runs (right person 0.807, spread 0.869,
+   gaps 0.821, steady 0.972, 4 marks). Spend is the logged cost of every run, re-measures included.

@@ -75,5 +75,25 @@
   "Pricing: per-person buying now correlates 0.42 with people (0.14 in round 2, 0.17 in round 0), with a spread of 6.8 against people's 7.6; buying is 53% against 48%."
  ],
  "signed_off_by": "Steven",
- "signed_off_at": "2026-10-17T09:19:28+00:00"
+ "signed_off_at": "2026-10-17T09:19:28+00:00",
+ "remeasured": {
+  "at": "2026-10-17T10:09:27+00:00",
+  "why": "Trigger 1 after round 6 (Steven): compare later rounds with the mean of round 3's runs.",
+  "run": "003-spending-habits-repeat",
+  "repeat": {
+   "right_person": 0.8110955056179775,
+   "right_spread": 0.8646264782538009,
+   "right_group_gaps": 0.7901234567901234,
+   "steady": 0.974,
+   "marks_passed": 3
+  },
+  "mean": {
+   "right_person": 0.8072331460674157,
+   "right_spread": 0.869222608886088,
+   "right_group_gaps": 0.8209876543209876,
+   "steady": 0.972
+  },
+  "mean_marks_passed": 4,
+  "cost_usd": 0.2611
+ }
 }

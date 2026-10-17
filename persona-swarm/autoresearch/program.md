@@ -32,8 +32,8 @@ procedure; follow it every round.
 3. **Change.** Edit `instructions.md` (or the format) once, as the chosen suggestion says.
 4. **Run.** `python3 autoresearch/run_round.py --slug <short-name> --sets tuning,check --steady [--format <fmt>]`.
 5. **Decide.** `python3 autoresearch/record_round.py autoresearch/rounds/NNN-<slug> --targeted <check> --label
-   "<short change>" --change "<what changed>" --hypothesis "<why>"` applies `evaluate.keep()` against the last kept
-   round with round 0's noise, checks the triggers, writes `decision.json` and the `results.tsv` row, and restores
+   "<short change>" --change "<what changed>" --hypothesis "<why>"` applies `evaluate.keep()` against the mean of the last
+   kept round's runs (the round and any re-measure) with round 0's noise, checks the triggers, writes `decision.json` and the `results.tsv` row, and restores
    the last kept `instructions.md` after a discard. A kept change is **on trial** until a coach signs it off.
 6. **Record.** Add the notes you used to `rounds/NNN-<slug>/sources.json`, and any trigger's question and the
    coach's reply to `decision.json`. Run `python3 autoresearch/export_record.py`, commit with the subject the recorder

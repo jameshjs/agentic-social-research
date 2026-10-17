@@ -29,10 +29,24 @@ def write(table):
         assert not any("\t" in str(v) or "\n" in str(v) for v in r.values()), r["round"]
     TSV.write_text("\t".join(COLUMNS) + "\n" + "".join("\t".join(str(r.get(c, "")) for c in COLUMNS) + "\n" for r in table))
 
+def runs(rnd):
+    """A round's scored runs: the round itself and any re-measure, never the no-persona baseline."""
+    return [p for p in sorted(ROUNDS.glob(f"{rnd}-*")) if not json.loads((p / "meta.json").read_text())["no_persona"]]
+
 def folder(rnd):
-    """A round's scored folder; for round 000 the first run, not the repeat or the no-persona baseline."""
-    return next(p for p in sorted(ROUNDS.glob(f"{rnd}-*"))
-                if not json.loads((p / "meta.json").read_text())["no_persona"])
+    """A round's own folder: its first run."""
+    return runs(rnd)[0]
+
+def kept_score(rnd):
+    """The bar a new round must beat: the mean check score over the kept round's runs, with the marks recomputed from
+    that mean (Steven, trigger 1 after round 6). A round with one run is just that run."""
+    scores = [json.loads((p / "score.json").read_text())["check"] for p in runs(rnd)]
+    mean = {c: sum(s[c] for s in scores) / len(scores) if all(s.get(c) is not None for s in scores) else None
+            for c in evaluate.CHECKS}
+    marks = {c: mean[c] is not None and mean[c] >= m for c, m in evaluate.MARKS.items()}
+    beaten = [b for b in scores[0]["baselines"].values() if b is not None]
+    marks["beats_baselines"] = mean["right_person"] is not None and bool(beaten) and all(mean["right_person"] > b for b in beaten)
+    return mean | {"marks": marks, "marks_passed": sum(marks.values()), "runs": [p.name for p in runs(rnd)]}
 
 def commit_of(rnd):
     out = subprocess.run(["git", "log", "-1", "--format=%h", "--", str(folder(rnd))], capture_output=True, text=True)
@@ -58,7 +72,7 @@ def record(a):
         sys.exit(f"round {rnd} is already in results.tsv")
     base = [r for r in table if r["kept"] in ("yes", "baseline")][-1]
     prev_dir = folder(base["round"])
-    prev = json.loads((prev_dir / "score.json").read_text())["check"]
+    prev = kept_score(base["round"])
     scores, meta = json.loads((out / "score.json").read_text()), json.loads((out / "meta.json").read_text())
     new, noise = scores["check"], json.loads((ROUNDS / "000-start" / "decision.json").read_text())["noise"]
     kept, reason = (False, "discard: invalid round, over 5% of check items missing") if new["invalid"] \
@@ -76,7 +90,7 @@ def record(a):
         fired.append(f"3: {', '.join(up)} rose past its noise while {', '.join(down)} fell past its noise")
     if kept and new["marks_passed"] == 4 and all(float(r["marks_passed"] or 0) < 4 for r in table if r["kept"] in ("yes", "baseline")):
         fired.append("5: the kept instructions now pass the benchmark")
-    spend = sum(float(r["cost_usd"] or 0) for r in table) + meta["cost_usd"]
+    spend = sum(json.loads(m.read_text())["cost_usd"] for m in ROUNDS.glob("[0-9][0-9][0-9]-*/meta.json"))  # every run, re-measures too
     if spend >= SPEND_CAP:
         fired.append(f"6: logged spend ${spend:.2f} reached ${SPEND_CAP:.0f}")
 
@@ -84,7 +98,8 @@ def record(a):
                                         "missing_share")} | {"by_family": {f: {k: v[k] for k in (
                                             "right_person", "right_spread", "right_group_gaps")} for f, v in s["by_family"].items()}}
     decision = {"round": rnd, "decided_at": now(), "check_targeted": a.targeted, "hypothesis": a.hypothesis,
-                "change": a.change, "compared_with": prev_dir.name, "kept": kept, "on_trial": kept, "reason": reason,
+                "change": a.change, "compared_with": {"runs": prev["runs"], "mean": {c: prev[c] for c in evaluate.CHECKS},
+                                                      "marks_passed": prev["marks_passed"]}, "kept": kept, "on_trial": kept, "reason": reason,
                 "deltas": deltas, "noise": noise, "check": pick(new), "tuning": pick(scores["tuning"]) if "tuning" in scores else None,
                 "triggers_fired": fired, "question": None, "reply": None, "spend_total_usd": round(spend, 2),
                 "format": meta["format"]}
