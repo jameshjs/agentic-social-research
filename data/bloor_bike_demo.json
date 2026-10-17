@@ -1,0 +1,263 @@
+{
+  "id": "bloor-bike-lane-removal-mvp",
+  "fixture_type": "scenario_research_inputs_not_run_result",
+  "checked_date": "2026-10-17",
+  "documentation": "../bloor-bike-demo.md",
+  "prompt": "What if the protected Bloor Street West bike lanes between Shaw Street and Avenue Road were removed and road space returned to motor vehicles?",
+  "scope": {
+    "city": "Toronto",
+    "corridor": "Bloor Street West, Shaw Street to Avenue Road",
+    "historical_pilot_length_km": 2.4,
+    "visual_focus": "schematic Annex and Korea Town microdistrict near Bathurst Street; not a GIS-accurate rendering of the whole corridor",
+    "baseline": "Existing protected cycle tracks",
+    "proposal": "Hypothetical removal of cycle-track separation with illustrative motor-vehicle reallocation; detailed geometry, feasibility and construction plan unverified",
+    "simulation_period": "one illustrative weekday steady-state",
+    "construction_period": "acknowledged as a separate phase; duration, local cost and impacts not estimated",
+    "population_scale": "synthetic sample only; no expansion to corridor or city totals"
+  },
+  "sources": {
+    "city_2025_cycling_review": {
+      "publisher": "City of Toronto Transportation Services",
+      "title": "2025 Toronto Cycling Year in Review",
+      "url": "https://www.toronto.ca/wp-content/uploads/2026/03/96e8-2025-Toronto-Cycling-Year-in-Review-FINAL.pdf",
+      "relevant_pages": "9-10",
+      "type": "official_observed_count_summary"
+    },
+    "city_2017_pilot": {
+      "publisher": "City of Toronto Transportation Services",
+      "title": "Bloor Street West Bike Lane Pilot Project Evaluation",
+      "url": "https://www.toronto.ca/wp-content/uploads/2017/10/8ef6-cycling-bloor-backgroundfile-107582.pdf",
+      "relevant_pages": "1, 7-15",
+      "type": "official_before_after_evaluation"
+    },
+    "tcat_bloor_business": {
+      "publisher": "Toronto Centre for Active Transportation with University of Toronto researchers",
+      "title": "Economic Impact Study of Bike Lanes in Toronto's Bloor Annex and Korea Town Neighbourhoods",
+      "url": "https://ero.ontario.ca/public/public_uploads/2024-10/Bloor-Economic-Impact-Study-Full-Report-2019-09-03_0.pdf",
+      "relevant_pages": "3-4, 8",
+      "type": "original_merchant_visitor_study"
+    },
+    "arancibia_2019": {
+      "publisher": "Journal of the American Planning Association",
+      "title": "Measuring the Local Economic Impacts of Replacing On-Street Parking With Bike Lanes: A Toronto (Canada) Case Study",
+      "doi": "10.1080/01944363.2019.1638816",
+      "url": "https://doi.org/10.1080/01944363.2019.1638816",
+      "type": "peer_reviewed_bloor_case_control_paper",
+      "access_note": "Abstract verified via Transportation Research Board record; full text not verified here"
+    },
+    "city_2024_removal_assessment": {
+      "publisher": "City of Toronto, City Manager",
+      "title": "Respecting Local Democracy and Cities - Supplemental Report: Impact of Bill 212 Bike Lanes Framework",
+      "url": "https://www.toronto.ca/legdocs/mmis/2024/cc/bgrd/backgroundfile-250545.pdf",
+      "relevant_pages": "1-2, 11-13",
+      "type": "official_preliminary_policy_assessment"
+    }
+  },
+  "observed_facts": [
+    {
+      "id": "B01",
+      "measure": "people_cycling_past_counter",
+      "value": 3524,
+      "unit": "counter_passages_per_day_annual_average",
+      "place": "Bloor Street West west of Huron Street",
+      "period": "2025",
+      "source_id": "city_2025_cycling_review",
+      "limit": "Single permanent counter; not unique people, Bloor corridor total, business visits, or predicted removal effect"
+    },
+    {
+      "id": "B02",
+      "measure": "people_cycling_past_bloor_count_locations",
+      "before": 3309,
+      "after": 4925,
+      "unit": "average_24_hour_cyclist_passages",
+      "place": "Bloor Street West, Shaw Street to Bay Street count average",
+      "before_period": "June 2016",
+      "after_period": "June 2017",
+      "source_id": "city_2017_pilot",
+      "limit": "Historical installation comparison; not removal elasticity and not comparable with B01 annual counter mean"
+    },
+    {
+      "id": "B03",
+      "measure": "pilot_area_cycling",
+      "value": 5220,
+      "unit": "average_weekday_cyclist_passages",
+      "place": "Bloor Street West pilot area excluding Bay Street count",
+      "period": "June 2017",
+      "source_id": "city_2017_pilot",
+      "limit": "Different count geography from B01 and B02; not current-day baseline"
+    },
+    {
+      "id": "B04",
+      "measure": "motor_vehicle_corridor_volume",
+      "before": 24322,
+      "after": 20434,
+      "unit": "average_24_hour_vehicle_passages",
+      "place": "Bloor Street West count locations",
+      "before_period": "June 2016",
+      "after_period": "June 2017",
+      "source_id": "city_2017_pilot",
+      "related_observation": "Dupont vehicle volume increased by 1467 and Harbord by 584 in the same comparison",
+      "limit": "Network adjustment after installation; cannot invert to predict removal traffic or time savings"
+    },
+    {
+      "id": "B05",
+      "measure": "bloor_peak_motor_travel_time_change_after_pilot_and_signal_adjustment",
+      "eastbound_am_increase_seconds": 120,
+      "westbound_pm_increase_seconds": 255,
+      "unit": "seconds_vs_June_2016",
+      "place": "Bloor Street West, Bay Street to Ossington Avenue",
+      "period": "June 2017",
+      "source_id": "city_2017_pilot",
+      "limit": "Peak direction historical travel-time differences; not promised savings from removal"
+    },
+    {
+      "id": "B06",
+      "measure": "all_road_user_conflicts_after_pilot",
+      "relative_change_pct": -44,
+      "unit": "percent_vs_pre_installation",
+      "place": "Video observations at Clinton Avenue, Walmer Road and Bedford Road",
+      "period": "2016-2017 evaluation",
+      "source_id": "city_2017_pilot",
+      "counterevidence": "Bike-pedestrian conflicts increased by 61 percent in the same short-window analysis",
+      "limit": "Short observed near-miss window; not collision or fatality prediction after removal"
+    },
+    {
+      "id": "B07",
+      "measure": "cyclist_injury_collisions_annual_average",
+      "before": 20,
+      "after": 15,
+      "unit": "injury_collisions_per_year",
+      "place": "Bloor Street West, Avenue Road to Shaw Street",
+      "before_period": "2008-2015",
+      "after_period": "2017-2024",
+      "source_id": "city_2024_removal_assessment",
+      "related_observation": "City estimated a 56 percent lower cycling injury-collision rate amid 40-90 percent higher cycling volumes",
+      "limit": "Historical City comparison, not a causal or reverse-removal fatality model"
+    },
+    {
+      "id": "B08",
+      "measure": "bloor_retail_visitor_mode_share",
+      "cycling_before_pct": 7,
+      "cycling_after_pct": 20,
+      "walking_after_pct": 48,
+      "driving_after_pct": 10,
+      "unit": "percent_of_surveyed_visitors",
+      "place": "Madison Avenue to Montrose Avenue business-study subarea",
+      "period": "2015 before; 2016-2017 after",
+      "source_id": "tcat_bloor_business",
+      "limit": "Survey snapshot and different geography; not 2026 arrival shares or a sales coefficient"
+    },
+    {
+      "id": "B09",
+      "measure": "moneris_transaction_value_growth_during_pilot",
+      "pilot_bloor_pct": 4.45,
+      "surrounding_area_pct": 3.73,
+      "danforth_comparator_pct": 2.21,
+      "toronto_total_pct": 4.96,
+      "unit": "year_over_year_percent",
+      "period": "pilot year vs preceding year, 2016-2017 evaluation",
+      "source_id": "city_2017_pilot",
+      "limit": "All areas grew and the business study reports possible non-lane causes; not a causal or reverse-removal retail coefficient"
+    },
+    {
+      "id": "B10",
+      "measure": "preliminary_removal_cost_estimate",
+      "value_lower_bound": 48,
+      "unit": "million_CAD",
+      "place": "Bloor, Yonge and University combined",
+      "period": "2024 assessment",
+      "source_id": "city_2024_removal_assessment",
+      "limit": "Explicitly not a Bloor-only or Shaw-Avenue segment cost; do not use in a local metric"
+    }
+  ],
+  "mechanisms": [
+    {
+      "id": "M01",
+      "path": ["protected_lane_removed", "cycling_comfort_and_route_cost", "cycle_bloor_or_detour_or_switch_mode_or_skip"],
+      "actors": ["less_confident_cyclist", "experienced_courier"],
+      "support": ["B02", "B06", "B07"],
+      "coefficient_status": "not_estimated_for_removal"
+    },
+    {
+      "id": "M02",
+      "path": ["lane_and_curb_reallocation", "junction_loading_parking_conditions", "driver_and_delivery_choice"],
+      "actors": ["driver", "delivery_van"],
+      "support": ["B04", "B05"],
+      "coefficient_status": "not_estimated_for_removal; zero_driver_time_gain_case_required"
+    },
+    {
+      "id": "M03",
+      "path": ["person_mode_and_route_choice", "destination_arrival", "shop_enter_or_not", "purchase_or_not"],
+      "actors": ["all_visitors", "shop_owner"],
+      "support": ["B08", "B09"],
+      "coefficient_status": "local_mechanism_plausible; retail_effect_unknown; zero_case_required"
+    },
+    {
+      "id": "M04",
+      "path": ["switch_to_ttc_or_car", "household_payment", "sampled_ttc_or_parking_receipt"],
+      "actors": ["travelers", "transit_agency", "parking_operator"],
+      "support": [],
+      "coefficient_status": "event_ledger_only; fare_and_parking_rules_needed"
+    },
+    {
+      "id": "M05",
+      "path": ["sampled_purchases", "shop_sales_and_partial_margin", "shop_staffing_or_inventory_decision"],
+      "actors": ["shop_owner", "worker"],
+      "support": ["B08", "B09"],
+      "coefficient_status": "synthetic_business_rule_required; no_closure_prediction"
+    },
+    {
+      "id": "M06",
+      "path": ["physical_removal", "design_and_construction", "implementation_cost_and_disruption"],
+      "actors": ["city_analyst", "business_owner", "traveler"],
+      "support": ["B10"],
+      "coefficient_status": "local_cost_and_duration_not_estimable"
+    }
+  ],
+  "sector_graph": {
+    "nodes": ["mobility", "access", "retail", "households_and_ttc", "curb_and_public_budget", "safety"],
+    "edges": [
+      {"from": "mobility", "to": "access", "mechanism_id": "M01"},
+      {"from": "mobility", "to": "retail", "mechanism_id": "M03"},
+      {"from": "mobility", "to": "households_and_ttc", "mechanism_id": "M04"},
+      {"from": "curb_and_public_budget", "to": "mobility", "mechanism_id": "M02"},
+      {"from": "retail", "to": "households_and_ttc", "mechanism_id": "M05"},
+      {"from": "mobility", "to": "safety", "mechanism_id": "M01"}
+    ]
+  },
+  "metric_candidates": [
+    {"id": "sample_trip_completion_by_mode", "unit": "trips_per_sample_weekday", "derive_from": "committed trip decision and arrival events", "status": "computable_if_events_exist"},
+    {"id": "sample_travel_minutes_by_group", "unit": "minutes_per_completed_trip", "derive_from": "departure and arrival event times", "status": "computable_if_events_exist"},
+    {"id": "sample_shop_visits_and_sales", "unit": "visits_and_CAD_per_sample_weekday", "derive_from": "shop entry and purchase events", "status": "assumption_driven"},
+    {"id": "sample_shop_partial_margin", "unit": "CAD_per_sample_weekday", "derive_from": "purchase receipts minus explicitly modelled costs", "status": "assumption_driven"},
+    {"id": "sample_household_travel_spend_and_ttc_receipts", "unit": "CAD_per_sample_weekday", "derive_from": "balanced payment and receipt events", "status": "computable_if_fare_rules_exist"},
+    {"id": "segment_construction_cost", "unit": "CAD", "derive_from": "no segment-specific cost input", "status": "not_estimable"},
+    {"id": "future_crashes_injuries_fatalities", "unit": "count", "derive_from": "no validated risk/exposure model", "status": "not_estimable"},
+    {"id": "net_emissions", "unit": "kg_CO2e", "derive_from": "requires distances, substituted modes, occupancy and factors", "status": "not_estimable"}
+  ],
+  "assumption_controls": [
+    {"id": "cycling_route_mode_response", "cases": ["low_change", "base_illustrative", "high_change"], "values": null, "note": "Set and human-review synthetic persona rules; no Toronto removal elasticity found"},
+    {"id": "driver_time_gain", "cases": ["zero_gain", "positive_gain_hypothetical"], "values": null, "note": "2017 installation delay is not a reversible removal estimate"},
+    {"id": "retail_conversion", "cases": ["zero_effect", "visit_mix_affects_purchases"], "values": null, "note": "No Bloor removal sales coefficient; compare cases"}
+  ],
+  "visual_story": [
+    {"beat": "baseline", "camera": "bloor_overview", "cue": "protected_cycle_tracks_and_live_agents", "evidence_cards": ["B01", "B08"]},
+    {"beat": "policy_switch", "camera": "bloor_street_section", "cue": "hypothetical_track_removal_overlay", "label": "schematic proposal, not built condition"},
+    {"beat": "rider_decisions", "camera": "selected_cyclist_route", "cue": "bike_continue_or_detour_or_transit_or_defer_from_WorldEvent"},
+    {"beat": "competing_channels", "camera": "shop_and_curb", "cue": "driver_delivery_and_shop_events_from_same_RunResult"},
+    {"beat": "sector_graph", "camera": "dashboard", "cue": "click_edge_to_filter_event_paths_and_metric_points"}
+  ],
+  "contract_notes": [
+    "WorldEvent visual cues need cycling and subway variants, or a generic mode/route payload that Aadit's renderer can map without inventing trips",
+    "All charts and camera highlights must trace to the same RunResult; observations in this fixture are reference cards, not simulated outputs",
+    "No Papiers human note or document import is asserted by this fixture"
+  ],
+  "global_limits": [
+    "Historical lane installation results are not the inverse effect of hypothetical removal",
+    "The 2025 counter, 2017 traffic counts and 2015-2017 retail surveys cover distinct places and periods",
+    "Retail correlation cannot identify a causal sales or business-closure effect",
+    "Do not scale sampled agent outcomes to the corridor or city",
+    "Do not use the multi-corridor B10 cost as a local estimate",
+    "No crash, fatality or net emissions forecast is supported"
+  ]
+}

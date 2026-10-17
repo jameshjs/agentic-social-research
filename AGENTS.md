@@ -1,6 +1,6 @@
 # Working instructions for coding agents
 
-Read [README.md](./README.md), [prd.md](./prd.md), [research.md](./research.md), [demo-data.md](./demo-data.md), and [papers.md](./papers.md) before proposing architecture or writing features. Those files contain the founder's decisions, hackathon requirements, sponsor descriptions, source links, verified demo data, fare research, and deadline conflicts. Do not ask teammates to paste those links again. Use [papiers-setup.md](./papiers-setup.md) for CLI sign-in and the sponsor acceptance test.
+Read [README.md](./README.md), [prd.md](./prd.md), [research.md](./research.md), [demo-data.md](./demo-data.md), [bloor-bike-demo.md](./bloor-bike-demo.md), [bike-lane-papers.md](./bike-lane-papers.md), [papers.md](./papers.md), and [experience/README.md](./experience/README.md) before proposing architecture or writing features. Those files contain the founder's decisions, hackathon requirements, sponsor descriptions, source links, both prepared demo cases, the visual prototype handoff, fare research, and deadline conflicts. Do not ask teammates to paste those links again. Use [papiers-setup.md](./papiers-setup.md) for CLI sign-in and the sponsor acceptance test.
 
 ## Product contract
 
@@ -14,6 +14,9 @@ Read [README.md](./README.md), [prd.md](./prd.md), [research.md](./research.md),
 - The [fare evidence index](./data/ttc_fare_evidence.json) and [EvidencePacket fixture](./data/ttc_fare_evidence_packet.json) are **agent-curated fallbacks**, not Papiers results or human annotations. Never invent a teammate note, import status, Toronto elasticity, retail-sales coefficient, or business closure. For the pitch, show a completed investigation, evidence evaluation including counterevidence, agent proposed next step, and genuine human contribution.
 - One demo scenario must use actual Toronto urban data for the School of Cities track. See [research.md](./research.md) for the sponsor's data catalogue and direct links.
 - The locked Toronto demo uses the observed [data fixture](./data/toronto_demo_baseline.json) and the source/assumption boundaries in [demo-data.md](./demo-data.md). Treat census income and commuting as separate neighbourhood marginals. Do not invent the joint distribution or claim a simulated shop closure, City-wide TTC outcome, or emissions reduction as observed fact.
+- The second prepared demo is hypothetical [Bloor West bike-lane removal](./bloor-bike-demo.md) with [observed context fixture](./data/bloor_bike_demo.json). Do not invert installation findings into removal coefficients, predict merchant closures/injuries/emissions from those sources, or treat the combined City removal cost as a cost for this segment.
+- The [Bloor evidence pack](./bike-lane-papers.md) and [independently prepared observed baseline](./data/bloor_bike_lane_baseline.json) add 11 source summaries and current Toronto counts. Their `B01`-style IDs are local to that pack and differ from IDs in `bloor_bike_demo.json`; reconcile by source URL and claim before joining fixtures.
+- The [cinematic UI](./experience/README.md) is a visual replay prototype with illustrative values. Its chart values, animated decisions, and arbitrary-prompt screen are not live engine results. Connect it to the authoritative `RunResult` before claiming agent decisions or policy effects in a pitch.
 
 ## Build decisions
 

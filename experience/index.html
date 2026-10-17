@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07131c" />
+    <meta name="description" content="Counterfactual Lab — explore how a city might respond to a policy change through a living simulation and connected impact map." />
+    <title>Counterfactual Lab — Ask a city what if</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-phase="intro" data-scenario="fare">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="city-stage" aria-hidden="true">
+      <canvas id="cityCanvas"></canvas>
+      <div class="sky-glow"></div>
+      <div class="scene-grain"></div>
+      <div class="city-haze"></div>
+    </div>
+
+    <div class="cloud-field" aria-hidden="true">
+      <span class="cloud cloud--a"></span><span class="cloud cloud--b"></span>
+      <span class="cloud cloud--c"></span><span class="cloud cloud--d"></span>
+      <span class="cloud cloud--e"></span><span class="cloud cloud--f"></span>
+    </div>
+
+    <header class="site-header">
+      <a class="brand" href="#intro" aria-label="Counterfactual Lab home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span class="brand-word">counterfactual<span class="brand-dot">.</span><small>LAB</small></span>
+      </a>
+      <div class="header-center"><span class="live-pulse"></span> A LIVING CITY MODEL <span class="header-rule"></span> TORONTO / 2026</div>
+      <button id="headerExplore" class="header-action" type="button">Explore a scenario <span aria-hidden="true">↗</span></button>
+    </header>
+
+    <main id="main">
+      <section id="intro" class="intro-chapter" aria-label="Introduce a hypothesis">
+        <div class="intro-sticky">
+          <div class="city-coordinates" aria-hidden="true"><span>43° 46′ 38″ N</span><span>79° 11′ 16″ W</span></div>
+
+          <div class="intro-message">
+            <div class="eyebrow"><span class="eyebrow-line"></span> CIVIC FUTURES, MADE VISIBLE</div>
+            <h1>What if a city<br /><em>could think ahead?</em></h1>
+            <p>A living lab for the decisions that move people, money, and possibility through a city.</p>
+            <button id="enterButton" class="round-link" type="button"><span>Enter the city</span><span class="round-icon" aria-hidden="true">↓</span></button>
+          </div>
+
+          <div class="composer-scene" id="composerScene" inert aria-hidden="true">
+            <div class="composer-heading">
+              <div class="eyebrow"><span class="eyebrow-line"></span> START WITH A QUESTION</div>
+              <h2>Change one thing.<br /><em>Watch everything else move.</em></h2>
+              <p>Describe a policy or choose a Toronto scenario to see people, places, and systems respond.</p>
+            </div>
+            <form id="hypothesisForm" class="hypothesis-card">
+              <label for="hypothesisInput">YOUR HYPOTHESIS</label>
+              <div class="composer-input-row">
+                <textarea id="hypothesisInput" rows="2" maxlength="280" placeholder="What if we changed the city…?" aria-describedby="composerHint"></textarea>
+                <button id="runButton" class="run-button" type="submit" aria-label="Run hypothesis"><span>Run the city</span><span class="run-arrow" aria-hidden="true">↗</span></button>
+              </div>
+              <div class="composer-footer"><span id="composerHint">Freeform questions are exploratory. Sample scenarios are prepared demos.</span><span>↵ TO RUN</span></div>
+            </form>
+            <div class="scenario-picks" aria-label="Prepared Toronto scenarios">
+              <span>OR START WITH</span>
+              <button class="scenario-chip" type="button" data-scenario-choice="fare"><span class="chip-icon">↗</span> TTC fare increase <span class="chip-end">01</span></button>
+              <button class="scenario-chip" type="button" data-scenario-choice="bike"><span class="chip-icon">◇</span> Bloor bike lane removal <span class="chip-end">02</span></button>
+            </div>
+          </div>
+
+          <div class="scroll-cue"><span class="scroll-track"><span></span></span><span>SCROLL TO REVEAL</span><span>01 / 03</span></div>
+          <div class="scene-credit">A city is more than its skyline <span>✳</span></div>
+        </div>
+      </section>
+
+      <section id="lab" class="lab-shell" hidden aria-label="Scenario replay">
+        <div class="lab-topline">
+          <div class="breadcrumb"><span class="breadcrumb-star">✳</span> THE CITY LAB <span>/</span> <strong id="scenarioBreadcrumb">MORNINGSIDE · HIGHLAND CREEK</strong></div>
+          <div class="run-status"><span class="live-pulse"></span><span id="runStatus">DEMO REPLAY ACTIVE</span><span class="status-separator">/</span><span id="sampleStatus">ILLUSTRATIVE SAMPLE</span></div>
+        </div>
+
+        <div class="lab-layout">
+          <aside class="story-rail">
+            <div class="rail-overline">CURRENT QUESTION <span>01 / 02</span></div>
+            <h2 id="studyTitle">What if the TTC adult fare rose by 50¢?</h2>
+            <p id="studySummary">Follow riders, a neighbourhood shop, and sample fare payments as choices ripple through a small synthetic district near UTSC.</p>
+            <div class="scenario-switch" role="group" aria-label="Choose demo scenario">
+              <button class="switch-button active" type="button" data-scenario-choice="fare" aria-pressed="true">TTC fare <span>↗</span></button>
+              <button class="switch-button" type="button" data-scenario-choice="bike" aria-pressed="false">Bloor bike lane <span>◇</span></button>
+            </div>
+            <div class="micro-section-label" id="chainLabel">WATCH THE CHAIN</div>
+            <ol id="causalChain" class="causal-chain"></ol>
+            <button id="impactMapButton" class="impact-cta" type="button"><span class="impact-cta-icon">✳</span><span>Open the impact map <small id="impactButtonHint">See the connected effects</small></span><span class="cta-arrow">↗</span></button>
+            <p class="rail-note"><span>ⓘ</span><span id="railNoteText">Simulated decisions are illustrative, not a validated policy forecast. Click an impact to inspect its assumptions.</span></p>
+          </aside>
+
+          <div class="simulation-viewport" id="simulationViewport">
+            <div class="viewport-upper"><span class="viewport-corner">CITY VIEW / <b id="viewportArea">UTSC DISTRICT</b></span><span class="viewport-legend" id="viewportLegend"><i class="legend-dot legend-dot--policy"></i> POLICY <i class="legend-dot legend-dot--baseline"></i> BASELINE</span></div>
+            <button class="focus-marker focus-marker--a" id="focusMarkerA" type="button" aria-label="Inspect mobility impact"><span class="focus-ring"></span><span class="focus-label" id="focusLabelA">01 / RIDER DECISION</span></button>
+            <button class="focus-marker focus-marker--b" id="focusMarkerB" type="button" aria-label="Inspect local business impact"><span class="focus-ring"></span><span class="focus-label" id="focusLabelB">02 / LOCAL BUSINESS</span></button>
+            <div class="world-caption"><span>ILLUSTRATIVE CITY</span><span class="caption-line"></span><span id="worldCaption">People choose. The city changes.</span></div>
+            <div class="viewport-bottom">
+              <div class="view-toggle" id="viewToggle" role="group" aria-label="Compare city state"><button id="baselineView" type="button" aria-pressed="false">Baseline</button><button id="policyView" class="selected" type="button" aria-pressed="true">With policy</button></div>
+              <div id="cityStateNote" class="city-state-note" hidden>No policy world computed yet</div>
+              <button id="motionButton" class="motion-button" type="button" aria-label="Pause city animation">Ⅱ</button>
+            </div>
+          </div>
+
+          <aside class="insight-rail">
+            <div class="insight-top"><span>THE SIGNAL</span><span class="signal-glyph">✳</span></div>
+            <div class="headline-impact"><small id="headlineEyebrow">SAMPLE FARE PAYMENTS</small><strong id="headlineValue">+7.1%</strong><span id="headlineDirection">relative to baseline</span></div>
+            <div id="metricMiniCards" class="metric-mini-cards"></div>
+            <div class="insight-divider"></div>
+            <div class="insight-description"><span class="info-icon">↗</span><p id="insightNarrative">A higher posted fare can change both how often people ride and which fare product they choose. These demo values come from a synthetic run.</p></div>
+            <div class="source-ribbon"><span class="source-icon">◆</span><span id="sourceRibbon">Observed Toronto context + explicit model assumptions</span></div>
+            <button id="inspectEvidence" class="text-link" type="button">Inspect evidence &amp; limits <span>↗</span></button>
+          </aside>
+        </div>
+
+        <div class="timeline-bar">
+          <div class="timeline-heading"><span>ILLUSTRATIVE CITY REPLAY</span><strong id="timelineLabel">MOTION FRAME 03 / 04</strong></div>
+          <div class="timeline-controls"><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub illustrative city animation; no event log attached" /><span>END</span></div>
+          <div class="timeline-time"><span>00</span><span>01</span><span>02</span><span>03</span><span>04</span></div>
+        </div>
+      </section>
+
+      <section id="impact" class="impact-section" hidden aria-label="Connected impact map">
+        <div class="impact-section-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> INSIDE THE CASCADE</div><h2><span id="impactHeadingLine">One decision.</span><br /><em id="impactHeadingEm">Many futures.</em></h2></div><p id="impactDescription">Choose a connected sector to inspect its illustrative comparison and evidence boundary.</p></div>
+        <div class="impact-layout">
+          <div class="sector-board">
+            <div class="sector-board-head"><span>CONNECTED SYSTEMS</span><span id="impactScenarioTag">TTC FARE / UTSC DISTRICT</span></div>
+            <svg class="sector-links" viewBox="0 0 750 500" preserveAspectRatio="none" aria-hidden="true">
+              <defs><linearGradient id="linkGradient"><stop stop-color="#a5f5d2"/><stop offset="1" stop-color="#ff8b72"/></linearGradient></defs>
+              <path d="M155 245 C260 190 290 130 382 120"/><path d="M382 120 C455 105 540 165 608 234"/><path d="M155 245 C260 285 297 350 389 377"/><path d="M389 377 C490 375 544 310 608 234"/><path d="M382 120 C380 220 380 280 389 377"/>
+            </svg>
+            <div class="sector-node sector-node--mobility active" data-sector="mobility" role="button" tabindex="0" aria-pressed="true" aria-label="Inspect mobility sector"><span class="sector-node-icon">↗</span><small>01 / INPUT</small><strong>Mobility</strong><em id="sectorDeltaMobility">−9% RIDES</em></div>
+            <div class="sector-node sector-node--access" data-sector="access" role="button" tabindex="0" aria-pressed="false" aria-label="Inspect access sector"><span class="sector-node-icon">◇</span><small>02 / REACH</small><strong>Access</strong><em id="sectorDeltaAccess">−6% TRIPS</em></div>
+            <div class="sector-node sector-node--commerce" data-sector="commerce" role="button" tabindex="0" aria-pressed="false" aria-label="Inspect local commerce sector"><span class="sector-node-icon">⌑</span><small>03 / ACTIVITY</small><strong>Local shops</strong><em id="sectorDeltaCommerce">−3% VISITS</em></div>
+            <div class="sector-node sector-node--households" data-sector="households" role="button" tabindex="0" aria-pressed="false" aria-label="Inspect households sector"><span class="sector-node-icon">◈</span><small>04 / PEOPLE</small><strong>Households</strong><em id="sectorDeltaHouseholds">+12% SPEND</em></div>
+            <div class="sector-node sector-node--public" data-sector="public" role="button" tabindex="0" aria-pressed="false" aria-label="Inspect public budget sector"><span class="sector-node-icon">≋</span><small>05 / SYSTEM</small><strong>Public realm</strong><em id="sectorDeltaPublic">+6% RECEIPTS</em></div>
+            <div class="sector-board-bottom"><span id="boardAction">✳ TRACE A CONNECTION</span><span id="boardCaption">ILLUSTRATIVE RUN · NOT A FORECAST</span></div>
+          </div>
+          <div class="sector-detail" id="sectorDetail" aria-live="polite">
+            <div class="detail-kicker"><span id="detailNumber">01 / MOBILITY</span><span class="detail-active">● ACTIVE SECTOR</span></div>
+            <div class="detail-title"><span id="detailIcon">↗</span><h3 id="detailTitle">A different route through the city.</h3></div>
+            <p id="detailDescription">People reconsider a trip when the cost of reaching it changes. Some keep riding, some switch modes, and others stay home.</p>
+            <div class="detail-chart-head"><span id="chartTitle">SAMPLE RIDES / 4 PERIODS</span><span>BASELINE <i class="chart-key chart-key--base"></i> POLICY <i class="chart-key chart-key--policy"></i></span></div>
+            <svg id="detailChart" class="detail-chart" viewBox="0 0 420 170" role="img" aria-label="Baseline and policy trend chart"></svg>
+            <p id="chartSummary" class="chart-summary">Illustrative chart values will appear here.</p>
+            <div class="detail-evidence"><span class="detail-evidence-icon">◆</span><div><small>EVIDENCE STATUS</small><p id="detailEvidence">Observed Toronto context; response size is an illustrative assumption.</p></div></div>
+            <button id="backToCity" class="back-city" type="button">Back to the living city <span>↗</span></button>
+          </div>
+        </div>
+        <div class="overview-section">
+          <div class="overview-head"><div><span id="overviewStatus">SCENARIO OUTPUTS / PREPARED REPLAY</span><h3 id="overviewTitle">Every signal in view.</h3></div><p id="overviewDescription">Five connected sectors, one illustrative comparison. Choose any chart to inspect its mechanism and evidence boundary.</p></div>
+          <div id="overviewGrid" class="overview-grid" aria-label="All sector charts"></div>
+        </div>
+      </section>
+
+      <section id="about" class="about-strip"><div>EVERY FUTURE BEGINS<br /><em>WITH A BETTER QUESTION.</em></div><p>Counterfactual Lab is a research prototype. Our city is a way to inspect assumptions, mechanisms and tradeoffs—not to certify a real-world prediction.</p><a id="askAnother" href="#intro">ASK ANOTHER QUESTION ↗</a></section>
+    </main>
+
+    <div id="investigation" class="investigation" hidden role="status" aria-live="polite">
+      <div class="investigation-card"><div class="investigation-top"><span class="investigation-orbit">✳</span><span>SCENARIO REPLAY</span><span id="investigationCount">01 / 04</span></div><h2 id="investigationTitle">Framing the question.</h2><p id="investigationDescription">Identifying the policy, affected people, and the change to test.</p><div class="investigation-progress"><span id="investigationProgress"></span></div><ol id="investigationSteps"><li>Frame the question</li><li>Load stakeholders</li><li>Review evidence</li><li>Compare worlds</li></ol><small>Prepared demo replay · no live model call</small></div>
+    </div>
+
+    <dialog id="evidenceDialog" class="evidence-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close evidence panel">×</button></form><div class="eyebrow"><span class="eyebrow-line"></span> WHAT WE KNOW, WHAT WE ASSUME</div><h2 id="evidenceDialogTitle">Evidence has a boundary.</h2><p id="evidenceDialogText"></p><div id="evidenceLinks" class="evidence-links"></div><div class="evidence-warning">The figures in this visual prototype are simulated examples. They are not calibrated Toronto forecasts, causal estimates, or a prediction that a shop will close.</div></dialog>
+
+    <script defer src="./scenarios.js"></script>
+    <script defer src="./city.js"></script>
+    <script defer src="./app.js"></script>
+  </body>
+</html>

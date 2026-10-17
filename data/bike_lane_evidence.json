@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "scenario": "candidate_bloor_st_w_bike_lane_keep_vs_remove",
+  "scenario": "selected_bloor_st_w_bike_lane_keep_vs_remove_demo",
   "curated_on": "2026-10-17",
   "provenance": "Agent-curated summaries of linked original sources; not Papiers search results, not human annotations, and not Toronto-calibrated forecast parameters.",
   "human_review_status": "pending",

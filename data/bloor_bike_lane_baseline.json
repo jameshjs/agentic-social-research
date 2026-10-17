@@ -1,6 +1,6 @@
 {
-  "purpose": "Observed source facts for a candidate Bloor Street West bike-lane scenario (keep vs remove); no simulated results, behavioural coefficients, or forecasts",
-  "status": "candidate_scenario_not_locked",
+  "purpose": "Observed source facts for the selected Bloor Street West bike-lane removal demo (keep vs remove); no simulated results, behavioural coefficients, or forecasts",
+  "status": "selected_demo_research_inputs_not_run_result",
   "checked_date": "2026-10-17",
   "sources": {
     "intersection_count": {

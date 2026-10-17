@@ -1,6 +1,6 @@
-# Bloor bike lane: candidate scenario, research and data pack
+# Bloor bike lane: selected demo research and data pack
 
-**Status (17 October 2026):** A **candidate** Toronto scenario drafted as an alternative or addition to the locked TTC fare demo. It is **not** a decision to change the demo pair in [prd.md](./prd.md). The PRD lists a bike-lane addition only as a fallback for Study B, so adopting this needs a team decision and a decision-log entry. All summaries are agent-curated; none is a human Papiers annotation, and no paper here is claimed to be in our Papiers library yet.
+**Status (17 October 2026):** Originally assembled as a candidate, this is now the **second prepared demo** after the founder chose hypothetical Bloor West bike-lane removal. The decision is recorded in [prd.md](./prd.md#17-locked-decisions-and-implementation-gaps), with the [scenario and visual brief](./bloor-bike-demo.md) alongside this deeper evidence pack. All summaries are agent-curated; none is a human Papiers annotation, and no paper here is claimed to be in our Papiers library yet. Source IDs in this pack and the separate scenario brief are local to each document and must be reconciled before combining fixtures.
 
 Machine-readable files:
 
@@ -159,9 +159,9 @@ The local JSON pack replays the paper evidence offline. It cannot be called a Pa
 
 `papiers search "Bloor bike lane economic impact" --limit 20 --json`, `papiers search "bike lane parking business" --limit 20 --json`, `papiers search "cycle track injury risk" --limit 20 --json`, then `papiers read <id> --json`. Save B01, B02 (or B03), B04, B06 and B08 in the app first. See [papiers-setup.md](./papiers-setup.md).
 
-## Team handoff if adopted
+## Team handoff for the selected demo
 
-- **Meet:** decide with the team whether this replaces or joins a demo; update the PRD decision log; curate B01/B04 in Papiers with a genuine human note.
+- **Meet:** align this pack with the Bloor scenario brief and PRD; curate B01/B04 in Papiers with a genuine human note.
 - **James:** load the baseline fixture; implement reroute/mode-switch, parking-search and shop-visit transactions; keep collisions and city-wide traffic `not_estimable`.
 - **Steven:** generate cyclist, driver, transit-rider, merchant (with B04 belief prior), shop worker, resident and BIA personas; reuse the B02 merchant survey items.
 - **Aadit:** render bike lane vs restored curb lane and parking, cyclists rerouting to Harbord/Dupont, and shop inspection; add the reversal × retail sweep chart.
