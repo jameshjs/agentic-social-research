@@ -15,7 +15,7 @@ procedure; follow it every round.
 ## May
 
 - Edit `instructions.md` (one idea per round, 600 words at most) and choose the persona format
-  (`full`, `compact`, `profile`, `short_card`).
+  (`full`, `compact`, `profile`, `interview`, `short_card`).
 - Read tuning-set answer sheets (`data/twin/tuning_answers.jsonl`) and tuning answers in round folders, to study
   mistakes.
 

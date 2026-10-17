@@ -91,8 +91,8 @@ change is judged on the check set, and the final set is scored once, at the end.
 _Avoid_: train/validation/test
 
 **Persona format**:
-How a respondent's given answers are written out for a persona agent: full, compact Q&A, topic profile, or short
-card.
+How a respondent's given answers are written out for a persona agent: full, compact Q&A, topic profile, interview
+(an interviewer-and-me transcript with the options offered), or short card.
 _Avoid_: template, rendering
 
 **Tendency**:
