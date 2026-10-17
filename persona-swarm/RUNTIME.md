@@ -157,6 +157,45 @@ range.
   `http://<that IP or MagicDNS name>:4174`. The key is still required.
 - **Hosted later:** run the same command on the host and change teammates' `AGENT_SERVER_URL`.
 
+## Public demo guard
+
+For the public site with no login: the server behind the Caddy tunnel ([ops/agents-tunnel.md](../ops/agents-tunnel.md))
+protects the plan itself. It is opt-in, so the local (:4174) and LAN (:4177) servers are unaffected.
+
+```sh
+npm --prefix persona-swarm/runtime start -- --require-key --port 4179 --demo-guard
+```
+
+| Limit | Default | `.env` / flag |
+|---|---|---|
+| Polls in flight, server-wide | 1 | `DEMO_CONCURRENT` / `--demo-concurrent` |
+| Polls per client IP per rolling window | 3 per 10 min | `DEMO_PER_IP`, `DEMO_WINDOW_MIN` / `--demo-per-ip`, `--demo-window-min` |
+| Polls over the whole demo (persisted) | 60 | `DEMO_MAX_TOTAL` / `--demo-max-total` |
+| Characters in the question or idea (and in its options) | 300 | `DEMO_MAX_CHARS` / `--demo-max-chars` |
+
+`DEMO_GUARD=1` in `.env` equals `--demo-guard`. Startup prints the limits and the polls left.
+
+- **Public:** `GET /health` (never counted; `ok: false` once the total is used up), `/agents`, `/replay/latest`,
+  `/saves/*`; `POST /ask` and `POST /chat` with `modes: ['poll']` only. A `/chat` draft and its poll count as one poll.
+  Everything else, including `/run*`, `/usage`, `/console` and the static site, returns 403. Visitors cannot set
+  `concurrency`.
+- **Refused:** HTTP 429 `{ error, reason: 'busy' | 'rate' | 'cap' | 'too_long', retry_after_s, replay }`. The
+  experience page shows `error` in the poll status ("Agents are busy with another visitor; try again in a moment",
+  "Demo limit reached: showing saved replays"). Its prepared replays keep working.
+- **Client IP:** the first `X-Forwarded-For` entry, trusted only when the socket peer is loopback (the tunnel);
+  otherwise the socket address. Caddy v2 overwrites any client-supplied `X-Forwarded-For` unless `trusted_proxies` is
+  set, so visitors cannot choose their address.
+- **Log:** each allowed or refused poll goes to `data/city/live/access.log` as
+  `demo allowed|refused reason=… ip=… /ask total=12/60`, with no key.
+- **Reset:** the total is in `data/city/live/demo-guard-total.txt` (git-ignored; `DEMO_TOTAL_FILE` moves it). A
+  restart keeps it and clears the per-IP windows. To reset, stop the server, delete the file, and start again.
+
+**After the demo:**
+1. Stop the tunnel (`ssh`/`autossh`) and the :4179 server.
+2. Meet removes the VM's `tunnel` user and the Caddy agents `handle` (see "Remove it after the event" in
+   [ops/agents-tunnel.md](../ops/agents-tunnel.md)).
+3. Rotate `CONSOLE_ACCESS_KEY` in `persona-swarm/.env` and in teammates' `.env` files.
+
 ## Frontend handoff
 
 - **The product UI is `/experience/`,** served by this server. A separate session wires it to the agents (`experience/`

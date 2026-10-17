@@ -522,3 +522,156 @@ test('a 1-5 poll: numeric choices, a running tally on every answer, the distribu
     assert.equal(summary.numbers_verified, true);
   } finally { await close(server); }
 });
+
+/* ---------- the public demo guard (--demo-guard) ---------- */
+
+const KEY = 'demo-key-not-real';
+const fiveCall = async () => ({ output: { choice: 3, reason: 'fake' }, meta: {} });
+function guarded(dir, limits = {}, deps = {}) {
+  const demoGuard = { concurrent: 1, perIp: 3, windowMin: 10, maxTotal: 60, maxChars: 300, totalFile: path.join(dir, 'total.txt'), ...limits };
+  return createServer({ backend: 'local', host: '127.0.0.1', concurrency: 4, requireKey: true, demoGuard }, { liveDir: dir, env: () => ({ CONSOLE_ACCESS_KEY: KEY }), call: fiveCall, ...deps });
+}
+// As Caddy sends it: the key added server-side and the visitor's address first in X-Forwarded-For.
+const post = (base, route, body, ip = '198.51.100.7') => fetch(`${base}${route}`, { method: 'POST', headers: { authorization: `Bearer ${KEY}`, 'x-forwarded-for': `${ip}, 10.0.0.1` },
+  body: JSON.stringify({ ids: ['a001'], options: [1, 2, 3, 4, 5], ...body }) });
+const ask = (base, question = 'Raise the fare?', ip) => post(base, '/ask', { question }, ip);
+
+test('demo guard config: off unless --demo-guard or DEMO_GUARD=1; limits from .env or flags; bad limits refused', async () => {
+  assert.equal(cfg.loadConfig([], {}).demoGuard, null);
+  assert.deepEqual(cfg.loadConfig(['--demo-guard'], {}).demoGuard, { concurrent: 1, perIp: 3, windowMin: 10, maxTotal: 60, maxChars: 300, totalFile: null });
+  const g = cfg.loadConfig(['--demo-per-ip', '5', '--demo-total-file', '/tmp/t.txt'], { DEMO_GUARD: '1', DEMO_MAX_TOTAL: '20', DEMO_PER_IP: '9' }).demoGuard;
+  assert.deepEqual([g.perIp, g.maxTotal, g.totalFile], [5, 20, '/tmp/t.txt'], 'a flag beats .env');
+  const base = { backend: 'replay', host: '127.0.0.1', concurrency: 16 };
+  assert.match((await cfg.checkStartup({ ...base, demoGuard: { ...g, maxChars: NaN } }, {}, { saves: () => true })).error, /DEMO_\* limits/);
+  assert.match((await cfg.checkStartup({ ...base, backend: 'remote', demoGuard: g }, {}, {})).error, /remote-mode server only forwards/);
+  assert.ok((await cfg.checkStartup({ ...base, demoGuard: g }, {}, { saves: () => true })).ok);
+});
+
+test('demo guard: X-Forwarded-For is trusted from loopback (the tunnel) only', () => {
+  const { clientIp } = require('./server');
+  const req = (remoteAddress, xff) => ({ socket: { remoteAddress }, headers: xff ? { 'x-forwarded-for': xff } : {} });
+  assert.equal(clientIp(req('127.0.0.1', '203.0.113.5, 10.0.0.1')), '203.0.113.5');
+  assert.equal(clientIp(req('::ffff:127.0.0.1', '203.0.113.5')), '203.0.113.5');
+  assert.equal(clientIp(req('::1', '2001:db8::5')), '2001:db8::5');
+  assert.equal(clientIp(req('192.168.1.30', '203.0.113.5')), '192.168.1.30', 'a LAN caller cannot pick its own address');
+  assert.equal(clientIp(req('127.0.0.1')), '127.0.0.1');
+});
+
+test('demo guard: health, roster and replays are public; /run*, /usage, the console, the site and non-poll chats are 403', async () => {
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, '2026-10-17T15-04-00-000Z-poll.json'), JSON.stringify(sample));
+  const server = guarded(dir);
+  const base = await listen(server);
+  const get = (p) => fetch(base + p, { headers: { authorization: `Bearer ${KEY}` } });
+  try {
+    for (const ok of ['/health', '/agents', '/replay/latest', '/saves/2026-10-17T15-04-00-000Z-poll.json']) assert.equal((await get(ok)).status, 200, ok);
+    for (const bad of ['/usage', '/console', '/agents-client.js', '/experience/', '/persona-swarm/runtime/agents-client.js', '/']) assert.equal((await get(bad)).status, 403, bad);
+    for (const route of ['/run/fare', '/run/bloor', '/run/bike']) assert.equal((await post(base, route, {})).status, 403, route);
+    for (const modes of [undefined, ['poll', 'run'], ['reply'], []]) assert.equal((await post(base, '/chat', { message: 'hi', modes })).status, 403, JSON.stringify(modes));
+    assert.equal(server.guard.total, 0, 'nothing above counts');
+    assert.equal((await (await get('/health')).json()).ok, true);
+  } finally { await close(server); }
+});
+
+test('demo guard: one poll at a time; a chat draft and its poll count once; the busy visitor gets a friendly 429', async () => {
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const call = async ({ schema }) => {
+    if (schema.properties.mode) return { output: { proposal: 'A $15 downtown charge.', mode: 'poll', question: 'q', options: [], policy: '', reply: '', note: 'n',
+      filter: { roles: [], age_bands: [], income_bands: [], sex: [], neighbourhoods: [], fare_category: '', has_car: '', has_bike: '' } }, meta: {} };
+    await gate;
+    return { output: { choice: 4, reason: 'fake' }, meta: {} };
+  };
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, '2026-10-17T15-04-00-000Z-poll.json'), JSON.stringify(sample));
+  const server = guarded(dir, {}, { call });
+  const base = await listen(server);
+  try {
+    const first = await post(base, '/chat', { message: 'congestion charge', modes: ['poll'] }, '198.51.100.1');   // a draft, still running
+    assert.equal(first.status, 200);
+    const busy = await ask(base, 'Another?', '198.51.100.2');
+    assert.equal(busy.status, 429);
+    assert.deepEqual(await busy.json(), { reason: 'busy', retry_after_s: 15, error: 'Agents are busy with another visitor; try again in a moment', replay: true });
+    const client = require('./agents-client').create({ serverUrl: base, accessKey: KEY });          // what the page's client throws
+    await assert.rejects(client.askAgents('And another?', { orchestrate: false }), (e) => e.status === 429 && e.replay === true && /busy with another visitor/.test(e.message));
+    release();
+    const evs = await events(first);
+    assert.ok(evs.some((e) => e.event === 'plan') && evs.some((e) => e.event === 'done'), 'the draft and its poll ran');
+    assert.equal(server.guard.total, 1, 'one draft plus its poll counts once');
+    const again = await ask(base, 'Now?', '198.51.100.2');
+    assert.equal(again.status, 200, 'free again once the first finished');
+    await events(again);
+  } finally { await close(server); }
+});
+
+test('demo guard: 3 per IP per rolling window, from the tunnelled X-Forwarded-For; too-long ideas are refused and never count', async () => {
+  const dir = tmp();
+  const server = guarded(dir);
+  const base = await listen(server);
+  try {
+    for (let i = 0; i < 3; i++) assert.equal((await events(await ask(base, `q${i}?`, '203.0.113.9'))).at(-1).event, 'done');
+    const rate = await ask(base, 'q3?', '203.0.113.9');
+    assert.equal(rate.status, 429);
+    const r = await rate.json();
+    assert.equal(r.reason, 'rate');
+    assert.ok(r.retry_after_s > 590 && r.retry_after_s <= 600, String(r.retry_after_s));
+    assert.match(r.error, /^Demo limit reached: showing saved replays\. Try again in 10 min$/);
+    assert.equal((await events(await ask(base, 'q?', '203.0.113.10'))).at(-1).event, 'done', 'another visitor is not limited');
+    server.guard.hits.set('203.0.113.9', server.guard.hits.get('203.0.113.9').map((t) => t - 10 * 60000));   // ten minutes later
+    assert.equal((await events(await ask(base, 'q4?', '203.0.113.9'))).at(-1).event, 'done', 'the window rolls');
+    const long = await ask(base, 'x'.repeat(301), '192.0.2.1');
+    assert.deepEqual([long.status, (await long.json()).reason], [429, 'too_long']);
+    const longChat = await post(base, '/chat', { message: 'x'.repeat(301), modes: ['poll'] }, '192.0.2.1');
+    assert.deepEqual([longChat.status, (await longChat.json()).reason], [429, 'too_long']);
+    const longOptions = await post(base, '/ask', { question: 'q?', options: ['x'.repeat(200), 'y'.repeat(200)] }, '192.0.2.1');
+    assert.equal((await longOptions.json()).reason, 'too_long', 'options are prompt text too');
+    assert.equal((await events(await ask(base, 'x'.repeat(300), '192.0.2.1'))).at(-1).event, 'done', '300 characters is fine');
+    assert.equal(server.guard.total, 6);
+    const log = fs.readFileSync(path.join(dir, 'access.log'), 'utf8');
+    assert.match(log, /demo allowed ip=203\.0\.113\.9 \/ask total=1\/60/);
+    assert.match(log, /demo refused reason=rate ip=203\.0\.113\.9 \/ask total=3\/60/);
+    assert.match(log, /demo refused reason=too_long ip=192\.0\.2\.1 \/chat/);
+    assert.doesNotMatch(log, new RegExp(KEY));
+  } finally { await close(server); }
+});
+
+test('demo guard: the total cap persists across a restart; at the cap /health reports offline', async () => {
+  const dir = tmp();
+  let server = guarded(dir, { maxTotal: 2 });
+  let base = await listen(server);
+  try {
+    await events(await ask(base, 'one?', '198.51.100.1'));
+    assert.equal(fs.readFileSync(path.join(dir, 'total.txt'), 'utf8'), '1\n');
+  } finally { await close(server); }
+  server = guarded(dir, { maxTotal: 2 });                                 // restarted: 1 of 2 already used
+  base = await listen(server);
+  try {
+    assert.equal(server.guard.total, 1);
+    await events(await ask(base, 'two?', '198.51.100.2'));
+    const cap = await ask(base, 'three?', '198.51.100.3');
+    assert.equal(cap.status, 429);
+    assert.deepEqual(await cap.json(), { reason: 'cap', retry_after_s: null, error: 'Demo limit reached: showing saved replays', replay: true });
+    const health = await (await fetch(`${base}/health`, { headers: { authorization: `Bearer ${KEY}` } })).json();
+    assert.equal(health.ok, false, 'the site shows its offline state and replays');
+    assert.equal(server.guard.total, 2);
+  } finally { await close(server); }
+  fs.writeFileSync(path.join(dir, 'total.txt'), 'garbled');
+  assert.throws(() => guarded(dir), /must hold a whole number/, 'an unreadable total never silently resets');
+});
+
+test('guard off: same server behaves as before (no limits, /run, /usage and the console served, nothing counted)', async () => {
+  const dir = tmp();
+  const call = async ({ schema }) => ({ output: schema.properties.action ? { action: schema.properties.action.enum[0], reason: 'fake' } : { choice: 3, reason: 'fake' }, meta: {} });
+  const server = createServer({ backend: 'local', host: '127.0.0.1', concurrency: 32 }, { liveDir: dir, env: () => ({}), call });
+  const base = await listen(server);
+  try {
+    assert.ok(!server.guard);
+    const polls = await Promise.all([1, 2, 3, 4, 5].map((i) => ask(base, `q${i}?`, '203.0.113.9')));
+    assert.ok(polls.every((r) => r.status === 200), 'five at once from one address');
+    await Promise.all(polls.map(events));
+    assert.equal((await fetch(`${base}/console`)).status, 200);
+    assert.equal((await fetch(`${base}/usage`)).status, 200);
+    assert.equal((await events(await fetch(`${base}/run/fare`, { method: 'POST', body: '{}' }))).at(-1).event, 'done');
+    assert.ok(!fs.existsSync(path.join(dir, 'demo-guard-total.txt')));
+  } finally { await close(server); }
+});

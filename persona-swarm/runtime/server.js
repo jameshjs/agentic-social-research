@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* The persona console server (Node, no dependencies). Usage, from the repository root:
  *   node persona-swarm/runtime/server.js [--lan | --host <address>] [--port 4174] [--backend local|token|api|remote|replay]
- *        [--concurrency 32] [--env-file path] [--require-key]        (or: npm --prefix persona-swarm/runtime start)
+ *        [--concurrency 32] [--env-file path] [--require-key] [--demo-guard]        (or: npm --prefix persona-swarm/runtime start)
  * Serves /console and streams (SSE) POST /ask (a poll of up to 100 agents), POST /run/:policy (a live world run of the 40
  * deciders, fare or bloor) and POST /chat (the orchestrator picks one of those and summarises). GET /replay/latest serves
  * the newest save. Every live poll and run is saved to data/city/live/. With no usable backend, or at the plan's limit,
@@ -64,6 +64,13 @@ function aggregatePoll(answers, options, n = Object.keys(answers).length) {
     ...(flagged ? { to_check: flagged } : {}) };
 }
 
+// Behind the Caddy tunnel every request comes from loopback, and Caddy overwrites X-Forwarded-For: trust it there only.
+function clientIp(req) {
+  const peer = req.socket.remoteAddress || '';
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return forwarded && cfg.isLoopback(peer.replace(/^::ffff:/, '')) ? forwarded : peer;
+}
+
 function createServer(config, deps = {}) {
   const env = deps.env || (() => cd.readDotEnv(config.envFile || cfg.envFile()));
   const liveDir = deps.liveDir || cfg.LIVE_DIR;
@@ -94,6 +101,32 @@ function createServer(config, deps = {}) {
   }
   const corsOrigins = config.corsOrigins || [];
   const state = { limited: null, usage: {} };
+
+  /* ---------- the public demo guard (opt-in: --demo-guard) ---------- */
+  const guard = config.demoGuard && (() => {
+    const file = config.demoGuard.totalFile || path.join(liveDir, 'demo-guard-total.txt');
+    let total = 0;                                            // persisted, so a restart never resets the demo's total
+    try { total = Number(fs.readFileSync(file, 'utf8').trim()); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    if (!Number.isInteger(total) || total < 0) throw new Error(`demo guard: ${file} must hold a whole number`);
+    return { ...config.demoGuard, file, total, active: 0, hits: new Map() };
+  })();
+  /* One live poll (a /chat draft and its poll count once): null when admitted, else why not. */
+  function admit(ip, text, options) {
+    const now = Date.now(), windowMs = guard.windowMin * 60000;
+    const hits = (guard.hits.get(ip) || []).filter((t) => now - t < windowMs);
+    if (text.length > guard.maxChars || JSON.stringify(options ?? []).length > guard.maxChars) return { reason: 'too_long', retry_after_s: 0, error: `Please keep your idea to ${guard.maxChars} characters` };
+    if (guard.total >= guard.maxTotal) return { reason: 'cap', retry_after_s: null, error: 'Demo limit reached: showing saved replays' };
+    if (hits.length >= guard.perIp) {
+      const s = Math.ceil((hits[0] + windowMs - now) / 1000);
+      return { reason: 'rate', retry_after_s: s, error: `Demo limit reached: showing saved replays. Try again in ${Math.ceil(s / 60)} min` };
+    }
+    if (guard.active >= guard.concurrent) return { reason: 'busy', retry_after_s: 15, error: 'Agents are busy with another visitor; try again in a moment' };
+    guard.hits.set(ip, [...hits, now]);
+    guard.active++;
+    fs.mkdirSync(path.dirname(guard.file), { recursive: true });
+    fs.writeFileSync(guard.file, `${++guard.total}\n`);
+    return null;
+  }
 
   /* ---------- saves and replay ---------- */
   function save(record, file) {
@@ -237,15 +270,22 @@ function createServer(config, deps = {}) {
     }
   }
 
+  const log = (line) => {
+    fs.mkdirSync(liveDir, { recursive: true });
+    fs.appendFileSync(path.join(liveDir, 'access.log'), `${new Date().toISOString()} ${line}\n`);
+  };
   function account(req, url, fp) {
     state.usage[fp] = (state.usage[fp] || 0) + 1;
-    fs.mkdirSync(liveDir, { recursive: true });
     // No secrets: the key's fingerprint, the caller's address, the endpoint and the running count.
-    fs.appendFileSync(path.join(liveDir, 'access.log'), `${new Date().toISOString()} key=${fp} from=${req.socket.remoteAddress} ${req.method} ${url.pathname} n=${state.usage[fp]}\n`);
+    log(`key=${fp} from=${req.socket.remoteAddress} ${req.method} ${url.pathname} n=${state.usage[fp]}`);
   }
 
   async function handler(req, res) {
     const url = new URL(req.url, 'http://console');
+    // The public demo serves health, the roster and replays, and polls through admit(); never /run*, /usage or the console.
+    if (guard && !(req.method === 'GET' && /^\/(health|agents|replay\/latest|saves\/.*)$/.test(url.pathname)) && !(req.method === 'POST' && ['/ask', '/chat'].includes(url.pathname))) {
+      json(res, 403, { error: 'not available in the public demo' }); return;
+    }
     // The main path is same-origin: this server also serves the site. A page on another allowed origin (python
     // http.server on :4173) may call in too, but such cross-origin calls always need the key.
     const origin = req.headers.origin;
@@ -281,7 +321,8 @@ function createServer(config, deps = {}) {
     try { body = req.method === 'POST' ? await readBody(req) : ''; } catch (e) { json(res, 413, { error: e.message }); return; }
     const params = (() => { try { return body ? JSON.parse(body) : {}; } catch { return null; } })();
     if (params === null) { json(res, 400, { error: 'invalid JSON' }); return; }
-    const concurrency = Math.min(64, Math.max(1, Number(params.concurrency) || config.concurrency));
+    // A public visitor never sets how many CLI calls run at once on this machine.
+    const concurrency = guard ? config.concurrency : Math.min(64, Math.max(1, Number(params.concurrency) || config.concurrency));
     const remoteRoute = config.backend === 'remote' && (req.method === 'POST' || ['/health', '/replay/latest'].includes(url.pathname) || url.pathname.startsWith('/saves/'));
 
     if (req.method === 'GET' && url.pathname === '/agents') { json(res, 200, { agents: roster, bundle_version: agents.data.bundle_version, attribution: agents.data.attribution }); return; }
@@ -289,7 +330,7 @@ function createServer(config, deps = {}) {
     if (remoteRoute) { await forward(req, res, url, body); return; }
     if (req.method === 'GET' && url.pathname === '/health') {
       // ok means live agents can answer now: false in replay mode or after the plan limit, so the site shows its offline state.
-      json(res, 200, { ok: Boolean(call) && !state.limited, backend: config.backend, agent_model: cd.AGENT, orchestrator_model: cd.ORCHESTRATOR, agents: roster.length,
+      json(res, 200, { ok: Boolean(call) && !state.limited && !(guard && guard.total >= guard.maxTotal), backend: config.backend, agent_model: cd.AGENT, orchestrator_model: cd.ORCHESTRATOR, agents: roster.length,
         deciders: roster.filter((a) => a.decider).length, concurrency: config.concurrency, limited: Boolean(state.limited), requires_key: requireKey });
       return;
     }
@@ -310,6 +351,18 @@ function createServer(config, deps = {}) {
     const routes = { '/ask': 'poll', '/chat': 'chat', '/run/fare': 'run', '/run/bloor': 'run', '/run/bike': 'run' };
     if (req.method !== 'POST' || !routes[url.pathname]) { json(res, 404, { error: 'not found' }); return; }
     const policy = url.pathname.startsWith('/run/') ? url.pathname.slice(5).replace(/^bike$/, 'bloor') : null;   // bike: the fixture's name
+    let admitted = false;
+    if (guard && url.pathname === '/chat' && !(Array.isArray(params.modes) && params.modes.length && params.modes.every((m) => m === 'poll'))) {
+      json(res, 403, { error: "the public demo runs polls only: modes must be ['poll']" }); return;
+    }
+    const text = String((url.pathname === '/ask' ? params.question : params.message) || '');
+    // A replay, or a request refused below for lacking its text, makes no model call and is never limited or counted.
+    if (guard && text && call && config.backend !== 'replay' && !state.limited) {
+      const ip = clientIp(req), refused = admit(ip, text, params.options);
+      log(`demo ${refused ? `refused reason=${refused.reason}` : 'allowed'} ip=${ip} ${url.pathname} total=${guard.total}/${guard.maxTotal}`);
+      if (refused) { json(res, 429, { ...refused, replay: Boolean(latestSave()) }); return; }
+      admitted = true;
+    }
     const send = sse(res);
     try {
       if (config.backend === 'replay' || !call || state.limited) {
@@ -349,13 +402,13 @@ function createServer(config, deps = {}) {
           await chat(send, { message: String(params.message), concurrency, modes, options: params.options, draft: Boolean(draft) });
         }
       }
-    } catch (e) { send('error', { message: e.message }); }
+    } catch (e) { send('error', { message: e.message }); } finally { if (admitted) guard.active--; }
     res.end();
   }
 
   return Object.assign(http.createServer((req, res) => {
     handler(req, res).catch((e) => { try { json(res, 500, { error: e.message }); } catch { res.end(); } });
-  }), { state, latestSave, save });
+  }), { state, latestSave, save, guard });
 }
 
 async function main() {
@@ -370,9 +423,12 @@ async function main() {
     process.stdout.write(`persona console: backend ${config.backend} (${check.detail}); ${cd.loadAgents().bundles.length} agents, 40 deciders; concurrency ${config.concurrency}\n`);
     process.stdout.write(`open ${url}${cfg.isLoopback(config.host) ? '' : '  (share this URL and the access key with teammates; the key is in persona-swarm/.env)'}`
       + `${config.requireKey ? '  (access key required)' : ''}\n`);
+    const g = server.guard;
+    if (g) process.stdout.write(`demo guard on: ${g.concurrent} at a time, ${g.perIp} per IP per ${g.windowMin} min, ${g.maxChars}-char ideas; `
+      + `${Math.max(0, g.maxTotal - g.total)} of ${g.maxTotal} polls left (${g.file.startsWith(REPO) ? path.relative(REPO, g.file) : g.file}); /run*, /usage and the console are blocked\n`);
   });
 }
 
 if (require.main === module) main().catch((e) => { process.stderr.write(`${e.stack || e}\n`); process.exitCode = 1; });
 
-module.exports = { createServer, aggregatePoll, summaries, staticFile };
+module.exports = { createServer, aggregatePoll, summaries, staticFile, clientIp };

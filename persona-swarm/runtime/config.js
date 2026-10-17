@@ -4,6 +4,8 @@
  *                  ANTHROPIC_API_KEY) | remote (forward to AGENT_SERVER_URL with CONSOLE_ACCESS_KEY) | replay (saved runs only)
  *   CONSOLE_HOST, CONSOLE_PORT, AGENT_CONCURRENCY, CONSOLE_CORS_ORIGINS; --lan, --host, --port, --backend,
  *   --concurrency, --env-file and --require-key override them.
+ *   DEMO_GUARD=1 (or --demo-guard) turns on the public demo's limits: DEMO_CONCURRENT, DEMO_PER_IP, DEMO_WINDOW_MIN,
+ *   DEMO_MAX_TOTAL, DEMO_MAX_CHARS, DEMO_TOTAL_FILE (or --demo-concurrent, --demo-per-ip, … --demo-total-file).
  * A server bound beyond loopback (or run with --require-key) requires CONSOLE_ACCESS_KEY on every API call, and so does
  * any cross-origin call from an allowed site. The key is read fresh on each request so it can be rotated. */
 'use strict';
@@ -43,7 +45,15 @@ function loadConfig(argv = [], env = readDotEnv(envFile(argv))) {
     remoteUrl: (env.AGENT_SERVER_URL || '').replace(/\/$/, ''),
     requireKey: argv.includes('--require-key') || env.CONSOLE_REQUIRE_KEY === '1',
     corsOrigins: (env.CONSOLE_CORS_ORIGINS || 'http://127.0.0.1:4173,http://localhost:4173').split(',').map((s) => s.trim()).filter(Boolean),
+    demoGuard: argv.includes('--demo-guard') || env.DEMO_GUARD === '1' ? demoGuard(value, env) : null,
   };
+}
+
+/* The public demo's limits (opt-in). totalFile defaults to demo-guard-total.txt in the live folder (not .json: replays list those). */
+function demoGuard(value, env) {
+  const num = (name, fallback) => Number(value(`--${name.toLowerCase().replace(/_/g, '-')}`) || env[name] || fallback);   // DEMO_PER_IP or --demo-per-ip
+  return { concurrent: num('DEMO_CONCURRENT', 1), perIp: num('DEMO_PER_IP', 3), windowMin: num('DEMO_WINDOW_MIN', 10), maxTotal: num('DEMO_MAX_TOTAL', 60),
+    maxChars: num('DEMO_MAX_CHARS', 300), totalFile: value('--demo-total-file') || env.DEMO_TOTAL_FILE || null };
 }
 
 /* `claude auth status` for the backend's own environment. It prints JSON with loggedIn and authMethod. */
@@ -67,6 +77,9 @@ async function checkStartup(config, env, deps = {}) {
   if (!isLoopback(config.host) && !env.CONSOLE_ACCESS_KEY) return fail(`binding to ${config.host} needs CONSOLE_ACCESS_KEY in persona-swarm/.env`);
   if (config.requireKey && !env.CONSOLE_ACCESS_KEY) return fail('--require-key needs CONSOLE_ACCESS_KEY in persona-swarm/.env');
   if (!(config.concurrency >= 1 && config.concurrency <= 64)) return fail('AGENT_CONCURRENCY must be between 1 and 64');
+  const guard = config.demoGuard;
+  if (guard && !['concurrent', 'perIp', 'windowMin', 'maxTotal', 'maxChars'].every((k) => Number.isInteger(guard[k]) && guard[k] >= 1)) return fail('DEMO_* limits must be whole numbers of at least 1');
+  if (guard && config.backend === 'remote') return fail('--demo-guard limits the agent server itself; a remote-mode server only forwards');
   const login = (mode, token) => {
     const s = status(mode, token);
     if (s.error) return fail(`claude auth status failed: ${s.error}`);
