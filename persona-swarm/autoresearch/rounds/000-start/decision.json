@@ -9,8 +9,8 @@
  },
  "check_start": {
   "right_person": 0.8061797752808989,
-  "right_spread": 0.9667395366633219,
-  "right_group_gaps": 0.7647058823529411,
+  "right_spread": 0.8791959360457436,
+  "right_group_gaps": 0.7901234567901234,
   "steady": 0.959,
   "marks_passed": 3,
   "marks": {
@@ -22,8 +22,8 @@
  },
  "check_repeat": {
   "right_person": 0.8211610486891385,
-  "right_spread": 0.9765276676660722,
-  "right_group_gaps": 0.8117647058823529,
+  "right_spread": 0.8775694069661537,
+  "right_group_gaps": 0.8395061728395061,
   "steady": 0.963,
   "marks_passed": 4,
   "marks": {
@@ -35,8 +35,8 @@
  },
  "tuning_start": {
   "right_person": 0.7977190876350541,
-  "right_spread": 0.9658685986307544,
-  "right_group_gaps": 0.672,
+  "right_spread": 0.8563570069165611,
+  "right_group_gaps": 0.6833333333333333,
   "steady": null,
   "marks_passed": 2,
   "marks": {
@@ -49,17 +49,17 @@
  "noise": {
   "right_person": 0.014981273408239626,
   "right_spread": 0.01,
-  "right_group_gaps": 0.04705882352941182,
+  "right_group_gaps": 0.04938271604938271,
   "steady": 0.01
  },
  "baselines_check": {
-  "most_common": 0.6207865168539326,
-  "demographic": 0.6051029962546817,
-  "most_similar": 0.6477059925093633,
+  "most_common": 0.7097378277153558,
+  "demographic": 0.6591760299625468,
+  "most_similar": 0.6889044943820225,
   "no_persona": 0.7326779026217228
  },
  "compare_next_round_with": "000-start (the first run); the repeat only measures the noise",
- "benchmark": "The repeat run passes all 4 marks; the first run passes 3, with right group gaps 0.765 below 0.80 (its noise is 0.047).",
+ "benchmark": "The repeat run passes all 4 marks; the first run passes 3, with right group gaps 0.790 below 0.80 (its noise is 0.049).",
  "triggers_fired": [
   "5: the benchmark is passed (by the repeat run)"
  ],
@@ -79,5 +79,6 @@
   "000-no-persona": 156.1,
   "000-start": 221.3,
   "000-start-repeat": 181.6
- }
+ },
+ "rescored": "Re-scored after round 1 ran: pricing items are now named by product (the block was shuffled per respondent), puzzle slugs are no longer cut off, and keep() ignores float rounding. The same answers, re-keyed; right person is unchanged."
 }

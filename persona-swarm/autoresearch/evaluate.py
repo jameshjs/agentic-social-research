@@ -17,6 +17,7 @@ MARKS = {"right_person": 0.70, "right_spread": 0.80, "right_group_gaps": 0.80}
 SPLITS = {"age": ("18-29", "65+"), "sex": ("Male", "Female"), "income_band": ("under_50k", "100k_plus"),
           "party": ("Democrat", "Republican")}
 MIN_GROUP, MIN_GAP, MAX_MISSING, MIN_NOISE = 5, Fraction(1, 10), 0.05, 0.01
+EPS = 1e-9                  # checks are ratios of counts: a change equal to the noise must not pass on float rounding
 EXPERIMENTS = {  # randomised decision-puzzle experiments: each respondent saw one condition (wave-4 block names)
     "absolute_vs_relative": ("Absolute vs. relative - calculator", "Absolute vs. relative - jacket"),
     "allais": ("Allais Form 1", "Allais Form 2"),
@@ -247,7 +248,8 @@ def keep(prev, new, noise):
     if unmeasured := [c for c in deltas if c not in noise]:
         raise ValueError(f"no noise measured for {unmeasured}: re-score both round 0 runs and recompute the noise")
     say = lambda c: f"{c} {deltas[c]:+.3f} (noise {noise[c]:.3f})"
-    up, down = [say(c) for c in deltas if deltas[c] > noise[c]], [say(c) for c in deltas if deltas[c] < -noise[c]]
+    up = [say(c) for c in deltas if deltas[c] > noise[c] + EPS]
+    down = [say(c) for c in deltas if deltas[c] < -noise[c] - EPS]
     marks_held = new["marks_passed"] >= prev["marks_passed"]
     reasons = ["fell beyond noise: " + ", ".join(down)] if down else []
     if not marks_held:

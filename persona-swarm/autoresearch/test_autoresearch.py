@@ -93,6 +93,8 @@ def test_all():
         assert not ev.keep(prev, {**prev, "right_person": 0.51}, noise)[0]
         assert not ev.keep(prev, {**prev, "right_person": 0.60, "right_spread": 0.55}, noise)[0]
         assert ev.keep(prev, {**prev, "right_person": 0.60}, noise)[0]
+        steady = {**prev, "steady": 0.959}                 # 0.969 - 0.959 is a hair above 0.01 in floating point
+        assert not ev.keep(steady, {**steady, "steady": 0.969}, {**noise, "steady": 0.01})[0]
         try:                                                # a check with no measured noise must be re-measured
             ev.keep({**prev, "steady": 0.9}, {**prev, "steady": 0.95}, noise)
         except ValueError:

@@ -11,14 +11,14 @@
   "agent_match_rate": 0.6645,
   "human_consistency": 0.833,
   "missing_share": 0.0,
-  "right_spread": 0.9658685986307544,
+  "right_spread": 0.8563570069165611,
   "spread_items": 50,
-  "right_group_gaps": 0.672,
-  "group_gaps_considered": 125,
+  "right_group_gaps": 0.6833333333333333,
+  "group_gaps_considered": 120,
   "baselines": {
-   "most_common": 0.7160864345738295,
-   "demographic": 0.8541416566626651,
-   "most_similar": 0.6506602641056423,
+   "most_common": 0.7749099639855942,
+   "demographic": 0.8661464585834334,
+   "most_similar": 0.7022809123649459,
    "no_persona": 0.7527010804321729
   },
   "marks": {
@@ -62,14 +62,14 @@
     "agent_match_rate": 0.649375,
     "human_consistency": 0.81,
     "missing_share": 0.0,
-    "right_spread": 0.9804598992013578,
+    "right_spread": 0.8435704095586163,
     "spread_items": 40,
-    "right_group_gaps": 0.616822429906542,
-    "group_gaps_considered": 107,
+    "right_group_gaps": 0.6274509803921569,
+    "group_gaps_considered": 102,
     "baselines": {
-     "most_common": 0.6805555555555556,
-     "demographic": 0.845679012345679,
-     "most_similar": 0.6057098765432098,
+     "most_common": 0.7561728395061729,
+     "demographic": 0.8611111111111112,
+     "most_similar": 0.6720679012345679,
      "no_persona": 0.7276234567901234
     },
     "marks": {
@@ -82,7 +82,7 @@
    }
   },
   "experiment_effects": null,
-  "scorer_sha256": "4f35d4828cdab965f95e02cc665fe8065fda01f374a77fcaed861cfd1f84e210",
+  "scorer_sha256": "9e5332f932ca821f7829ffc03475a8dd11f238cc56ddf2610c2ed694a75aee4b",
   "rewordings_sha256": "45136ba1ef58e2287a6c1e193368568c44c6444b6c2d005b413999dbe904ec65"
  },
  "check": {
@@ -97,14 +97,14 @@
   "agent_match_rate": 0.6888,
   "human_consistency": 0.8544,
   "missing_share": 0.0,
-  "right_spread": 0.9667395366633219,
+  "right_spread": 0.8791959360457436,
   "spread_items": 50,
-  "right_group_gaps": 0.7647058823529411,
-  "group_gaps_considered": 85,
+  "right_group_gaps": 0.7901234567901234,
+  "group_gaps_considered": 81,
   "baselines": {
-   "most_common": 0.6207865168539326,
-   "demographic": 0.6051029962546817,
-   "most_similar": 0.6477059925093633,
+   "most_common": 0.7097378277153558,
+   "demographic": 0.6591760299625468,
+   "most_similar": 0.6889044943820225,
    "no_persona": 0.7326779026217228
   },
   "marks": {
@@ -148,14 +148,14 @@
     "agent_match_rate": 0.68075,
     "human_consistency": 0.8425,
     "missing_share": 0.0,
-    "right_spread": 0.9863527868256063,
+    "right_spread": 0.8769232860536335,
     "spread_items": 40,
-    "right_group_gaps": 0.7164179104477612,
-    "group_gaps_considered": 67,
+    "right_group_gaps": 0.746031746031746,
+    "group_gaps_considered": 63,
     "baselines": {
-     "most_common": 0.5833827893175074,
-     "demographic": 0.5676557863501484,
-     "most_similar": 0.6172106824925816,
+     "most_common": 0.6961424332344214,
+     "demographic": 0.6362017804154303,
+     "most_similar": 0.6694362017804154,
      "no_persona": 0.7178041543026706
     },
     "marks": {
@@ -168,7 +168,7 @@
    }
   },
   "experiment_effects": null,
-  "scorer_sha256": "4f35d4828cdab965f95e02cc665fe8065fda01f374a77fcaed861cfd1f84e210",
+  "scorer_sha256": "9e5332f932ca821f7829ffc03475a8dd11f238cc56ddf2610c2ed694a75aee4b",
   "rewordings_sha256": "45136ba1ef58e2287a6c1e193368568c44c6444b6c2d005b413999dbe904ec65"
  }
 }

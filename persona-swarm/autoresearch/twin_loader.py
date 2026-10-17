@@ -22,8 +22,10 @@ def norm(text):
     t = re.sub(r"[‐-―−]", "-", t).replace("’", "'")
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9$%' -]+", " ", t)).strip()
 
+PRODUCT = re.compile(r"in that category: (.*?)\. The product is priced at")
+
 def slug(text):
-    return re.sub(r"[^a-z0-9]+", "-", norm(text)).strip("-")[:40]
+    return re.sub(r"[^a-z0-9]+", "-", norm(text)).strip("-")  # untruncated: "...Problem 1" and "...Problem 2" differ
 
 def is_ordinal(options):
     """Within-one-step matching applies only to ordered scales of 5+ points (PLAN.md, settled decision 5)."""
@@ -39,7 +41,7 @@ def family(block):
 
 def exam_items(blocks):
     """Wave-4 blocks -> ([item without answer], {item_id: answer position}). Free text, sliders and text-only skipped."""
-    items, answers, n_price = [], {}, 0
+    items, answers = [], {}
     for b in blocks:
         name = (b.get("BlockName") or "").strip()
         fam = family(name)
@@ -47,9 +49,11 @@ def exam_items(blocks):
             qtype, ans = q.get("QuestionType"), (q.get("Answers") or {})
             pos = ans.get("SelectedByPosition")
             if qtype == "MC" and isinstance(pos, int) and q.get("Options"):
-                if fam == "pricing":
-                    n_price += 1
-                    iid = f"price_{n_price:02d}"
+                if fam == "pricing":  # the block is shuffled per respondent, so items are named by product, not position
+                    product = PRODUCT.search(q.get("QuestionText", ""))
+                    if not product:
+                        sys.exit(f"pricing question without a product name: {q.get('QuestionText', '')[:80]!r}")
+                    iid = "price_" + "-".join(slug(product.group(1)).split("-")[:3])
                 else:
                     iid = f"puzzle_{slug(name)}_{qi}"
                 if fam == "policy":
@@ -68,6 +72,8 @@ def exam_items(blocks):
                                       "text": f"{q.get('QuestionText', '')} {row}", "row": row, "options": cols,
                                       "ordinal": ordinal})
                         answers[iid] = p
+    ids = [i["id"] for i in items]
+    assert len(ids) == len(set(ids)), f"duplicate item ids: {sorted(i for i in ids if ids.count(i) > 1)[:5]}"
     return items, answers
 
 def demographics(given_blocks):

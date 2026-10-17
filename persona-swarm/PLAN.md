@@ -92,8 +92,9 @@ needs, and Task 12 depends on it.
   - Outside the repo: `~/.cache/persona-swarm/twin/*.parquet`, and `~/.cache/persona-swarm/locked/answers.jsonl` and
     `consistency.jsonl` for the check and final sets.
 - **Implementation decisions:**
-  - Item ids: `policy_01`…`policy_10`, `price_01`…`price_40`, and `puzzle_<block-slug>_<n>` for puzzles, with
-    matrix rows suffixed `_r<k>`.
+  - Item ids: `policy_01`…`policy_10`, `price_<product>` (the first three words of the product name, because the
+    pricing block is shuffled per respondent), and `puzzle_<block-slug>_<n>` for puzzles with the full block name,
+    with matrix rows suffixed `_r<k>`.
   - `condition` = the block name.
   - `ordinal` = true for matrix rows, and for `MC` items whose options are an agreement, likelihood or favour ladder
     or monotonic dollar amounts. Every other `MC` item is matched exactly.
@@ -339,3 +340,8 @@ These were open when the plan was first drafted. They are now reflected in the t
    of the pool (the first draw had the tuning set 11 points short on the South).
 5. **Papiers:** the CLI is installed and Steven's token works, but the library is empty, so rounds record no coach
    notes until papers are saved and annotated.
+6. **Item ids fixed after round 0.** The pricing block is shuffled per respondent, so position ids (`price_01`)
+   named a different product for each person, and two puzzle conditions shared one cut-off slug. Right person was
+   unaffected, but per-item baselines, spread and group gaps pooled different questions. Items are now named by
+   content, saved answers were re-keyed (the same answers under new ids) and every round was re-scored before any
+   keep decision was made.

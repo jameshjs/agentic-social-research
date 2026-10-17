@@ -28,13 +28,14 @@ procedure; follow it every round.
 2. **Hypothesise.** One sentence: what change should fix the weakest check, and why (cite note or passage ids).
 3. **Change.** Edit `instructions.md` (or the format) once.
 4. **Run.** `python3 autoresearch/run_round.py --slug <short-name> --sets tuning,check --steady [--format <fmt>]`.
-5. **Decide.** Use `evaluate.keep(prev_check_score, new_check_score, noise)` with the noise from round 0. Keep or
-   discard; a kept change is **on trial** until a coach signs it off. If discarded, restore the last kept
-   `instructions.md`.
-6. **Record.** Add the notes you used to `rounds/NNN-<slug>/sources.json`, write `decision.json`
-   (hypothesis, change, kept, reason, triggers fired, question asked and reply), append the row to `results.tsv`,
-   commit `round NN keep (on trial): <change> — <check> +x.xx` or `round NN discard: <change> — within noise`,
-   then export and re-publish the tuning record page.
+5. **Decide.** `python3 autoresearch/record_round.py autoresearch/rounds/NNN-<slug> --targeted <check> --label
+   "<short change>" --change "<what changed>" --hypothesis "<why>"` applies `evaluate.keep()` against the last kept
+   round with round 0's noise, checks the triggers, writes `decision.json` and the `results.tsv` row, and restores
+   the last kept `instructions.md` after a discard. A kept change is **on trial** until a coach signs it off.
+6. **Record.** Add the notes you used to `rounds/NNN-<slug>/sources.json`, and any trigger's question and the
+   coach's reply to `decision.json`. Run `python3 autoresearch/export_record.py`, commit with the subject the recorder
+   printed (`round NN keep (on trial): <change> — <check> +x.xx` or `round NN discard: <change> — within noise`),
+   then re-publish the tuning record page.
 
 ## Stop and ask a coach when
 
@@ -49,9 +50,10 @@ While waiting you may test ideas on the tuning set only; at most 2 changes may b
 
 ## Sign-off
 
-A coach types `sign off round NN — <name>` (or `reject round NN — <name>`). Record it in `decision.json` and
-`results.tsv`, and commit `round NN signed off: <name>` (or `round NN rejected by coach`, restoring the last
-signed-off instructions).
+A coach types `sign off round NN — <name>` (or `reject round NN — <name>`). Record a sign-off with
+`python3 autoresearch/record_round.py --sign-off NNN --by <name>`, which updates `decision.json` and `results.tsv`,
+and commit `round NN signed off: <name>`. A rejection is recorded by hand: `kept` becomes `rejected`, the last
+signed-off instructions are restored, and the commit is `round NN rejected by coach`.
 
 ## After round 10
 

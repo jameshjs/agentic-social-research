@@ -11,14 +11,14 @@
   "agent_match_rate": 0.7016,
   "human_consistency": 0.8544,
   "missing_share": 0.0,
-  "right_spread": 0.9765276676660722,
+  "right_spread": 0.8775694069661537,
   "spread_items": 50,
-  "right_group_gaps": 0.8117647058823529,
-  "group_gaps_considered": 85,
+  "right_group_gaps": 0.8395061728395061,
+  "group_gaps_considered": 81,
   "baselines": {
-   "most_common": 0.6207865168539326,
-   "demographic": 0.6051029962546817,
-   "most_similar": 0.6477059925093633,
+   "most_common": 0.7097378277153558,
+   "demographic": 0.6591760299625468,
+   "most_similar": 0.6889044943820225,
    "no_persona": 0.7326779026217228
   },
   "marks": {
@@ -62,14 +62,14 @@
     "agent_match_rate": 0.6945,
     "human_consistency": 0.8425,
     "missing_share": 0.0,
-    "right_spread": 0.9910724976688098,
+    "right_spread": 0.8673746717939116,
     "spread_items": 40,
-    "right_group_gaps": 0.7611940298507462,
-    "group_gaps_considered": 67,
+    "right_group_gaps": 0.7936507936507936,
+    "group_gaps_considered": 63,
     "baselines": {
-     "most_common": 0.5833827893175074,
-     "demographic": 0.5676557863501484,
-     "most_similar": 0.6172106824925816,
+     "most_common": 0.6961424332344214,
+     "demographic": 0.6362017804154303,
+     "most_similar": 0.6694362017804154,
      "no_persona": 0.7178041543026706
     },
     "marks": {
@@ -82,7 +82,7 @@
    }
   },
   "experiment_effects": null,
-  "scorer_sha256": "4f35d4828cdab965f95e02cc665fe8065fda01f374a77fcaed861cfd1f84e210",
+  "scorer_sha256": "9e5332f932ca821f7829ffc03475a8dd11f238cc56ddf2610c2ed694a75aee4b",
   "rewordings_sha256": "45136ba1ef58e2287a6c1e193368568c44c6444b6c2d005b413999dbe904ec65"
  }
 }
