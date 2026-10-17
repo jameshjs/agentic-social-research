@@ -17,15 +17,13 @@ Status, 17 Oct 13:20 ET: the VM side is configured and verified with a stand-in 
 | --- | --- | --- |
 | Tunnel-only user | `tunnel`, shell `/usr/sbin/nologin` | `~tunnel/.ssh/authorized_keys` holds Steven's key with `restrict,port-forwarding,permitlisten="127.0.0.1:4179"`. That user can forward only VM-local port 4179: no shell, PTY, agent or X11. `GatewayPorts no`, so 4179 never faces the internet. OpenSSH 9.6. |
 | Access key | `/etc/caddy/agents.env` (root, 0600) | `CONSOLE_ACCESS_KEY=…` from Steven's `persona-swarm/.env`. systemd reads it through the drop-in `/etc/systemd/system/caddy.service.d/agents.conf`. That drop-in also removes the package's `--environ` flag, so the key is never printed to the journal. |
-| Demo login | `/etc/caddy/demo.hash` (bcrypt cost 14) | User `demo`. The password was hashed from stdin. Only the hash is stored. |
-| Routes | `/etc/caddy/Caddyfile` | `ops/deploy.sh` regenerates them on every deploy whenever the two files above exist. `basic_auth` guards only `/ask`, `/chat` and `/run*`, the routes that spend his plan. The page, `/health` and replays stay public. `header_up Authorization "Bearer {env.CONSOLE_ACCESS_KEY}"` attaches the key server-side. `flush_interval -1` keeps answer streams live. |
+| Routes | `/etc/caddy/Caddyfile` | `ops/deploy.sh` regenerates them on every deploy whenever `agents.env` exists. All agent routes are **public, with no login** (team decision, 17 Oct 13:40). Anyone with the URL can run polls on Steven's plan, so his server's plan-limit stop is the only spending cap. `header_up Authorization "Bearer {env.CONSOLE_ACCESS_KEY}"` attaches the key server-side. `flush_interval -1` keeps answer streams live. |
 
 Secrets are shared by private message only. Never put them in git, chat logs, the Caddyfile, or a command line on the VM. To set them up on a new VM, pipe them over SSH stdin:
 
 ```sh
-# one line each on stdin: the access key, then the demo password
+# the access key as one line on stdin
 ssh -i ~/.ssh/vultr_htv_ed25519 root@<ip> 'umask 077; read -r k; printf "CONSOLE_ACCESS_KEY=%s\n" "$k" > /etc/caddy/agents.env
-  read -r pw; printf "%s\n" "$pw" | caddy hash-password > /etc/caddy/demo.hash; chown root:caddy /etc/caddy/demo.hash; chmod 640 /etc/caddy/demo.hash
   printf "[Service]\nEnvironmentFile=/etc/caddy/agents.env\nExecStart=\nExecStart=/usr/bin/caddy run --config /etc/caddy/Caddyfile\n" > /etc/systemd/system/caddy.service.d/agents.conf
   systemctl daemon-reload'
 ops/deploy.sh --skip-key   # writes the Caddyfile with the agent routes, restarts nothing else
@@ -48,7 +46,7 @@ If the laptop sleeps or the tunnel drops, `/health` returns 502. The page then s
 
 ## Judges and teammates
 
-Open the site. Pages and replays need no login. Asking the agents prompts for a login once: user `demo`, plus the password the team shares privately. Rotate it after judging by re-running the stdin hash step with a new password, then reloading Caddy.
+Open the site; nothing needs a login. To limit who can spend Steven's plan, restore a Caddy `basic_auth` on `/ask /chat /run*` inside `handle @agents` (`caddy hash-password` reads the password from stdin), then `systemctl reload caddy`. Also add the `basic_auth` block to the template in `ops/deploy.sh`, or the next deploy removes it.
 
 ## Remove it after the event
 

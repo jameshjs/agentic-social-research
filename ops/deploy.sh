@@ -181,7 +181,7 @@ write_caddy() {  # $1 = tls | plain
   local conf
   if [ "$1" = tls ]; then
     # @@AGENTS@@ becomes the persona-agent tunnel routes (ops/agents-tunnel.md) when the VM has
-    # /etc/caddy/demo.hash and /etc/caddy/agents.env; otherwise it is dropped. Secrets stay on the VM.
+    # /etc/caddy/agents.env; otherwise it is dropped. Secrets stay on the VM.
     conf="$DOMAIN {
 	header {
 		Strict-Transport-Security \"max-age=86400\"
@@ -209,27 +209,23 @@ cat > /etc/caddy/Caddyfile.new
 python3 - <<"PY"
 import pathlib
 p = pathlib.Path("/etc/caddy/Caddyfile.new"); s = p.read_text()
-hash_file, env_file = pathlib.Path("/etc/caddy/demo.hash"), pathlib.Path("/etc/caddy/agents.env")
+env_file = pathlib.Path("/etc/caddy/agents.env")
 block = ""
-if "@@AGENTS@@" in s and hash_file.exists() and env_file.exists():
-    h = hash_file.read_text().strip()
+if "@@AGENTS@@" in s and env_file.exists():
     block = """	# The 100 persona agents (Steven) answer from his laptop through an SSH reverse tunnel
 	# (VM 127.0.0.1:4179 <-> laptop 127.0.0.1:4179). Caddy adds CONSOLE_ACCESS_KEY from
-	# /etc/caddy/agents.env server-side; endpoints that spend his plan need the demo login.
+	# /etc/caddy/agents.env server-side. No login: the agent routes are public (team decision, 17 Oct);
+	# The agent server stops all calls at the plan limit and then serves labelled replays.
 	@agents path /health /ask /chat /run* /replay* /saves* /agents* /usage
-	@spend path /ask /chat /run*
 	handle @agents {
-		basic_auth @spend {
-			demo %s
-		}
 		reverse_proxy 127.0.0.1:4179 {
 			header_up Authorization "Bearer {env.CONSOLE_ACCESS_KEY}"
 			flush_interval -1
 		}
 	}
-""" % h
+"""
 p.write_text(s.replace("@@AGENTS@@\n", block))
-print("persona-agent tunnel routes:", "on" if block else "off (no /etc/caddy/demo.hash or agents.env)")
+print("persona-agent tunnel routes:", "on" if block else "off (no /etc/caddy/agents.env)")
 PY
 chown root:caddy /etc/caddy/Caddyfile.new && chmod 640 /etc/caddy/Caddyfile.new
 caddy validate --config /etc/caddy/Caddyfile.new --adapter caddyfile >/dev/null 2>&1 || { caddy validate --config /etc/caddy/Caddyfile.new --adapter caddyfile; exit 1; }
