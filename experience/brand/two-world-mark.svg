@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Two World — one street, two possible city paths</title>
+  <!-- One shared origin and two equal-weight destinations. The negative-space
+       street through each block keeps the symbol about a place, not an arrow. -->
+  <path d="M5 32h24" stroke="#F3F6ED" stroke-width="6" stroke-linecap="square"/>
+  <path d="m28 32 18-19" stroke="#A8F4D1" stroke-width="6" stroke-linecap="square"/>
+  <path d="m28 32 18 19" stroke="#FF987E" stroke-width="6" stroke-linecap="square"/>
+  <path d="m46 3 14 9-14 9-14-9L46 3Z" fill="#A8F4D1"/>
+  <path d="m46 43 14 9-14 9-14-9 14-9Z" fill="#FF987E"/>
+  <path d="m46 8 6 4-6 4-6-4 6-4Zm0 40 6 4-6 4-6-4 6-4Z" fill="#07131C"/>
+  <path d="M2 27h10v10H2z" fill="#F3F6ED"/>
+</svg>

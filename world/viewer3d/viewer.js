@@ -1389,6 +1389,38 @@ function setArm(a) {
   if (EMBED && window.parent !== window) window.parent.postMessage({ type: 'viewer3d:arm', arm: a }, location.origin);
 }
 
+/* A guided, event-backed comparison. The bus and stop are scheduled GTFS context; the
+ * highlighted person's mode and the policy-specific street treatment come from the run. */
+function showImpactPhase({ arm, actor, trip, tick, kind }) {
+  const run = runOf();
+  if (!EMBED || !run || !run.mapped || !['baseline', 'policy'].includes(arm)) return;
+  const choice = run.changed.find((c) => c.actor === actor && c.trip === trip && c.tick === tick);
+  if (!choice) return;
+  if (state.week !== tick) { state.week = tick; rebuildArms(); }
+  setArm(arm);
+  const person = curArm().people.find((a) => a.persona.pid === actor && a.persona.trip === trip);
+  state.t = Math.max(state.start, Math.min(state.end, (person ? person.t0 : state.start) - 8));
+  for (const a of state.agents) a.cursor = 0;
+  state.playing = true; $('play').textContent = '❚❚';
+  state.speed = 30; $('speed').value = '30';
+  // Hold the baseline on Bathurst Station; then follow the changed TTC rider's
+  // actual policy route. Bike shots stay on one street axis for a fair comparison.
+  state.selected = actor;
+  state.follow = kind === 'fare' && arm === 'policy' ? person || null : null;
+  state.flashUntil = performance.now() + 9000;
+  // The fare baseline frames Bathurst Station and its sourced route-7 bus. The
+  // policy shot follows the changed trip onto Bloor. The bike pair keeps the
+  // same street axis so loss of protection and routing are easy to compare.
+  const stop = STOPS.find((s) => s.id === '14617').xy;
+  const fareBefore = { pos: P(stop[0] + 10, stop[1] - 88, 49), tgt: P(stop[0] - 15, stop[1] + 16, 1) };
+  const fareAfter = { pos: P(100, -72, 48), tgt: P(155, 0, 1) };
+  const bikeBefore = { pos: P(240, -70, 51), tgt: P(300, 0, 1) };
+  const bikeAfter = { pos: P(265, -52, 35), tgt: P(305, 0, 1) };
+  const target = kind === 'bike' ? (arm === 'baseline' ? bikeBefore : bikeAfter) : (arm === 'baseline' ? fareBefore : fareAfter);
+  tween = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to: target, t0: performance.now(), dur: 2200 };
+  updateAgents(state.t); updateVehicles(state.t);
+}
+
 /* ---------- dashboard ---------- */
 function renderStats() {
   const arm = curArm(); if (!arm) return;
@@ -1617,6 +1649,7 @@ window.addEventListener('message', (ev) => {
   if (d.type === 'viewer3d:run') setMappedRun(d.result);
   if (d.type === 'viewer3d:arm') setArm(d.arm === 'baseline' ? 'baseline' : 'policy');
   if (d.type === 'viewer3d:person' && personaById(d.id)) selectPerson(d.id);
+  if (d.type === 'viewer3d:impact-phase') showImpactPhase(d);
 });
 if (EMBED && window.parent !== window) window.parent.postMessage({ type: 'viewer3d:ready' }, location.origin);
 const startPreset = PRESETS[HASH.get('preset')] ? HASH.get('preset') : 'overview';

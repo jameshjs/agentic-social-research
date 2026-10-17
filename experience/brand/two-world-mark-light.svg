@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Two World — one street, two possible city paths</title>
+  <path d="M5 32h24" stroke="#07131C" stroke-width="6" stroke-linecap="square"/>
+  <path d="m28 32 18-19" stroke="#147B66" stroke-width="6" stroke-linecap="square"/>
+  <path d="m28 32 18 19" stroke="#C65A43" stroke-width="6" stroke-linecap="square"/>
+  <path d="m46 3 14 9-14 9-14-9L46 3Z" fill="#147B66"/>
+  <path d="m46 43 14 9-14 9-14-9 14-9Z" fill="#C65A43"/>
+  <path d="m46 8 6 4-6 4-6-4 6-4Zm0 40 6 4-6 4-6-4 6-4Z" fill="#F3F6ED"/>
+  <path d="M2 27h10v10H2z" fill="#07131C"/>
+</svg>
