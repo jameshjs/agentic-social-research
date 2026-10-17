@@ -1,8 +1,9 @@
 # Runs one tuning round (PLAN.md Task 5): every respondent in the chosen sets gets one persona-agent call that sees the
 # shared instructions plus that respondent's given answers, and answers their exam. Writes autoresearch/rounds/NNN-<slug>/
 # with the instructions used, answers, scores and timing/cost. The researcher adds sources.json and decision.json.
-# Usage: python3 autoresearch/run_round.py --slug start --sets tuning,check [--format full] [--steady] [--dry-run]
-import argparse, asyncio, json, random, re, sys, time
+# Usage: python3 autoresearch/run_round.py --slug start --sets tuning,check [--format full_relative] [--steady] [--dry-run]
+#        python3 autoresearch/run_round.py --slug rehearsal --scratch [--concurrency 16]   (real calls, tuning set, outside the record)
+import argparse, asyncio, json, random, re, shutil, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -90,6 +91,26 @@ async def ask(system, items, steady, sem, dry):
             break
     return got, cost, calls, failed
 
+def run_sets(sets, scratch):
+    """The sets a run asks. A scratch run asks the tuning set only (its default) and refuses any other."""
+    sets = (sets or ("tuning" if scratch else "tuning,check")).split(",")
+    if scratch and sets != ["tuning"]:
+        sys.exit("scratch runs use the tuning set only: they stay outside the record")
+    return sets
+
+def folder_name(slug, n, dry=False, scratch=False):
+    """dry-<slug> and demo-<slug> stay unnumbered, so numbering, the review gate, results.tsv and the exporter skip them."""
+    return f"dry-{slug}" if dry else f"demo-{slug}" if scratch else f"{n:03d}-{slug}"
+
+def compare_with_kept(new):
+    """A scratch run's tuning-set checks beside the kept round's, overall and policy against pricing."""
+    import record_round as rr
+    kept = [r["round"] for r in rr.read() if r["kept"] == "yes"][-1]
+    old = json.loads((rr.folder(kept) / "score.json").read_text())["tuning"]
+    print(f"\ntuning set, this run (change vs round {kept}); steady is asked on the check and final sets only")
+    for name, a, b in [("all", new, old), *((f, new["by_family"][f], old["by_family"][f]) for f in ("policy", "pricing"))]:
+        print(f"  {name:8s}" + "   ".join(f"{c} {a[c]:.3f} ({a[c] - b[c]:+.3f})" for c in ("right_person", "right_spread", "right_group_gaps")))
+
 def score_round(out_dir, baseline_file):
     """Score a round folder's answers.jsonl with the frozen scorer and write score.json (also used to re-score)."""
     import evaluate
@@ -114,25 +135,28 @@ def score_round(out_dir, baseline_file):
     return scores
 
 async def run(args):
-    sets = args.sets.split(",")
+    sets = run_sets(args.sets, args.scratch)
     if args.dry_run and "final" in sets:
-        sys.exit("dry runs never touch the final set: it is scored once, after round 10")
+        sys.exit("dry runs never touch the final set: it is scored once, when the team stops the loop")
     people = respondents(sets)
     instructions = NO_PERSONA if args.no_persona else Path(args.instructions).read_text()
     problem = None if args.no_persona else scan(instructions, [r["pid"] for r in people])
     if problem:
         sys.exit(f"refused before any model call: {problem}")
-    if not args.dry_run:
+    if not (args.dry_run or args.scratch):
         import record_round
         if wait := record_round.needs_review():                 # a coach reviews every round before the next (ADR 0003)
             sys.exit(f"refused before any model call: {wait}")
     ROUNDS.mkdir(exist_ok=True)
     n = args.number if args.number is not None else 1 + max([int(p.name[:3]) for p in ROUNDS.glob("[0-9][0-9][0-9]-*")], default=-1)
-    out_dir = ROUNDS / (f"dry-{args.slug}" if args.dry_run else f"{n:03d}-{args.slug}")  # dry runs stay unnumbered
-    out_dir.mkdir(exist_ok=args.dry_run)
+    out_dir = ROUNDS / folder_name(args.slug, n, args.dry_run, args.scratch)
+    out_dir.mkdir(exist_ok=args.dry_run or args.scratch)
     (out_dir / "instructions.md").write_text(instructions)
-    if not args.dry_run and (ROUNDS / "sources-pending.json").exists():  # the Papiers lookup made before this round
-        (ROUNDS / "sources-pending.json").rename(out_dir / "sources.json")
+    pending = ROUNDS / "sources-pending.json"               # the Papiers lookup made before this round
+    if args.scratch and pending.exists():
+        shutil.copy(pending, out_dir / "sources.json")      # a copy: the next real round still files it
+    elif not args.dry_run and pending.exists():
+        pending.rename(out_dir / "sources.json")
     rewordings = {r["id"]: r["reworded"] for r in json.loads((HERE / "rewordings.json").read_text())}
     sem, started, t0 = asyncio.Semaphore(args.concurrency), now(), time.time()
     families = ("policy", "pricing", "puzzle") if args.all_families else ("policy", "pricing")
@@ -152,26 +176,31 @@ async def run(args):
     results = await asyncio.gather(*(one(r) for r in people))
     rows = [x[0] for x in results]
     (out_dir / "answers.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
-    meta = {"round": f"{n:03d}", "slug": args.slug, "started_at": started, "ended_at": now(),
+    meta = {"round": "demo" if args.scratch else f"{n:03d}", "slug": args.slug, "scratch": args.scratch, "started_at": started, "ended_at": now(),
             "seconds": round(time.time() - t0, 1), "sets": sets, "format": args.format, "given_size": args.given_size,
             "no_persona": args.no_persona, "all_families": args.all_families, "model": MODEL, "effort": EFFORT, "dry_run": args.dry_run,
             "respondents": len(rows), "calls": sum(x[2] for x in results), "failed_calls": sum(x[3] for x in results),
             "missing_items": sum(r["missing"] for r in rows), "cost_usd": round(sum(x[1] for x in results), 4)}
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=1))
+    if args.no_score:                                       # check the run first, then score once with --rescore
+        print(json.dumps(meta, indent=1))
+        return out_dir
     try:
         import evaluate  # noqa: F401
     except ImportError:
         print("evaluate.py not built yet: answers saved, no score")
         print(json.dumps(meta, indent=1))
         return out_dir
-    score_round(out_dir, args.no_persona_answers)
+    scores = score_round(out_dir, args.no_persona_answers)
+    if args.scratch:
+        compare_with_kept(scores["tuning"])
     return out_dir
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--slug", required=True)
-    ap.add_argument("--sets", default="tuning,check")
-    ap.add_argument("--format", default="full", choices=formats.FORMATS)
+    ap.add_argument("--sets", help="comma-separated; default tuning,check (tuning for --scratch)")
+    ap.add_argument("--format", default="full_relative", choices=formats.FORMATS)  # the kept round 9's format (ADR 0004)
     ap.add_argument("--given-size", type=int)
     ap.add_argument("--instructions", default=str(HERE / "instructions.md"))
     ap.add_argument("--number", type=int, help="round number; default is the next free one")
@@ -182,6 +211,8 @@ if __name__ == "__main__":
     ap.add_argument("--all-families", action="store_true", help="also ask decision puzzles (final set only)")
     ap.add_argument("--concurrency", type=int, default=CONCURRENCY)
     ap.add_argument("--dry-run", action="store_true", help="random valid answers, no model calls")
+    ap.add_argument("--scratch", action="store_true", help="real calls on the tuning set, in an unnumbered demo-<slug> folder outside the record")
     ap.add_argument("--rescore", type=Path, help="re-score an existing round folder; no model calls")
+    ap.add_argument("--no-score", action="store_true", help="save answers only (the final set: check failures, then --rescore)")
     a = ap.parse_args()
     score_round(a.rescore, a.no_persona_answers) if a.rescore else asyncio.run(run(a))

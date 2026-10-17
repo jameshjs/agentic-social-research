@@ -1,7 +1,7 @@
 # Offline self-check of the frozen scorer (PLAN.md Task 3), and of the round review gate (ADR 0003), on synthetic
 # fixtures in a temporary folder. It never reads data/twin, the real round record or ~/.cache/persona-swarm, and makes
 # no model calls.
-# Usage: python3 autoresearch/test_autoresearch.py      (prints "ok"; pytest also collects test_all and test_review_gate)
+# Usage: python3 autoresearch/test_autoresearch.py      (prints "ok"; pytest also collects every test_ function)
 import hashlib, importlib.util, json, random, tempfile
 from pathlib import Path
 
@@ -163,7 +163,38 @@ def test_review_gate():
             "Steven: redo round 7 Steven: Spread fell again. Next: Read papers on answer variety."), rr.read()
         assert rr.needs_review() is None
 
+        # the keep rule takes the re-benchmarked noise when rounds/rebench/bar.json exists, else round 0's
+        (rr.ROUNDS / "000-start").mkdir()
+        (rr.ROUNDS / "000-start" / "decision.json").write_text(json.dumps({"noise": {"right_person": 0.015}}))
+        assert rr.current_noise() == {"right_person": 0.015}, rr.current_noise()
+        (rr.ROUNDS / "rebench").mkdir()
+        (rr.ROUNDS / "rebench" / "bar.json").write_text(json.dumps({"noise": {"right_person": 0.011}}))
+        assert rr.current_noise() == {"right_person": 0.011}, rr.current_noise()
+
+def test_scratch_runs():
+    import record_round as rr, run_round
+    # scratch runs ask the tuning set only, and refuse the check and final sets
+    assert run_round.run_sets(None, scratch=True) == ["tuning"]
+    assert run_round.run_sets(None, scratch=False) == ["tuning", "check"]
+    for sets in ("tuning,check", "check", "final"):
+        try:
+            run_round.run_sets(sets, scratch=True)
+        except SystemExit:
+            pass
+        else:
+            raise AssertionError(f"a scratch run accepted --sets {sets}")
+    # they land in an unnumbered demo- folder, which the review gate ignores
+    assert run_round.folder_name("rehearsal", 11, scratch=True) == "demo-rehearsal"
+    assert run_round.folder_name("rehearsal", 11) == "011-rehearsal"
+    with tempfile.TemporaryDirectory() as tmp:
+        rr.ROUNDS = Path(tmp) / "rounds"
+        for name, decision in (("010-done", {"human_review": {"by": "Team"}}), ("demo-rehearsal", {})):
+            (rr.ROUNDS / name).mkdir(parents=True)
+            (rr.ROUNDS / name / "decision.json").write_text(json.dumps(decision))
+        assert rr.needs_review() is None, rr.needs_review()
+
 if __name__ == "__main__":
     test_all()
     test_review_gate()
+    test_scratch_runs()
     print("ok")

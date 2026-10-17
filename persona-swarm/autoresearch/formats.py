@@ -127,6 +127,10 @@ def render(pid, fmt, given_size=None):
     items = list(answered(bl))
     if given_size is not None:
         items, fmt = items[:given_size], ("compact" if fmt == "full" else fmt)
+        if fmt == "full_relative":                          # the first N answers, and a profile from those N alone
+            keep = {id(q) for *_, q in items}
+            bl_n = [{**b, "Questions": [q for q in b.get("Questions") or [] if id(q) in keep]} for b in bl]
+            return "\n\n".join(filter(None, [_qa(items), relative_profile(bl_n)]))
     if fmt == "full":
         return (GIVEN / f"{pid}.txt").read_text()
     if fmt == "full_relative":

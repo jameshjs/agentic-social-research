@@ -17,9 +17,9 @@
   },
   "marks_passed": 4
  },
- "kept": false,
+ "kept": true,
  "on_trial": false,
- "reason": "discard: marks passed fell 4 -> 3; improved beyond noise: right_person +0.016 (noise 0.015)",
+ "reason": "keep (on trial) after re-benchmark: keep: improved beyond noise: right_spread +0.015 (noise 0.014)",
  "deltas": {
   "right_person": 0.0158005617977528,
   "right_spread": 0.003424874879432327,
@@ -128,5 +128,67 @@
   ],
   "chosen": null
  },
- "page_store": "datasets/rounds v10 -> /_blob/7829fdae9feb140f8b673125148717a6 (rounds 000-009; old blob 428d508c deleted); next update uses if_version 10."
+ "page_store": "datasets/rounds v12 -> /_blob/591f0bd94f2f5e8295030d0d2e330cfb (rounds 000-009, round 9 kept on trial; old blob 74a7184a deleted); next update uses if_version 12.",
+ "human_review": {
+  "by": "Team",
+  "at": "2026-10-17T12:58:36+00:00",
+  "verdict": "continue",
+  "comment": "we observed the past pattern",
+  "improvement": "instead of running round 10, re-benchmark previous data to see real gains"
+ },
+ "original_verdict": {
+  "kept": false,
+  "reason": "discard: marks passed fell 4 -> 3; improved beyond noise: right_person +0.016 (noise 0.015)",
+  "compared_with": {
+   "runs": [
+    "003-spending-habits",
+    "003-spending-habits-repeat"
+   ],
+   "mean": {
+    "right_person": 0.8072331460674157,
+    "right_spread": 0.869222608886088,
+    "right_group_gaps": 0.8209876543209876,
+    "steady": 0.972
+   },
+   "marks_passed": 4
+  },
+  "deltas": {
+   "right_person": 0.0158005617977528,
+   "right_spread": 0.003424874879432327,
+   "right_group_gaps": -0.043209876543209846,
+   "steady": 0.0010000000000000009
+  },
+  "noise": {
+   "right_person": 0.014981273408239626,
+   "right_spread": 0.01,
+   "right_group_gaps": 0.04938271604938271,
+   "steady": 0.01
+  }
+ },
+ "rebench": {
+  "kept": true,
+  "reason": "keep: improved beyond noise: right_spread +0.015 (noise 0.014)",
+  "runs": [
+   "009-relative-profile",
+   "009-relative-profile-repeat"
+  ],
+  "mean": {
+   "right_person": 0.8203417602996255,
+   "right_spread": 0.8801302348295205,
+   "right_group_gaps": 0.7592592592592593,
+   "steady": 0.9704999999999999,
+   "marks_passed": 3
+  },
+  "deltas": {
+   "right_person": 0.009012172284644127,
+   "right_spread": 0.014919437683497794,
+   "right_group_gaps": -0.03827160493827153,
+   "steady": -0.000300000000000078
+  },
+  "bar_and_noise": "rounds/rebench/bar.json",
+  "source": "rounds/rebench/rejudged.json",
+  "decided": "Team, 17 Oct: kept on trial after the re-benchmark (ADR 0004)"
+ },
+ "signed_off_by": "Team",
+ "signed_off_at": "2026-10-17T13:42:43+00:00"
 }

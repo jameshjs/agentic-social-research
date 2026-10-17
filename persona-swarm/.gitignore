@@ -5,3 +5,12 @@ __pycache__/
 autoresearch/rounds/dry-*/
 # the Papiers lookup waiting for the next round (run_round.py files it as sources.json)
 autoresearch/rounds/sources-pending.json
+# the opt-in API backend's package (npm install in runtime/)
+runtime/node_modules/
+# personal console saves and the access log; the committed samples stay
+data/city/live/*
+!data/city/live/samples/
+# local CLI run outputs (run.js); the console's saves are the shared record
+data/city/run-*.json
+data/city/smoke-*.json
+data/city/eval-*.json

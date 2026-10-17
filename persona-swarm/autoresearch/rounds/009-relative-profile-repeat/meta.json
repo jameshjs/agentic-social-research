@@ -1,0 +1,22 @@
+{
+ "round": "009",
+ "slug": "relative-profile-repeat",
+ "started_at": "2026-10-17T13:09:45+00:00",
+ "ended_at": "2026-10-17T13:13:06+00:00",
+ "seconds": 201.3,
+ "sets": [
+  "check"
+ ],
+ "format": "full_relative",
+ "given_size": null,
+ "no_persona": false,
+ "all_families": false,
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "dry_run": false,
+ "respondents": 100,
+ "calls": 200,
+ "failed_calls": 0,
+ "missing_items": 0,
+ "cost_usd": 0.2662
+}

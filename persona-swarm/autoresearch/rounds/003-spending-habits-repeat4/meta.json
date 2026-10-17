@@ -1,0 +1,22 @@
+{
+ "round": "003",
+ "slug": "spending-habits-repeat4",
+ "started_at": "2026-10-17T13:06:13+00:00",
+ "ended_at": "2026-10-17T13:09:34+00:00",
+ "seconds": 201.0,
+ "sets": [
+  "check"
+ ],
+ "format": "full",
+ "given_size": null,
+ "no_persona": false,
+ "all_families": false,
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "dry_run": false,
+ "respondents": 100,
+ "calls": 200,
+ "failed_calls": 0,
+ "missing_items": 0,
+ "cost_usd": 0.2655
+}

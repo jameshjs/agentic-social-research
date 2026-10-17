@@ -1,0 +1,138 @@
+{
+ "round": "010",
+ "decided_at": "2026-10-17T13:31:20+00:00",
+ "check_targeted": "right_group_gaps",
+ "hypothesis": "Round 9 kept spread but pricing group gaps fell to 0.706 (2-run mean). The Self-Reports note (nte_5fda00df283d4ba21864448ef45d18c0) keeps demographic and party information in context, the Funhouse note (nte_d065ced88cfc601fc8e4fdcdd6c33563) gives demographics a place in the evidence order, and Out of One, Many finds combining backstory elements predicts best (hl_f9cf5b71d8b01335a0f1fee0962f34de). Letting age, sex, income and household shape purchases should restore real shopping differences between groups: pricing gaps up.",
+ "change": "Replaced step (4) of round 9's 'How to decide' bullet ('demographics, party or ideology only as a tiebreaker') with: '(4) for purchases, your age, sex, income and household shape what you need, so weigh them alongside the profile. Use party or ideology only as a tiebreaker, and only for political views.' Nothing else changed; format full_relative.",
+ "compared_with": {
+  "runs": [
+   "009-relative-profile",
+   "009-relative-profile-repeat"
+  ],
+  "mean": {
+   "right_person": 0.8203417602996255,
+   "right_spread": 0.8801302348295205,
+   "right_group_gaps": 0.7592592592592593,
+   "steady": 0.9704999999999999
+  },
+  "marks_passed": 3
+ },
+ "kept": false,
+ "on_trial": false,
+ "reason": "discard: no check improved beyond noise: right_person +0.000 (noise 0.011), right_spread +0.004 (noise 0.014), right_group_gaps +0.068 (noise 0.083), steady -0.007 (noise 0.009)",
+ "deltas": {
+  "right_person": 0.000117041198501866,
+  "right_spread": 0.0039568717915986484,
+  "right_group_gaps": 0.0679012345679012,
+  "steady": -0.007499999999999951
+ },
+ "noise": {
+  "right_person": 0.011357218605532014,
+  "right_spread": 0.014032138036068256,
+  "right_group_gaps": 0.08300116698257588,
+  "steady": 0.00864869932417587
+ },
+ "check": {
+  "right_person": 0.8204588014981273,
+  "right_spread": 0.8840871066211191,
+  "right_group_gaps": 0.8271604938271605,
+  "steady": 0.963,
+  "marks_passed": 4,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8270509977827051,
+    "right_spread": 0.9059504523785886,
+    "right_group_gaps": 0.9444444444444444
+   },
+   "pricing": {
+    "right_person": 0.8186943620178041,
+    "right_spread": 0.8786212701817517,
+    "right_group_gaps": 0.7936507936507936
+   }
+  }
+ },
+ "tuning": {
+  "right_person": 0.8109243697478992,
+  "right_spread": 0.8826953642370456,
+  "right_group_gaps": 0.5833333333333334,
+  "steady": null,
+  "marks_passed": 2,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.7891891891891892,
+    "right_spread": 0.9285974361435614,
+    "right_group_gaps": 0.7777777777777778
+   },
+   "pricing": {
+    "right_person": 0.8171296296296297,
+    "right_spread": 0.8712198462604167,
+    "right_group_gaps": 0.5490196078431373
+   }
+  }
+ },
+ "triggers_fired": [],
+ "question": null,
+ "reply": null,
+ "spend_total_usd": 22.25,
+ "format": "full_relative",
+ "split_check_tuning": {
+  "round_9_vs_3": "pricing directions right: age 12->12/22, sex 11->11/25, income 17->17/23, party 13->11/22; policy age 2->1/3, others unchanged",
+  "round_10_vs_9": "pricing directions right: age 12->13/22, sex 11->9/25, income 17->17/23, party 11->13/22; policy age 1->0/3, sex 2->1/2, others unchanged",
+  "note": "tuning set only (8-20 people per group); check-set answer sheets are locked"
+ },
+ "next_suggestions": {
+  "written_at": "2026-10-17T13:31:48+00:00",
+  "context": "Results of rounds 0-10, the re-benchmark (rounds/rebench/) and the Papiers library: 7 papers, 49 highlights, 3 notes.",
+  "suggestions": [
+   {
+    "rank": 1,
+    "kind": "re-measure",
+    "edit": "Run round 10's instructions once more on the check set with steady (--number 10 --slug purchase-demographics-repeat --instructions rounds/010-purchase-demographics/instructions.md) and judge round 10 on the mean of its 2 runs, as round 9 was.",
+    "answers_result": "Round 10 is one run against round 9's 2-run mean; it passed 4 marks with pricing gaps 0.794 (round 9: 0.706) and gaps +0.068 against a noise of 0.083.",
+    "highlights": [
+     "hl_ef176edeb52094c16f68e9ad57932e9a"
+    ],
+    "why": "Out of One, Many expects variation between draws; the re-benchmark judged rounds on 2-run means.",
+    "expected": "A fair verdict on round 10; gaps may hold above the 0.80 mark.",
+    "risk": "Gaps' noise (0.083) is so wide that the mean may still not pass it; a re-measure of a discarded round is the team's call, not standard procedure."
+   },
+   {
+    "rank": 2,
+    "kind": "instructions",
+    "edit": "On top of round 10: 'Political opinions: combine all of your background. Party is one part, but your age, religion, income, work and your own answers about values also shape each view.'",
+    "answers_result": "Round 10 confines party to a tiebreaker for political views; on the tuning set policy directions slipped on age and sex, and agents still oppose the two conservative policy items far more than people.",
+    "highlights": [
+     "hl_f9cf5b71d8b01335a0f1fee0962f34de",
+     "hl_f18aa709faacc6143d24b8564e885491"
+    ],
+    "why": "Out of One, Many finds combining elements predicts best; Synthetic Replacements finds synthetic partisans more extreme than people.",
+    "expected": "Policy right person and gaps hold or rise.",
+    "risk": "Policy is 10 of 50 items, so the pooled checks likely stay within noise."
+   },
+   {
+    "rank": 3,
+    "kind": "persona format",
+    "edit": "A fourth relative-profile line in full_relative: concern for others from the $5 giving choice ('Gives more to others than approximately N% of respondents').",
+    "answers_result": "Round 9's profile raised spread; a fourth tendency may separate people further on policy.",
+    "highlights": [
+     "nte_d065ced88cfc601fc8e4fdcdd6c33563",
+     "hl_aa7442f770fd4aac6935927509fdf271"
+    ],
+    "why": "The Funhouse note's relative profile targets under-dispersion; its paper's benchmark is the twin/human standard-deviation ratio.",
+    "expected": "Spread up, mainly on policy.",
+    "risk": "Needs a formats.py change and the leak check; may read as a rule and overshoot."
+   }
+  ],
+  "chosen": null
+ },
+ "page_store": "datasets/rounds v13 -> /_blob/56f06d43029a3952e3eb6fbfea6629da (rounds 000-010; old blob 591f0bd9 deleted); next update uses if_version 13.",
+ "human_review": {
+  "by": "Team",
+  "at": "2026-10-17T13:35:33+00:00",
+  "verdict": "continue",
+  "comment": "Accept discard.",
+  "improvement": "if not, then we should call it and then start consolidating data and dashboard to presetn."
+ }
+}

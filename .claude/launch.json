@@ -1,0 +1,35 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "persona-console",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["persona-swarm/runtime/server.js", "--backend", "local", "--port", "4174"],
+      "port": 4174
+    },
+    {
+      "name": "persona-console-replay",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["persona-swarm/runtime/server.js", "--backend", "replay", "--port", "4175"],
+      "port": 4175
+    },
+    {
+      "name": "persona-agent-server-keyed",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["persona-swarm/runtime/server.js", "--env-file", "/private/tmp/claude-501/-Users-admin-GitHub-agentic-social-research/a59adaa0-80e9-4157-bd94-f9f92f1c7dfe/scratchpad/agent-server.env", "--require-key", "--port", "4174"],
+      "port": 4174
+    },
+    {
+      "name": "persona-teammate-remote",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["persona-swarm/runtime/server.js", "--env-file", "/private/tmp/claude-501/-Users-admin-GitHub-agentic-social-research/a59adaa0-80e9-4157-bd94-f9f92f1c7dfe/scratchpad/teammate.env", "--port", "4176"],
+      "port": 4176
+    },
+    {
+      "name": "experience-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4173", "--bind", "127.0.0.1"],
+      "port": 4173
+    }
+  ]
+}

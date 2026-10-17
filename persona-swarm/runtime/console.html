@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Persona console</title>
+<style>
+  :root { --bg:#f6f5f2; --panel:#fff; --ink:#1c1c1a; --muted:#6b6a65; --line:#e3e1db; --accent:#2f5d8a; --warn:#9a5b00; --bad:#a33;
+    --s1:#b2443a; --s2:#e08f6a; --s3:#bdb9ae; --s4:#7aa6c9; --s5:#2f5d8a; --o1:#2f5d8a; --o2:#c47a2c; --o3:#4f8a5b; --o4:#8a5bb0; --o5:#b2443a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#151514; --panel:#1f1f1d; --ink:#ecebe6; --muted:#a19f97; --line:#34332f; --accent:#7fb0dc; --s5:#7fb0dc; --o1:#7fb0dc; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  .pill { font-size:12px; padding:2px 8px; border-radius:99px; border:1px solid var(--line); color:var(--muted); }
+  main { display:grid; grid-template-columns:minmax(300px,38%) 1fr; height:calc(100vh - 49px); }
+  @media (max-width:860px) { main { grid-template-columns:1fr; height:auto; } }
+  #chat { display:flex; flex-direction:column; border-right:1px solid var(--line); min-height:60vh; }
+  #log { flex:1; overflow:auto; padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+  .msg { padding:8px 10px; border-radius:8px; background:var(--panel); border:1px solid var(--line); white-space:pre-wrap; }
+  .msg.user { align-self:flex-end; background:var(--accent); color:#fff; border:0; max-width:85%; }
+  .msg.sys { color:var(--muted); font-size:13px; }
+  .msg .meta { display:block; margin-top:6px; font-size:12px; color:var(--muted); }
+  form { display:flex; gap:8px; padding:10px 16px; border-top:1px solid var(--line); flex-wrap:wrap; }
+  input, select, button, textarea { font:inherit; color:inherit; }
+  #msg { flex:1; min-width:160px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+  button { padding:8px 12px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--accent); }
+  button:disabled { opacity:.5; cursor:default; }
+  select { padding:7px; border-radius:8px; border:1px solid var(--line); background:var(--panel); }
+  #side { overflow:auto; padding:12px 16px; display:flex; flex-direction:column; gap:12px; }
+  .banner { padding:8px 10px; border-radius:8px; border:1px solid var(--warn); color:var(--warn); display:none; }
+  .banner.bad { border-color:var(--bad); color:var(--bad); }
+  #status { display:flex; gap:12px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+  #split { display:flex; height:22px; border-radius:6px; overflow:hidden; border:1px solid var(--line); }
+  #split div { height:100%; }
+  #legend { display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--muted); }
+  #legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:-1px; }
+  #grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:6px; }
+  .card { border:1px solid var(--line); border-left:4px solid var(--line); border-radius:6px; padding:5px 6px; background:var(--panel); cursor:pointer; min-height:52px; }
+  .card b { display:block; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card small { color:var(--muted); font-size:11px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card.wait { animation:pulse 1.2s infinite; }
+  .card.dim { opacity:.35; }
+  .card.fail { border-left-color:var(--bad); }
+  @keyframes pulse { 50% { opacity:.55; } }
+  table { border-collapse:collapse; width:100%; font-size:12px; }
+  th, td { border-bottom:1px solid var(--line); padding:4px 6px; text-align:right; }
+  th:first-child, td:first-child { text-align:left; }
+  #run { display:none; }
+  dialog { border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); max-width:min(560px,92vw); }
+  dialog h3 { margin:0 0 6px; }
+  dialog ul { padding-left:18px; margin:6px 0; }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Bloor policy console</h1>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span class="pill" id="backend">connecting…</span>
+    <label class="muted" for="conc">parallel</label>
+    <select id="conc"><option>16</option><option selected>32</option><option>48</option></select>
+    <button class="ghost" id="replayBtn" type="button">Show latest replay</button>
+  </div>
+</header>
+<main>
+  <section id="chat">
+    <div id="log">
+      <div class="msg sys">Ask the 100 agents a policy question, or say "run the fare change" or "run the Bloor change". Agents are US survey respondents' real answers placed in synthetic Toronto roles; their answers are survey-style reactions, not forecasts.</div>
+    </div>
+    <form id="form">
+      <input id="msg" autocomplete="off" placeholder="e.g. Should the TTC raise the adult fare by 50 cents?">
+      <button id="send">Send</button>
+    </form>
+  </section>
+  <section id="side">
+    <div class="banner" id="banner"></div>
+    <div id="status"><span id="what">Idle</span><span id="count"></span><span id="timer"></span></div>
+    <div id="split"></div>
+    <div id="legend"></div>
+    <div id="run"><table><thead id="runHead"></thead><tbody id="runBody"></tbody></table></div>
+    <div id="grid"></div>
+  </section>
+</main>
+<dialog id="detail"><div id="detailBody"></div><form method="dialog" style="padding:0;border:0"><button>Close</button></form></dialog>
+<script>
+const $ = (id) => document.getElementById(id);
+const STANCES = ['strongly oppose', 'oppose', 'neutral', 'support', 'strongly support'];
+const STANCE_COLOR = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)'];
+const OPTION_COLOR = ['var(--o1)', 'var(--o2)', 'var(--o3)', 'var(--o4)', 'var(--o5)'];
+const ACTION = { bus: 'TTC', walk: 'walk', drive: 'drive', bike_bloor: 'Bloor bike', bike_detour: 'side streets', defer: 'defer' };
+const METRICS = { fare: ['bus_trips', 'deferred_trips', 'car_trips', 'walk_trips', 'fare_revenue_cad', 'shop_sales_cad'],
+  bloor: ['bike_trips', 'bloor_route_trips', 'car_trips', 'bus_trips', 'plaza_arrivals', 'shop_sales_cad'] };
+let agents = [], byId = {}, cur = null, timer = null;
+// Browsers never carry an access key. A server that asks for one is someone else's: run your own with AGENT_BACKEND=remote.
+const KEYED = 'This server needs an access key, and browsers never send one. Run your own server with AGENT_BACKEND=remote and open it instead.';
+
+const headers = () => ({ 'content-type': 'application/json' });
+async function api(path) {
+  const r = await fetch(path, { headers: headers() });
+  if (r.status === 401) { banner(KEYED, true); throw new Error('access key required'); }
+  return r.json();
+}
+
+function say(text, cls = 'sys', meta = '') {
+  const d = document.createElement('div');
+  d.className = `msg ${cls}`;
+  d.textContent = text;
+  if (meta) { const m = document.createElement('span'); m.className = 'meta'; m.textContent = meta; d.append(m); }
+  $('log').append(d);
+  $('log').scrollTop = 1e9;
+  return d;
+}
+function banner(text, bad) { $('banner').textContent = text; $('banner').className = `banner${bad ? ' bad' : ''}`; $('banner').style.display = text ? 'block' : 'none'; }
+
+function drawGrid() {
+  $('grid').innerHTML = '';
+  for (const a of agents) {
+    const c = document.createElement('div');
+    c.className = 'card'; c.id = `c-${a.id}`;
+    c.innerHTML = `<b></b><small></small><small class="ans"></small>`;
+    c.querySelector('b').textContent = a.name;
+    c.querySelector('small').textContent = `${a.role.replace('_', ' ')}${a.decider ? ' · decider' : ''}`;
+    c.onclick = () => openDetail(a.id);
+    $('grid').append(c);
+  }
+}
+function setCard(id, { color, text, cls } = {}) {
+  const c = $(`c-${id}`); if (!c) return;
+  c.className = `card${cls ? ` ${cls}` : ''}`;
+  c.style.borderLeftColor = color || '';
+  c.querySelector('.ans').textContent = text || '';
+}
+function openDetail(id) {
+  const a = byId[id]; if (!a) return;
+  const ans = cur?.answers?.[id];
+  const decs = (cur?.decisions || []).filter((d) => d.person === id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  $('detailBody').innerHTML = `<h3>${esc(a.name)} <span class="muted">${esc(a.role.replace('_', ' '))}${a.shop ? ` (${esc(a.shop.replace('_', ' '))})` : ''}</span></h3>
+    <div class="muted">${esc(a.neighbourhood)} · ${a.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare'} · ${a.has_car ? 'car' : 'no car'} · ${a.has_bike ? 'bike' : 'no bike'} · donor ${esc(a.match_keys.age_band)}, ${esc(a.match_keys.sex)}, ${esc(a.match_keys.income_band)}</div>
+    ${ans ? `<p><b>${esc(ans.choice || `${ans.stance}, affected ${ans.affected}`)}</b>: ${esc(ans.reason)}<br><span class="muted">${esc(ans.label)}</span></p>` : ''}
+    ${decs.length ? `<p><b>Decisions</b></p><ul>${decs.map((d) => `<li>week ${d.tick} ${esc(d.trip)} (${esc(d.arm)}): <b>${esc(ACTION[d.action] || d.action || 'fallback')}</b>, ${esc(d.reason || d.error || '')}</li>`).join('')}</ul>` : ''}
+    <p><b>Situation in Toronto</b></p><ul>${a.situation.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>
+    <p><b>Relative profile</b> <span class="muted">(against 240 survey respondents)</span></p><ul>${a.relative_profile.map((s) => `<li>${esc(s.slice(2))}</li>`).join('')}</ul>`;
+  $('detail').showModal();
+}
+
+function split(parts) {
+  const total = parts.reduce((s, p) => s + p.n, 0) || 1;
+  $('split').innerHTML = parts.map((p) => `<div title="${p.label}: ${p.n}" style="width:${(100 * p.n) / total}%;background:${p.color}"></div>`).join('');
+  $('legend').innerHTML = parts.map((p) => `<span><i style="background:${p.color}"></i>${p.label} ${p.n}</span>`).join('');
+}
+function startTimer() { const t0 = Date.now(); clearInterval(timer); timer = setInterval(() => { $('timer').textContent = `${((Date.now() - t0) / 1000).toFixed(1)} s`; }, 100); }
+function stopTimer(wall) { clearInterval(timer); if (wall != null) $('timer').textContent = `${Number(wall).toFixed(1)} s`; }
+
+/* ---------- rendering a poll or a run, live or replayed ---------- */
+function pollStart(e) {
+  cur = { kind: 'poll', options: e.options, answers: {}, ids: e.ids };
+  $('run').style.display = 'none';
+  $('what').textContent = `Poll: ${e.question}`;
+  for (const a of agents) setCard(a.id, e.ids.includes(a.id) ? { cls: 'wait' } : { cls: 'dim' });
+  pollTally();
+}
+function pollAnswer(id, ans) {
+  cur.answers[id] = ans;
+  if (!ans) { setCard(id, { cls: 'fail', text: 'no answer' }); return pollTally(); }
+  const color = cur.options ? OPTION_COLOR[cur.options.indexOf(ans.choice) % 5] : STANCE_COLOR[STANCES.indexOf(ans.stance)];
+  setCard(id, { color, text: ans.choice || ans.stance });
+  pollTally();
+}
+function pollTally() {
+  const got = Object.values(cur.answers).filter(Boolean);
+  $('count').textContent = `${Object.keys(cur.answers).length} / ${cur.ids.length} answered`;
+  split(cur.options ? cur.options.map((o, i) => ({ label: o, n: got.filter((a) => a.choice === o).length, color: OPTION_COLOR[i % 5] }))
+    : STANCES.map((s, i) => ({ label: s, n: got.filter((a) => a.stance === s).length, color: STANCE_COLOR[i] })));
+}
+function runStart(e) {
+  cur = { kind: 'run', policy: e.policy, decisions: [], weeks: [] };
+  $('what').textContent = `World run: ${e.policy_text}`;
+  $('split').innerHTML = ''; $('legend').textContent = e.label;
+  for (const a of agents) setCard(a.id, e.deciders.includes(a.id) ? { cls: 'wait' } : { cls: 'dim', text: 'poll only' });
+  $('run').style.display = 'block';
+  $('runHead').innerHTML = `<tr><th>week</th>${METRICS[e.policy].map((m) => `<th>${m.replace(/_/g, ' ')}<br><span class="muted">base → policy</span></th>`).join('')}</tr>`;
+  $('runBody').innerHTML = '';
+}
+function runDecision(d) {
+  cur.decisions.push(d);
+  $('count').textContent = `${cur.decisions.length} decisions`;
+  if (d.arm !== 'baseline') setCard(d.person, d.ok ? { color: 'var(--accent)', text: `w${d.tick} ${ACTION[d.action] || d.action}` } : { cls: 'fail', text: 'fallback' });
+}
+function runRow(label, b, i) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${label}</td>${METRICS[cur.policy].map((m) => `<td>${b[m]} → <b>${i[m]}</b></td>`).join('')}`;
+  $('runBody').append(tr);
+}
+function runDone(e) {
+  runRow('total', e.totals.baseline, e.totals.intervention);
+  const c = e.checks;
+  const lines = [`${c.changed_decisions.count} of ${c.changed_decisions.of_pairs} decisions changed under the policy; agent decisions ${Math.round(100 * c.feasible_action_rate)}%.`];
+  if (c.fare_elasticity) lines.push(`Implied fare elasticity ${c.fare_elasticity.agents.elasticity} (${c.fare_elasticity.verdict} of the papers' ${c.fare_elasticity.range.join(' to ')}; a check, never a target).`);
+  if (c.bloor_cyclists) { const b = c.bloor_cyclists.agents; lines.push(`Bloor cyclists: stay ${Math.round(100 * b.stay)}%, reroute ${Math.round(100 * b.reroute)}%, switch ${Math.round(100 * b.switch_mode)}%, defer ${Math.round(100 * b.defer)}%.`); }
+  say(lines.join('\n'), 'sys', 'event-derived totals from this run');
+}
+
+function render(record, label) {
+  banner(label, false);
+  if (record.kind === 'poll') {
+    pollStart(record);
+    for (const id of record.ids) pollAnswer(id, record.answers[id]);
+    stopTimer(record.timings?.wall_s);
+  } else {
+    runStart({ ...record, deciders: agents.filter((a) => a.decider).map((a) => a.id) });
+    const t = record.result?.runs || null;
+    const weeks = t ? t.baseline.metrics.by_tick.length : 0;
+    for (let w = 0; w < weeks; w++) runRow(`week ${w + 1}`, t.baseline.metrics.by_tick[w], t.intervention.metrics.by_tick[w]);
+    for (const d of record.decisions?.intervention || []) runDecision({ person: d.actor, tick: d.tick, trip: d.trip_id, action: d.action, ok: d.provider !== 'fixture_rule', arm: 'policy' });
+    runDone({ totals: record.totals, checks: record.checks });
+    stopTimer(record.meta?.wall_s);
+  }
+  if (record.summary) say(record.summary.summary, 'sys', `summary (numbers ${record.summary.numbers_verified ? 'checked against the results' : `not found in the results: ${record.summary.unverified.join(', ')}`})`);
+}
+
+async function stream(path, body) {
+  $('send').disabled = true;
+  banner('');
+  startTimer();
+  try {
+    const res = await fetch(path, { method: 'POST', headers: headers(), body: JSON.stringify({ ...body, concurrency: Number($('conc').value) }) });
+    if (res.status === 401) { banner(KEYED, true); return; }
+    if (!res.ok || !res.body) {
+      const err = await res.json().catch(() => ({}));
+      say(`Agent server unavailable: ${err.error || res.status}`, 'sys');
+      if (err.replay) await showReplay();
+      return;
+    }
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n\n')) >= 0) {
+        const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+        const ev = /^event: (.*)$/m.exec(chunk)?.[1], raw = /^data: (.*)$/m.exec(chunk)?.[1];
+        if (ev && raw) handle(ev, JSON.parse(raw));
+      }
+    }
+  } catch (e) { say(`Connection error: ${e.message}`, 'sys'); }
+  finally { $('send').disabled = false; clearInterval(timer); }
+}
+
+function handle(ev, d) {
+  if (ev === 'plan') say(d.note || `${d.mode}`, 'sys', d.mode === 'poll' ? `poll${d.options.length ? ` · options: ${d.options.join(' / ')}` : ' · 5-point stance'}` : d.mode === 'run' ? `world run · ${d.policy}` : '');
+  else if (ev === 'reply') say(d.text, 'sys');
+  else if (ev === 'status') $('count').textContent = `${d.message} ${d.elapsed_s ? `${d.elapsed_s} s` : ''}`;
+  else if (ev === 'start') (d.kind === 'poll' ? pollStart : runStart)(d);
+  else if (ev === 'answer') pollAnswer(d.id, d.answer);
+  else if (ev === 'decision') runDecision(d);
+  else if (ev === 'tick') runRow(`week ${d.week}`, d.baseline, d.intervention);
+  else if (ev === 'done') {
+    stopTimer(d.timings?.wall_s ?? d.meta?.wall_s);
+    if (cur?.kind === 'run') runDone(d);
+    else say(`${d.aggregate.answered} of ${d.aggregate.asked} answered in ${d.timings.wall_s.toFixed(1)} s at ${d.timings.concurrency} in parallel.`, 'sys', 'survey-style reactions, not a forecast');
+  }
+  else if (ev === 'summary') say(d.summary, 'sys', `summary (numbers ${d.numbers_verified ? 'checked against the results' : `not found in the results: ${d.unverified.join(', ')}`})`);
+  else if (ev === 'limit') { banner('Agent backend limit reached: no further agent calls until the server restarts. Use "Show latest replay".', true); }
+  else if (ev === 'replay') render(d.record, d.label + (d.sample ? ' (committed sample)' : ''));
+  else if (ev === 'error') say(`Error: ${d.message}`, 'sys');
+}
+
+$('form').onsubmit = (e) => {
+  e.preventDefault();
+  const text = $('msg').value.trim(); if (!text) return;
+  say(text, 'user'); $('msg').value = '';
+  stream('/chat', { message: text });
+};
+async function showReplay() {
+  try { const r = await api('/replay/latest'); render(r.record, r.label + (r.sample ? ' (committed sample)' : '')); }
+  catch (e) { say(`No replay: ${e.message}`, 'sys'); }
+}
+$('replayBtn').onclick = showReplay;
+
+async function boot() {
+  let replayNow = false;
+  try {
+    const h = await api('/health');
+    $('backend').textContent = `backend: ${h.backend}${h.limited ? ' · limit reached' : ''}`;
+    $('conc').value = String([16, 32, 48].includes(h.concurrency) ? h.concurrency : 32);
+    replayNow = h.backend === 'replay' || h.limited;
+  } catch (e) {
+    $('backend').textContent = 'backend unavailable';
+    replayNow = true;
+  }
+  try {
+    const r = await api('/agents');
+    agents = r.agents; byId = Object.fromEntries(agents.map((a) => [a.id, a]));
+    drawGrid();
+  } catch (e) { say(`Could not load agents: ${e.message}`, 'sys'); }
+  if (replayNow) await showReplay();
+}
+boot();
+</script>
+</body>
+</html>

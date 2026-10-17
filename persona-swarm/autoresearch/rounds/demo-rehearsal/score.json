@@ -1,0 +1,88 @@
+{
+ "tuning": {
+  "set_name": "tuning",
+  "families": [
+   "policy",
+   "pricing"
+  ],
+  "n_respondents": 40,
+  "n_items": 2000,
+  "right_person": 0.8229291716686674,
+  "agent_match_rate": 0.6855,
+  "human_consistency": 0.833,
+  "missing_share": 0.0,
+  "right_spread": 0.8816166875251931,
+  "spread_items": 50,
+  "right_group_gaps": 0.65,
+  "group_gaps_considered": 120,
+  "baselines": {
+   "most_common": 0.7749099639855942,
+   "demographic": 0.8661464585834334,
+   "most_similar": 0.7022809123649459,
+   "no_persona": 0.7527010804321729
+  },
+  "marks": {
+   "right_person": true,
+   "right_spread": true,
+   "right_group_gaps": false,
+   "beats_baselines": false
+  },
+  "marks_passed": 2,
+  "steady": null,
+  "steady_status": "not_run",
+  "invalid": false,
+  "by_family": {
+   "policy": {
+    "n_items": 400,
+    "right_person": 0.7972972972972973,
+    "agent_match_rate": 0.7375,
+    "human_consistency": 0.925,
+    "missing_share": 0.0,
+    "right_spread": 0.8993543675739589,
+    "spread_items": 10,
+    "right_group_gaps": 0.8888888888888888,
+    "group_gaps_considered": 18,
+    "baselines": {
+     "most_common": 0.8405405405405405,
+     "demographic": 0.8837837837837837,
+     "most_similar": 0.8081081081081081,
+     "no_persona": 0.8405405405405405
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": true,
+     "beats_baselines": false
+    },
+    "marks_passed": 3
+   },
+   "pricing": {
+    "n_items": 1600,
+    "right_person": 0.8302469135802469,
+    "agent_match_rate": 0.6725,
+    "human_consistency": 0.81,
+    "missing_share": 0.0,
+    "right_spread": 0.8771822675130017,
+    "spread_items": 40,
+    "right_group_gaps": 0.6078431372549019,
+    "group_gaps_considered": 102,
+    "baselines": {
+     "most_common": 0.7561728395061729,
+     "demographic": 0.8611111111111112,
+     "most_similar": 0.6720679012345679,
+     "no_persona": 0.7276234567901234
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": false,
+     "beats_baselines": false
+    },
+    "marks_passed": 2
+   }
+  },
+  "experiment_effects": null,
+  "scorer_sha256": "9e5332f932ca821f7829ffc03475a8dd11f238cc56ddf2610c2ed694a75aee4b",
+  "rewordings_sha256": "45136ba1ef58e2287a6c1e193368568c44c6444b6c2d005b413999dbe904ec65"
+ }
+}

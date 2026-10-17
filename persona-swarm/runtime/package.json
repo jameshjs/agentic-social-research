@@ -1,0 +1,12 @@
+{
+  "name": "persona-swarm-city-runtime",
+  "private": true,
+  "description": "Persona agent server and console. Start: npm --prefix persona-swarm/runtime start (add -- --lan to share on the LAN). Only the opt-in API backend needs npm install.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test-runtime.js test-server.js"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "0.135.0"
+  }
+}

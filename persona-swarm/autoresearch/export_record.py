@@ -3,7 +3,9 @@
 #         autoresearch/rounds/<NNN>-<slug>/instructions.md  the instructions each round used
 #         autoresearch/final/final.json                   optional; {section: [row, ...]}, written after the last round
 # Writes  data/record/rounds.json  every results.tsv column (numbers as floats, blank as null) plus instructions_before
-#                                  (the latest earlier kept or baseline round's instructions) and instructions_after
+#                                  (the latest earlier kept or baseline round's instructions), instructions_after, and
+#                                  the round's own check-set run per family (policy_/pricing_ right_person, right_spread,
+#                                  right_group_gaps; null when not scored)
 #         data/record/final.json   the final sections flattened to rows with a `section` and a `row_id` column; [] until then
 # Usage: python3 autoresearch/export_record.py [--root DIR]      (DIR defaults to persona-swarm/)
 import argparse, csv, json, math, sys
@@ -15,6 +17,7 @@ COLUMNS = ["round", "started_at", "ended_at", "check_targeted", "hypothesis", "c
            "kept", "signed_off_by", "signed_off_at", "commit"]
 NUMBERS = {"right_person", "right_spread", "right_group_gaps", "steady", "marks_passed", "delta_vs_prev", "cost_usd"}
 KEPT = ("yes", "baseline")                                  # rounds whose instructions the next round starts from
+FAMILY_FIELDS = [(f, c) for f in ("policy", "pricing") for c in ("right_person", "right_spread", "right_group_gaps")]
 
 def number(text, where):
     """Blank, nan and inf give None; any other non-number stops the export and says where."""
@@ -66,12 +69,22 @@ def instructions(rounds_dir, rnd):
             return (folder / "instructions.md").read_text(encoding="utf-8")
     return ""
 
+def by_family(rounds_dir, rnd):
+    """The round's own run (not a re-measure) on the check set, per family, as policy_right_person etc."""
+    key, fams = f"{int(rnd):03d}", {}
+    for folder in sorted(rounds_dir.glob(f"{key}-*")):
+        if (folder / "score.json").is_file() and not no_persona(folder):
+            fams = json.loads((folder / "score.json").read_text(encoding="utf-8")).get("check", {}).get("by_family", {})
+            break
+    return {f"{f}_{c}": fams.get(f, {}).get(c) for f, c in FAMILY_FIELDS}
+
 def build_rounds(root):
     rows = read_results(root / "autoresearch" / "results.tsv")
     before = ""                                             # round 000 has nothing earlier to compare with
     for row in rows:
         row["instructions_before"] = before
         row["instructions_after"] = instructions(root / "autoresearch" / "rounds", row["round"])
+        row |= by_family(root / "autoresearch" / "rounds", row["round"])
         if row["kept"].lower() in KEPT:
             before = row["instructions_after"]
     return rows
@@ -85,7 +98,7 @@ def cell(v):
 def read_final(path):
     """final.json -> flat rows; one "pending" row until the loop writes it (the dashboard reads no empty file)."""
     if not path.is_file():
-        return [{"section": "pending", "row_id": "pending:0", "status": "The final set is scored once, after round 10."}]
+        return [{"section": "pending", "row_id": "pending:0", "status": "The final set is scored once, when the team stops the loop."}]
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except ValueError as e:

@@ -1,0 +1,146 @@
+[
+ {
+  "round": "004",
+  "change": "Added one bullet on top of round 3: decide every opinion and purchase from the person's own answers, not from what people of their party, age, sex or income are assumed to think or buy; people differ a lot within every group, and policy views are often more moderate and mixed than a party label suggests.",
+  "runs": [
+   "004-person-over-group",
+   "004-person-over-group-repeat"
+  ],
+  "original": {
+   "kept": "no",
+   "reason": "discard: fell beyond noise: right_spread -0.011 (noise 0.010), steady -0.017 (noise 0.010); improved beyond noise: right_person +0.023 (noise 0.015)",
+   "check": {
+    "right_person": 0.826310861423221,
+    "right_spread": 0.8631265204588313,
+    "right_group_gaps": 0.8024691358024691,
+    "steady": 0.953,
+    "marks_passed": 4
+   }
+  },
+  "mean": {
+   "right_person": 0.8242041198501873,
+   "right_spread": 0.8688720044139461,
+   "right_group_gaps": 0.7901234567901234,
+   "steady": 0.9575,
+   "marks_passed": 3
+  },
+  "deltas": {
+   "right_person": 0.012874531835205927,
+   "right_spread": 0.0036612072679234053,
+   "right_group_gaps": -0.007407407407407418,
+   "steady": -0.013299999999999979
+  },
+  "new": {
+   "kept": false,
+   "reason": "discard: fell beyond noise: steady -0.013 (noise 0.009); improved beyond noise: right_person +0.013 (noise 0.011)"
+  }
+ },
+ {
+  "round": "007",
+  "change": "Added one bullet: be a real, imperfect person, not a helpful or sensible assistant; don't pick an answer because it is the responsible, healthy, kind or widely approved one; real people buy treats on a whim, skip things they arguably should buy, and hold views others dislike. Format full; otherwise round 3's instructions.",
+  "runs": [
+   "007-not-an-assistant",
+   "007-not-an-assistant-repeat"
+  ],
+  "original": {
+   "kept": "no",
+   "reason": "discard: fell beyond noise: right_spread -0.011 (noise 0.010); marks passed fell 4 -> 3; no check improved beyond noise: right_person +0.005 (noise 0.015), right_spread -0.011 (noise 0.010), right_group_gaps -0.031 (noise 0.049), steady -0.006 (noise 0.010)",
+   "check": {
+    "right_person": 0.8125,
+    "right_spread": 0.8582857441508581,
+    "right_group_gaps": 0.7901234567901234,
+    "steady": 0.966,
+    "marks_passed": 3
+   }
+  },
+  "mean": {
+   "right_person": 0.8156601123595506,
+   "right_spread": 0.8558272103910292,
+   "right_group_gaps": 0.7654320987654321,
+   "steady": 0.963,
+   "marks_passed": 3
+  },
+  "deltas": {
+   "right_person": 0.004330524344569264,
+   "right_spread": -0.009383586754993511,
+   "right_group_gaps": -0.032098765432098775,
+   "steady": -0.007800000000000029
+  },
+  "new": {
+   "kept": false,
+   "reason": "discard: no check improved beyond noise: right_person +0.004 (noise 0.011), right_spread -0.009 (noise 0.014), right_group_gaps -0.032 (noise 0.083), steady -0.008 (noise 0.009)"
+  }
+ },
+ {
+  "round": "008",
+  "change": "Added one bullet: first find this person's earlier answers that bear most directly on the question (own habits, experiences, views and limits) and answer from those; if none settle it, reason from their other answers; use age, sex, income, party or ideology only as a tiebreaker, never as the main reason, but don't ignore them. Format full; otherwise round 3's instructions.",
+  "runs": [
+   "008-self-report-first",
+   "008-self-report-first-repeat"
+  ],
+  "original": {
+   "kept": "no",
+   "reason": "discard: no check improved beyond noise: right_person +0.003 (noise 0.015), right_spread -0.008 (noise 0.010), right_group_gaps -0.019 (noise 0.049), steady -0.001 (noise 0.010)",
+   "check": {
+    "right_person": 0.81062734082397,
+    "right_spread": 0.8613310247113232,
+    "right_group_gaps": 0.8024691358024691,
+    "steady": 0.971,
+    "marks_passed": 4
+   }
+  },
+  "mean": {
+   "right_person": 0.8117977528089888,
+   "right_spread": 0.8577219470440495,
+   "right_group_gaps": 0.7901234567901234,
+   "steady": 0.971,
+   "marks_passed": 3
+  },
+  "deltas": {
+   "right_person": 0.000468164794007464,
+   "right_spread": -0.007488850101973199,
+   "right_group_gaps": -0.007407407407407418,
+   "steady": 0.00019999999999997797
+  },
+  "new": {
+   "kept": false,
+   "reason": "discard: no check improved beyond noise: right_person +0.000 (noise 0.011), right_spread -0.007 (noise 0.014), right_group_gaps -0.007 (noise 0.083), steady +0.000 (noise 0.009)"
+  }
+ },
+ {
+  "round": "009",
+  "change": "Persona format full -> full_relative: the full persona plus a 3-line relative profile computed from given answers against the 240 respondents (spending habits from the tightwad-spendthrift answer, standing in for price sensitivity; 'Is generally trusting'; risk aversion from the lottery choices), worded like the note. Two bullets added to round 3's instructions, quoted closely from the note: evidence order (directly relevant earlier answers; related experiences, preferences and constraints; the relative profile; demographics, party or ideology only as a tiebreaker), percentiles as tendencies not rules, and preserve uncertainty, mistakes, incomplete knowledge, mixed motives and non-normative choices.",
+  "runs": [
+   "009-relative-profile",
+   "009-relative-profile-repeat"
+  ],
+  "original": {
+   "kept": "no",
+   "reason": "discard: marks passed fell 4 -> 3; improved beyond noise: right_person +0.016 (noise 0.015)",
+   "check": {
+    "right_person": 0.8230337078651685,
+    "right_spread": 0.8726474837655204,
+    "right_group_gaps": 0.7777777777777778,
+    "steady": 0.973,
+    "marks_passed": 3
+   }
+  },
+  "mean": {
+   "right_person": 0.8203417602996255,
+   "right_spread": 0.8801302348295205,
+   "right_group_gaps": 0.7592592592592593,
+   "steady": 0.9704999999999999,
+   "marks_passed": 3
+  },
+  "deltas": {
+   "right_person": 0.009012172284644127,
+   "right_spread": 0.014919437683497794,
+   "right_group_gaps": -0.03827160493827153,
+   "steady": -0.000300000000000078
+  },
+  "new": {
+   "kept": true,
+   "reason": "keep: improved beyond noise: right_spread +0.015 (noise 0.014)"
+  }
+ }
+]
