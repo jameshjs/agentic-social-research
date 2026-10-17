@@ -12,8 +12,6 @@ body.demo-view #agentsNote{display:none!important}
 /* ---------- prompt page: the question, one Run button and the two prepared questions ---------- */
 .composer-heading h2{margin-bottom:26px}
 
-/* ---------- 100-agent panel: no survey caveat line, no mean/flagged line ---------- */
-#agentPoll .persona-reaction-head > p,#agentPollStats{display:none!important}
 
 /* ---------- lab (demo view): a big 3D box and nothing under it ---------- */
 body.demo-view .lab-status,body.demo-view .lab-scenarios{display:none!important}
