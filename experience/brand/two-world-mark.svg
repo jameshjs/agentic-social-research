@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title">
-  <title id="title">Two World — one street, two possible city paths</title>
+  <title id="title">Two Worlds — one street, two possible city paths</title>
   <!-- One shared origin and two equal-weight destinations. The negative-space
        street through each block keeps the symbol about a place, not an arrow. -->
   <path d="M5 32h24" stroke="#F3F6ED" stroke-width="6" stroke-linecap="square"/>

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-labelledby="title">
-  <title id="title">Two World</title>
+  <title id="title">Two Worlds</title>
   <!-- The same fork as the primary mark, redrawn on a coarse 32 px grid. -->
   <path d="M4 16h10" stroke="#F3F6ED" stroke-width="4" stroke-linecap="square"/>
   <path d="m14 16 10-9" stroke="#A8F4D1" stroke-width="4" stroke-linecap="square"/>

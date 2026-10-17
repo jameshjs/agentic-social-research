@@ -1,20 +1,33 @@
-# Counterfactual Lab experience — canonical front end
+# Two Worlds experience — canonical front end
 
 This is the **one public entry point** for the hackathon demo. The cinematic entry, TTC replay, Bloor explorer, impact map, and persona research record live at `/experience/`. Aadit's detailed TTC 3D inspector remains implemented in [`demo-ui/`](../demo-ui/README.md) and is embedded here as the research workbench. Do not build another standalone public front end.
 
 **Mapped run (canonical, 17 Oct):** `?demo=fare`, `?demo=bike` and any compiled prompt run the **same** paired experiment on James's Bathurst–Spadina world. That means 19 persistent synthetic people, the Game Master sandbox, seed 42 and one `experiment.v2` RunResult from [`../experiment/world-runner.js`](../experiment/world-runner.js). Everything below reads that one event log. [`bloor-map.js`](./bloor-map.js) replays the travel events as people, bikes, cars, Line 2 trains, homes, shop visits and fare cues, with baseline and policy on one compressed clock. Click a person to open their choices. The **shared decision ledger** (`#runLedger`) lists every changed choice; clicking one seeks the map to that event. A **versioned rerun** changes one sensitivity assumption (cost weight, cycling discomfort, shop staffing response), and when the Vultr engine is up a **sweep** is available. The **five charts** come from [`world-run-adapter.js`](./world-run-adapter.js). Every run dispatches `counterfactual:result`.
 
-**Demo view and Researcher view.** The page opens in the **demo view**, the four-beat stage walkthrough in [pitch/SCRIPT.md](../pitch/SCRIPT.md): city → prompt → 3D lab → report, then the 100-agent panel. The lab is a title bar (question, `19 synthetic people · same seed · real Bloor St W map`, a `RUN ON …` host badge and the TTC fare / Bloor bike lane switch), the full-width 3D view with a large Baseline / With policy switch (a fresh run opens on Baseline), and a "people who changed" strip (one chip per person from `changedSummary`; a click switches to With policy and flies the 3D camera to them through `data-viewer3d-person`). The report is the headline and mini cards, the five charts (click one for its detail), the not-estimable list from `result.not_estimable`, and one provenance line. The **Researcher view** switch in the header, or `?detail=1`, shows everything else as before: both rails, the ledger with rerun, sweep and Clef, the replay scrubber, the sector board, the TTC workbench, the Bloor storyboard and the persona research record. [`view-mode.js`](./view-mode.js) sets `body.demo-view`, keeps the choice in `sessionStorage` (`?detail=0` forces the demo view) and moves the agents panel to match. It is CSS on one DOM, so both views read the same run.
+**Demo view and Researcher view.** The page opens in **demo view**: Earth-to-Bloor landing → freeform prompt → 100-agent reaction when online → 3D lab and impact tour. The 3D view has a Baseline / With policy switch and metric tiles reduced from the same `experiment.v2` result. No prepared-case selector is shown; a typed TTC fare or Bloor lane question loads its prepared run, while other prompts use the compiler. The **Researcher view** switch in the header, or `?detail=1`, reveals the ledger, versioned rerun, sensitivity sweep, sector board, TTC workbench, Bloor storyboard, and persona research record. [`view-mode.js`](./view-mode.js) controls the view without changing the run data.
 
 **Where runs execute.** `app.js` looks for the engine API at `/api/health`: first on the same origin (the Vultr VM or `node api/server.js`), then, on a localhost page, at the public Vultr engine (CORS is allowed only from localhost origins). If neither answers, the same modules run in the browser. `?engine=off` forces the browser, `?engine=<url>` picks a backend, and the status line says which host served the run. **Fallback:** if `data/world/` cannot load, the earlier engines (the `demo-ui` TTC trace and the 8-person `experiment.v1` Bloor fixture) run exactly as before. The embedded TTC inspector is kept as a labelled earlier prototype. In mapped mode its reruns update only its own status bar.
 
-## Two World demo pass (17 Oct)
+## Two Worlds demo pass (17 Oct)
 
 The default demo view now runs landing → prompt → 3D. The changes live in `two-world.css` and `two-world.js`, plus text edits in `index.html` and one routing function in `app.js`. Researcher view (`?detail=1`) still shows every section.
-- **Landing:** the drawn city under drawn clouds that part as you scroll. It uses no photos, so it needs no credit line. The brand is "two.world", with a shorter hero and prompt.
-- **Prepared questions:** the two chips under the prompt run the prepared cases. A typed question about the TTC fare or the Bloor bike lane opens the same runs (`preparedIntent` in `app.js`). Anything else uses the compiler path.
+- **Landing:** the drawn city under drawn clouds that part as you scroll. It uses no photos, so it needs no credit line. The brand is "Two Worlds", with a shorter hero and prompt.
+- **Prepared questions:** a typed question about the TTC fare or the Bloor bike lane opens the prepared run (`preparedIntent` in `app.js`). Other prompts use the compiler path. The prepared cases are not listed as frontend choices.
 - **Lab:** shows only the 3D view, made larger and with no 2D toggle, under a single timeline. Below it is one row of metric tiles, baseline → with policy, summed by `two-world.js` from the run's own `metrics.by_tick`. Everything else below (people strip, report, ledger, footer) is hidden in the demo view.
 - **The 100-agent panel:** sits right after the prompt, unchanged. When the agents are online, the page scrolls to it first, so its rating animation plays before the 3D lab.
+
+## Landing globe
+
+Scrolling the landing flies from the whole Earth to Toronto, then down to a tilted 3D view of Bloor St W from Bathurst to Spadina. The 619 m section is drawn as a mint line, and the camera lands behind the question box. It is `globe-intro.js` and `globe-intro.css`, with no change to `app.js`: the script reads the same scroll progress as `updateReveal()`.
+
+- **Map and tiles:** MapLibre GL 5.6.0 from jsdelivr, with dark OpenFreeMap vector tiles (no key, OpenStreetMap data, attribution shown). `api/server.js` allows `tiles.openfreemap.org` in `connect-src` and `img-src` for this.
+- **What is shown:** the street and building shapes are OpenStreetMap context only. The world the runs use is still `data/world/`.
+- **Fallback:** the globe removes itself and the drawn city landing shows as before when any of these apply:
+  - the page has `?globe=off`
+  - reduced motion is on
+  - there is no WebGL
+  - MapLibre or the tiles fail to load within 12 s, which also covers being offline
+- **Once a run starts:** the globe hides, and it comes back when you return to the landing.
 
 ## Run it
 

@@ -4,11 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#07131c" />
-    <meta name="description" content="Two World — see a policy change play out on a real Toronto street, with and without it." />
-    <title>Two World — Ask a city what if</title>
+    <meta name="description" content="Two Worlds — see a policy change play out on a real Toronto street, with and without it." />
+    <title>Two Worlds — Ask a city what if</title>
     <link rel="icon" href="./brand/two-world-favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css?v=demo-view-1" />
     <link rel="stylesheet" href="./two-world.css?v=6" />
+    <link rel="stylesheet" href="./globe-intro.css?v=2" />
   </head>
   <body data-phase="intro" data-scenario="fare">
     <!-- Sets body.demo-view (default) or Researcher view before the first paint. -->
@@ -22,6 +23,13 @@
       <div class="city-haze"></div>
     </div>
 
+    <!-- Landing globe: scrolling flies from the Earth to Bloor, Bathurst–Spadina (globe-intro.js; ?globe=off keeps the drawn city). -->
+    <div id="globeStage" class="globe-stage" aria-hidden="true">
+      <div class="globe-map"></div>
+      <div class="globe-caption"></div>
+      <div class="globe-credit"><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
+    </div>
+
     <div class="cloud-field" aria-hidden="true">
       <span class="cloud cloud--a"></span><span class="cloud cloud--b"></span>
       <span class="cloud cloud--c"></span><span class="cloud cloud--d"></span>
@@ -29,9 +37,9 @@
     </div>
 
     <header class="site-header">
-      <a class="brand" href="#intro" aria-label="Two World home">
+      <a class="brand" href="#intro" aria-label="Two Worlds home">
         <img src="./brand/two-world-mark.svg" width="29" height="29" alt="" aria-hidden="true" />
-        <span class="brand-word">two<span class="brand-dot">.</span>world</span>
+        <span class="brand-word">Two Worlds</span>
       </a>
       <div class="header-actions">
         <button id="researchToggle" class="research-toggle" type="button" aria-pressed="false" title="Show every section, rail and tool (?detail=1)"><span class="research-toggle-track" aria-hidden="true"><span></span></span><span class="research-toggle-label">Researcher view</span></button>
@@ -53,7 +61,8 @@
 
           <div class="composer-scene" id="composerScene" inert aria-hidden="true">
             <div class="composer-heading">
-              <h2>Every future begins<br /><em>with a better question.</em></h2>
+              <h2>Change one thing.<br /><em>Watch everything else move.</em></h2>
+              <p>Describe a policy to see people, places, and systems respond.</p>
             </div>
             <form id="hypothesisForm" class="hypothesis-card">
               <label for="hypothesisInput" class="sr-only">Your question</label>
@@ -63,11 +72,6 @@
               </div>
               <span id="composerHint" hidden></span>
             </form>
-            <div class="scenario-picks" aria-label="Prepared Toronto scenarios">
-              <span>OR START WITH</span>
-              <button class="scenario-chip" type="button" data-scenario-choice="fare"><span class="chip-icon">↗</span> TTC fare increase <span class="chip-end">01</span></button>
-              <button class="scenario-chip" type="button" data-scenario-choice="bike"><span class="chip-icon">◇</span> Bloor bike lane removal <span class="chip-end">02</span></button>
-            </div>
           </div>
 
           <div class="scroll-cue"><span class="scroll-track"><span></span></span><span>SCROLL TO REVEAL</span><span>01 / 03</span></div>
@@ -96,10 +100,6 @@
             <h2 id="labQuestion">What if?</h2>
             <p class="lab-status"><span class="live-pulse" aria-hidden="true"></span><span id="labStatus">Synthetic people · same seed · real Bloor St W map</span><span id="labHost" class="lab-badge" hidden></span><span id="labCompiler" class="lab-badge lab-badge--compiler" hidden></span></p>
           </div>
-          <div class="lab-scenarios" role="group" aria-label="Choose a prepared policy">
-            <button class="switch-button" type="button" data-scenario-choice="fare" aria-pressed="false">TTC fare</button>
-            <button class="switch-button" type="button" data-scenario-choice="bike" aria-pressed="false">Bloor bike lane</button>
-          </div>
         </div>
 
         <div class="lab-layout">
@@ -108,10 +108,6 @@
             <h2 id="studyTitle">What if the TTC adult fare rose by 50¢?</h2>
             <p id="studySummary">Follow riders, a neighbourhood shop, and sample fare payments as choices ripple through a small synthetic district near UTSC.</p>
             <p id="compilerBadge" class="compiler-badge" hidden></p>
-            <div class="scenario-switch" role="group" aria-label="Choose demo scenario">
-              <button class="switch-button active" type="button" data-scenario-choice="fare" aria-pressed="true">TTC fare <span>↗</span></button>
-              <button class="switch-button" type="button" data-scenario-choice="bike" aria-pressed="false">Bloor bike lane <span>◇</span></button>
-            </div>
             <div class="micro-section-label" id="chainLabel">WATCH THE CHAIN</div>
             <ol id="causalChain" class="causal-chain"></ol>
             <button id="bikeLabButton" class="bike-lab-entry" type="button" hidden><span>◇</span><span>Explore the Bloor street change <small>Compare the street and follow a person</small></span><span aria-hidden="true">↗</span></button>
@@ -391,5 +387,6 @@
     <script defer src="./persona-lab.js?v=2"></script>
     <script defer src="./viewer3d-bridge.js?v=demo-view-1"></script>
     <script defer src="./two-world.js?v=6"></script>
+    <script defer src="./globe-intro.js?v=3"></script>
   </body>
 </html>

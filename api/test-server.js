@@ -95,6 +95,7 @@ test('redirects, gzip, ETag revalidation and security headers', async () => {
   assert.ok(js.headers['referrer-policy']);
   assert.match(js.headers['content-security-policy'], /script-src 'self' 'unsafe-inline' https:\/\/cdnjs\.cloudflare\.com https:\/\/cdn\.jsdelivr\.net/);
   assert.match(js.headers['content-security-policy'], /fonts\.googleapis\.com/);
+  assert.match(js.headers['content-security-policy'], /connect-src 'self' https:\/\/tiles\.openfreemap\.org/);
   const again = await request(server, 'GET', '/experience/app.js', { headers: { 'Accept-Encoding': 'gzip', 'If-None-Match': js.headers.etag } });
   assert.equal(again.status, 304);
   const plain = await request(server, 'GET', '/experience/app.js');
@@ -113,7 +114,7 @@ test('the pitch deck is served from /pitch/ with its assets, and nothing else le
   const deck = await request(server, 'GET', '/pitch/');
   assert.equal(deck.status, 200);
   assert.match(deck.headers['content-type'], /text\/html/);
-  assert.match(deck.text, /Counterfactual Lab/);
+  assert.match(deck.text, /Two Worlds/);
   const img = await request(server, 'GET', '/pitch/assets/bloor-night-3d.jpg');
   assert.equal(img.status, 200);
   assert.match(img.headers['content-type'], /image\/jpeg/);

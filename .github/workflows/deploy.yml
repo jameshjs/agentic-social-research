@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-24.04
     environment:
       name: production
-      url: https://155-138-141-130.sslip.io/experience/
+      url: https://twotwosmyworld.select/experience/
     concurrency:
       group: counterfactual-production
       cancel-in-progress: false

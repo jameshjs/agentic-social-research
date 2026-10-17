@@ -12,6 +12,7 @@ Read [README.md](./README.md), [prd.md](./prd.md), [research.md](./research.md),
 
 ## Product contract
 
+- The public product name is **Two Worlds** (capital T and W, final s). Use it in UI, pitch, Devpost, and team docs. Internal filenames may keep `two-world`.
 - This is a **general hypothesis-to-simulation product**. Any freeform hypothesis must start a run. The TTC fare case is one demonstration, not the application architecture.
 - Autonomously generate hypothesis-specific, persistent personas for every visible person. A subset uses LLM reasoning; other individuals may use profile-conditioned rules.
 - Agents must make state-changing decisions and interact through a shared world/event log. The visual city, economic charts, and decision brief must consume that same log/result JSON.

@@ -1,4 +1,4 @@
-# Final demo runbook — Counterfactual Lab
+# Final demo runbook — Two Worlds
 
 **Updated:** 17 October 2026. **Public route:** `/experience/` (serve from the repository root). This is a live handoff document: verify its status against current `main` before presenting.
 

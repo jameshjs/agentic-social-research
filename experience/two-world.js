@@ -1,4 +1,4 @@
-/* Two World demo view.
+/* Two Worlds demo view.
  * 1. The 100-agent panel sits right after the prompt, above the 3D view, because the demo view hides
  *    everything under the 3D view (two-world.css). Researcher view keeps view-mode.js's order.
  * 2. One row of metric tiles right under the 3D view: baseline → with policy over the periods after the

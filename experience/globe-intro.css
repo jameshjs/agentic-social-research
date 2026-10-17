@@ -1,0 +1,14 @@
+/* Landing globe (globe-intro.js). Sits over the drawn city and under the clouds and the intro text. */
+.globe-stage{position:fixed;z-index:1;inset:0;pointer-events:none;background:radial-gradient(ellipse at 64% 46%,#10283a 0%,#07131c 62%);opacity:0;transition:opacity .9s ease}
+.globe-stage.is-ready{opacity:1}
+.globe-stage.is-off{opacity:0;visibility:hidden;transition:opacity .4s ease,visibility 0s .4s}
+.globe-map{position:absolute;inset:0}
+.globe-map .maplibregl-canvas{position:absolute;left:0;top:0}
+.globe-map .maplibregl-canvas-container,.globe-map .maplibregl-control-container{display:contents}
+/* Keeps the headline and composer readable over bright tiles. */
+.globe-stage::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#07131ccc 0%,#07131c55 38%,transparent 62%),linear-gradient(0deg,#07131caa 0%,transparent 26%);opacity:calc(1 - var(--reveal,0)*1.8)}
+.globe-stage[data-stage=street]::after{opacity:.6;background:radial-gradient(ellipse at 50% 48%,#07131c99 0%,#07131c33 55%,#07131c99 100%)}
+.globe-caption{position:absolute;z-index:2;left:50%;bottom:34px;transform:translateX(-50%);font-size:9px;font-weight:700;letter-spacing:1.6px;color:#8affd5;white-space:nowrap;text-shadow:0 1px 10px #07131c}
+.globe-credit{position:absolute;z-index:2;right:12px;bottom:8px;font-size:9px;color:#cdd9db8c}
+.globe-credit a{color:inherit;pointer-events:auto}
+@media(max-width:760px){.globe-caption{bottom:74px;font-size:8px}}

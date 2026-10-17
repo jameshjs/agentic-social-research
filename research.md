@@ -70,7 +70,7 @@ The [hacker package](https://app.notion.com/p/hackthevalley11/Hack-the-Valley-11
 
 ## Toronto Civic Data Starter Guide — direct source catalogue
 
-These are the sponsor guide's source links, grouped by how Counterfactual Lab may use them. **“Listed” means the guide linked them; it does not mean we downloaded, cleaned, checked freshness, or approved them for a model.** Use a dataset only after recording its year, geography, unit, licence, missingness, and relevant fields.
+These are the sponsor guide's source links, grouped by how Two Worlds may use them. **“Listed” means the guide linked them; it does not mean we downloaded, cleaned, checked freshness, or approved them for a model.** Use a dataset only after recording its year, geography, unit, licence, missingness, and relevant fields.
 
 ### Core geography and demographics
 
@@ -152,7 +152,7 @@ The PRD's [economist/policymaker workspace](./prd.md#76-economist-and-policymake
 - [Holmgren's transit-demand meta-analysis](https://www.sciencedirect.com/science/article/pii/S096585640700047X) reports that fare response depends on how service quality is modelled. A foreign estimate is a sensitivity input, not a Toronto-calibrated coefficient.
 - [Ontario minimum wage rules](https://www.ontario.ca/document/your-guide-employment-standards-act-0/minimum-wage) establish the current provincial rate and jurisdiction. A “Toronto increases minimum wage” prompt should be reframed as a hypothetical Ontario change affecting Toronto or a specific City fair-wage policy.
 
-**Product interpretation:** Counterfactual Lab must distinguish (1) observed public data, (2) research-based parameters transferred from another setting, (3) human assumptions, (4) AI-generated assumptions, and (5) events measured inside its simulation. Every economic metric needs a unit, group denominator, time horizon, calculation rule, and trace to events/sources. Never promote a simulated result to a real-world forecast automatically.
+**Product interpretation:** Two Worlds must distinguish (1) observed public data, (2) research-based parameters transferred from another setting, (3) human assumptions, (4) AI-generated assumptions, and (5) events measured inside its simulation. Every economic metric needs a unit, group denominator, time horizon, calculation rule, and trace to events/sources. Never promote a simulated result to a real-world forecast automatically.
 
 ## Founder decisions received
 

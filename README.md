@@ -1,8 +1,8 @@
-# Counterfactual Lab — Hack the Valley 11
+# Two Worlds — Hack the Valley 11
 
 A general, human-guided social simulation and policy decision product. Enter **any hypothesis**; the system generates relevant synthetic personas, lets them act and interact in a live city, compares baseline with intervention, and explains the simulated effects. A linked economic dashboard shows household, business, public-budget, and access impacts with charts, scenario trajectories, subgroup comparisons, and uncertainty. When evidence is thin, it still runs and labels the output as speculative. The live world is the primary interface; the decision dashboard and cited brief explain what a policymaker could and could not conclude.
 
-**Build status (17 Oct, 13:30 ET):** the consolidation is on `main`. `/experience/` runs **both prepared policies on one mapped Bloor St W world, Bathurst St to Spadina Ave**: the TTC adult fare +$0.50 with Fair Pass unchanged, and removal of the protected cycle track. Both use the same 19 synthetic people, James's Game Master sandbox, one `experiment.v2` RunResult, the event-driven map, the shared decision ledger and five charts. `?demo=fare` and `?demo=bike` select the policy. Freeform prompts are compiled into sandbox levers, by Vultr GLM when the backend is up and by offline rules otherwise. They run on the same map or stay *speculative / not estimable*. Steven's 100 Haiku persona agents rate any policy 1–5 in the same page. **Live:** <https://155-138-141-130.sslip.io/experience/> on Vultr Cloud Compute (Toronto). See [Run and replicate](#run-and-replicate) and [VULTR.md](./VULTR.md).
+**Build status (17 Oct, 13:30 ET):** the consolidation is on `main`. `/experience/` runs **both prepared policies on one mapped Bloor St W world, Bathurst St to Spadina Ave**: the TTC adult fare +$0.50 with Fair Pass unchanged, and removal of the protected cycle track. Both use the same 19 synthetic people, James's Game Master sandbox, one `experiment.v2` RunResult, the event-driven map, the shared decision ledger and five charts. `?demo=fare` and `?demo=bike` select the policy. Freeform prompts are compiled into sandbox levers, by Vultr GLM when the backend is up and by offline rules otherwise. They run on the same map or stay *speculative / not estimable*. Steven's 100 Haiku persona agents rate any policy 1–5 in the same page. **Live:** <https://twotwosmyworld.select/experience/> on Vultr Cloud Compute (Toronto). See [Run and replicate](#run-and-replicate) and [VULTR.md](./VULTR.md).
 
 ## Start here
 
@@ -27,7 +27,7 @@ Node 22 and Python 3 only; no `npm install` outside the optional Anthropic SDK i
 
 | What | Command (from the repo root) | Open |
 | --- | --- | --- |
-| Hosted demo (nothing to install) | — | <https://155-138-141-130.sslip.io/experience/?demo=bike> |
+| Hosted demo (nothing to install) | — | <https://twotwosmyworld.select/experience/?demo=bike> |
 | Static site | `python3 -m http.server 4173 --bind 127.0.0.1` | <http://127.0.0.1:4173/experience/>. Paired runs execute in the browser, or on the Vultr engine when it answers (localhost pages may call it). Add `?engine=off` to force the browser. |
 | Site + engine API locally | `node api/server.js --port 8080` (live Vultr compiler: `node ops/vultr.js run -- node api/server.js --port 8080`) | <http://127.0.0.1:8080/experience/> |
 | Steven's 100 persona agents | `cp persona-swarm/.env.example persona-swarm/.env`, set `AGENT_BACKEND` (`local` on Steven's laptop; `remote` + the URL/key he DMs; or `replay` offline), then `npm --prefix persona-swarm/runtime start` | <http://127.0.0.1:4174/experience/> ([RUNTIME.md](./persona-swarm/RUNTIME.md)) |

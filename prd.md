@@ -1,6 +1,6 @@
-# PRD — Counterfactual Lab
+# PRD — Two Worlds
 
-**Working title:** Counterfactual Lab (rename with the team)
+**Product name:** Two Worlds
 **Status:** Final product scope v1.0; model credentials, exact stack, and deployment URL are implementation fields to fill at kickoff
 **Hackathon:** Hack the Valley 11, 16–18 October 2026
 **Owners:** Meet (compiler/economic definitions/evidence/integration), James (world engine/metrics/orchestrator/backend), Steven (persona swarm), Aadit (city and dashboard frontend)
@@ -13,7 +13,7 @@
 
 ## 1. Executive decision
 
-Counterfactual Lab accepts a freeform hypothesis such as “What if bus fares rose?”, “What if a bus route disappeared?”, “What if minimum wage increased?”, or “What if protected bike lanes were added?” It converts the hypothesis into a structured scenario, creates a scenario-specific population of synthetic households, workers, firms, and institutions, runs baseline and intervention worlds, and shows the resulting choices, interactions, and possible second-order effects. Researchers can add sources and their own notes, correct assumptions, and rerun the same world.
+Two Worlds accepts a freeform hypothesis such as “What if bus fares rose?”, “What if a bus route disappeared?”, “What if minimum wage increased?”, or “What if protected bike lanes were added?” It converts the hypothesis into a structured scenario, creates a scenario-specific population of synthetic households, workers, firms, and institutions, runs baseline and intervention worlds, and shows the resulting choices, interactions, and possible second-order effects. Researchers can add sources and their own notes, correct assumptions, and rerun the same world.
 
 **Product promise:** “Turn an idea into an inspectable social experiment and decision brief in minutes.”
 
@@ -530,6 +530,7 @@ Attend or send one teammate to the [School of Cities workshop Friday 10–11 pm]
 
 ### Confirmed by founder
 
+- **Product name and public flow (17 Oct):** The name is **Two Worlds**, with capital T and W and the final s. The canonical `/experience/` site opens on an Earth-to-Bloor scroll, accepts a freeform policy question without displaying prepared-case choices, shows the 100-agent reaction when online, then moves into the mapped 3D experiment and an event-backed impact tour. Typed TTC fare and Bloor cycle-track questions may load cached prepared runs; other prompts use the compiler. The public copy, pitch, Devpost draft, and logo lockup must use the same product name.
 - **Unrestricted prompts:** Every hypothesis should start an interactive simulation, even if it must be labeled speculative.
 - **Primary output:** The live city and its agents. A rigorous report is secondary.
 - **Non-negotiable features:** Autonomous generation of personas tailored to the prompt; agents interact and make state-changing decisions; a visually excellent world with moving buses, cars, people, activity in homes and shops.

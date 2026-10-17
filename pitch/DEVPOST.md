@@ -1,15 +1,15 @@
 # Devpost write-up (draft — paste section by section)
 
-**Name:** Counterfactual Lab
+**Name:** Two Worlds
 **Tagline:** Ask a city "what if". Test the policy before you test it on people.
-**Links:** live demo <https://155-138-141-130.sslip.io/experience/> · deck <https://155-138-141-130.sslip.io/pitch/> · code <https://github.com/jameshjs/agentic-social-research>
+**Links:** live demo <https://twotwosmyworld.select/experience/> · deck <https://twotwosmyworld.select/pitch/> · code <https://github.com/jameshjs/agentic-social-research>
 **Categories:** Papiers Autoresearch Challenge · U of T School of Cities · [MLH] Best Use of Vultr · Sustainable FinTech & Economic Inclusion (household and shop ledgers) · Top 3 overall
 
 ## Inspiration
 In 2024 Ontario moved to remove the protected bike lanes on Bloor, Yonge and University. The City estimated the cost at more than $48 million for the three corridors. TTC fares have been frozen for three years running, and every budget reopens the question of raising them. Decisions like these touch thousands of people, and they are argued on intuition, with no way to try them first. Agent simulations promise a way to do that. Most of them, though, are an LLM role-playing a stereotype on a cartoon map, with numbers nobody can trace.
 
 ## What it does
-You type a policy question. Counterfactual Lab:
+You type a policy question. Two Worlds:
 1. **Compiles it.** A Vultr-hosted GLM-5.3-flash model maps the question to the levers of a real street model (fare, cycle track, car lanes, parking, signals, Line 2 frequency). A validator decides what can run. A question with no lever is kept as *speculative / not estimable*.
 2. **Runs the city twice.** The same synthetic people, with homes, commutes, errands and budgets, live on a rule-checked map of **Bloor St W from Bathurst to Spadina**, built from City of Toronto open data, TTC GTFS and OpenStreetMap. A baseline and a policy world run from the same seed. Every walk, signal wait, subway boarding, fare and shop visit is validated by a game master, and every choice is a committed event.
 3. **Shows the consequences.** A 3D city replays those events. A decision ledger lets you click any changed choice and watch that person. Household spending, shop receipts and TTC receipts are added up from the same events and reconcile exactly. Effects we cannot support, such as injuries, closures and citywide totals, are labelled *not estimable* rather than invented.

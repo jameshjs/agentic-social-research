@@ -1,8 +1,9 @@
-/* Two World: landing photos, a shorter prompt page, and a 3D-only lab (Aadit's 17 Oct pass).
+/* Two Worlds: landing photos, a shorter prompt page, and a 3D-only lab (Aadit's 17 Oct pass).
    Landing and prompt rules apply in both views; the lab rules apply to the default demo view only,
    so Researcher view (?detail=1) still shows every section. Photos: see assets/CREDITS.md. */
 
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.brand-word{letter-spacing:-.6px;word-spacing:2px}
 
 /* ---------- landing: the drawn city under drawn clouds that part as you scroll (no photos) ---------- */
 .intro-message h1,.intro-message p{text-shadow:0 2px 24px #07131caa}

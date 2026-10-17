@@ -1,6 +1,6 @@
 # Steven's persona agents on the hosted site (SSH reverse tunnel)
 
-The public site `https://155-138-141-130.sslip.io/experience/` reaches Steven's 100 Twin-tuned Claude Haiku persona agents through his laptop. The agents run on his Claude Max plan. The Vultr VM holds **no** model key and no Claude credential.
+The public site `https://twotwosmyworld.select/experience/` reaches Steven's 100 Twin-tuned Claude Haiku persona agents through his laptop. The agents run on his Claude Max plan. The Vultr VM holds **no** model key and no Claude credential.
 
 ```text
 browser → Caddy (VM :443) ── /health /ask /chat /run* /replay* /saves* /agents* /usage ──► 127.0.0.1:4179 on the VM
@@ -40,7 +40,7 @@ ops/deploy.sh --skip-key   # writes the Caddyfile with the agent routes, restart
    ```
 
    For automatic reconnects, use `autossh -M 0` with the same arguments.
-3. Check from anywhere: `curl -s https://155-138-141-130.sslip.io/health` should return your server's health JSON, and the site's corner pill should read `LIVE · 100 PERSONA AGENTS`.
+3. Check from anywhere: `curl -s https://twotwosmyworld.select/health` should return your server's health JSON, and the site's corner pill should read `LIVE · 100 PERSONA AGENTS`.
 
 If the laptop sleeps or the tunnel drops, `/health` returns 502. The page then says "agents offline" and keeps working: the mapped paired run, charts, ledger and compiler all run on the Vultr engine. For a laptop-free fallback, run the site locally with `AGENT_BACKEND=replay`; see [persona-swarm/RUNTIME.md](../persona-swarm/RUNTIME.md).
 

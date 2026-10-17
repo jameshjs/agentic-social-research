@@ -1,4 +1,4 @@
-// Counterfactual Lab — demo trace generator for the TTC fare case.
+// Two Worlds — demo trace generator for the TTC fare case.
 // Deterministic, rule-based stand-in for the full agent model: same seed + same params => same trace.
 // Output follows demo-ui/replay-trace-spec.md. Works in the browser (window.CFSim) and in Node.
 (function (root) {

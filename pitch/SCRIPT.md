@@ -1,4 +1,4 @@
-# Counterfactual Lab: 4-minute pitch script
+# Two Worlds: 4-minute pitch script
 
 **Flow:** slides (1:30) → live site (2:05) → close (0:25), then 1 minute of Q&A ([QA.md](./QA.md)).
 **Speakers:** Meet opens and closes. Steven covers the autoresearcher. Aadit drives the site. James answers world and engine questions in Q&A.
@@ -6,9 +6,9 @@
 
 ## Before you walk up (5 minutes before)
 
-- [ ] Laptop 1 (Aadit) shows <https://155-138-141-130.sslip.io/experience/>, scrolled to the top, browser fullscreen (⌃⌘F), zoom 100%.
-- [ ] Laptop 2 (Meet) shows the deck at <https://155-138-141-130.sslip.io/pitch/> (or `pitch/index.html` opened from disk), fullscreen, slide 1. Press `N` once on your own screen to check the speaker notes.
-- [ ] Steven: agent server and tunnel are up. `curl -s https://155-138-141-130.sslip.io/health` returns `"ok":true`, and the site's corner pill reads **LIVE · 100 PERSONA AGENTS**.
+- [ ] Laptop 1 (Aadit) shows <https://twotwosmyworld.select/experience/>, scrolled to the top, browser fullscreen (⌃⌘F), zoom 100%.
+- [ ] Laptop 2 (Meet) shows the deck at <https://twotwosmyworld.select/pitch/> (or `pitch/index.html` opened from disk), fullscreen, slide 1. Press `N` once on your own screen to check the speaker notes.
+- [ ] Steven: agent server and tunnel are up. `curl -s https://twotwosmyworld.select/health` returns `"ok":true`, and the site's corner pill reads **LIVE · 100 PERSONA AGENTS**.
 - [ ] Warm the engine: open `?demo=bike` once, then `?demo=fare`, then return to the top. The first run after a server restart takes about 20 s, and you don't want that on stage.
 - [ ] Wi-Fi fails: on Aadit's laptop run `python3 -m http.server 4173` from the repo and open `http://127.0.0.1:4173/experience/?engine=off`. The whole run happens in the browser. The agents panel says "offline". Skip that beat.
 
@@ -18,7 +18,7 @@
 
 ## 0:20–0:40 · Meet · Slide 2 "Ask a city what if"
 
-> "Counterfactual Lab lets you ask a city *what if*. Type a policy. We generate the people it affects, put them on a real, rule-checked map of Bloor Street, and run the city twice, once without the policy and once with it. Then we show every choice, every dollar, and what we *can't* know."
+> "Two Worlds lets you ask a city *what if*. Type a policy. We generate the people it affects, put them on a real, rule-checked map of Bloor Street, and run the city twice, once without the policy and once with it. Then we show every choice, every dollar, and what we *can't* know."
 
 *Click to slide 3, hand to Steven.*
 
@@ -58,7 +58,7 @@
 
 > "One city. Any question. Two very different policies on the same people, from real Toronto open data. Persona agents tuned with Papiers research and human sign-off. And it all runs on **Vultr**: cloud compute runs the experiments, a GLM model on Vultr turns any question into a runnable policy, and Vultr's Clef model double-checked all 448 trip decisions, agreeing 91% of the time.
 >
-> Counterfactual Lab. Test the policy before you test it on people."
+> Two Worlds. Test the policy before you test it on people."
 
 ## Phrases to use, and to avoid
 
