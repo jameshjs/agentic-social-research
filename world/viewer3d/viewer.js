@@ -628,6 +628,15 @@ const VEH = [];
     }
     g.visible = false; groups.transit.add(g);
     const v = { sched: s, mesh: g, dep: null };
+    if (s.kind === 'bus' && s.route === '7' && s.dir === '1') {
+      const tag = document.createElement('div');
+      tag.textContent = 'ROUTE 7 · SCHEDULED';
+      tag.style.cssText = 'padding:5px 8px;border:1px solid #ff987e;border-radius:5px;background:#10232eea;color:#fff4ed;font:700 9px Space Grotesk,sans-serif;letter-spacing:.07em;white-space:nowrap;box-shadow:0 5px 16px #0009';
+      v.tourLabel = new CSS2DObject(tag);
+      v.tourLabel.position.set(0, s.height + 2.8, 0);
+      v.tourLabel.visible = false;
+      g.add(v.tourLabel);
+    }
     VEH.push(v);
     pickable(g, () => v.dep == null ? null : { title: s.label, kind: s.kind === 'subway' ? 'Subway train' : s.kind === 'bus' ? 'Bus' : 'Streetcar', status: 'observed',
       rows: [['Scheduled at reference', `${hm(v.dep)} ${chip('observed')}`], ['Trips this hour', s.tbh[String(Math.floor(state.t / 3600))] || 0], ['Animated speed', `${s.speed.toFixed(1)} m/s ${chip(s.kind === 'subway' ? 'derived' : 'assumption')}`]],
@@ -636,7 +645,7 @@ const VEH = [];
 }
 function updateVehicles(t) {
   const used = new Map();
-  for (const v of VEH) v.mesh.visible = false;
+  for (const v of VEH) { v.mesh.visible = false; if (v.tourLabel) v.tourLabel.visible = false; }
   for (const s of SCHED) {
     const pool = VEH.filter((v) => v.sched === s); let k = 0;
     for (const d of s.deps) {
@@ -645,6 +654,7 @@ function updateVehicles(t) {
       if (k >= pool.length) break;
       const v = pool[k++], p = along(s.pts, s.cum, pos - s.length / 2);
       v.dep = d; v.mesh.visible = true;
+      if (v.tourLabel) v.tourLabel.visible = state.impactKind === 'fare' && state.arm === 'baseline';
       v.mesh.position.copy(P(p.x, p.y, p.h + (s.kind === 'subway' ? 0 : 0.05)));
       v.mesh.rotation.y = p.yaw;
       if (at.dwell >= 0 && p.h > -0.5) boardAt(s, s.stops[at.dwell], p, d, at.dwell, at.u);
@@ -1399,10 +1409,15 @@ function showImpactPhase({ arm, actor, trip, tick, kind }) {
   if (state.week !== tick) { state.week = tick; rebuildArms(); }
   setArm(arm);
   const person = curArm().people.find((a) => a.persona.pid === actor && a.persona.trip === trip);
-  state.t = Math.max(state.start, Math.min(state.end, (person ? person.t0 : state.start) - 8));
+  // Show a GTFS-scheduled arrival in the transit baseline. It is context for
+  // the TTC demand change, not a claim that this persona boards Route 7.
+  const route7 = SCHED.find((s) => s.kind === 'bus' && s.route === '7' && s.dir === '1');
+  const busAt = kind === 'fare' && arm === 'baseline' && route7?.deps.find((d) => d >= (person?.t0 || state.start) + 60 && d < state.end - 60);
+  state.t = Math.max(state.start, Math.min(state.end, busAt ? busAt - 18 : (person ? person.t0 : state.start) - 8));
   for (const a of state.agents) a.cursor = 0;
   state.playing = true; $('play').textContent = '❚❚';
-  state.speed = 30; $('speed').value = '30';
+  state.speed = busAt ? 10 : 30; $('speed').value = String(state.speed);
+  state.impactKind = kind;
   // Hold the baseline on Bathurst Station; then follow the changed TTC rider's
   // actual policy route. Bike shots stay on one street axis for a fair comparison.
   state.selected = actor;
