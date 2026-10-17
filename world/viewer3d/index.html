@@ -29,14 +29,14 @@
   body.embed #hl, body.embed #armWrap { display: none !important; }
   body.embed #right { position: static; width: 0; height: 0; }
   body.embed #insp { position: fixed !important; top: 76px; right: 12px; width: 300px; max-height: calc(100% - 160px); }
-  body.embed #people { position: fixed; left: 12px; right: 12px; bottom: 62px; max-height: none; padding: 6px 8px; display: flex; gap: 6px; align-items: center; overflow-x: auto; background: rgba(16,20,27,0.55); }
+  body.embed #people { display: none !important; }
   body.embed #people h2 { margin: 0 6px 0 2px; white-space: nowrap; }
   body.embed #peopleBody { display: flex; gap: 6px; align-items: center; }
   body.embed #people .person { width: auto; margin: 0; padding: 4px 9px; white-space: nowrap; }
   body.embed #people .person br, body.embed #people .note { display: none; }
   body.embed #people .person em { margin-left: 6px; }
   body.embed #stats { display: none; }
-  body.embed #credit { display: block !important; top: 10px; bottom: auto; right: 12px; opacity: 0.75; }
+  body.embed #credit { display: block !important; top: 10px; bottom: auto; right: 12px; max-width: 210px; font-size: 8px; line-height: 1.2; opacity: 0.6; }
   .ptag .pay { color: #b8ffd9; font-weight: 700; }
   .ptag .pay.up { color: #ff9f97; }
   body.embed #dash { bottom: 8px; left: 8px; right: 8px; padding: 6px 10px; grid-template-columns: auto minmax(0, 1fr); }
@@ -71,6 +71,8 @@
   .lbl.big { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; }
   .lbl.sub { color: #9ff0c9; font-style: italic; font-weight: 500; }
   .lbl.stn { background: rgba(0,0,0,0.55); padding: 1px 6px; border-radius: 6px; border-left: 3px solid #3fbf88; }
+  .tour-stop-label { display:grid;gap:2px;padding:8px 11px;border-radius:9px;background:rgba(14,38,43,.92);border:1px solid #ff9b7d;color:#fff;font:700 11px 'Space Grotesk',system-ui,sans-serif;letter-spacing:.08em;box-shadow:0 8px 28px #0008;white-space:nowrap;pointer-events:none; }
+  .tour-stop-label span {font-size:9px;letter-spacing:.015em;font-weight:500;color:#c8d7d4}
   #credit { position: fixed; right: 12px; bottom: 132px; font-size: 10px; color: rgba(255,255,255,0.85); text-shadow: 0 1px 2px #000; text-align: right; pointer-events: none; }
   /* scenario headline, people list, persona tags, street cues */
   #hl { top: 12px; left: 50%; transform: translateX(-50%); width: min(600px, calc(100% - 720px)); min-width: 420px; padding: 10px 14px; }
@@ -218,6 +220,6 @@
 </script>
 <script src="../background.js"></script>
 <script src="../sandbox.js"></script>
-<script type="module" src="./viewer.js"></script>
+<script type="module" src="./viewer.js?v=street-tour-6"></script>
 </body>
 </html>
