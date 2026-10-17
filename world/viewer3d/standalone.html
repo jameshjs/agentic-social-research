@@ -1763,12 +1763,11 @@ function describeAgent(a, arm) {
 }
 
 /* ---------- scenario cues on the street ---------- */
-const CUES = { tags: [], board: null };
+const CUES = { tags: [] };
 {
   const mk = (cls, x, y, h) => { const d = document.createElement('div'); d.className = cls; const o = new CSS2DObject(d); o.position.copy(P(x, y, h)); scene.add(o); return o; };
   for (const st of W.transit.stations) st.entrances.forEach((e, k) => CUES.tags.push(mk(k ? 'fare small' : 'fare', e.x, e.y, k ? 6 : 10)));
   for (const s of STOPS) if (s.deps.some((d) => d.route === '510' || d.route === '511')) CUES.tags.push(mk('fare small', s.xy[0], s.xy[1], 6));
-  CUES.board = mk('board', 300, 0, 34);
   CUES.detour = Object.values(DETOUR).map((d) => mk('dtag', d.pts[1][0] - 60, d.pts[1][1], 6));
   DETOUR.north.lbl = CUES.detour[0]; DETOUR.south.lbl = CUES.detour[1];
 }
@@ -1794,14 +1793,6 @@ function updateCues() {
   }
   for (const d of CUES.detour) d.visible = sc === 'bike' && groups.cycling.visible;
   DETOUR.north.lbl.element.textContent = `detour route: ${DETOUR.north.name}`; DETOUR.south.lbl.element.textContent = `detour route: ${DETOUR.south.name}`;
-  CUES.board.visible = !!run && groups.labels.visible;
-  if (run) {
-    const h = headlineItems(run, sc), top = h.items[0];
-    CUES.board.element.innerHTML = pol
-      ? `<div class="k">${esc(SCEN[sc].short)} · policy</div><b>${esc(top.label)}: ${top.a} → ${top.b} <i class="${top.up ? 'up' : 'down'}">${top.d}</i></b><div>${h.changed} trip decisions changed</div>`
-      : `<div class="k">${esc(SCEN[sc].short)} · baseline</div><b>${sc === 'bike' ? 'Protected cycle track (2016)' : `Adult fare ${money(fares['baseline:adult'])}`}</b><div>switch to Policy to see the change</div>`;
-    CUES.board.element.classList.toggle('pol', pol);
-  }
   // Bike policy: posts gone, paint turns amber and pulses. Fare policy: entrances glow red.
   const unprot = sc === 'bike' ? pol : sc === 'sandbox' ? $('track').value !== 'protected' : false;
   TRACK.posts.visible = !(sc === 'sandbox' ? $('track').value !== 'protected' : unprot);
