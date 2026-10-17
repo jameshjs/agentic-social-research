@@ -16,11 +16,19 @@ Porkbun DNS (verified 17 Oct 2026): root `A → 155.138.141.130` and `www CNAME 
 
 ## Automatic deployment from GitHub
 
-[`../.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) runs the offline engine/API and persona-runtime tests on pull requests and pushes. A passing push to `main` then runs [`deploy-ci.sh`](./deploy-ci.sh): it copies the same allowlisted files as the manual deploy, leaves `/etc/counterfactual.env` and Caddy alone, restarts the service, and checks `/experience/`, both paired API runs, and the public HTTPS health endpoint. If a check fails, it restores the previous release and restarts it. The prior release remains on the VM at `/srv/counterfactual.rollback-*` for inspection. A superseded workflow skips deployment; `workflow_dispatch` can redeploy the current `main` commit.
+[`../.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) runs the offline engine, API and persona-runtime tests on pull requests and pushes. It also runs the CI-account guard tests. A passing push to `main` then runs [`deploy-ci.sh`](./deploy-ci.sh) as the restricted **`ci-deploy`** account, never as root:
+- It builds one tarball of the same allowlisted files as the manual deploy and streams it over SSH.
+- On the VM, the root-owned `counterfactual-activate` validates the release and swaps it in. It then checks `/experience/`, both paired API runs and the public HTTPS health at `twotwosmyworld.select`. If a check fails, it restores the previous release.
+- `/etc/counterfactual.env`, the systemd unit and Caddy are left alone.
+- A superseded workflow skips the deploy, and `workflow_dispatch` redeploys the current `main`.
 
-**Activation requires a repository admin.** In GitHub → repository Settings → Secrets and variables → Actions, add a repository secret named `VULTR_DEPLOY_SSH_KEY`. Its value must be the private half of an SSH key whose public half is authorized for `root@155.138.141.130`. Prefer a dedicated, revocable CI key; keep the private half out of git, issues, chat, and workflow logs. The host's ED25519 key is pinned in [`known_hosts`](./known_hosts). The current GitHub collaborator token can push code but does not have repository admin permission to configure secrets. Until the secret is set, the test job works but the production deploy job reports the missing credential and does not change the VM. No Vultr API token or inference key is needed in GitHub Actions; the VM retains its current inference configuration.
+**The account is designed and tested but not yet installed.** [`ci-deploy/README.md`](./ci-deploy/README.md) lists the exact VM changes, the remaining risk, and Meet's approval steps:
+- run `install-on-vm.sh` with a new CI-only public key
+- store its private half as the `production` environment secret **`VULTR_CI_DEPLOY_KEY`**
 
-After activation, check the Actions run and verify `/api/health.git_sha` equals the pushed commit. If the VM is replaced or its SSH host key changes, verify the new fingerprint independently before updating `known_hosts`.
+Until then, the deploy job reports "Deploy skipped" with a warning and does not touch the VM. The workflow no longer reads `VULTR_DEPLOY_SSH_KEY`; do not put the root key in GitHub. The host's ED25519 key is pinned in [`known_hosts`](./known_hosts). If the VM is replaced or its host key changes, verify the new fingerprint independently before updating that file. No Vultr API token or inference key is needed in GitHub Actions.
+
+After activation, check the Actions run and confirm that `/api/health.git_sha` equals the pushed commit.
 
 ## Redeploy
 
