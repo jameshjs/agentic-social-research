@@ -178,12 +178,14 @@
     };
     for (const m of moves) {
       const e = graph.edges.get(m.edge), a = graph.nodes.get(e.from), b = graph.nodes.get(e.to);
+      // The sandbox rounds t, wait_s, travel_s and arrive_t separately, so their
+      // sum can overshoot arrive_t by 0.1 s; clamp so the path never runs backwards.
       push(a.x, a.y, m.t);
       if (e.gate && e.gate.at === 'end' && !e.transit) {
-        push(b.x, b.y, m.t + m.travel_s);
-        push(b.x, b.y, m.t + m.travel_s + m.wait_s);
+        push(b.x, b.y, Math.min(m.t + m.travel_s, m.arrive_t));
+        push(b.x, b.y, m.arrive_t);
       } else {
-        push(a.x, a.y, m.t + m.wait_s);
+        push(a.x, a.y, Math.min(m.t + m.wait_s, m.arrive_t));
         push(b.x, b.y, m.arrive_t);
       }
     }

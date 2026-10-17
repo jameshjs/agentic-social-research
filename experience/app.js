@@ -4,6 +4,11 @@ const traceAdapter = window.CounterfactualTraceAdapter;
 const experimentRunner = window.CounterfactualExperiment;
 const experimentFixtures = window.CounterfactualExperimentFixtures;
 const experimentAdapter = window.CounterfactualExperimentAdapter;
+// One mapped Bathurst–Spadina world for both prepared policies and compiled prompts.
+const worldRunner = window.CounterfactualWorldExperiment;
+const worldFixtures = window.CounterfactualWorldFixtures;
+const worldAdapter = window.CounterfactualWorldRunAdapter;
+const scenarioCompiler = window.CounterfactualScenarioCompiler;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -13,18 +18,43 @@ bikeScene.setScenario('bike');
 bikeScene.setPhase('lab');
 const bloorMainMap = new window.BloorMapView($('#bloorMapMain'));
 const bloorBikeMap = new window.BloorMapView($('#bloorMapBike'));
-fetch('../data/world/bloor_spadina_bathurst.json')
+
+// Mapped-run state. `runs` keeps the latest version per prepared scenario; `active` is what the lab shows.
+const mapped = {
+  world: null, runs: {}, specs: {}, active: null, activeKey: null, activeEvent: null, ratingsOn: false,
+  rerunStatus: {}, pending: {}, servedBy: new WeakMap(), clef: {}, unsubscribe: null, lastLabel: '',
+};
+const worldReady = fetch('../data/world/bloor_spadina_bathurst.json')
   .then((response) => { if (!response.ok) throw new Error(`Map HTTP ${response.status}`); return response.json(); })
   .then((world) => {
-    bloorMainMap.setWorld(world);
+    if (!bloorMainMap.setWorld(world)) return null;
     bloorBikeMap.setWorld(world);
     $('#bikeMapCredit').hidden = false;
     bloorMainMap.setScenario(current.id);
     bloorBikeMap.setScenario('bike');
-    $('#worldCaption').textContent = current.id === 'custom' ? current.worldCaption : 'Mapped Bathurst–Spadina context · synthetic policy trace';
-    if (phase === 'lab' || phase === 'impact') renderLab();
+    $('#worldCaption').textContent = current.id === 'custom' ? current.worldCaption : 'Mapped Bathurst–Spadina section · replays recorded travel events';
+    mapped.world = world;
+    return world;
   })
-  .catch(() => { /* Keep the existing schematic city as an offline fallback. */ });
+  .catch((error) => { console.warn('Mapped world unavailable; using the earlier schematic engines.', error); return null; });
+// The canonical engine needs the world JSON and every mapped-run module; otherwise the old fixture engines run.
+const mappedAvailable = () => Boolean(mapped.world && worldRunner && worldFixtures && worldAdapter && window.BloorSandbox);
+const mappedMode = () => mappedAvailable() && !mapped.failed;
+
+// Optional same-origin backend (api/server.js, deployed on Vultr). Absent under python http.server or the agent
+// server; then every run, compile and rerun happens in this browser.
+async function api(path, body = null, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal } : { signal: controller.signal });
+    if (!response.ok) throw new Error(`${path} HTTP ${response.status}`);
+    return await response.json();
+  } finally { clearTimeout(timer); }
+}
+const backendReady = api('/api/health', null, 1500)
+  .then((health) => { mapped.backend = health?.ok && health.host ? health : null; return mapped.backend; })
+  .catch(() => null);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current = preparedScenarios.fare;
 let phase = 'intro';
@@ -56,11 +86,15 @@ const agentsReady = (async () => {
 
 function useFareTrace(trace) {
   if (!traceAdapter.isFareTrace(trace)) return;
+  $('#ttcWorkbenchStatus').textContent = `PROTOTYPE RUN v${trace.version} · ${trace.diverged_events} CHANGED CHOICES`;
+  $('#ttcWorkbenchMeta').textContent = `SEED ${trace.seed} · ASSUMPTION-DRIVEN · NOT A FORECAST`;
+  // With the mapped world loaded, the earlier prototype only updates its own status bar; the outer charts,
+  // ledger and map stay on the canonical mapped RunResult.
+  if (mappedMode()) return;
   fareTrace = trace;
   window.CounterfactualCurrentRun = trace;
   window.dispatchEvent(new CustomEvent('counterfactual:result', { detail: trace }));
   $('#ttcWorkbenchStatus').textContent = `RUN v${trace.version} · ${trace.diverged_events} CHANGED CHOICES`;
-  $('#ttcWorkbenchMeta').textContent = `SEED ${trace.seed} · ASSUMPTION-DRIVEN · NOT A FORECAST`;
   if (current.id === 'fare' && phase !== 'intro' && phase !== 'composer') {
     current = traceAdapter.toFareScenario(trace, preparedScenarios.fare);
     renderLab();
@@ -175,6 +209,501 @@ function renderBikeExperiment(result) {
   path.append(caveat);
 }
 
+// ---------- Mapped Bathurst–Spadina run: one RunResult for the map, ledger and charts ----------
+const nice = (value) => String(value ?? '').replaceAll('_', ' ');
+const cad = (value) => (Number.isFinite(Number(value)) ? `$${Number(value).toFixed(2)}` : '$—');
+const hhmm = (seconds) => {
+  const s = Number(seconds);
+  if (!Number.isFinite(s)) return '--:--';
+  const whole = Math.max(0, Math.floor(s));
+  return `${String(Math.floor(whole / 3600) % 24).padStart(2, '0')}:${String(Math.floor((whole % 3600) / 60)).padStart(2, '0')}`;
+};
+const ASSUMPTION_LABELS = { cost_weight: 'Cost weight', unprotected_cycling_discomfort_per_km: 'Shared-lane discomfort per km', shop_staffing_response: 'Shop staffing response' };
+const assumptionLabel = (id) => ASSUMPTION_LABELS[id] || nice(id);
+const formatValue = (value) => (typeof value === 'boolean' ? (value ? 'on' : 'off') : String(value));
+const STREET_LEVERS = new Set(['bloor_cycle_track', 'bloor_car_lanes_per_direction', 'on_street_parking', 'signal_cycle_s', 'bloor_green_share']);
+const ARM_LABEL = { fare: 'WITH +$0.50 ADULT FARE', bike: 'WITH TRACK REMOVED', compiled: 'WITH COMPILED CHANGE' };
+const runKeyOf = (result) => (result.scenario_id === 'fare' || result.scenario_id === 'bike' ? result.scenario_id : 'compiled');
+// The event replay owns the timeline only while a mapped RunResult is on a visible map.
+const replayActive = () => Boolean(current.run && bloorMainMap.run && !bloorMainMap.canvas.hidden);
+
+async function executeMapped(key, spec, { overrides = {}, version = 1 } = {}) {
+  const backend = await backendReady;
+  if (backend) {
+    try {
+      const out = await api('/api/run', key === 'compiled' ? { spec, overrides, version } : { scenario: key, overrides, version }, 30000);
+      const result = out?.result;
+      if (result?.schema_version === 'experiment.v2' && result.runs?.baseline && result.runs?.intervention && result.version === version) {
+        mapped.servedBy.set(result, { ...(out.served_by || {}), remote: true });
+        return result;
+      }
+      console.info('Backend did not return the requested experiment.v2 version; running in this browser.');
+    } catch (error) { console.warn('Backend run failed; running in this browser.', error); }
+  }
+  const started = performance.now();
+  const result = await worldRunner.runWorldExperiment(spec, { world: mapped.world, seed: 42, version, overrides });
+  mapped.servedBy.set(result, { host: 'this browser', elapsed_ms: Math.round(performance.now() - started), remote: false });
+  return result;
+}
+
+async function preparedRun(key) {
+  mapped.specs[key] = worldFixtures[key];
+  if (!mapped.runs[key]) mapped.runs[key] = await executeMapped(key, worldFixtures[key]);
+  return mapped.runs[key];
+}
+
+function publishRun(result) {
+  window.CounterfactualCurrentRun = result;
+  window.dispatchEvent(new CustomEvent('counterfactual:result', { detail: result }));
+}
+
+const trackChanged = (result) => (result.scenario.intervention || []).some((change) => (change.lever || change.target) === 'bloor_cycle_track' && change.value !== 'protected');
+// A compiled change borrows the closest dashboard: street levers read the Bloor metrics, fare/service levers the TTC ones.
+const dashboardKind = (result) => ((result.scenario.intervention || []).some((change) => STREET_LEVERS.has(change.lever || change.target)) ? 'bike' : 'fare');
+const COMPILED_TITLES = {
+  fare: { mobility: 'Line 2 trips in the sample.', access: 'Trips deferred or taken elsewhere.', commerce: 'The shop ledger follows purchases.', households: 'Household fare spending.', public: 'Sample TTC receipts, ride by ride.' },
+  bike: { mobility: 'Cycling trips that use Bloor.', access: 'Cycling distance shared with cars.', commerce: 'The shop ledger follows purchases.', households: 'Recorded travel payments.', public: 'Driver minutes inside the section.' },
+};
+
+function mappedScenarioFor(result, template) {
+  const key = runKeyOf(result);
+  if (key !== 'compiled') return { ...worldAdapter.toMappedScenario(result, template), id: key, runKey: key, mapScenario: key, template, evidence: template.mappedEvidence || template.evidence };
+  let scenario = null;
+  try { scenario = worldAdapter.toMappedScenario(result, template); } catch { scenario = null; }
+  if (!scenario) {
+    // The adapter maps only the prepared dashboards; reuse the closest one and replace its policy-specific copy.
+    const kind = dashboardKind(result);
+    scenario = worldAdapter.toMappedScenario({ ...result, scenario_id: kind }, template);
+    const ticks = result.scenario.ticks;
+    for (const [name, sector] of Object.entries(scenario.sectors)) {
+      sector.title = COMPILED_TITLES[kind][name];
+      if (kind === 'bike' && name === 'public') {
+        sector.description = 'Mean in-map minutes per sample car leg, read from committed travel events. Time beyond the section is not estimable.';
+        sector.delta = `${sector.policy.at(-1) ?? '—'} / ${sector.baseline.at(-1) ?? '—'} MIN · P${ticks}`;
+      }
+      if (kind === 'fare' && name === 'households') sector.description = 'Fares recorded for sample households (payer side). Adult and Fair Pass spending are split in run.metrics.by_group.';
+    }
+    scenario.summary = `${template.change} from period ${result.scenario.policy_start}. ${result.changed_decisions.length} of ${result.runs.intervention.decisions.length} paired choices differ for the same synthetic people. Synthetic people and assumption-driven responses, not a Toronto forecast.`;
+  }
+  return { ...scenario, run: result, id: 'compiled', runKey: 'compiled', mapScenario: trackChanged(result) ? 'bike' : 'fare', template };
+}
+
+function compilerBadge(compiled) {
+  const c = compiled?.compiler || {};
+  if (c.live) {
+    const who = /vultr/i.test(String(c.provider)) ? 'VULTR' : nice(c.provider).toUpperCase();
+    return `COMPILED BY ${who}${c.model ? ` · ${c.model}` : ''}${Number.isFinite(c.latency_ms) ? ` · ${(c.latency_ms / 1000).toFixed(1)} s` : ''}`;
+  }
+  const fellBack = (c.warnings || []).some((warning) => warning.code === 'compiler_fallback');
+  return `OFFLINE RULES${fellBack ? ' · HOSTED COMPILER UNAVAILABLE' : ''} · NO MODEL CALL`;
+}
+
+function compiledTemplate(prompt, compiled) {
+  const changes = (compiled.interventions || []).map((change) => `${nice(change.lever)} → ${formatValue(change.value)}${change.unit === 'CAD' ? ' CAD' : change.unit === 'seconds' ? ' s' : ''}`);
+  const change = changes.length ? `Compiled change: ${changes.join(' + ')}` : 'The compiled change';
+  return {
+    id: 'compiled', prompt, change, mapTag: 'COMPILED / BATHURST–SPADINA', location: 'Bloor Street West, Bathurst Street–Spadina Avenue',
+    chain: [change, 'The same synthetic people choose again', 'Trips, fares and shop visits commit as events', 'Map, ledger and charts read that event log'],
+    focus: ['01 / CHANGED CHOICE', '02 / LOCAL BUSINESS'],
+    evidence: {
+      title: 'A compiled question is still an assumption.',
+      text: `${compilerBadge(compiled)}. ${compiled.interpretation || ''} The lever change runs on the same mapped Bathurst–Spadina section, synthetic people and seed as the prepared cases. Responses are assumption-driven, not a Toronto forecast. Assumptions the compiler proposed are for review only; they are not run inputs.`.replace(/\s+/g, ' '),
+      links: [['Hypothesis compiler rules', '../experiment/scenario-compiler.js'], ['Mapped world sources', '../world/README.md'], ['Product requirements', '../prd.md']],
+    },
+    sectors: Object.fromEntries(Object.entries(preparedScenarios.fare.sectors).map(([name, sector]) => [name, { icon: sector.icon, number: sector.number }])),
+  };
+}
+
+async function compilePrompt(prompt) {
+  const backend = await backendReady;
+  let compiled = null, spec = null;
+  if (backend) {
+    try { const out = await api('/api/compile', { prompt }, 25000); compiled = out?.compiled || null; spec = out?.spec || null; }
+    catch (error) { console.warn('Hosted compiler unavailable; using offline rules.', error); }
+  }
+  if (!compiled) compiled = scenarioCompiler.offlineCompile(prompt, { world: mapped.world, warnings: backend ? [{ code: 'compiler_fallback', message: 'The hosted compiler did not answer.' }] : [] });
+  if (!spec) {
+    try { spec = scenarioCompiler.toWorldSpec(compiled, worldFixtures, { world: mapped.world }); }
+    catch (error) { spec = { runnable: false, execution_path: 'speculative', reason: error.message }; }
+  }
+  return { compiled, spec };
+}
+
+// Readable names for sandbox nodes and places in ledger rows.
+function placeName(id, result = current.run) {
+  if (id === 'offmap' || id === 'outside_section') return 'a shop outside the section';
+  return result?.places?.shops?.find((shop) => shop.business_id === id)?.name || nice(id);
+}
+function nodeName(node, result = current.run) {
+  const id = String(node ?? '');
+  const station = result?.places?.stations?.find((item) => item.node === id);
+  if (station) return station.name;
+  const crossings = mapped.world?.bloor?.intersections || [];
+  const portal = /^portal_(north|south)_(\d+)$/.exec(id);
+  const leg = portal && crossings[Number(portal[2])]?.legs?.find((item) => item.endsWith(`|${portal[1]}`));
+  if (leg) return leg.split('|')[0];
+  // Bloor lane and track nodes are indexed by the mapped intersection they sit at.
+  const lane = /^(car|trk)_(eb|wb)_(\d+)$/.exec(id);
+  const at = lane && [...new Set((crossings[Number(lane[3])]?.legs || []).map((item) => item.split('|')[0]))].join(' / ');
+  if (lane) return `Bloor ${lane[2] === 'eb' ? 'eastbound' : 'westbound'} ${lane[1] === 'car' ? 'lane' : 'cycle track'}${at ? ` at ${at}` : ''}`;
+  const shop = result?.places?.shops?.find((item) => item.door_node === id);
+  if (shop) return `${shop.name} door`;
+  return nice(id);
+}
+const TRAVEL_VERB = { walk: 'Walked', bike: 'Cycled', car: 'Drove', transit: 'Rode Line 2' };
+const CHOICE_LABEL = { bike_bloor: 'bike on Bloor', bike_side_street: 'bike via a side street', shop_elsewhere: 'shop elsewhere', defer: 'defer the trip' };
+const choiceLabel = (action) => CHOICE_LABEL[action] || nice(action);
+
+function eventTextV2(event, result = current.run) {
+  switch (event.action) {
+    case 'choose_trip': return `Chose ${choiceLabel(event.chosen)} for the ${nice(event.purpose || event.trip_id)} trip · ${event.provider === 'fixture_rule' || !event.provider ? 'fixture rule' : `agent · ${event.provider}`}`;
+    case 'change_destination': return `Changed destination: ${placeName(event.from, result)} → ${placeName(event.to, result)}`;
+    case 'travel': {
+      const minutes = Number.isFinite(event.arrive_t - event.depart_t) ? ` · ${((event.arrive_t - event.depart_t) / 60).toFixed(1)} min` : '';
+      const shared = event.shared_with_cars_m > 0 ? ` · ${Math.round(event.shared_with_cars_m)} m shared with cars` : '';
+      const exits = event.exits_to ? ` · exits to ${event.exits_to}` : '';
+      return `${TRAVEL_VERB[event.mode] || nice(event.mode)} ${nodeName(event.from_node, result)} → ${nodeName(event.to_node, result)}${minutes}${shared}${exits}`;
+    }
+    case 'pay_fare': return `Paid ${cad(event.amount_cad)} TTC fare (${event.fare_product === 'fair_pass' ? 'Fair Pass' : nice(event.fare_product || 'adult')})`;
+    case 'pay_travel_cost': return `Paid ${cad(event.amount_cad)} travel cost${event.recipient ? ` · ${nice(event.recipient)}` : ''}`;
+    case 'enter_business': return `Entered ${event.name || placeName(event.business_id, result)}`;
+    case 'purchase': return `Bought ${cad(event.amount_cad)} at ${placeName(event.recipient, result)}`;
+    case 'spend_elsewhere': return `Spent ${cad(event.amount_cad)} outside the section`;
+    case 'defer_trip': return `Deferred the ${nice(event.trip_id || 'planned')} trip`;
+    case 'set_shop_hours': return `${event.name || placeName(event.business_id, result)} set next-period hours: closes ${typeof event.closes_at === 'string' ? event.closes_at : hhmm(event.closes_at)}${event.reduced ? ' (reduced)' : ''}`;
+    case 'trip_completed': return `Trip completed · ${nice(event.mode)}${Number.isFinite(event.total_minutes) ? ` · ${event.total_minutes} min door to door` : ''}`;
+    case 'policy_change': return 'The policy took effect';
+    default: return nice(event.action);
+  }
+}
+
+// changedSummary() from the adapter when present; otherwise the same rows from result.changed_decisions.
+function changedRows(result) {
+  if (typeof worldAdapter?.changedSummary === 'function') {
+    try { const rows = worldAdapter.changedSummary(result); if (Array.isArray(rows)) return rows; } catch (error) { console.warn(error); }
+  }
+  const people = new Map(result.personas.map((person) => [person.id, person]));
+  return result.changed_decisions.map((change) => {
+    const moved = change.baseline.destination !== change.intervention.destination;
+    const side = (value) => `${value.action}${moved && value.destination ? ` (${placeName(value.destination, result)})` : ''}`;
+    return {
+      key: change.key, actor: change.actor, name: people.get(change.actor)?.name || change.actor, role: people.get(change.actor)?.role || 'resident',
+      tick: change.tick, trip_id: change.trip_id, from: side(change.baseline), to: side(change.intervention),
+      baseline_event_id: change.baseline_event_id, intervention_event_id: change.intervention_event_id,
+    };
+  });
+}
+// Adapter rows may carry 'bike_bloor' or 'bike_bloor (Shop name)'; label the leading action only.
+const sideText = (value) => {
+  const text = String(typeof value === 'string' ? value : value?.action || '');
+  const match = /^(\S+) (via|to) (.+)$/.exec(text);
+  if (match) return `${choiceLabel(match[1])} ${match[2]} ${match[2] === 'to' ? placeName(match[3]) : nice(match[3])}`;
+  const [action, ...rest] = text.split(' ');
+  return [choiceLabel(action), ...rest].join(' ');
+};
+
+function renderRunLedger() {
+  const result = current.run;
+  $('#runLedger').hidden = !result;
+  if (!result) return;
+  const rows = changedRows(result);
+  const by = experimentAdapter.deciders(result);
+  const served = mapped.servedBy.get(result);
+  $('#runLedgerSeed').textContent = `ONE EVENT LOG · RUN v${result.version} · SEED ${result.seed} · SYNTHETIC`;
+  $('#runLedgerHost').textContent = !served ? '' : served.remote
+    ? `SERVED BY ${String(served.host || 'BACKEND').toUpperCase()}${served.region ? ` · ${String(served.region).toUpperCase()}` : ''}${Number.isFinite(served.elapsed_ms) ? ` · ${served.elapsed_ms} MS` : ''}${served.cached ? ' · CACHED' : ''}`
+    : `RUN IN THIS BROWSER · ${served.elapsed_ms} MS`;
+  $('#runLedgerScope').textContent = `${result.population.count} synthetic people · ${rows.length} changed choice${rows.length === 1 ? '' : 's'} from period ${result.scenario.policy_start}. Choose one to follow both worlds on the map; each row below is a committed event. Choices come from ${by.label}, not observed Toronto behaviour.`;
+  if (!rows.some((row) => row.key === mapped.activeKey)) mapped.activeKey = rows[0]?.key ?? null;
+  $('#runLedgerChoices').replaceChildren(...rows.map((row) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'experiment-choice';
+    button.setAttribute('aria-pressed', String(row.key === mapped.activeKey));
+    const label = document.createElement('strong'); label.textContent = `${row.name || row.actor} · ${nice(row.trip_id)} · P${row.tick}`;
+    const route = document.createElement('span'); route.textContent = `${sideText(row.from)} → ${sideText(row.to)}`;
+    button.append(label, route);
+    button.addEventListener('click', () => { mapped.activeKey = row.key; renderRunLedger(); followDecision(row); });
+    return button;
+  }));
+  renderRunPath(result, rows.find((row) => row.key === mapped.activeKey), by);
+  renderRerunControls(result);
+  renderClef(current.runKey);
+}
+
+function renderRunPath(result, row, by) {
+  const path = $('#runLedgerPath');
+  path.replaceChildren();
+  if (!row) {
+    const empty = document.createElement('p'); empty.className = 'experiment-path-caveat';
+    empty.textContent = 'No choice differs between the two worlds in this run, so the map, ledger and charts show the same events in both. That follows from these synthetic assumptions; it is not a measured null effect.';
+    path.append(empty); return;
+  }
+  const person = result.personas.find((item) => item.id === row.actor);
+  const provider = result.runs.intervention.decisions.find((item) => item.key === row.key)?.provider || 'fixture_rule';
+  const heading = document.createElement('div'); heading.className = 'experiment-path-heading';
+  const title = document.createElement('strong'); title.textContent = `${person?.name || row.actor} (${nice(person?.role || row.role || 'resident')}) · ${nice(row.trip_id)} trip · period ${row.tick}`;
+  const note = document.createElement('span'); note.textContent = `${provider === 'fixture_rule' ? 'FIXTURE RULE' : `AGENT · ${String(provider).toUpperCase()}`} / EACH EVENT SEEKS THE MAP`;
+  heading.append(title, note); path.append(heading);
+  const columns = document.createElement('div'); columns.className = 'experiment-path-columns';
+  for (const [arm, startId, label] of [['baseline', row.baseline_event_id, 'BASELINE'], ['intervention', row.intervention_event_id, ARM_LABEL[current.runKey] || 'WITH POLICY']]) {
+    const column = document.createElement('div'); column.className = 'experiment-path-column';
+    const armLabel = document.createElement('span'); armLabel.textContent = label; column.append(armLabel);
+    for (const event of eventDescendants(result.runs[arm].events, startId)) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'experiment-event';
+      button.dataset.event = `${arm}|${event.id}`;
+      button.setAttribute('aria-pressed', String(mapped.activeEvent === button.dataset.event));
+      const index = document.createElement('small'); index.textContent = `${String(event.id).split(':').at(-1)} · ${hhmm(event.t)}`;
+      const description = document.createElement('span'); description.textContent = eventTextV2(event, result);
+      button.title = `Show this ${label.toLowerCase()} event on the map`;
+      button.append(index, description);
+      button.addEventListener('click', () => followEvent(arm, event.id));
+      column.append(button);
+    }
+    columns.append(column);
+  }
+  path.append(columns);
+  const caveat = document.createElement('p'); caveat.className = 'experiment-path-caveat';
+  caveat.textContent = `The policy starts in period ${result.scenario.policy_start}. ${by.agent ? `Choices come from persona agents (${by.label})${by.agent < by.total ? '; the rest used the fixture rule' : ''}.` : 'Preferences, budgets, baskets and response weights are explicit synthetic assumptions.'} Every move passed the mapped world's rule checks. These are sampled choices, not observed Toronto behaviour.`;
+  path.append(caveat);
+}
+
+function revealMap() {
+  const rect = $('#simulationViewport').getBoundingClientRect();
+  if (rect.bottom < 90 || rect.top > window.innerHeight - 90) $('#simulationViewport').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'nearest' });
+}
+
+function followEvent(arm, eventId, { play = false } = {}) {
+  if (!bloorMainMap.run || !eventId) return;
+  setCityMode(arm === 'baseline' ? 'baseline' : 'policy');
+  const hit = bloorMainMap.seekToEvent(arm, eventId);
+  mapped.activeEvent = `${arm}|${eventId}`;
+  $$('#runLedgerPath [data-event]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.event === mapped.activeEvent)));
+  const name = current.run.personas.find((person) => person.id === bloorMainMap.focusId)?.name;
+  $('#runLedgerSeek').textContent = hit
+    ? `MAP AT P${hit.tick} · ${hit.clock} · ${arm === 'baseline' ? 'BASELINE' : 'WITH POLICY'}${name ? ` · FOLLOWING ${name.toUpperCase()}` : ''}`
+    : 'THIS EVENT HAS NO TIME ON THE MAP';
+  showPersonaCard(bloorMainMap.focusId);
+  if (play && !reducedMotion) bloorMainMap.play();
+  revealMap();
+}
+
+function followDecision(row) {
+  const arm = bloorMainMap.arm;
+  followEvent(arm, arm === 'baseline' ? row.baseline_event_id : row.intervention_event_id, { play: true });
+}
+
+// A small synthetic persona card on the map for a clicked person.
+function showPersonaCard(personaId) {
+  const card = $('#mapPersonaCard');
+  const result = current.run;
+  const person = personaId && result?.personas.find((item) => item.id === personaId);
+  card.hidden = !person;
+  if (!person) return;
+  const rows = changedRows(result).filter((row) => row.actor === personaId);
+  const name = document.createElement('strong'); name.textContent = person.name || person.id;
+  const home = person.home?.kind === 'mapped' ? `home on ${person.home.street || 'a mapped side street'}` : `visitor · ${person.home?.label || 'lives off the map'}`;
+  const facts = document.createElement('span');
+  facts.textContent = `${nice(person.role)} · ${home} · ${person.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare'} · synthetic persona`;
+  card.replaceChildren(name, facts);
+  if (rows.length) {
+    const link = document.createElement('button'); link.type = 'button'; link.className = 'map-persona-link';
+    link.textContent = `${rows.length} changed choice${rows.length === 1 ? '' : 's'} in the ledger ↓`;
+    link.addEventListener('click', () => $('#runLedger').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
+    card.append(link);
+  } else {
+    const same = document.createElement('small'); same.textContent = 'Same choices in both worlds this run.'; card.append(same);
+  }
+}
+
+// ---------- Versioned rerun: change one sensitivity assumption, rerun from the same seed ----------
+const sensitivityOf = (result) => (result.assumptions || []).filter((item) => item.kind === 'sensitivity');
+function levelsOf(assumption) {
+  if (typeof assumption.value === 'boolean') return [{ label: 'On', value: true }, { label: 'Off', value: false }];
+  const levels = [];
+  for (const [label, value] of [['Low', assumption.low], ['Base', assumption.value], ['High', assumption.high]]) {
+    if (value !== undefined && !levels.some((level) => level.value === value)) levels.push({ label: `${label} · ${value}`, value });
+  }
+  return levels;
+}
+
+function renderRerunControls(result) {
+  const list = sensitivityOf(result);
+  $('#runRerun').hidden = !list.length;
+  if (!list.length) return;
+  const key = current.runKey;
+  const pending = mapped.pending[key] ||= { id: list[0].id, value: undefined };
+  if (!list.some((item) => item.id === pending.id)) Object.assign(pending, { id: list[0].id, value: undefined });
+  $('#rerunAssumption').replaceChildren(...list.map((item) => new Option(assumptionLabel(item.id), item.id, false, item.id === pending.id)));
+  const assumption = list.find((item) => item.id === pending.id);
+  const now = result.assumption_values?.[assumption.id] ?? assumption.value;
+  if (pending.value === undefined) pending.value = now;
+  $('#rerunLevels').replaceChildren(...levelsOf(assumption).map((level) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = level.label;
+    button.setAttribute('aria-pressed', String(level.value === pending.value));
+    if (level.value === now) button.dataset.current = 'true';
+    button.addEventListener('click', () => { pending.value = level.value; renderRerunControls(result); });
+    return button;
+  }));
+  $('#rerunNote').textContent = `${assumption.note || ''} In v${result.version}: ${formatValue(now)}${assumption.unit && assumption.unit !== 'on/off' ? ` (${assumption.unit})` : ''}. A synthetic sensitivity, not a measured Toronto value.`;
+  const button = $('#rerunButton');
+  button.disabled = Boolean(mapped.rerunning) || pending.value === now;
+  button.textContent = `Rerun as v${result.version + 1} ↻`;
+  const overrides = Object.entries(result.assumption_overrides || {});
+  $('#rerunStatus').textContent = mapped.rerunStatus[key] || `RUN v${result.version} · ${overrides.length ? overrides.map(([id, value]) => `${assumptionLabel(id)} = ${formatValue(value)}`).join(' · ') : 'ALL ASSUMPTIONS AT BASE'} · ${result.changed_decisions.length} CHANGED CHOICES`;
+  $('#sweepButton').hidden = !mapped.backend || key === 'compiled';
+}
+
+async function rerunMapped() {
+  const previous = current.run;
+  if (!previous || mapped.rerunning) return;
+  const key = current.runKey;
+  const pending = mapped.pending[key];
+  const assumption = sensitivityOf(previous).find((item) => item.id === pending?.id);
+  if (!assumption) return;
+  const overrides = { ...(previous.assumption_overrides || {}) };
+  if (pending.value === assumption.value) delete overrides[assumption.id]; else overrides[assumption.id] = pending.value;
+  const version = previous.version + 1;
+  const token = investigationToken;
+  mapped.rerunning = true;
+  $('#rerunButton').disabled = true;
+  $('#rerunStatus').textContent = `RUNNING v${version} · ${assumptionLabel(assumption.id)} = ${formatValue(pending.value)}…`;
+  try {
+    const result = await executeMapped(key, mapped.specs[key], { overrides, version });
+    if (token !== investigationToken || current.run !== previous) return;   // the reader moved on
+    const delta = result.changed_decisions.length - previous.changed_decisions.length;
+    mapped.runs[key] = result;
+    mapped.rerunStatus[key] = `RUN v${version} · ${assumptionLabel(assumption.id)} = ${formatValue(pending.value)} · ${result.changed_decisions.length} CHANGED CHOICES (${delta >= 0 ? '+' : '−'}${Math.abs(delta)} VS v${previous.version})`;
+    pending.value = undefined;
+    current = mappedScenarioFor(result, current.template);
+    publishRun(result);
+    renderLab({ rerun: true });
+  } catch (error) {
+    console.error(error);
+    mapped.rerunStatus[key] = `RERUN FAILED · ${String(error.message || error).toUpperCase()}`;
+  } finally {
+    mapped.rerunning = false;
+    if (current.run) renderRerunControls(current.run);
+  }
+}
+
+function sweepCell(value) {
+  if (Number.isFinite(value)) return String(value);
+  if (value && typeof value === 'object') {
+    if ('intervention' in value || 'baseline' in value) return `${value.intervention ?? value.policy ?? '—'} / ${value.baseline ?? '—'}`;
+    return Object.entries(value).slice(0, 3).map(([name, item]) => `${nice(name)} ${typeof item === 'object' ? JSON.stringify(item) : item}`).join(' · ');
+  }
+  return value == null ? '—' : String(value);
+}
+
+async function sweepOnVultr() {
+  const result = current.run, key = current.runKey;
+  const assumption = result && sensitivityOf(result).find((item) => item.id === mapped.pending[key]?.id);
+  if (!assumption || !mapped.backend || key === 'compiled') return;
+  const box = $('#sweepResult');
+  box.hidden = false;
+  box.textContent = `SWEEPING ${assumptionLabel(assumption.id).toUpperCase()} ON THE HOSTED BACKEND…`;
+  const started = performance.now();
+  try {
+    const out = await api('/api/sweep', { scenario: key, assumption_id: assumption.id, values: levelsOf(assumption).map((level) => level.value) }, 60000);
+    if (current.run !== result) return;
+    const rows = Array.isArray(out?.rows) ? out.rows : [];
+    const host = out?.served_by?.host || mapped.backend.host, region = out?.served_by?.region || mapped.backend.region;
+    const table = document.createElement('table');
+    const caption = document.createElement('caption');
+    caption.textContent = `${assumptionLabel(assumption.id)} sweep · served by ${host}${region ? ` · ${region}` : ''} · ${Math.round(performance.now() - started)} ms round trip · synthetic sensitivity, not a forecast`;
+    const head = document.createElement('tr');
+    for (const label of ['Value', `P${result.scenario.ticks} headline (policy / baseline)`, 'Run', 'ms']) { const th = document.createElement('th'); th.scope = 'col'; th.textContent = label; head.append(th); }
+    const thead = document.createElement('thead'); thead.append(head);
+    const tbody = document.createElement('tbody');
+    for (const row of rows) {
+      const tr = document.createElement('tr');
+      for (const cell of [formatValue(row.value), sweepCell(row.p4), row.run_id || '—', Number.isFinite(row.elapsed_ms) ? String(row.elapsed_ms) : '—']) { const td = document.createElement('td'); td.textContent = cell; tr.append(td); }
+      tbody.append(tr);
+    }
+    table.append(caption, thead, tbody);
+    box.replaceChildren(table);
+  } catch (error) {
+    box.textContent = `SWEEP FAILED · ${String(error.message || error).toUpperCase()}`;
+  }
+}
+
+// ---------- Vultr Clef second opinion: shown only when a saved comparison exists ----------
+function clefSummary(data) {
+  if (!data || typeof data !== 'object') return null;
+  const source = { ...(data.summary || {}), ...data };
+  const overall = Number(source.agreement?.overall);
+  if (!Number.isFinite(overall)) return null;
+  const n = [source.agreement?.n, source.agreement?.choices, source.agreement?.total, source.calls].map(Number).find(Number.isFinite);
+  const median = Number(source.median_latency_ms);
+  return { model: source.model || 'clef', pct: Math.round(overall <= 1 ? overall * 100 : overall), n, median: Number.isFinite(median) ? Math.round(median) : null };
+}
+function loadClef(key) {
+  if (key === 'compiled') return Promise.resolve(null);
+  mapped.clef[key] ||= (async () => {
+    const backend = await backendReady;
+    const paths = [...(backend ? [`/api/clef/${key}`] : []), `../experiment/vultr-runs/clef-world-${key}.json`];
+    for (const path of paths) {
+      try { const summary = clefSummary(await api(path, null, 4000)); if (summary) return summary; } catch { /* not saved */ }
+    }
+    return null;
+  })();
+  return mapped.clef[key];
+}
+async function renderClef(key) {
+  const card = $('#clefCard');
+  const summary = await loadClef(key);
+  if (current.runKey !== key) return;
+  card.hidden = !summary;
+  if (!summary) return;
+  const label = document.createElement('span'); label.textContent = 'VULTR CLEF SECOND OPINION';
+  const value = document.createElement('strong'); value.textContent = `Agrees with ${summary.pct}%${Number.isFinite(summary.n) ? ` of ${summary.n} choices` : ''}`;
+  const meta = document.createElement('small'); meta.textContent = `${summary.median != null ? `median ${summary.median} ms · ` : ''}${summary.model} · not used for the run`;
+  card.replaceChildren(label, value, meta);
+}
+
+// ---------- Event replay timeline ----------
+function syncReplayButton(running) {
+  if (mapped.replayRunning === running) return;
+  mapped.replayRunning = running;
+  $('#replayToggle').textContent = running ? 'Ⅱ' : '▶';
+  $('#replayToggle').setAttribute('aria-label', running ? 'Pause event replay' : 'Play event replay');
+  $('#replayToggle').setAttribute('aria-pressed', String(running));
+}
+function renderReplayPeriods() {
+  const run = bloorMainMap.run;
+  const start = current.run?.scenario?.policy_start;
+  $('#timelinePeriods').replaceChildren(...(run?.timeline.ticks || []).map((tick) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.tick = String(tick);
+    button.textContent = tick === start ? `P${tick} · POLICY` : `P${tick}`;
+    button.setAttribute('aria-label', `Jump the replay to period ${tick}${tick === start ? ', when the policy starts' : ''}`);
+    button.addEventListener('click', () => bloorMainMap.seekTo(tick, 0));
+    return button;
+  }));
+}
+bloorMainMap.onFrame((state) => {
+  if (!replayActive()) return;
+  const label = `EVENT REPLAY · P${state.tick ?? '–'} · ${state.clock} · ${state.arm === 'baseline' ? 'BASELINE' : 'WITH POLICY'}`;
+  if (label !== mapped.lastLabel) {
+    mapped.lastLabel = label;
+    $('#timelineLabel').textContent = label;
+    $('#timeScrubber').setAttribute('aria-valuetext', label);
+    $$('#timelinePeriods button').forEach((button) => button.classList.toggle('current', Number(button.dataset.tick) === state.tick));
+  }
+  $('#timeScrubber').value = String(Math.round(state.progress * 1000));
+  syncReplayButton(state.running);
+});
+function startReplay() {
+  if (replayActive() && !reducedMotion) bloorMainMap.play();
+  syncReplayButton(bloorMainMap.running);
+}
+
 function setPhase(value) {
   phase = value;
   document.body.dataset.phase = value;
@@ -211,6 +740,8 @@ function resetToIntro() {
   $('#bikeLab').hidden = true;
   bikeScene.setMotion(false);
   $('#ttcWorkbench').hidden = true;
+  $('#runLedger').hidden = true;
+  bloorMainMap.pause();
   $('#impact').hidden = true;
   $('#personaLab').hidden = true;
   agents.chatToken++;
@@ -227,6 +758,13 @@ const steps = [
   ['Loading the people.', 'Showing example riders, cyclists, households, shops and public agencies.'],
   ['Reviewing the evidence.', 'Showing the research and the effects it cannot establish.'],
   ['Comparing both worlds.', 'Replaying illustrative city states and connecting them to example metrics.'],
+];
+// The mapped engine runs a real paired experiment, so its overlay describes that work.
+const mappedSteps = [
+  ['Framing the question.', 'Turning the policy into a sandbox lever, or marking it speculative.'],
+  ['Loading the people.', 'Placing the same synthetic residents and visitors on the mapped Bathurst–Spadina section.'],
+  ['Reviewing the evidence.', 'Separating observed Toronto inputs from synthetic assumptions.'],
+  ['Running both worlds.', 'Baseline and policy from one seed; every move passes the world’s rule checks.'],
 ];
 
 function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
@@ -366,6 +904,21 @@ function showActors() {
   $('#mapMotionNote').hidden = !actors.length || bloorMainMap.canvas.hidden;
   if (!actors.length) $('#mapActorCard').hidden = true;
   else $('#mapMotionCount').textContent = `${actors.length} of ${poll.asked || 100} agents rated · mean ${(actors.reduce((sum, a) => sum + a.rating, 0) / actors.length).toFixed(1)} / 5.`;
+  syncRatingsNote();
+}
+
+// With an event-driven run on the map, the rating dots are an opt-in overlay; the run's actors stay primary.
+function syncRatingsNote() {
+  const hasRun = Boolean(bloorMainMap.run);
+  const expanded = !hasRun || mapped.ratingsOn;
+  bloorMainMap.setRatingsOverlay(hasRun && mapped.ratingsOn);
+  $('#mapMotionNote').classList.toggle('is-collapsed', !expanded);
+  $('#mapMotionTitle').textContent = expanded
+    ? "Illustrative motion mapped from agents' 1–5 ratings, not simulated trip decisions."
+    : 'Live agent 1–5 ratings (survey-style, not trip decisions).';
+  $('#ratingsToggle').hidden = !hasRun;
+  $('#ratingsToggle').setAttribute('aria-pressed', String(Boolean(mapped.ratingsOn)));
+  if (!expanded) $('#mapActorCard').hidden = true;
 }
 
 function showPickedActor(actor) {
@@ -394,7 +947,7 @@ async function askOrchestrator(message, view) {
         if (plan.mode === 'run') {
           refused = true;
           const target = plan.policy === 'fare' ? 'fare' : 'bike';
-          update({ status: 'WORLD RUNS ARE NOT ENABLED IN THIS SITE', summary: `The orchestrator picked a live world run of the ${target === 'fare' ? 'TTC fare' : 'Bloor bike lane'} policy. This site asks all 100 agents for a 1–5 rating instead.`,
+          update({ status: 'LIVE-AGENT WORLD RUNS ARE NOT ENABLED IN THIS SITE', summary: `The orchestrator picked a live world run of the ${target === 'fare' ? 'TTC fare' : 'Bloor bike lane'} policy. ${mappedMode() ? 'The mapped paired run on this page uses fixture-rule choices; this site' : 'This site'} asks all 100 agents for a 1–5 rating instead.`,
             action: { label: `Ask all 100 agents to rate the ${target === 'fare' ? 'fare change' : 'Bloor change'} 1–5 ↗`, run: () => runScenario(target) } });
           return;
         }
@@ -427,53 +980,163 @@ async function runScenario(scenario, promptOverride = null) {
   if (promptOverride === null) agents.focusPoll = false;
   await agentsReady;
   if (token !== investigationToken) return;
-  if (scenario === 'fare') {
-    if (!fareTrace) fareTrace = window.CFSim.buildTrace({ seed: 42, version: 1 });
-    current = traceAdapter.toFareScenario(fareTrace, preparedScenarios.fare);
-    useFareTrace(fareTrace);
-    ensureFareInspector();
-  } else if (scenario === 'bike') {
-    if (!bikeExperiment) bikeExperiment = await experimentRunner.runExperiment(experimentFixtures.bike);
+  await Promise.all([worldReady, backendReady]);
+  if (token !== investigationToken) return;
+  const useMapped = mappedMode();
+  if (!useMapped) {
+    current = await legacyScenario(scenario, promptOverride);
     if (token !== investigationToken) return;
-    window.CounterfactualCurrentExperiment = bikeExperiment;
-    current = experimentAdapter.toBikeScenario(bikeExperiment, preparedScenarios.bike);
-  } else current = exploratoryScenario(promptOverride || '');
+  }
   if (scenario !== 'custom' && promptOverride === null) startPolicyPoll(scenario);   // composer questions go through askOrchestrator
-  $('#investigationNote').textContent = !agents.online ? 'Prepared demo replay · no live model call'
-    : promptOverride !== null ? 'Asking the persona agents through the orchestrator' : 'Prepared replay (synthetic) · asking all 100 persona agents for a 1–5 rating';
-  document.body.dataset.scenario = current.id;
-  scene.setScenario(current.id);
+  const agentNote = !agents.online ? 'no live model call'
+    : promptOverride !== null ? 'asking the persona agents through the orchestrator' : 'asking all 100 persona agents for a 1–5 rating';
+  $('#investigationNote').textContent = !useMapped
+    ? (!agents.online ? 'Prepared demo replay · no live model call'
+      : promptOverride !== null ? 'Asking the persona agents through the orchestrator' : 'Prepared replay (synthetic) · asking all 100 persona agents for a 1–5 rating')
+    : scenario === 'custom'
+      ? `Compiling the hypothesis ${mapped.backend ? `on ${mapped.backend.host}` : 'with offline rules in this browser'} · ${agentNote}`
+      : `Mapped paired run ${mapped.backend ? `on ${mapped.backend.host}` : 'in this browser'} · ${agentNote}`;
+  document.body.dataset.scenario = useMapped ? scenario : current.id;
+  scene.setScenario(useMapped ? scenario : current.id);
   const overlay = $('#investigation');
   overlay.hidden = false;
   setPhase('investigating');
-  for (let i = 0; i < steps.length; i++) {
+  const copy = useMapped ? mappedSteps : steps;
+  let work = null;
+  for (let i = 0; i < copy.length; i++) {
     if (token !== investigationToken) return;
     $('#investigationCount').textContent = `${String(i + 1).padStart(2, '0')} / 04`;
-    $('#investigationTitle').textContent = steps[i][0];
-    $('#investigationDescription').textContent = steps[i][1];
+    $('#investigationTitle').textContent = copy[i][0];
+    $('#investigationDescription').textContent = copy[i][1];
     $('#investigationProgress').style.width = `${(i + 1) * 25}%`;
     $$('#investigationSteps li').forEach((li, n) => li.classList.toggle('complete', n <= i));
     await wait(reducedMotion ? 100 : 670);
+    // Start the run after the overlay has painted; the in-browser paired run blocks the main thread briefly.
+    if (useMapped && i === 0) { work = mappedWork(scenario, promptOverride); work.catch(() => {}); }
   }
   if (token !== investigationToken) return;
+  if (work) {
+    try { current = await work; }
+    catch (error) {
+      console.error('Mapped run failed; using the earlier engine for this scenario.', error);
+      mapped.failed = true;
+      current = await legacyScenario(scenario, promptOverride);
+    }
+    if (token !== investigationToken) return;
+    if (current.run) publishRun(current.run);
+    if (current.id === 'fare') ensureFareInspector();
+    document.body.dataset.scenario = current.id;
+  }
   overlay.hidden = true;
   renderLab();
   $('#lab').hidden = false;
   $('#impact').hidden = false;
   $('#personaLab').hidden = false;
   setPhase('lab');
-  requestAnimationFrame(() => $(agents.focusPoll ? '#agentPoll' : '#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
+  requestAnimationFrame(() => {
+    $(agents.focusPoll ? '#agentPoll' : '#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+    startReplay();
+  });
 }
 
-function renderLab() {
+// The earlier engines: the TTC demo-ui trace and the experiment.v1 Bloor fixture. Used only without the mapped world.
+async function legacyScenario(scenario, promptOverride) {
+  if (scenario === 'fare') {
+    if (!fareTrace) fareTrace = window.CFSim.buildTrace({ seed: 42, version: 1 });
+    current = traceAdapter.toFareScenario(fareTrace, preparedScenarios.fare);
+    useFareTrace(fareTrace);
+    ensureFareInspector();
+    return current;
+  }
+  if (scenario === 'bike') {
+    if (!bikeExperiment) bikeExperiment = await experimentRunner.runExperiment(experimentFixtures.bike);
+    window.CounterfactualCurrentExperiment = bikeExperiment;
+    return experimentAdapter.toBikeScenario(bikeExperiment, preparedScenarios.bike);
+  }
+  return exploratoryScenario(promptOverride || '');
+}
+
+// Prepared selectors run the canonical mapped RunResult; any other prompt is compiled, then run or kept speculative.
+async function mappedWork(scenario, prompt) {
+  if (scenario === 'fare' || scenario === 'bike') return mappedScenarioFor(await preparedRun(scenario), preparedScenarios[scenario]);
+  const text = prompt || '';
+  if (!scenarioCompiler) return exploratoryScenario(text);
+  const { compiled, spec } = await compilePrompt(text);
+  const badge = compilerBadge(compiled);
+  let reason = spec?.reason || compiled?.unsupported_reason || null;
+  if (scenarioCompiler.isRunnableSpec(spec)) {
+    try {
+      const result = await executeMapped('compiled', spec);
+      mapped.specs.compiled = spec;
+      mapped.runs.compiled = result;
+      delete mapped.rerunStatus.compiled;
+      delete mapped.pending.compiled;
+      return { ...mappedScenarioFor(result, compiledTemplate(text, compiled)), compilerBadge: badge };
+    } catch (error) {
+      console.warn('Compiled spec did not run on the mapped world.', error);
+      reason = `The compiled change could not run on the mapped world (${error.message}).`;
+    }
+  }
+  reason ||= 'No mapped Bathurst–Spadina sandbox lever directly represents this hypothesis.';
+  const speculative = exploratoryScenario(text);
+  speculative.compilerBadge = badge;
+  speculative.summary = `${reason} The compiler kept this question on the speculative path, so no agent decisions or policy effects were computed. Every outcome is not estimable.`;
+  speculative.narrative = 'The hypothesis compiler found no mapped sandbox lever for this question, so nothing was simulated on the Bathurst–Spadina world. A defensible result needs a modelled mechanism, evidence and its own run.';
+  for (const sector of Object.values(speculative.sectors)) sector.evidence = `Compiler (${badge.toLowerCase()}): ${reason}`;
+  speculative.evidence = { ...speculative.evidence, text: `${speculative.evidence.text} Compiler result (${badge.toLowerCase()}): ${reason}` };
+  return speculative;
+}
+
+// Fallback copy is captured from the markup, so the earlier-engine mode reads exactly as before.
+const fallbackCopy = new Map();
+function setCopy(selector, mappedText, useMapped) {
+  const element = $(selector);
+  if (!element) return;
+  if (!fallbackCopy.has(selector)) fallbackCopy.set(selector, element.textContent);
+  element.textContent = useMapped ? mappedText : fallbackCopy.get(selector);
+}
+
+// Put the current RunResult on the one shared map. A fresh scenario starts at the period the policy begins.
+function attachRun(rerun) {
+  const result = current.run;
+  if (bloorMainMap.run?.result !== result) {
+    bloorMainMap.setRun(result, { keepProgress: rerun });
+    if (!rerun) bloorMainMap.seekTo(result.scenario.policy_start, 0);
+  }
+  bloorMainMap.setScenario(current.mapScenario || 'fare');
+}
+
+function mappedRailNote(result, by) {
+  const changed = result.changed_decisions.length;
+  const base = `${result.population.count} ${by.who} · seed ${result.seed} · v${result.version} · ${changed} changed choice${changed === 1 ? '' : 's'}. The map, charts and decision ledger read one event log.`;
+  if (current.id === 'fare') return `${base} The TTC inspector further down is the earlier rule-based prototype district with its own trace.`;
+  if (current.id === 'bike') return `${base} The street section and branches below the ledger are schematic illustrations, not run output.`;
+  return `${base} Your question was compiled to a sandbox lever (${(current.compilerBadge || 'offline rules').toLowerCase()}); responses stay assumption-driven.`;
+}
+
+function renderLab(options = {}) {
+  const rerun = Boolean(options.rerun);
+  const result = current.run || null;
   bloorMainMap.canvas.hidden = current.id === 'custom' || !bloorMainMap.world;
   $('#simulationViewport').classList.toggle('has-mapped-world', !bloorMainMap.canvas.hidden);
   $('#mapAttribution').hidden = bloorMainMap.canvas.hidden;
-  bloorMainMap.setScenario(current.id);
+  if (result) attachRun(rerun);
+  else { if (bloorMainMap.run) bloorMainMap.setRun(null); bloorMainMap.setScenario(current.id); }
+  const replay = replayActive();
   bloorBikeMap.setScenario('bike');
-  showPoll(agents.polls[current.id] || (agents.chatPoll?.view === current.id ? agents.chatPoll : null));
+  const chatPoll = agents.chatPoll && (agents.chatPoll.view === current.id || (current.id === 'compiled' && agents.chatPoll.view === 'custom')) ? agents.chatPoll : null;
+  showPoll(agents.polls[current.id] || chatPoll);
   showActors();
   $('#bikeLab').hidden = current.id !== 'bike';
+  // Mapped mode keeps the bike lab's schematic street comparison and optional branches; the shared
+  // ledger and the main map replace its experiment.v1 ledger and its second map.
+  $('#bikeExperimentLedger').hidden = Boolean(result);
+  $('#bikeWorldPanel').hidden = Boolean(result);
+  setCopy('#bikeLabDeck', 'A protected cycle track connects a person to more than a route. The live map above replays the recorded run and the shared ledger lists every changed choice. This section compares the street layout schematically and offers branches that are not in the run.', Boolean(result));
+  setCopy('#bikeWorldHead', 'Street section', Boolean(result));
+  setCopy('#bikeWorldTag', 'SCHEMATIC · NOT RUN OUTPUT', Boolean(result));
+  setCopy('#bikeTraceDeck', 'These selectable branches show additional mechanisms that are not choices in the seeded run. The recorded decisions and their event paths are in the shared ledger under the city.', Boolean(result));
+  setCopy('#bikePipelineNote', 'The recorded run, its decision ledger and the five charts sit above. Its choices and shop responses are synthetic assumptions, not a Bloor removal forecast.', Boolean(result));
   if (current.id === 'bike') {
     bikeScene.resize();
     bikeScene.setPhase('lab');
@@ -483,15 +1146,23 @@ function renderLab() {
   $('#bikeLabButton').hidden = current.id !== 'bike';
   $('#ttcWorkbench').hidden = current.id !== 'fare';
   $('#ttcInspectorButton').hidden = current.id !== 'fare';
+  setCopy('#ttcWorkbenchKicker', '01 / EARLIER PROTOTYPE · RULE-BASED DISTRICT', Boolean(result));
+  setCopy('#ttcWorkbenchDeck', 'This is the earlier rule-based TTC prototype in its own synthetic district, kept for its persona inspector, evidence and rerun controls. Its reruns update only the status bar below; the mapped Bloor run above drives the city, the decision ledger and every chart.', Boolean(result));
+  setCopy('#ttcInspectorTitle', 'Open the earlier TTC prototype', Boolean(result));
+  setCopy('#ttcInspectorHint', 'Rule-based district with its own trace', Boolean(result));
   $('#scenarioBreadcrumb').textContent = current.breadcrumb;
-  const run = current.experiment || current.trace;
-  const by = current.experiment && experimentAdapter.deciders(current.experiment);
-  $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : 'PREPARED REPLAY (SYNTHETIC)';
-  $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT' : `SYNTHETIC v${run.version}`;
+  const run = result || current.experiment || current.trace;
+  const by = (result || current.experiment) && experimentAdapter.deciders(result || current.experiment);
+  const served = result && mapped.servedBy.get(result);
+  $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : result ? 'MAPPED PAIRED RUN (SYNTHETIC)' : 'PREPARED REPLAY (SYNTHETIC)';
+  $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT'
+    : result ? `SEED ${result.seed} · v${result.version}${served?.remote ? ` · ${/vultr/i.test(String(served.host)) ? 'VULTR' : 'HOSTED'}` : ''}` : `SYNTHETIC v${run.version}`;
   $('#studyTitle').textContent = current.title;
   $('#studySummary').textContent = current.summary;
+  $('#compilerBadge').hidden = !current.compilerBadge;
+  $('#compilerBadge').textContent = current.compilerBadge || '';
   $('#viewportArea').textContent = current.viewport;
-  $('#worldCaption').textContent = !bloorMainMap.canvas.hidden ? 'Mapped Bathurst–Spadina context · synthetic policy trace' : current.worldCaption;
+  $('#worldCaption').textContent = result && !bloorMainMap.canvas.hidden ? current.worldCaption : !bloorMainMap.canvas.hidden ? 'Mapped Bathurst–Spadina context · synthetic policy trace' : current.worldCaption;
   $('#focusLabelA').textContent = current.focus[0];
   $('#focusLabelB').textContent = current.focus[1];
   $('#headlineEyebrow').textContent = current.headline.label;
@@ -500,25 +1171,35 @@ function renderLab() {
   $('#insightNarrative').textContent = current.narrative;
   $('#sourceRibbon').textContent = current.sourceRibbon;
   $('#impactScenarioTag').textContent = current.mapTag;
-  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : current.trace ? `SCENARIO OUTPUTS / SHARED TRACE v${run.version}` : `SCENARIO OUTPUTS / PAIRED TRACE v${run.version}`;
+  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : result ? `SCENARIO OUTPUTS / MAPPED RUN v${run.version}` : current.trace ? `SCENARIO OUTPUTS / SHARED TRACE v${run.version}` : `SCENARIO OUTPUTS / PAIRED TRACE v${run.version}`;
   const custom = current.id === 'custom';
   $('#chainLabel').textContent = custom ? 'WHAT A CONNECTED ENGINE WOULD DO' : 'WATCH THE CHAIN';
   $('#impactButtonHint').textContent = custom ? 'Inspect missing evidence' : 'See the connected effects';
-  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : current.trace ? 'The map shows observed Bathurst–Spadina context; the fare run still uses a separate synthetic district. Open its inspector for people, events and reruns.' : current.id === 'fare' ? `The map shows observed Bathurst–Spadina context; ${current.experiment.population.count} ${by.who} use a separate paired run. The charts share that run; the TTC inspector below is the earlier rule-based prototype with its own trace.` : `The map shows observed Bathurst–Spadina context; ${current.experiment.population.count} ${by.who} use a separate paired trace. The charts and decision ledger share that trace, not the map yet.`;
+  $('#railNoteText').textContent = custom ? (current.compilerBadge ? 'The compiler found no mapped lever for this question, so no agent decisions or policy effects were computed. Inspect a sector to see what is missing.' : 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.') : result ? mappedRailNote(result, by) : current.trace ? 'The map shows observed Bathurst–Spadina context; the fare run still uses a separate synthetic district. Open its inspector for people, events and reruns.' : current.id === 'fare' ? `The map shows observed Bathurst–Spadina context; ${current.experiment.population.count} ${by.who} use a separate paired run. The charts share that run; the TTC inspector below is the earlier rule-based prototype with its own trace.` : `The map shows observed Bathurst–Spadina context; ${current.experiment.population.count} ${by.who} use a separate paired trace. The charts and decision ledger share that trace, not the map yet.`;
   $('#impactHeadingLine').textContent = custom ? 'One question.' : 'One decision.';
   $('#impactHeadingEm').textContent = custom ? 'Open outcomes.' : 'Many futures.';
-  $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : current.trace ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : current.id === 'fare' ? 'Each fare chart reduces the same committed events of one paired run.' : 'Each Bloor chart reduces the same committed events shown in the decision ledger.';
-  $('#boardCaption').textContent = custom ? 'NO RUN RESULT ATTACHED' : `PREPARED REPLAY (SYNTHETIC) v${run.version} · NOT A FORECAST`;
+  $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : result ? 'Each chart reduces the same committed events the map replays and the decision ledger lists.' : current.trace ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : current.id === 'fare' ? 'Each fare chart reduces the same committed events of one paired run.' : 'Each Bloor chart reduces the same committed events shown in the decision ledger.';
+  $('#boardCaption').textContent = custom ? 'NO RUN RESULT ATTACHED' : result ? `MAPPED PAIRED RUN v${run.version} · SYNTHETIC · NOT A FORECAST` : `PREPARED REPLAY (SYNTHETIC) v${run.version} · NOT A FORECAST`;
   $('#boardAction').textContent = custom ? '✳ INSPECT AN OPEN QUESTION' : '✳ TRACE A CONNECTION';
   $('#overviewTitle').textContent = custom ? 'What remains to measure.' : 'Every signal in view.';
-  $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : current.trace ? 'Five linked views of one seeded run. Change an assumption in the TTC inspector and every chart updates.' : `Five event-derived views of one paired ${current.id === 'fare' ? 'TTC fare' : 'Bloor'} sample. Choose a chart to inspect its assumption boundary.`;
+  $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : result ? 'Five event-derived views of one paired run on the mapped section. Change an assumption in the decision ledger and the map, ledger and every chart update together.' : current.trace ? 'Five linked views of one seeded run. Change an assumption in the TTC inspector and every chart updates.' : `Five event-derived views of one paired ${current.id === 'fare' ? 'TTC fare' : 'Bloor'} sample. Choose a chart to inspect its assumption boundary.`;
   $('#viewToggle').hidden = custom;
   $('#motionButton').hidden = !bloorMainMap.canvas.hidden;
-  $('.timeline-bar').hidden = !bloorMainMap.canvas.hidden;
+  // With a mapped run the timeline is the event replay scrubber; otherwise it scrubs the schematic city (old behaviour).
+  $('.timeline-bar').hidden = !bloorMainMap.canvas.hidden && !replay;
+  $('.timeline-bar').classList.toggle('is-replay', replay);
+  $('#timelineKicker').textContent = replay ? 'ONE EVENT LOG · BOTH WORLDS' : 'ILLUSTRATIVE CITY REPLAY';
+  $('#replayToggle').hidden = !replay;
+  $('#timelinePeriods').hidden = !replay;
+  $('#timelineFrames').hidden = replay;
+  $('#timeScrubber').max = replay ? '1000' : '100';
+  $('#timeScrubber').setAttribute('aria-label', replay ? 'Event replay position. Scrub through the recorded travel events of both worlds.' : 'Scrub schematic city animation; recorded decisions appear in the experiment ledger below');
+  if (!replay) $('#timeScrubber').removeAttribute('aria-valuetext');
   $('#viewportLegend').hidden = custom;
   $('#cityStateNote').hidden = !custom;
-  $('#focusMarkerA').hidden = custom;
-  $('#focusMarkerB').hidden = custom;
+  // The schematic hotspots would point at arbitrary pixels on the mapped street.
+  $('#focusMarkerA').hidden = custom || replay;
+  $('#focusMarkerB').hidden = custom || replay;
   $('#causalChain').replaceChildren(...current.chain.map(item => {
     const li = document.createElement('li'); li.textContent = item; return li;
   }));
@@ -538,17 +1219,31 @@ function renderLab() {
     households: '#sectorDeltaHouseholds', public: '#sectorDeltaPublic',
   };
   for (const [sector, selector] of Object.entries(deltas)) $(selector).textContent = current.sectors[sector].delta;
-  activeSector = 'mobility';
+  if (!rerun) activeSector = 'mobility';
   renderSector();
   renderOverview();
   scene.setSector(null);
-  setCityMode('policy');
-  if (current.id === 'bike') setBikeRole('cyclist');
+  if (!rerun) setCityMode('policy');
+  if (current.id === 'bike' && !rerun) setBikeRole('cyclist');
   const moving = scene.setMotion(true);
   $('#motionButton').textContent = moving ? 'Ⅱ' : '▶';
   $('#motionButton').setAttribute('aria-label', moving ? 'Pause city animation' : 'Play city animation');
-  $('#timeScrubber').value = 70;
-  updateTimeline();
+  if (replay) {
+    renderReplayPeriods();
+    mapped.lastLabel = '';
+    mapped.replayRunning = null;
+    bloorMainMap.requestDraw();
+  } else {
+    $('#timeScrubber').value = 70;
+    updateTimeline();
+  }
+  if (!rerun) {
+    mapped.activeEvent = null;
+    $('#runLedgerSeek').textContent = '';
+    $('#mapPersonaCard').hidden = true;
+    $('#sweepResult').hidden = true;
+  }
+  renderRunLedger();
   $('#focusMarkerA').style.top = current.id === 'bike' ? '45%' : '39%';
   $('#focusMarkerA').style.left = current.id === 'bike' ? '43%' : '52%';
   $('#focusMarkerB').style.top = current.id === 'bike' ? '62%' : '63%';
@@ -569,7 +1264,9 @@ function renderChart(data) {
     ? 'No modelled series or numeric effect is attached to this question.'
     : current.trace
       ? `Seeded model values, weeks 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed change compares the average after the policy starts: ${data.delta}. Not a Toronto forecast.`
-      : `Paired event totals, periods 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed value compares period 4: ${data.delta}. Not a Toronto forecast.`;
+      : current.run
+        ? `Paired event totals from the shared event log, modelled weekdays 1–${base.length}. Baseline: ${base.map((v) => v ?? '—').join(', ')}. Proposal: ${policy.map((v) => v ?? '—').join(', ')}. Unit: ${data.unit}. Displayed value compares period ${base.length}: ${data.delta}. Synthetic run v${current.run.version}, not a Toronto forecast.`
+        : `Paired event totals, periods 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed value compares period 4: ${data.delta}. Not a Toronto forecast.`;
   chart.setAttribute('aria-label', `${data.chartTitle}. ${summary}`);
   $('#chartSummary').textContent = summary;
   const ns = 'http://www.w3.org/2000/svg';
@@ -778,7 +1475,11 @@ $('#hypothesisForm').addEventListener('submit', event => {
   if (!query) { $('#hypothesisInput').focus(); return; }
   const normalized = query.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').replace(/[?.!]+$/, '');
   const match = Object.entries(preparedScenarios).find(([, prepared]) => [prepared.prompt, ...(prepared.aliases || [])].some(phrase => phrase.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').replace(/[?.!]+$/, '') === normalized));
-  const chosen = match ? match[0] : 'custom';
+  // The compiler's prepared-prompt list also routes to the prepared mapped runs.
+  const compiledMatch = !match && scenarioCompiler?.PREPARED_PROMPTS
+    ? Object.entries(scenarioCompiler.PREPARED_PROMPTS).find(([id, prompts]) => preparedScenarios[id] && prompts.some((phrase) => scenarioCompiler.normalizeText(phrase) === scenarioCompiler.normalizeText(query)))
+    : null;
+  const chosen = match ? match[0] : compiledMatch ? compiledMatch[0] : 'custom';
   runScenario(chosen, query);
   askOrchestrator(query, chosen);
 });
@@ -809,9 +1510,14 @@ $$('.sector-node').forEach(node => {
 $('#baselineView').addEventListener('click', () => setCityMode('baseline'));
 $('#policyView').addEventListener('click', () => setCityMode('policy'));
 $('#motionButton').addEventListener('click', () => { const running = scene.toggleMotion(); $('#motionButton').textContent = running ? 'Ⅱ' : '▶'; $('#motionButton').setAttribute('aria-label', running ? 'Pause city animation' : 'Play city animation'); });
-$('#timeScrubber').addEventListener('input', () => updateTimeline(true));
+$('#timeScrubber').addEventListener('input', () => {
+  if (!replayActive()) { updateTimeline(true); return; }
+  bloorMainMap.pause();
+  bloorMainMap.setProgress(Number($('#timeScrubber').value) / Number($('#timeScrubber').max || 1000));
+});
+$('#replayToggle').addEventListener('click', () => syncReplayButton(bloorMainMap.toggle()));
 setInterval(() => {
-  if ($('#lab').hidden || !scene.running) return;
+  if ($('#lab').hidden || !scene.running || replayActive()) return;
   const value = Math.floor(scene.time % 100);
   $('#timeScrubber').value = value;
   updateTimelineLabel(value);
@@ -821,6 +1527,22 @@ $('#focusMarkerA').addEventListener('click', () => { activeSector = 'mobility'; 
 $('#focusMarkerB').addEventListener('click', () => { activeSector = 'commerce'; renderSector(); $('#impactMapButton').click(); });
 window.addEventListener('scroll', updateReveal, { passive: true });
 window.addEventListener('resize', updateReveal, { passive: true });
+// Clicking a person on the mapped city selects their first changed decision and shows a synthetic persona card.
+$('#bloorMapMain').addEventListener('bloormap:select', (event) => {
+  if (!current.run) return;
+  const personaId = event.detail?.personaId || null;
+  showPersonaCard(personaId);
+  const row = personaId && changedRows(current.run).find((item) => item.actor === personaId);
+  if (row && row.key !== mapped.activeKey) { mapped.activeKey = row.key; renderRunLedger(); }
+});
+$('#rerunAssumption').addEventListener('change', () => {
+  if (!current.run) return;
+  mapped.pending[current.runKey] = { id: $('#rerunAssumption').value, value: undefined };
+  renderRerunControls(current.run);
+});
+$('#rerunButton').addEventListener('click', rerunMapped);
+$('#sweepButton').addEventListener('click', sweepOnVultr);
+$('#ratingsToggle').addEventListener('click', () => { mapped.ratingsOn = !mapped.ratingsOn; syncRatingsNote(); });
 window.addEventListener('message', event => {
   const inspector = $('#ttcInspector');
   if (event.origin !== window.location.origin || event.source !== inspector.contentWindow || event.data?.type !== 'counterfactual:result') return;
@@ -831,4 +1553,4 @@ const linkedDemo = new URLSearchParams(window.location.search).get('demo');
 if (linkedDemo && preparedScenarios[linkedDemo]) runScenario(linkedDemo);
 
 // Preview helpers for in-app QA; no production data is exposed.
-window.counterfactualPreview = { runScenario, scene, goToComposer, openEvidence };
+window.counterfactualPreview = { runScenario, scene, goToComposer, openEvidence, map: bloorMainMap, rerun: rerunMapped, current: () => current };

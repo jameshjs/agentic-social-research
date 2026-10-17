@@ -1,0 +1,5927 @@
+{
+ "schema": "clef-second-opinion.v1",
+ "model": "clef",
+ "endpoint": "https://api.vultrinference.com/v1/systemone",
+ "run_at": "2026-10-17T16:32:57.309Z",
+ "scenario": "fare",
+ "spec_id": "bloor-section-fare-050",
+ "question": "What if the adult TTC fare rose by 50 cents, with Fair Pass unchanged?",
+ "world_id": "bloor-spadina-bathurst",
+ "seed": 42,
+ "calls": 236,
+ "call_breakdown": {
+  "fixture_trajectory_states": 196,
+  "clef_run_new_states": 40,
+  "states_used": 236,
+  "reused_from_earlier_scenario": 0,
+  "note": "One call per unique decision state; identical states across arms and scenarios share a call. Latency and tokens below cover only calls made for this scenario."
+ },
+ "errors": 0,
+ "median_latency_ms": 216,
+ "p95_latency_ms": 317,
+ "input_tokens": 183678,
+ "http_retries": 0,
+ "wall_ms": 128578,
+ "agreement": {
+  "unit": "arm-decisions on the fixture-rule trajectory (tick-1 states count once per arm)",
+  "overall": {
+   "n": 224,
+   "agree": 204,
+   "rate": 0.911
+  },
+  "by_arm": {
+   "baseline": {
+    "n": 112,
+    "agree": 103,
+    "rate": 0.92
+   },
+   "intervention": {
+    "n": 112,
+    "agree": 101,
+    "rate": 0.902
+   }
+  },
+  "by_role": {
+   "bike_courier": {
+    "n": 8,
+    "agree": 8,
+    "rate": 1
+   },
+   "adult_near_fair_pass_cutoff": {
+    "n": 32,
+    "agree": 24,
+    "rate": 0.75
+   },
+   "fair_pass_commuter": {
+    "n": 32,
+    "agree": 32,
+    "rate": 1
+   },
+   "less_confident_cyclist": {
+    "n": 24,
+    "agree": 24,
+    "rate": 1
+   },
+   "adult_car_owner": {
+    "n": 16,
+    "agree": 8,
+    "rate": 0.5
+   },
+   "driver": {
+    "n": 8,
+    "agree": 7,
+    "rate": 0.875
+   },
+   "adult_transit_commuter": {
+    "n": 16,
+    "agree": 16,
+    "rate": 1
+   },
+   "confident_cyclist": {
+    "n": 16,
+    "agree": 16,
+    "rate": 1
+   },
+   "pedestrian": {
+    "n": 16,
+    "agree": 16,
+    "rate": 1
+   },
+   "visitor_fair_pass_shopper": {
+    "n": 8,
+    "agree": 8,
+    "rate": 1
+   },
+   "visitor_confident_cyclist": {
+    "n": 8,
+    "agree": 8,
+    "rate": 1
+   },
+   "visitor_transit_shopper": {
+    "n": 8,
+    "agree": 8,
+    "rate": 1
+   },
+   "visitor_driver": {
+    "n": 8,
+    "agree": 8,
+    "rate": 1
+   },
+   "visitor_adult_near_cutoff": {
+    "n": 8,
+    "agree": 5,
+    "rate": 0.625
+   },
+   "visitor_less_confident_cyclist": {
+    "n": 8,
+    "agree": 8,
+    "rate": 1
+   },
+   "visitor_student": {
+    "n": 8,
+    "agree": 8,
+    "rate": 1
+   }
+  },
+  "unanswered": 0
+ },
+ "paired_checks": {
+  "fair_pass_unchanged_by_fare": {
+   "applicable": true,
+   "rule": "Fair Pass riders whose legal options (cost, minutes) are identical in both arms keep the same Clef choice when only the adult fare rises.",
+   "pass": true,
+   "compared": 9,
+   "choice_changes": 0,
+   "max_abs_p_transit_delta": 0.0055,
+   "rows": [
+    {
+     "key": "2:nadia:commute",
+     "persona": "nadia",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.9881,
+     "p_transit_intervention": 0.988,
+     "delta": -0.0001
+    },
+    {
+     "key": "2:yusuf:commute",
+     "persona": "yusuf",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.9803,
+     "p_transit_intervention": 0.9797,
+     "delta": -0.0006
+    },
+    {
+     "key": "2:lena:errand",
+     "persona": "lena",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.8941,
+     "p_transit_intervention": 0.8893,
+     "delta": -0.0048
+    },
+    {
+     "key": "3:nadia:commute",
+     "persona": "nadia",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.9882,
+     "p_transit_intervention": 0.9879,
+     "delta": -0.0003
+    },
+    {
+     "key": "3:yusuf:commute",
+     "persona": "yusuf",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.9813,
+     "p_transit_intervention": 0.9811,
+     "delta": -0.0002
+    },
+    {
+     "key": "3:lena:errand",
+     "persona": "lena",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.8768,
+     "p_transit_intervention": 0.8722,
+     "delta": -0.0046
+    },
+    {
+     "key": "4:nadia:commute",
+     "persona": "nadia",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.9874,
+     "p_transit_intervention": 0.9873,
+     "delta": -0.0001
+    },
+    {
+     "key": "4:yusuf:commute",
+     "persona": "yusuf",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.982,
+     "p_transit_intervention": 0.9822,
+     "delta": 0.0002
+    },
+    {
+     "key": "4:lena:errand",
+     "persona": "lena",
+     "same_options": true,
+     "baseline": "transit",
+     "intervention": "transit",
+     "p_transit_baseline": 0.889,
+     "p_transit_intervention": 0.8835,
+     "delta": -0.0055
+    }
+   ],
+   "context_adult_riders": {
+    "pairs": 33,
+    "mean_p_transit_delta": -0.0031,
+    "switched_away_from_transit": 0,
+    "note": "Context only: adult riders do face the higher fare; a fall in P(transit) is directionally plausible, not a measured elasticity."
+   }
+  },
+  "safety_sensitive_not_more_bike_bloor_after_removal": {
+   "applicable": false,
+   "reason": "This scenario does not change the Bloor cycle track."
+  },
+  "note": "Engineering face-validity checks on Clef’s choices for the same people in both arms; not empirical transport validation."
+ },
+ "decisions": [
+  {
+   "key": "1:theo:commute",
+   "state": "35d10935a5d9",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "theo",
+   "role": "bike_courier",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8512,
+    "bike_side_street": 0.131,
+    "defer": 0.0177
+   },
+   "p_fixture_choice": 0.8512,
+   "latency_ms": 482,
+   "input_tokens": 777
+  },
+  {
+   "key": "1:hawa:commute",
+   "state": "f5723597149b",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "bike_bloor",
+   "agree": false,
+   "p": {
+    "transit": 0.3149,
+    "bike_bloor": 0.5792,
+    "bike_side_street": 0.0778,
+    "defer": 0.0282
+   },
+   "p_fixture_choice": 0.3149,
+   "latency_ms": 273,
+   "input_tokens": 931
+  },
+  {
+   "key": "1:maria:commute",
+   "state": "ac91413f075b",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.5389,
+    "bike_bloor": 0.4052,
+    "defer": 0.0559
+   },
+   "p_fixture_choice": 0.5389,
+   "latency_ms": 217,
+   "input_tokens": 788
+  },
+  {
+   "key": "1:nadia:commute",
+   "state": "cb76d77ed486",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9913,
+    "defer": 0.0087
+   },
+   "p_fixture_choice": 0.9913,
+   "latency_ms": 182,
+   "input_tokens": 637
+  },
+  {
+   "key": "1:sam:commute",
+   "state": "751357dc69f7",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "sam",
+   "role": "less_confident_cyclist",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.91,
+    "bike_side_street": 0.0464,
+    "transit": 0.026,
+    "defer": 0.0176
+   },
+   "p_fixture_choice": 0.91,
+   "latency_ms": 240,
+   "input_tokens": 921
+  },
+  {
+   "key": "1:ravi:commute",
+   "state": "97cc37fa58e7",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "drive",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "drive",
+   "agree": false,
+   "p": {
+    "transit": 0.0759,
+    "drive": 0.9099,
+    "defer": 0.0143
+   },
+   "p_fixture_choice": 0.0759,
+   "latency_ms": 208,
+   "input_tokens": 769
+  },
+  {
+   "key": "1:leila:commute",
+   "state": "a39510b95d6d",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9148,
+    "bike_side_street": 0.0615,
+    "transit": 0.0119,
+    "defer": 0.0117
+   },
+   "p_fixture_choice": 0.9148,
+   "latency_ms": 278,
+   "input_tokens": 929
+  },
+  {
+   "key": "1:yusuf:commute",
+   "state": "f39e16011641",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9817,
+    "defer": 0.0183
+   },
+   "p_fixture_choice": 0.9817,
+   "latency_ms": 192,
+   "input_tokens": 636
+  },
+  {
+   "key": "1:elena:commute",
+   "state": "091575db4760",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "elena",
+   "role": "driver",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "drive",
+    "transit",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.8935,
+    "transit": 0.0772,
+    "defer": 0.0293
+   },
+   "p_fixture_choice": 0.8935,
+   "latency_ms": 211,
+   "input_tokens": 756
+  },
+  {
+   "key": "1:jun:commute",
+   "state": "d4e1ec0466eb",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9749,
+    "defer": 0.0251
+   },
+   "p_fixture_choice": 0.9749,
+   "latency_ms": 183,
+   "input_tokens": 629
+  },
+  {
+   "key": "1:priya:commute",
+   "state": "cb25122e8fee",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.953,
+    "bike_side_street": 0.0316,
+    "transit": 0.008,
+    "defer": 0.0074
+   },
+   "p_fixture_choice": 0.953,
+   "latency_ms": 280,
+   "input_tokens": 929
+  },
+  {
+   "key": "1:mei:commute",
+   "state": "8114601404fa",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 1,
+   "trip": "commute",
+   "options": [
+    "walk",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9607,
+    "defer": 0.0393
+   },
+   "p_fixture_choice": 0.9607,
+   "latency_ms": 182,
+   "input_tokens": 605
+  },
+  {
+   "key": "1:lena:errand",
+   "state": "1c648426a984",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "lena",
+   "role": "visitor_fair_pass_shopper",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8891,
+    "shop_elsewhere": 0.0885,
+    "defer": 0.0224
+   },
+   "p_fixture_choice": 0.8891,
+   "latency_ms": 211,
+   "input_tokens": 768
+  },
+  {
+   "key": "1:priya:errand",
+   "state": "a380c8ef7fe7",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8653,
+    "shop_elsewhere": 0.0758,
+    "defer": 0.059
+   },
+   "p_fixture_choice": 0.8653,
+   "latency_ms": 250,
+   "input_tokens": 766
+  },
+  {
+   "key": "1:yusuf:errand",
+   "state": "9625a32533b0",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9284,
+    "shop_elsewhere": 0.0506,
+    "defer": 0.0211
+   },
+   "p_fixture_choice": 0.9284,
+   "latency_ms": 200,
+   "input_tokens": 750
+  },
+  {
+   "key": "1:ben:errand",
+   "state": "e20f5802af2f",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "ben",
+   "role": "visitor_confident_cyclist",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9291,
+    "bike_side_street": 0.0391,
+    "shop_elsewhere": 0.0176,
+    "defer": 0.0142
+   },
+   "p_fixture_choice": 0.9291,
+   "latency_ms": 251,
+   "input_tokens": 911
+  },
+  {
+   "key": "1:omar:errand",
+   "state": "72847fb6b8cd",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "omar",
+   "role": "visitor_transit_shopper",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8891,
+    "shop_elsewhere": 0.0847,
+    "defer": 0.0262
+   },
+   "p_fixture_choice": 0.8891,
+   "latency_ms": 247,
+   "input_tokens": 758
+  },
+  {
+   "key": "1:jun:errand",
+   "state": "7725656ed39a",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8947,
+    "shop_elsewhere": 0.077,
+    "defer": 0.0283
+   },
+   "p_fixture_choice": 0.8947,
+   "latency_ms": 376,
+   "input_tokens": 754
+  },
+  {
+   "key": "1:marta:errand",
+   "state": "4f371bff329a",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "marta",
+   "role": "visitor_driver",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "drive",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.8408,
+    "shop_elsewhere": 0.13,
+    "defer": 0.0292
+   },
+   "p_fixture_choice": 0.8408,
+   "latency_ms": 196,
+   "input_tokens": 742
+  },
+  {
+   "key": "1:grace:errand",
+   "state": "1a3dc9db78f7",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "grace",
+   "role": "visitor_adult_near_cutoff",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9029,
+    "shop_elsewhere": 0.071,
+    "defer": 0.0261
+   },
+   "p_fixture_choice": 0.9029,
+   "latency_ms": 258,
+   "input_tokens": 762
+  },
+  {
+   "key": "1:kaya:errand",
+   "state": "917a79197f44",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "kaya",
+   "role": "visitor_less_confident_cyclist",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8894,
+    "bike_side_street": 0.0507,
+    "shop_elsewhere": 0.0407,
+    "defer": 0.0192
+   },
+   "p_fixture_choice": 0.8894,
+   "latency_ms": 230,
+   "input_tokens": 909
+  },
+  {
+   "key": "1:mei:errand",
+   "state": "5bf1596e06a8",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9499,
+    "shop_elsewhere": 0.0343,
+    "defer": 0.0157
+   },
+   "p_fixture_choice": 0.9499,
+   "latency_ms": 204,
+   "input_tokens": 724
+  },
+  {
+   "key": "1:arun:errand",
+   "state": "ada1bcfc617b",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "arun",
+   "role": "visitor_student",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8483,
+    "shop_elsewhere": 0.1222,
+    "defer": 0.0295
+   },
+   "p_fixture_choice": 0.8483,
+   "latency_ms": 246,
+   "input_tokens": 765
+  },
+  {
+   "key": "1:leila:errand",
+   "state": "0c1a42a27cab",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8842,
+    "shop_elsewhere": 0.0602,
+    "defer": 0.0556
+   },
+   "p_fixture_choice": 0.8842,
+   "latency_ms": 208,
+   "input_tokens": 770
+  },
+  {
+   "key": "1:maria:errand",
+   "state": "b100227ea2f6",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9079,
+    "shop_elsewhere": 0.0528,
+    "defer": 0.0393
+   },
+   "p_fixture_choice": 0.9079,
+   "latency_ms": 200,
+   "input_tokens": 762
+  },
+  {
+   "key": "1:nadia:errand",
+   "state": "e39e50674306",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9061,
+    "shop_elsewhere": 0.0654,
+    "defer": 0.0286
+   },
+   "p_fixture_choice": 0.9061,
+   "latency_ms": 328,
+   "input_tokens": 756
+  },
+  {
+   "key": "1:ravi:errand",
+   "state": "fdb7259f29f7",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9026,
+    "shop_elsewhere": 0.0577,
+    "defer": 0.0397
+   },
+   "p_fixture_choice": 0.9026,
+   "latency_ms": 195,
+   "input_tokens": 756
+  },
+  {
+   "key": "1:hawa:errand",
+   "state": "0151a4c5dcce",
+   "arms": [
+    "baseline",
+    "intervention"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 1,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8406,
+    "shop_elsewhere": 0.0981,
+    "defer": 0.0614
+   },
+   "p_fixture_choice": 0.8406,
+   "latency_ms": 206,
+   "input_tokens": 774
+  },
+  {
+   "key": "2:theo:commute",
+   "state": "ff129d2ba4d1",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "theo",
+   "role": "bike_courier",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8795,
+    "bike_side_street": 0.1038,
+    "defer": 0.0167
+   },
+   "p_fixture_choice": 0.8795,
+   "latency_ms": 212,
+   "input_tokens": 777
+  },
+  {
+   "key": "2:hawa:commute",
+   "state": "71c9e0021d82",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "transit": 0.3653,
+    "bike_bloor": 0.542,
+    "bike_side_street": 0.0642,
+    "defer": 0.0285
+   },
+   "p_fixture_choice": 0.542,
+   "latency_ms": 272,
+   "input_tokens": 935
+  },
+  {
+   "key": "2:maria:commute",
+   "state": "dafb93ca0555",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "transit",
+   "agree": false,
+   "p": {
+    "transit": 0.5525,
+    "bike_bloor": 0.3857,
+    "defer": 0.0617
+   },
+   "p_fixture_choice": 0.3857,
+   "latency_ms": 222,
+   "input_tokens": 782
+  },
+  {
+   "key": "2:nadia:commute",
+   "state": "fedf0d75bddc",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9881,
+    "defer": 0.0119
+   },
+   "p_fixture_choice": 0.9881,
+   "latency_ms": 191,
+   "input_tokens": 639
+  },
+  {
+   "key": "2:sam:commute",
+   "state": "b5aa5ea6374c",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "sam",
+   "role": "less_confident_cyclist",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9173,
+    "bike_side_street": 0.0473,
+    "transit": 0.0188,
+    "defer": 0.0166
+   },
+   "p_fixture_choice": 0.9173,
+   "latency_ms": 231,
+   "input_tokens": 921
+  },
+  {
+   "key": "2:ravi:commute",
+   "state": "d175a6c22e10",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "drive",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "drive",
+   "agree": false,
+   "p": {
+    "transit": 0.0478,
+    "drive": 0.9407,
+    "defer": 0.0115
+   },
+   "p_fixture_choice": 0.0478,
+   "latency_ms": 235,
+   "input_tokens": 771
+  },
+  {
+   "key": "2:leila:commute",
+   "state": "eed4914ac02e",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8954,
+    "bike_side_street": 0.0758,
+    "transit": 0.0145,
+    "defer": 0.0142
+   },
+   "p_fixture_choice": 0.8954,
+   "latency_ms": 238,
+   "input_tokens": 929
+  },
+  {
+   "key": "2:yusuf:commute",
+   "state": "e3d860a9a682",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9803,
+    "defer": 0.0197
+   },
+   "p_fixture_choice": 0.9803,
+   "latency_ms": 223,
+   "input_tokens": 638
+  },
+  {
+   "key": "2:elena:commute",
+   "state": "b3bf33e3725f",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "elena",
+   "role": "driver",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "drive",
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "drive",
+   "agree": false,
+   "p": {
+    "drive": 0.9062,
+    "transit": 0.0677,
+    "defer": 0.0261
+   },
+   "p_fixture_choice": 0.0677,
+   "latency_ms": 243,
+   "input_tokens": 757
+  },
+  {
+   "key": "2:jun:commute",
+   "state": "1e19f938c77f",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9769,
+    "defer": 0.0231
+   },
+   "p_fixture_choice": 0.9769,
+   "latency_ms": 187,
+   "input_tokens": 640
+  },
+  {
+   "key": "2:priya:commute",
+   "state": "454bb8117543",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9428,
+    "bike_side_street": 0.0389,
+    "transit": 0.0084,
+    "defer": 0.0098
+   },
+   "p_fixture_choice": 0.9428,
+   "latency_ms": 281,
+   "input_tokens": 921
+  },
+  {
+   "key": "2:mei:commute",
+   "state": "25a8c49da9fd",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "walk",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9599,
+    "defer": 0.0401
+   },
+   "p_fixture_choice": 0.9599,
+   "latency_ms": 188,
+   "input_tokens": 605
+  },
+  {
+   "key": "2:lena:errand",
+   "state": "5efc312e8851",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "lena",
+   "role": "visitor_fair_pass_shopper",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8941,
+    "shop_elsewhere": 0.0832,
+    "defer": 0.0227
+   },
+   "p_fixture_choice": 0.8941,
+   "latency_ms": 210,
+   "input_tokens": 770
+  },
+  {
+   "key": "2:priya:errand",
+   "state": "e3236ba2aaab",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.887,
+    "shop_elsewhere": 0.0605,
+    "defer": 0.0525
+   },
+   "p_fixture_choice": 0.887,
+   "latency_ms": 198,
+   "input_tokens": 766
+  },
+  {
+   "key": "2:yusuf:errand",
+   "state": "05d02529a52e",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8942,
+    "shop_elsewhere": 0.0733,
+    "defer": 0.0325
+   },
+   "p_fixture_choice": 0.8942,
+   "latency_ms": 198,
+   "input_tokens": 750
+  },
+  {
+   "key": "2:ben:errand",
+   "state": "668f7ad8aeb5",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ben",
+   "role": "visitor_confident_cyclist",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9329,
+    "bike_side_street": 0.0352,
+    "shop_elsewhere": 0.0174,
+    "defer": 0.0144
+   },
+   "p_fixture_choice": 0.9329,
+   "latency_ms": 273,
+   "input_tokens": 911
+  },
+  {
+   "key": "2:omar:errand",
+   "state": "6b2b7b477f02",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "omar",
+   "role": "visitor_transit_shopper",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.871,
+    "shop_elsewhere": 0.0977,
+    "defer": 0.0312
+   },
+   "p_fixture_choice": 0.871,
+   "latency_ms": 220,
+   "input_tokens": 760
+  },
+  {
+   "key": "2:jun:errand",
+   "state": "1c166d1b7efd",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.896,
+    "shop_elsewhere": 0.0744,
+    "defer": 0.0296
+   },
+   "p_fixture_choice": 0.896,
+   "latency_ms": 195,
+   "input_tokens": 755
+  },
+  {
+   "key": "2:marta:errand",
+   "state": "890dd7d09c62",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "marta",
+   "role": "visitor_driver",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "drive",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.8279,
+    "shop_elsewhere": 0.1394,
+    "defer": 0.0326
+   },
+   "p_fixture_choice": 0.8279,
+   "latency_ms": 366,
+   "input_tokens": 742
+  },
+  {
+   "key": "2:grace:errand",
+   "state": "0e4959e2017e",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "grace",
+   "role": "visitor_adult_near_cutoff",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9432,
+    "shop_elsewhere": 0.0405,
+    "defer": 0.0164
+   },
+   "p_fixture_choice": 0.9432,
+   "latency_ms": 206,
+   "input_tokens": 756
+  },
+  {
+   "key": "2:kaya:errand",
+   "state": "c885699f29d4",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "kaya",
+   "role": "visitor_less_confident_cyclist",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8843,
+    "bike_side_street": 0.0536,
+    "shop_elsewhere": 0.0418,
+    "defer": 0.0204
+   },
+   "p_fixture_choice": 0.8843,
+   "latency_ms": 274,
+   "input_tokens": 909
+  },
+  {
+   "key": "2:mei:errand",
+   "state": "30b0a54bc988",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9658,
+    "shop_elsewhere": 0.0222,
+    "defer": 0.0121
+   },
+   "p_fixture_choice": 0.9658,
+   "latency_ms": 266,
+   "input_tokens": 732
+  },
+  {
+   "key": "2:arun:errand",
+   "state": "d9be5569d460",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "arun",
+   "role": "visitor_student",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8556,
+    "shop_elsewhere": 0.1122,
+    "defer": 0.0322
+   },
+   "p_fixture_choice": 0.8556,
+   "latency_ms": 203,
+   "input_tokens": 767
+  },
+  {
+   "key": "2:leila:errand",
+   "state": "922d21441ad9",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8931,
+    "shop_elsewhere": 0.053,
+    "defer": 0.0538
+   },
+   "p_fixture_choice": 0.8931,
+   "latency_ms": 260,
+   "input_tokens": 770
+  },
+  {
+   "key": "2:maria:errand",
+   "state": "5a35a73aa2b6",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8952,
+    "shop_elsewhere": 0.0553,
+    "defer": 0.0495
+   },
+   "p_fixture_choice": 0.8952,
+   "latency_ms": 197,
+   "input_tokens": 762
+  },
+  {
+   "key": "2:nadia:errand",
+   "state": "fdbecd3b578c",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9061,
+    "shop_elsewhere": 0.0641,
+    "defer": 0.0298
+   },
+   "p_fixture_choice": 0.9061,
+   "latency_ms": 202,
+   "input_tokens": 756
+  },
+  {
+   "key": "2:ravi:errand",
+   "state": "6947dfe0a27c",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8953,
+    "shop_elsewhere": 0.0605,
+    "defer": 0.0442
+   },
+   "p_fixture_choice": 0.8953,
+   "latency_ms": 198,
+   "input_tokens": 756
+  },
+  {
+   "key": "2:hawa:errand",
+   "state": "a60041046ce0",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8322,
+    "shop_elsewhere": 0.0988,
+    "defer": 0.069
+   },
+   "p_fixture_choice": 0.8322,
+   "latency_ms": 257,
+   "input_tokens": 774
+  },
+  {
+   "key": "3:theo:commute",
+   "state": "b10c6516c482",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "theo",
+   "role": "bike_courier",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8978,
+    "bike_side_street": 0.0879,
+    "defer": 0.0143
+   },
+   "p_fixture_choice": 0.8978,
+   "latency_ms": 253,
+   "input_tokens": 777
+  },
+  {
+   "key": "3:hawa:commute",
+   "state": "5f29f34b19af",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "transit": 0.3438,
+    "bike_bloor": 0.5624,
+    "bike_side_street": 0.0672,
+    "defer": 0.0267
+   },
+   "p_fixture_choice": 0.5624,
+   "latency_ms": 237,
+   "input_tokens": 935
+  },
+  {
+   "key": "3:maria:commute",
+   "state": "4e4e8a49460b",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.4749,
+    "bike_bloor": 0.4712,
+    "defer": 0.0539
+   },
+   "p_fixture_choice": 0.4749,
+   "latency_ms": 261,
+   "input_tokens": 790
+  },
+  {
+   "key": "3:nadia:commute",
+   "state": "5c609ad9d93e",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9882,
+    "defer": 0.0118
+   },
+   "p_fixture_choice": 0.9882,
+   "latency_ms": 184,
+   "input_tokens": 639
+  },
+  {
+   "key": "3:sam:commute",
+   "state": "ad9c466810e5",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "sam",
+   "role": "less_confident_cyclist",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9179,
+    "bike_side_street": 0.0423,
+    "transit": 0.0219,
+    "defer": 0.0179
+   },
+   "p_fixture_choice": 0.9179,
+   "latency_ms": 241,
+   "input_tokens": 921
+  },
+  {
+   "key": "3:leila:commute",
+   "state": "6c1ec92fd689",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9129,
+    "bike_side_street": 0.0616,
+    "transit": 0.0123,
+    "defer": 0.0131
+   },
+   "p_fixture_choice": 0.9129,
+   "latency_ms": 237,
+   "input_tokens": 929
+  },
+  {
+   "key": "3:ravi:commute",
+   "state": "33aa6cc4669a",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "drive",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "drive",
+   "agree": false,
+   "p": {
+    "transit": 0.0558,
+    "drive": 0.9322,
+    "defer": 0.0121
+   },
+   "p_fixture_choice": 0.0558,
+   "latency_ms": 209,
+   "input_tokens": 772
+  },
+  {
+   "key": "3:yusuf:commute",
+   "state": "1b5fdc5d3600",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9813,
+    "defer": 0.0187
+   },
+   "p_fixture_choice": 0.9813,
+   "latency_ms": 178,
+   "input_tokens": 638
+  },
+  {
+   "key": "3:elena:commute",
+   "state": "ba0fba190349",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "elena",
+   "role": "driver",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "drive",
+    "transit",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.9183,
+    "transit": 0.056,
+    "defer": 0.0256
+   },
+   "p_fixture_choice": 0.9183,
+   "latency_ms": 282,
+   "input_tokens": 759
+  },
+  {
+   "key": "3:jun:commute",
+   "state": "fc31a8901b47",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9778,
+    "defer": 0.0222
+   },
+   "p_fixture_choice": 0.9778,
+   "latency_ms": 181,
+   "input_tokens": 640
+  },
+  {
+   "key": "3:priya:commute",
+   "state": "8e403b2cf2ce",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9436,
+    "bike_side_street": 0.0375,
+    "transit": 0.0101,
+    "defer": 0.0089
+   },
+   "p_fixture_choice": 0.9436,
+   "latency_ms": 310,
+   "input_tokens": 930
+  },
+  {
+   "key": "3:mei:commute",
+   "state": "7b781c60c5ff",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "walk",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9638,
+    "defer": 0.0362
+   },
+   "p_fixture_choice": 0.9638,
+   "latency_ms": 194,
+   "input_tokens": 605
+  },
+  {
+   "key": "3:lena:errand",
+   "state": "ae0127bad606",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "lena",
+   "role": "visitor_fair_pass_shopper",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8768,
+    "shop_elsewhere": 0.098,
+    "defer": 0.0252
+   },
+   "p_fixture_choice": 0.8768,
+   "latency_ms": 255,
+   "input_tokens": 768
+  },
+  {
+   "key": "3:priya:errand",
+   "state": "d27f7f1deaa4",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.873,
+    "shop_elsewhere": 0.068,
+    "defer": 0.0591
+   },
+   "p_fixture_choice": 0.873,
+   "latency_ms": 210,
+   "input_tokens": 767
+  },
+  {
+   "key": "3:yusuf:errand",
+   "state": "24df8c10a8e2",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8914,
+    "shop_elsewhere": 0.0759,
+    "defer": 0.0327
+   },
+   "p_fixture_choice": 0.8914,
+   "latency_ms": 207,
+   "input_tokens": 750
+  },
+  {
+   "key": "3:ben:errand",
+   "state": "2d084f78741d",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ben",
+   "role": "visitor_confident_cyclist",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9309,
+    "bike_side_street": 0.0375,
+    "shop_elsewhere": 0.0169,
+    "defer": 0.0147
+   },
+   "p_fixture_choice": 0.9309,
+   "latency_ms": 237,
+   "input_tokens": 911
+  },
+  {
+   "key": "3:omar:errand",
+   "state": "e669d48e11c1",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "omar",
+   "role": "visitor_transit_shopper",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8629,
+    "shop_elsewhere": 0.1031,
+    "defer": 0.034
+   },
+   "p_fixture_choice": 0.8629,
+   "latency_ms": 199,
+   "input_tokens": 761
+  },
+  {
+   "key": "3:jun:errand",
+   "state": "e2049528c237",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9106,
+    "shop_elsewhere": 0.0639,
+    "defer": 0.0254
+   },
+   "p_fixture_choice": 0.9106,
+   "latency_ms": 198,
+   "input_tokens": 755
+  },
+  {
+   "key": "3:marta:errand",
+   "state": "825146f0d87e",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "marta",
+   "role": "visitor_driver",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "drive",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.8406,
+    "shop_elsewhere": 0.1274,
+    "defer": 0.032
+   },
+   "p_fixture_choice": 0.8406,
+   "latency_ms": 202,
+   "input_tokens": 743
+  },
+  {
+   "key": "3:grace:errand",
+   "state": "09d9301278e3",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "grace",
+   "role": "visitor_adult_near_cutoff",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.914,
+    "shop_elsewhere": 0.0598,
+    "defer": 0.0261
+   },
+   "p_fixture_choice": 0.914,
+   "latency_ms": 199,
+   "input_tokens": 764
+  },
+  {
+   "key": "3:kaya:errand",
+   "state": "5fe6d3d20a26",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "kaya",
+   "role": "visitor_less_confident_cyclist",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8839,
+    "bike_side_street": 0.0538,
+    "shop_elsewhere": 0.0413,
+    "defer": 0.0211
+   },
+   "p_fixture_choice": 0.8839,
+   "latency_ms": 282,
+   "input_tokens": 909
+  },
+  {
+   "key": "3:mei:errand",
+   "state": "3caf175c36cd",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9549,
+    "shop_elsewhere": 0.0295,
+    "defer": 0.0156
+   },
+   "p_fixture_choice": 0.9549,
+   "latency_ms": 202,
+   "input_tokens": 732
+  },
+  {
+   "key": "3:arun:errand",
+   "state": "9db46402cdb6",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "arun",
+   "role": "visitor_student",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8795,
+    "shop_elsewhere": 0.0938,
+    "defer": 0.0267
+   },
+   "p_fixture_choice": 0.8795,
+   "latency_ms": 229,
+   "input_tokens": 759
+  },
+  {
+   "key": "3:leila:errand",
+   "state": "c0026d9cb68a",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8878,
+    "shop_elsewhere": 0.0552,
+    "defer": 0.057
+   },
+   "p_fixture_choice": 0.8878,
+   "latency_ms": 208,
+   "input_tokens": 770
+  },
+  {
+   "key": "3:maria:errand",
+   "state": "abfb4e33d6c7",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9007,
+    "shop_elsewhere": 0.0539,
+    "defer": 0.0454
+   },
+   "p_fixture_choice": 0.9007,
+   "latency_ms": 324,
+   "input_tokens": 762
+  },
+  {
+   "key": "3:nadia:errand",
+   "state": "25bd0c3e7411",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9047,
+    "shop_elsewhere": 0.065,
+    "defer": 0.0302
+   },
+   "p_fixture_choice": 0.9047,
+   "latency_ms": 243,
+   "input_tokens": 756
+  },
+  {
+   "key": "3:ravi:errand",
+   "state": "0e0b427d83c6",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8902,
+    "shop_elsewhere": 0.063,
+    "defer": 0.0468
+   },
+   "p_fixture_choice": 0.8902,
+   "latency_ms": 196,
+   "input_tokens": 757
+  },
+  {
+   "key": "3:hawa:errand",
+   "state": "59c359c87052",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8161,
+    "shop_elsewhere": 0.1083,
+    "defer": 0.0756
+   },
+   "p_fixture_choice": 0.8161,
+   "latency_ms": 210,
+   "input_tokens": 774
+  },
+  {
+   "key": "4:theo:commute",
+   "state": "c0d75aa3a431",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "theo",
+   "role": "bike_courier",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9181,
+    "bike_side_street": 0.0692,
+    "defer": 0.0128
+   },
+   "p_fixture_choice": 0.9181,
+   "latency_ms": 255,
+   "input_tokens": 778
+  },
+  {
+   "key": "4:hawa:commute",
+   "state": "765a8b6dd5a3",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "bike_bloor",
+   "agree": false,
+   "p": {
+    "transit": 0.3353,
+    "bike_bloor": 0.5615,
+    "bike_side_street": 0.0751,
+    "defer": 0.0281
+   },
+   "p_fixture_choice": 0.3353,
+   "latency_ms": 232,
+   "input_tokens": 933
+  },
+  {
+   "key": "4:maria:commute",
+   "state": "cbf5b865ce7b",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "transit",
+   "agree": false,
+   "p": {
+    "transit": 0.6743,
+    "bike_bloor": 0.262,
+    "defer": 0.0637
+   },
+   "p_fixture_choice": 0.262,
+   "latency_ms": 248,
+   "input_tokens": 782
+  },
+  {
+   "key": "4:nadia:commute",
+   "state": "8f86b9296266",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9874,
+    "defer": 0.0126
+   },
+   "p_fixture_choice": 0.9874,
+   "latency_ms": 181,
+   "input_tokens": 639
+  },
+  {
+   "key": "4:sam:commute",
+   "state": "bcedc599580f",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "sam",
+   "role": "less_confident_cyclist",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9239,
+    "bike_side_street": 0.0422,
+    "transit": 0.019,
+    "defer": 0.0148
+   },
+   "p_fixture_choice": 0.9239,
+   "latency_ms": 227,
+   "input_tokens": 922
+  },
+  {
+   "key": "4:ravi:commute",
+   "state": "c70f81210c27",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "drive",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "drive",
+   "agree": false,
+   "p": {
+    "transit": 0.066,
+    "drive": 0.9188,
+    "defer": 0.0152
+   },
+   "p_fixture_choice": 0.066,
+   "latency_ms": 213,
+   "input_tokens": 772
+  },
+  {
+   "key": "4:leila:commute",
+   "state": "b934e2a70426",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.906,
+    "bike_side_street": 0.0674,
+    "transit": 0.0129,
+    "defer": 0.0137
+   },
+   "p_fixture_choice": 0.906,
+   "latency_ms": 234,
+   "input_tokens": 929
+  },
+  {
+   "key": "4:yusuf:commute",
+   "state": "66da5572d980",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.982,
+    "defer": 0.018
+   },
+   "p_fixture_choice": 0.982,
+   "latency_ms": 224,
+   "input_tokens": 638
+  },
+  {
+   "key": "4:elena:commute",
+   "state": "b0fd2baf3f87",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "elena",
+   "role": "driver",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "drive",
+    "transit",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.9286,
+    "transit": 0.0504,
+    "defer": 0.021
+   },
+   "p_fixture_choice": 0.9286,
+   "latency_ms": 213,
+   "input_tokens": 759
+  },
+  {
+   "key": "4:jun:commute",
+   "state": "6bfa21c5c2f9",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9736,
+    "defer": 0.0264
+   },
+   "p_fixture_choice": 0.9736,
+   "latency_ms": 185,
+   "input_tokens": 632
+  },
+  {
+   "key": "4:priya:commute",
+   "state": "03b04a0eaac7",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9423,
+    "bike_side_street": 0.0389,
+    "transit": 0.0094,
+    "defer": 0.0094
+   },
+   "p_fixture_choice": 0.9423,
+   "latency_ms": 297,
+   "input_tokens": 930
+  },
+  {
+   "key": "4:mei:commute",
+   "state": "502458639d63",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "walk",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9576,
+    "defer": 0.0424
+   },
+   "p_fixture_choice": 0.9576,
+   "latency_ms": 182,
+   "input_tokens": 605
+  },
+  {
+   "key": "4:lena:errand",
+   "state": "f468309f62ab",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "lena",
+   "role": "visitor_fair_pass_shopper",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.889,
+    "shop_elsewhere": 0.086,
+    "defer": 0.025
+   },
+   "p_fixture_choice": 0.889,
+   "latency_ms": 204,
+   "input_tokens": 768
+  },
+  {
+   "key": "4:priya:errand",
+   "state": "4ae94299dddb",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.878,
+    "shop_elsewhere": 0.0658,
+    "defer": 0.0562
+   },
+   "p_fixture_choice": 0.878,
+   "latency_ms": 343,
+   "input_tokens": 767
+  },
+  {
+   "key": "4:yusuf:errand",
+   "state": "5c1415d09caf",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9154,
+    "shop_elsewhere": 0.0572,
+    "defer": 0.0274
+   },
+   "p_fixture_choice": 0.9154,
+   "latency_ms": 206,
+   "input_tokens": 750
+  },
+  {
+   "key": "4:ben:errand",
+   "state": "b889774d084a",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ben",
+   "role": "visitor_confident_cyclist",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9281,
+    "bike_side_street": 0.0382,
+    "shop_elsewhere": 0.0186,
+    "defer": 0.0152
+   },
+   "p_fixture_choice": 0.9281,
+   "latency_ms": 401,
+   "input_tokens": 912
+  },
+  {
+   "key": "4:omar:errand",
+   "state": "a3745160a77d",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "omar",
+   "role": "visitor_transit_shopper",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8697,
+    "shop_elsewhere": 0.0972,
+    "defer": 0.0331
+   },
+   "p_fixture_choice": 0.8697,
+   "latency_ms": 195,
+   "input_tokens": 761
+  },
+  {
+   "key": "4:jun:errand",
+   "state": "833813d20357",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9033,
+    "shop_elsewhere": 0.0688,
+    "defer": 0.0278
+   },
+   "p_fixture_choice": 0.9033,
+   "latency_ms": 199,
+   "input_tokens": 755
+  },
+  {
+   "key": "4:marta:errand",
+   "state": "9c9bde5cab87",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "marta",
+   "role": "visitor_driver",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "drive",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.8414,
+    "shop_elsewhere": 0.127,
+    "defer": 0.0316
+   },
+   "p_fixture_choice": 0.8414,
+   "latency_ms": 208,
+   "input_tokens": 743
+  },
+  {
+   "key": "4:grace:errand",
+   "state": "28d833e41221",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "grace",
+   "role": "visitor_adult_near_cutoff",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9403,
+    "shop_elsewhere": 0.042,
+    "defer": 0.0178
+   },
+   "p_fixture_choice": 0.9403,
+   "latency_ms": 243,
+   "input_tokens": 756
+  },
+  {
+   "key": "4:kaya:errand",
+   "state": "2d5d349411fe",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "kaya",
+   "role": "visitor_less_confident_cyclist",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8844,
+    "bike_side_street": 0.0528,
+    "shop_elsewhere": 0.0418,
+    "defer": 0.021
+   },
+   "p_fixture_choice": 0.8844,
+   "latency_ms": 283,
+   "input_tokens": 909
+  },
+  {
+   "key": "4:mei:errand",
+   "state": "e089d74ad314",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9686,
+    "shop_elsewhere": 0.0204,
+    "defer": 0.0109
+   },
+   "p_fixture_choice": 0.9686,
+   "latency_ms": 200,
+   "input_tokens": 732
+  },
+  {
+   "key": "4:arun:errand",
+   "state": "c38f0a59e245",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "arun",
+   "role": "visitor_student",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8527,
+    "shop_elsewhere": 0.1159,
+    "defer": 0.0314
+   },
+   "p_fixture_choice": 0.8527,
+   "latency_ms": 202,
+   "input_tokens": 767
+  },
+  {
+   "key": "4:leila:errand",
+   "state": "b036c744af57",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8901,
+    "shop_elsewhere": 0.0541,
+    "defer": 0.0558
+   },
+   "p_fixture_choice": 0.8901,
+   "latency_ms": 222,
+   "input_tokens": 770
+  },
+  {
+   "key": "4:maria:errand",
+   "state": "b11819552bef",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8892,
+    "shop_elsewhere": 0.061,
+    "defer": 0.0498
+   },
+   "p_fixture_choice": 0.8892,
+   "latency_ms": 206,
+   "input_tokens": 762
+  },
+  {
+   "key": "4:nadia:errand",
+   "state": "3ac5866d8212",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9089,
+    "shop_elsewhere": 0.0619,
+    "defer": 0.0292
+   },
+   "p_fixture_choice": 0.9089,
+   "latency_ms": 198,
+   "input_tokens": 756
+  },
+  {
+   "key": "4:ravi:errand",
+   "state": "f0628a076ef2",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8825,
+    "shop_elsewhere": 0.0683,
+    "defer": 0.0492
+   },
+   "p_fixture_choice": 0.8825,
+   "latency_ms": 240,
+   "input_tokens": 757
+  },
+  {
+   "key": "4:hawa:errand",
+   "state": "737fa50bd173",
+   "arms": [
+    "baseline"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8135,
+    "shop_elsewhere": 0.1105,
+    "defer": 0.076
+   },
+   "p_fixture_choice": 0.8135,
+   "latency_ms": 216,
+   "input_tokens": 774
+  },
+  {
+   "key": "2:theo:commute",
+   "state": "9bec7b82a343",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "theo",
+   "role": "bike_courier",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8785,
+    "bike_side_street": 0.1049,
+    "defer": 0.0166
+   },
+   "p_fixture_choice": 0.8785,
+   "latency_ms": 217,
+   "input_tokens": 777
+  },
+  {
+   "key": "2:hawa:commute",
+   "state": "3ec54768372c",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "transit": 0.3694,
+    "bike_bloor": 0.5334,
+    "bike_side_street": 0.0686,
+    "defer": 0.0286
+   },
+   "p_fixture_choice": 0.5334,
+   "latency_ms": 237,
+   "input_tokens": 935
+  },
+  {
+   "key": "2:maria:commute",
+   "state": "345ac69e23d6",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "transit",
+   "agree": false,
+   "p": {
+    "transit": 0.5473,
+    "bike_bloor": 0.3866,
+    "defer": 0.0661
+   },
+   "p_fixture_choice": 0.3866,
+   "latency_ms": 210,
+   "input_tokens": 782
+  },
+  {
+   "key": "2:nadia:commute",
+   "state": "39d1540316d8",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.988,
+    "defer": 0.012
+   },
+   "p_fixture_choice": 0.988,
+   "latency_ms": 193,
+   "input_tokens": 639
+  },
+  {
+   "key": "2:sam:commute",
+   "state": "ecbc634ee038",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "sam",
+   "role": "less_confident_cyclist",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9197,
+    "bike_side_street": 0.0442,
+    "transit": 0.0193,
+    "defer": 0.0168
+   },
+   "p_fixture_choice": 0.9197,
+   "latency_ms": 317,
+   "input_tokens": 921
+  },
+  {
+   "key": "2:ravi:commute",
+   "state": "28f19fa343ac",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "drive",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "drive",
+   "agree": false,
+   "p": {
+    "transit": 0.0462,
+    "drive": 0.9425,
+    "defer": 0.0113
+   },
+   "p_fixture_choice": 0.0462,
+   "latency_ms": 209,
+   "input_tokens": 771
+  },
+  {
+   "key": "2:leila:commute",
+   "state": "410420ef4ef6",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9024,
+    "bike_side_street": 0.071,
+    "transit": 0.0131,
+    "defer": 0.0135
+   },
+   "p_fixture_choice": 0.9024,
+   "latency_ms": 231,
+   "input_tokens": 929
+  },
+  {
+   "key": "2:yusuf:commute",
+   "state": "444c561ab47f",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9797,
+    "defer": 0.0203
+   },
+   "p_fixture_choice": 0.9797,
+   "latency_ms": 179,
+   "input_tokens": 638
+  },
+  {
+   "key": "2:elena:commute",
+   "state": "6ad6d4edb0da",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "elena",
+   "role": "driver",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "drive",
+    "transit",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.9072,
+    "transit": 0.0655,
+    "defer": 0.0273
+   },
+   "p_fixture_choice": 0.9072,
+   "latency_ms": 203,
+   "input_tokens": 757
+  },
+  {
+   "key": "2:jun:commute",
+   "state": "309ab0818def",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.977,
+    "defer": 0.023
+   },
+   "p_fixture_choice": 0.977,
+   "latency_ms": 178,
+   "input_tokens": 640
+  },
+  {
+   "key": "2:priya:commute",
+   "state": "3d9e2bbafb0e",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9393,
+    "bike_side_street": 0.0422,
+    "transit": 0.0086,
+    "defer": 0.0099
+   },
+   "p_fixture_choice": 0.9393,
+   "latency_ms": 241,
+   "input_tokens": 921
+  },
+  {
+   "key": "2:mei:commute",
+   "state": "86f380988836",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 2,
+   "trip": "commute",
+   "options": [
+    "walk",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9602,
+    "defer": 0.0398
+   },
+   "p_fixture_choice": 0.9602,
+   "latency_ms": 181,
+   "input_tokens": 605
+  },
+  {
+   "key": "2:lena:errand",
+   "state": "af601f8ace80",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "lena",
+   "role": "visitor_fair_pass_shopper",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8893,
+    "shop_elsewhere": 0.0874,
+    "defer": 0.0233
+   },
+   "p_fixture_choice": 0.8893,
+   "latency_ms": 214,
+   "input_tokens": 770
+  },
+  {
+   "key": "2:priya:errand",
+   "state": "ad642e9510ac",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8856,
+    "shop_elsewhere": 0.0612,
+    "defer": 0.0532
+   },
+   "p_fixture_choice": 0.8856,
+   "latency_ms": 221,
+   "input_tokens": 766
+  },
+  {
+   "key": "2:yusuf:errand",
+   "state": "32d9be2a840e",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.893,
+    "shop_elsewhere": 0.0737,
+    "defer": 0.0332
+   },
+   "p_fixture_choice": 0.893,
+   "latency_ms": 237,
+   "input_tokens": 750
+  },
+  {
+   "key": "2:ben:errand",
+   "state": "d630cd032116",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ben",
+   "role": "visitor_confident_cyclist",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9334,
+    "bike_side_street": 0.0358,
+    "shop_elsewhere": 0.0166,
+    "defer": 0.0142
+   },
+   "p_fixture_choice": 0.9334,
+   "latency_ms": 243,
+   "input_tokens": 911
+  },
+  {
+   "key": "2:omar:errand",
+   "state": "01604f84c05e",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "omar",
+   "role": "visitor_transit_shopper",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.86,
+    "shop_elsewhere": 0.1076,
+    "defer": 0.0323
+   },
+   "p_fixture_choice": 0.86,
+   "latency_ms": 237,
+   "input_tokens": 760
+  },
+  {
+   "key": "2:jun:errand",
+   "state": "845ea0aedf8c",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9021,
+    "shop_elsewhere": 0.0688,
+    "defer": 0.0291
+   },
+   "p_fixture_choice": 0.9021,
+   "latency_ms": 238,
+   "input_tokens": 755
+  },
+  {
+   "key": "2:marta:errand",
+   "state": "a7d1722f8219",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "marta",
+   "role": "visitor_driver",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "drive",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.8267,
+    "shop_elsewhere": 0.1409,
+    "defer": 0.0324
+   },
+   "p_fixture_choice": 0.8267,
+   "latency_ms": 202,
+   "input_tokens": 742
+  },
+  {
+   "key": "2:grace:errand",
+   "state": "5f77dd19d06b",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "grace",
+   "role": "visitor_adult_near_cutoff",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "shop_elsewhere",
+   "clef": "transit",
+   "agree": false,
+   "p": {
+    "transit": 0.936,
+    "shop_elsewhere": 0.0458,
+    "defer": 0.0182
+   },
+   "p_fixture_choice": 0.0458,
+   "latency_ms": 252,
+   "input_tokens": 756
+  },
+  {
+   "key": "2:kaya:errand",
+   "state": "a28327754633",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "kaya",
+   "role": "visitor_less_confident_cyclist",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8849,
+    "bike_side_street": 0.0538,
+    "shop_elsewhere": 0.0406,
+    "defer": 0.0207
+   },
+   "p_fixture_choice": 0.8849,
+   "latency_ms": 232,
+   "input_tokens": 909
+  },
+  {
+   "key": "2:mei:errand",
+   "state": "435bc1a6b0b5",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9664,
+    "shop_elsewhere": 0.0219,
+    "defer": 0.0117
+   },
+   "p_fixture_choice": 0.9664,
+   "latency_ms": 240,
+   "input_tokens": 732
+  },
+  {
+   "key": "2:arun:errand",
+   "state": "8935a65bce01",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "arun",
+   "role": "visitor_student",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8372,
+    "shop_elsewhere": 0.1274,
+    "defer": 0.0354
+   },
+   "p_fixture_choice": 0.8372,
+   "latency_ms": 197,
+   "input_tokens": 767
+  },
+  {
+   "key": "2:leila:errand",
+   "state": "fd6051928ee6",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8927,
+    "shop_elsewhere": 0.0524,
+    "defer": 0.0549
+   },
+   "p_fixture_choice": 0.8927,
+   "latency_ms": 211,
+   "input_tokens": 770
+  },
+  {
+   "key": "2:maria:errand",
+   "state": "1ed440893f48",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8976,
+    "shop_elsewhere": 0.0552,
+    "defer": 0.0472
+   },
+   "p_fixture_choice": 0.8976,
+   "latency_ms": 207,
+   "input_tokens": 762
+  },
+  {
+   "key": "2:nadia:errand",
+   "state": "611b260cf9f4",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9045,
+    "shop_elsewhere": 0.0655,
+    "defer": 0.03
+   },
+   "p_fixture_choice": 0.9045,
+   "latency_ms": 195,
+   "input_tokens": 756
+  },
+  {
+   "key": "2:ravi:errand",
+   "state": "dddb27baf5de",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8936,
+    "shop_elsewhere": 0.0623,
+    "defer": 0.0441
+   },
+   "p_fixture_choice": 0.8936,
+   "latency_ms": 325,
+   "input_tokens": 756
+  },
+  {
+   "key": "2:hawa:errand",
+   "state": "8e1f0ed081cd",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 2,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8304,
+    "shop_elsewhere": 0.0986,
+    "defer": 0.071
+   },
+   "p_fixture_choice": 0.8304,
+   "latency_ms": 209,
+   "input_tokens": 774
+  },
+  {
+   "key": "3:theo:commute",
+   "state": "07f4a1508900",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "theo",
+   "role": "bike_courier",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8966,
+    "bike_side_street": 0.0891,
+    "defer": 0.0143
+   },
+   "p_fixture_choice": 0.8966,
+   "latency_ms": 225,
+   "input_tokens": 777
+  },
+  {
+   "key": "3:hawa:commute",
+   "state": "43363d2a9ece",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "transit": 0.3471,
+    "bike_bloor": 0.5546,
+    "bike_side_street": 0.0697,
+    "defer": 0.0286
+   },
+   "p_fixture_choice": 0.5546,
+   "latency_ms": 368,
+   "input_tokens": 935
+  },
+  {
+   "key": "3:maria:commute",
+   "state": "6a425ded4b82",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "transit",
+   "agree": false,
+   "p": {
+    "transit": 0.5087,
+    "bike_bloor": 0.4351,
+    "defer": 0.0562
+   },
+   "p_fixture_choice": 0.4351,
+   "latency_ms": 271,
+   "input_tokens": 790
+  },
+  {
+   "key": "3:nadia:commute",
+   "state": "3ca1c3c80a7f",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9879,
+    "defer": 0.0121
+   },
+   "p_fixture_choice": 0.9879,
+   "latency_ms": 187,
+   "input_tokens": 639
+  },
+  {
+   "key": "3:sam:commute",
+   "state": "2f7f49ba9dee",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "sam",
+   "role": "less_confident_cyclist",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9161,
+    "bike_side_street": 0.0423,
+    "transit": 0.0234,
+    "defer": 0.0182
+   },
+   "p_fixture_choice": 0.9161,
+   "latency_ms": 230,
+   "input_tokens": 921
+  },
+  {
+   "key": "3:leila:commute",
+   "state": "5d51eecfde04",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9131,
+    "bike_side_street": 0.0617,
+    "transit": 0.0121,
+    "defer": 0.0131
+   },
+   "p_fixture_choice": 0.9131,
+   "latency_ms": 235,
+   "input_tokens": 929
+  },
+  {
+   "key": "3:ravi:commute",
+   "state": "9bf9e0fe6cb4",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "drive",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "drive",
+   "agree": false,
+   "p": {
+    "transit": 0.0529,
+    "drive": 0.9349,
+    "defer": 0.0122
+   },
+   "p_fixture_choice": 0.0529,
+   "latency_ms": 219,
+   "input_tokens": 772
+  },
+  {
+   "key": "3:yusuf:commute",
+   "state": "e07c55e62a8f",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9811,
+    "defer": 0.0189
+   },
+   "p_fixture_choice": 0.9811,
+   "latency_ms": 177,
+   "input_tokens": 638
+  },
+  {
+   "key": "3:elena:commute",
+   "state": "4071276e5799",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "elena",
+   "role": "driver",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "drive",
+    "transit",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.9351,
+    "transit": 0.0416,
+    "defer": 0.0233
+   },
+   "p_fixture_choice": 0.9351,
+   "latency_ms": 197,
+   "input_tokens": 757
+  },
+  {
+   "key": "3:jun:commute",
+   "state": "59a89f6e3895",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9769,
+    "defer": 0.0231
+   },
+   "p_fixture_choice": 0.9769,
+   "latency_ms": 180,
+   "input_tokens": 640
+  },
+  {
+   "key": "3:priya:commute",
+   "state": "3b4768266fa9",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9453,
+    "bike_side_street": 0.0362,
+    "transit": 0.0098,
+    "defer": 0.0087
+   },
+   "p_fixture_choice": 0.9453,
+   "latency_ms": 250,
+   "input_tokens": 930
+  },
+  {
+   "key": "3:mei:commute",
+   "state": "9e863020211e",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 3,
+   "trip": "commute",
+   "options": [
+    "walk",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9636,
+    "defer": 0.0364
+   },
+   "p_fixture_choice": 0.9636,
+   "latency_ms": 187,
+   "input_tokens": 605
+  },
+  {
+   "key": "3:lena:errand",
+   "state": "577b5b6eff4d",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "lena",
+   "role": "visitor_fair_pass_shopper",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8722,
+    "shop_elsewhere": 0.1014,
+    "defer": 0.0264
+   },
+   "p_fixture_choice": 0.8722,
+   "latency_ms": 203,
+   "input_tokens": 768
+  },
+  {
+   "key": "3:priya:errand",
+   "state": "7892fe2f9ed8",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8778,
+    "shop_elsewhere": 0.0635,
+    "defer": 0.0587
+   },
+   "p_fixture_choice": 0.8778,
+   "latency_ms": 207,
+   "input_tokens": 767
+  },
+  {
+   "key": "3:yusuf:errand",
+   "state": "62888997a92f",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8902,
+    "shop_elsewhere": 0.0766,
+    "defer": 0.0332
+   },
+   "p_fixture_choice": 0.8902,
+   "latency_ms": 197,
+   "input_tokens": 750
+  },
+  {
+   "key": "3:ben:errand",
+   "state": "95ccef21f362",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ben",
+   "role": "visitor_confident_cyclist",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9311,
+    "bike_side_street": 0.0377,
+    "shop_elsewhere": 0.0167,
+    "defer": 0.0145
+   },
+   "p_fixture_choice": 0.9311,
+   "latency_ms": 235,
+   "input_tokens": 911
+  },
+  {
+   "key": "3:omar:errand",
+   "state": "276d7d5f9026",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "omar",
+   "role": "visitor_transit_shopper",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8517,
+    "shop_elsewhere": 0.1135,
+    "defer": 0.0349
+   },
+   "p_fixture_choice": 0.8517,
+   "latency_ms": 205,
+   "input_tokens": 761
+  },
+  {
+   "key": "3:jun:errand",
+   "state": "45738ccb7e82",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9135,
+    "shop_elsewhere": 0.0619,
+    "defer": 0.0246
+   },
+   "p_fixture_choice": 0.9135,
+   "latency_ms": 246,
+   "input_tokens": 755
+  },
+  {
+   "key": "3:marta:errand",
+   "state": "b07d3c1f7254",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "marta",
+   "role": "visitor_driver",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "drive",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.8382,
+    "shop_elsewhere": 0.1296,
+    "defer": 0.0322
+   },
+   "p_fixture_choice": 0.8382,
+   "latency_ms": 209,
+   "input_tokens": 743
+  },
+  {
+   "key": "3:grace:errand",
+   "state": "609353cc1d54",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "grace",
+   "role": "visitor_adult_near_cutoff",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "shop_elsewhere",
+   "clef": "transit",
+   "agree": false,
+   "p": {
+    "transit": 0.9201,
+    "shop_elsewhere": 0.0559,
+    "defer": 0.024
+   },
+   "p_fixture_choice": 0.0559,
+   "latency_ms": 241,
+   "input_tokens": 764
+  },
+  {
+   "key": "3:kaya:errand",
+   "state": "bc3f516454cd",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "kaya",
+   "role": "visitor_less_confident_cyclist",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8863,
+    "bike_side_street": 0.0525,
+    "shop_elsewhere": 0.0403,
+    "defer": 0.0209
+   },
+   "p_fixture_choice": 0.8863,
+   "latency_ms": 237,
+   "input_tokens": 909
+  },
+  {
+   "key": "3:mei:errand",
+   "state": "6fbf35f1e990",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9552,
+    "shop_elsewhere": 0.0296,
+    "defer": 0.0151
+   },
+   "p_fixture_choice": 0.9552,
+   "latency_ms": 240,
+   "input_tokens": 732
+  },
+  {
+   "key": "3:arun:errand",
+   "state": "b28cd8d8fcbc",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "arun",
+   "role": "visitor_student",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8747,
+    "shop_elsewhere": 0.0978,
+    "defer": 0.0276
+   },
+   "p_fixture_choice": 0.8747,
+   "latency_ms": 245,
+   "input_tokens": 759
+  },
+  {
+   "key": "3:leila:errand",
+   "state": "c8a101def61a",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8874,
+    "shop_elsewhere": 0.055,
+    "defer": 0.0576
+   },
+   "p_fixture_choice": 0.8874,
+   "latency_ms": 212,
+   "input_tokens": 770
+  },
+  {
+   "key": "3:maria:errand",
+   "state": "050c132c01af",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.894,
+    "shop_elsewhere": 0.0571,
+    "defer": 0.0489
+   },
+   "p_fixture_choice": 0.894,
+   "latency_ms": 205,
+   "input_tokens": 762
+  },
+  {
+   "key": "3:nadia:errand",
+   "state": "8c053dc9ebfd",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9016,
+    "shop_elsewhere": 0.0669,
+    "defer": 0.0316
+   },
+   "p_fixture_choice": 0.9016,
+   "latency_ms": 201,
+   "input_tokens": 756
+  },
+  {
+   "key": "3:ravi:errand",
+   "state": "0160245bdbca",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "shop_elsewhere",
+   "clef": "shop_elsewhere",
+   "agree": true,
+   "p": {
+    "shop_elsewhere": 0.6741,
+    "defer": 0.3259
+   },
+   "p_fixture_choice": 0.6741,
+   "latency_ms": 232,
+   "input_tokens": 627
+  },
+  {
+   "key": "3:hawa:errand",
+   "state": "e7ef2c0d251c",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 3,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8208,
+    "shop_elsewhere": 0.1062,
+    "defer": 0.073
+   },
+   "p_fixture_choice": 0.8208,
+   "latency_ms": 211,
+   "input_tokens": 774
+  },
+  {
+   "key": "4:theo:commute",
+   "state": "ff10c899868b",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "theo",
+   "role": "bike_courier",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9163,
+    "bike_side_street": 0.0709,
+    "defer": 0.0127
+   },
+   "p_fixture_choice": 0.9163,
+   "latency_ms": 255,
+   "input_tokens": 778
+  },
+  {
+   "key": "4:hawa:commute",
+   "state": "f50fb3abea45",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "bike_side_street",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "transit": 0.3528,
+    "bike_bloor": 0.5379,
+    "bike_side_street": 0.0799,
+    "defer": 0.0294
+   },
+   "p_fixture_choice": 0.5379,
+   "latency_ms": 235,
+   "input_tokens": 933
+  },
+  {
+   "key": "4:maria:commute",
+   "state": "208ccfbf1de1",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "bike_bloor",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "transit",
+   "agree": false,
+   "p": {
+    "transit": 0.6273,
+    "bike_bloor": 0.3106,
+    "defer": 0.0621
+   },
+   "p_fixture_choice": 0.3106,
+   "latency_ms": 260,
+   "input_tokens": 782
+  },
+  {
+   "key": "4:nadia:commute",
+   "state": "a46565b25aa1",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9873,
+    "defer": 0.0127
+   },
+   "p_fixture_choice": 0.9873,
+   "latency_ms": 236,
+   "input_tokens": 639
+  },
+  {
+   "key": "4:sam:commute",
+   "state": "b15fbde18e39",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "sam",
+   "role": "less_confident_cyclist",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9221,
+    "bike_side_street": 0.0426,
+    "transit": 0.0198,
+    "defer": 0.0154
+   },
+   "p_fixture_choice": 0.9221,
+   "latency_ms": 236,
+   "input_tokens": 922
+  },
+  {
+   "key": "4:ravi:commute",
+   "state": "f22c225d6565",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "drive",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "drive",
+   "agree": false,
+   "p": {
+    "transit": 0.0648,
+    "drive": 0.9198,
+    "defer": 0.0154
+   },
+   "p_fixture_choice": 0.0648,
+   "latency_ms": 218,
+   "input_tokens": 772
+  },
+  {
+   "key": "4:leila:commute",
+   "state": "5ec5ab720f22",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9037,
+    "bike_side_street": 0.0686,
+    "transit": 0.0137,
+    "defer": 0.0139
+   },
+   "p_fixture_choice": 0.9037,
+   "latency_ms": 232,
+   "input_tokens": 929
+  },
+  {
+   "key": "4:yusuf:commute",
+   "state": "5897e97919ee",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9822,
+    "defer": 0.0178
+   },
+   "p_fixture_choice": 0.9822,
+   "latency_ms": 186,
+   "input_tokens": 638
+  },
+  {
+   "key": "4:elena:commute",
+   "state": "ea7a62d68c85",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "elena",
+   "role": "driver",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "drive",
+    "transit",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.9371,
+    "transit": 0.0431,
+    "defer": 0.0198
+   },
+   "p_fixture_choice": 0.9371,
+   "latency_ms": 197,
+   "input_tokens": 757
+  },
+  {
+   "key": "4:jun:commute",
+   "state": "eb7d356159a7",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "transit",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.9728,
+    "defer": 0.0272
+   },
+   "p_fixture_choice": 0.9728,
+   "latency_ms": 184,
+   "input_tokens": 632
+  },
+  {
+   "key": "4:priya:commute",
+   "state": "b01d8cd62385",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "transit",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9436,
+    "bike_side_street": 0.038,
+    "transit": 0.009,
+    "defer": 0.0093
+   },
+   "p_fixture_choice": 0.9436,
+   "latency_ms": 234,
+   "input_tokens": 930
+  },
+  {
+   "key": "4:mei:commute",
+   "state": "d8f2045869d5",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 4,
+   "trip": "commute",
+   "options": [
+    "walk",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9573,
+    "defer": 0.0427
+   },
+   "p_fixture_choice": 0.9573,
+   "latency_ms": 233,
+   "input_tokens": 605
+  },
+  {
+   "key": "4:lena:errand",
+   "state": "40e0cd5d047a",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "lena",
+   "role": "visitor_fair_pass_shopper",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8835,
+    "shop_elsewhere": 0.0899,
+    "defer": 0.0266
+   },
+   "p_fixture_choice": 0.8835,
+   "latency_ms": 203,
+   "input_tokens": 768
+  },
+  {
+   "key": "4:priya:errand",
+   "state": "5e1f8b931745",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "priya",
+   "role": "confident_cyclist",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8812,
+    "shop_elsewhere": 0.0636,
+    "defer": 0.0552
+   },
+   "p_fixture_choice": 0.8812,
+   "latency_ms": 195,
+   "input_tokens": 767
+  },
+  {
+   "key": "4:yusuf:errand",
+   "state": "24fca4482434",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "yusuf",
+   "role": "fair_pass_commuter",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9188,
+    "shop_elsewhere": 0.0543,
+    "defer": 0.0269
+   },
+   "p_fixture_choice": 0.9188,
+   "latency_ms": 210,
+   "input_tokens": 750
+  },
+  {
+   "key": "4:ben:errand",
+   "state": "d714a8af09f3",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ben",
+   "role": "visitor_confident_cyclist",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.9292,
+    "bike_side_street": 0.0373,
+    "shop_elsewhere": 0.0179,
+    "defer": 0.0156
+   },
+   "p_fixture_choice": 0.9292,
+   "latency_ms": 275,
+   "input_tokens": 912
+  },
+  {
+   "key": "4:omar:errand",
+   "state": "0eefe034e07c",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "omar",
+   "role": "visitor_transit_shopper",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.8573,
+    "shop_elsewhere": 0.1086,
+    "defer": 0.0342
+   },
+   "p_fixture_choice": 0.8573,
+   "latency_ms": 204,
+   "input_tokens": 761
+  },
+  {
+   "key": "4:jun:errand",
+   "state": "5142556d27f0",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "jun",
+   "role": "adult_transit_commuter",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9093,
+    "shop_elsewhere": 0.0643,
+    "defer": 0.0264
+   },
+   "p_fixture_choice": 0.9093,
+   "latency_ms": 253,
+   "input_tokens": 755
+  },
+  {
+   "key": "4:marta:errand",
+   "state": "e9baa5db2828",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "marta",
+   "role": "visitor_driver",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "drive",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "drive",
+   "clef": "drive",
+   "agree": true,
+   "p": {
+    "drive": 0.8432,
+    "shop_elsewhere": 0.1253,
+    "defer": 0.0314
+   },
+   "p_fixture_choice": 0.8432,
+   "latency_ms": 330,
+   "input_tokens": 743
+  },
+  {
+   "key": "4:grace:errand",
+   "state": "2ac39cfadef1",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "grace",
+   "role": "visitor_adult_near_cutoff",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "shop_elsewhere",
+   "clef": "transit",
+   "agree": false,
+   "p": {
+    "transit": 0.937,
+    "shop_elsewhere": 0.0449,
+    "defer": 0.0181
+   },
+   "p_fixture_choice": 0.0449,
+   "latency_ms": 197,
+   "input_tokens": 756
+  },
+  {
+   "key": "4:kaya:errand",
+   "state": "6be5c4804e14",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "kaya",
+   "role": "visitor_less_confident_cyclist",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "bike_bloor",
+    "bike_side_street",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "bike_bloor",
+   "clef": "bike_bloor",
+   "agree": true,
+   "p": {
+    "bike_bloor": 0.8848,
+    "bike_side_street": 0.0529,
+    "shop_elsewhere": 0.0412,
+    "defer": 0.0211
+   },
+   "p_fixture_choice": 0.8848,
+   "latency_ms": 272,
+   "input_tokens": 909
+  },
+  {
+   "key": "4:mei:errand",
+   "state": "34a3f93e1dd1",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "mei",
+   "role": "pedestrian",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9689,
+    "shop_elsewhere": 0.0203,
+    "defer": 0.0108
+   },
+   "p_fixture_choice": 0.9689,
+   "latency_ms": 198,
+   "input_tokens": 732
+  },
+  {
+   "key": "4:arun:errand",
+   "state": "b85e99cb0df5",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "arun",
+   "role": "visitor_student",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "transit",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "transit",
+   "clef": "transit",
+   "agree": true,
+   "p": {
+    "transit": 0.837,
+    "shop_elsewhere": 0.1274,
+    "defer": 0.0356
+   },
+   "p_fixture_choice": 0.837,
+   "latency_ms": 205,
+   "input_tokens": 767
+  },
+  {
+   "key": "4:leila:errand",
+   "state": "e7ce1bb5f76f",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "leila",
+   "role": "less_confident_cyclist",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8874,
+    "shop_elsewhere": 0.0559,
+    "defer": 0.0567
+   },
+   "p_fixture_choice": 0.8874,
+   "latency_ms": 220,
+   "input_tokens": 770
+  },
+  {
+   "key": "4:maria:errand",
+   "state": "cf9b78a23982",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "maria",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8973,
+    "shop_elsewhere": 0.055,
+    "defer": 0.0477
+   },
+   "p_fixture_choice": 0.8973,
+   "latency_ms": 253,
+   "input_tokens": 762
+  },
+  {
+   "key": "4:nadia:errand",
+   "state": "de4ab4c6ada6",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "nadia",
+   "role": "fair_pass_commuter",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.9084,
+    "shop_elsewhere": 0.0616,
+    "defer": 0.03
+   },
+   "p_fixture_choice": 0.9084,
+   "latency_ms": 203,
+   "input_tokens": 756
+  },
+  {
+   "key": "4:ravi:errand",
+   "state": "74994d56d039",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "ravi",
+   "role": "adult_car_owner",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "shop_elsewhere",
+   "clef": "shop_elsewhere",
+   "agree": true,
+   "p": {
+    "shop_elsewhere": 0.6654,
+    "defer": 0.3346
+   },
+   "p_fixture_choice": 0.6654,
+   "latency_ms": 181,
+   "input_tokens": 627
+  },
+  {
+   "key": "4:hawa:errand",
+   "state": "1345d870b244",
+   "arms": [
+    "intervention"
+   ],
+   "persona": "hawa",
+   "role": "adult_near_fair_pass_cutoff",
+   "tick": 4,
+   "trip": "errand",
+   "options": [
+    "walk",
+    "shop_elsewhere",
+    "defer"
+   ],
+   "fixture": "walk",
+   "clef": "walk",
+   "agree": true,
+   "p": {
+    "walk": 0.8077,
+    "shop_elsewhere": 0.1132,
+    "defer": 0.079
+   },
+   "p_fixture_choice": 0.8077,
+   "latency_ms": 219,
+   "input_tokens": 774
+  }
+ ],
+ "clef_run_summary": {
+  "description": "Full paired runWorldExperiment with Clef as decide; the mapped sandbox validated and committed every move.",
+  "run_ids": {
+   "baseline": "bloor-section-fare-050:v1:baseline:42",
+   "intervention": "bloor-section-fare-050:v1:intervention:42"
+  },
+  "decisions": 224,
+  "fallbacks": 0,
+  "rejected_actions": 0,
+  "differs_from_fixture_run": {
+   "baseline": 9,
+   "intervention": 13
+  },
+  "changed_decisions": [],
+  "fixture_changed_decisions": 8,
+  "headline_tick": 4,
+  "headline_p4": {
+   "baseline": {
+    "completed_trips": 28,
+    "transit_trips": 8,
+    "bike_trips": 7,
+    "bloor_bike_trips": 7,
+    "car_trips": 3,
+    "walk_trips": 10,
+    "deferred_trips": 0,
+    "line2_rides": 8,
+    "bloor_shared_cycling_m": 0,
+    "local_shop_visits": 16,
+    "shop_sales_cad": 316,
+    "errands_elsewhere": 0,
+    "fare_revenue_cad": 22.8,
+    "household_fare_spend_cad": 22.8,
+    "shops_reduced_hours": 0
+   },
+   "intervention": {
+    "completed_trips": 28,
+    "transit_trips": 8,
+    "bike_trips": 7,
+    "bloor_bike_trips": 7,
+    "car_trips": 3,
+    "walk_trips": 10,
+    "deferred_trips": 0,
+    "line2_rides": 8,
+    "bloor_shared_cycling_m": 0,
+    "local_shop_visits": 16,
+    "shop_sales_cad": 316,
+    "errands_elsewhere": 0,
+    "fare_revenue_cad": 25.3,
+    "household_fare_spend_cad": 25.3,
+    "shops_reduced_hours": 0
+   }
+  },
+  "fixture_headline_p4": {
+   "baseline": {
+    "completed_trips": 28,
+    "transit_trips": 9,
+    "bike_trips": 7,
+    "bloor_bike_trips": 7,
+    "car_trips": 2,
+    "walk_trips": 10,
+    "deferred_trips": 0,
+    "line2_rides": 9,
+    "bloor_shared_cycling_m": 0,
+    "local_shop_visits": 16,
+    "shop_sales_cad": 316,
+    "errands_elsewhere": 0,
+    "fare_revenue_cad": 26.1,
+    "household_fare_spend_cad": 26.1,
+    "shops_reduced_hours": 0
+   },
+   "intervention": {
+    "completed_trips": 28,
+    "transit_trips": 7,
+    "bike_trips": 8,
+    "bloor_bike_trips": 8,
+    "car_trips": 2,
+    "walk_trips": 9,
+    "deferred_trips": 0,
+    "line2_rides": 7,
+    "bloor_shared_cycling_m": 0,
+    "local_shop_visits": 14,
+    "shop_sales_cad": 289,
+    "errands_elsewhere": 2,
+    "fare_revenue_cad": 21.5,
+    "household_fare_spend_cad": 21.5,
+    "shops_reduced_hours": 1
+   }
+  }
+ },
+ "replay": {
+  "35d10935a5d9": "bike_bloor",
+  "f5723597149b": "bike_bloor",
+  "ac91413f075b": "transit",
+  "cb76d77ed486": "transit",
+  "751357dc69f7": "bike_bloor",
+  "97cc37fa58e7": "drive",
+  "a39510b95d6d": "bike_bloor",
+  "f39e16011641": "transit",
+  "091575db4760": "drive",
+  "d4e1ec0466eb": "transit",
+  "cb25122e8fee": "bike_bloor",
+  "8114601404fa": "walk",
+  "1c648426a984": "transit",
+  "a380c8ef7fe7": "walk",
+  "9625a32533b0": "walk",
+  "e20f5802af2f": "bike_bloor",
+  "72847fb6b8cd": "transit",
+  "7725656ed39a": "walk",
+  "4f371bff329a": "drive",
+  "1a3dc9db78f7": "transit",
+  "917a79197f44": "bike_bloor",
+  "5bf1596e06a8": "walk",
+  "ada1bcfc617b": "transit",
+  "0c1a42a27cab": "walk",
+  "b100227ea2f6": "walk",
+  "e39e50674306": "walk",
+  "fdb7259f29f7": "walk",
+  "0151a4c5dcce": "walk",
+  "ff129d2ba4d1": "bike_bloor",
+  "71c9e0021d82": "bike_bloor",
+  "dafb93ca0555": "transit",
+  "fedf0d75bddc": "transit",
+  "b5aa5ea6374c": "bike_bloor",
+  "d175a6c22e10": "drive",
+  "eed4914ac02e": "bike_bloor",
+  "e3d860a9a682": "transit",
+  "b3bf33e3725f": "drive",
+  "1e19f938c77f": "transit",
+  "454bb8117543": "bike_bloor",
+  "25a8c49da9fd": "walk",
+  "5efc312e8851": "transit",
+  "e3236ba2aaab": "walk",
+  "05d02529a52e": "walk",
+  "668f7ad8aeb5": "bike_bloor",
+  "6b2b7b477f02": "transit",
+  "1c166d1b7efd": "walk",
+  "890dd7d09c62": "drive",
+  "0e4959e2017e": "transit",
+  "c885699f29d4": "bike_bloor",
+  "30b0a54bc988": "walk",
+  "d9be5569d460": "transit",
+  "922d21441ad9": "walk",
+  "5a35a73aa2b6": "walk",
+  "fdbecd3b578c": "walk",
+  "6947dfe0a27c": "walk",
+  "a60041046ce0": "walk",
+  "b10c6516c482": "bike_bloor",
+  "5f29f34b19af": "bike_bloor",
+  "4e4e8a49460b": "transit",
+  "5c609ad9d93e": "transit",
+  "ad9c466810e5": "bike_bloor",
+  "6c1ec92fd689": "bike_bloor",
+  "33aa6cc4669a": "drive",
+  "1b5fdc5d3600": "transit",
+  "ba0fba190349": "drive",
+  "fc31a8901b47": "transit",
+  "8e403b2cf2ce": "bike_bloor",
+  "7b781c60c5ff": "walk",
+  "ae0127bad606": "transit",
+  "d27f7f1deaa4": "walk",
+  "24df8c10a8e2": "walk",
+  "2d084f78741d": "bike_bloor",
+  "e669d48e11c1": "transit",
+  "e2049528c237": "walk",
+  "825146f0d87e": "drive",
+  "09d9301278e3": "transit",
+  "5fe6d3d20a26": "bike_bloor",
+  "3caf175c36cd": "walk",
+  "9db46402cdb6": "transit",
+  "c0026d9cb68a": "walk",
+  "abfb4e33d6c7": "walk",
+  "25bd0c3e7411": "walk",
+  "0e0b427d83c6": "walk",
+  "59c359c87052": "walk",
+  "c0d75aa3a431": "bike_bloor",
+  "765a8b6dd5a3": "bike_bloor",
+  "cbf5b865ce7b": "transit",
+  "8f86b9296266": "transit",
+  "bcedc599580f": "bike_bloor",
+  "c70f81210c27": "drive",
+  "b934e2a70426": "bike_bloor",
+  "66da5572d980": "transit",
+  "b0fd2baf3f87": "drive",
+  "6bfa21c5c2f9": "transit",
+  "03b04a0eaac7": "bike_bloor",
+  "502458639d63": "walk",
+  "f468309f62ab": "transit",
+  "4ae94299dddb": "walk",
+  "5c1415d09caf": "walk",
+  "b889774d084a": "bike_bloor",
+  "a3745160a77d": "transit",
+  "833813d20357": "walk",
+  "9c9bde5cab87": "drive",
+  "28d833e41221": "transit",
+  "2d5d349411fe": "bike_bloor",
+  "e089d74ad314": "walk",
+  "c38f0a59e245": "transit",
+  "b036c744af57": "walk",
+  "b11819552bef": "walk",
+  "3ac5866d8212": "walk",
+  "f0628a076ef2": "walk",
+  "737fa50bd173": "walk",
+  "9bec7b82a343": "bike_bloor",
+  "3ec54768372c": "bike_bloor",
+  "345ac69e23d6": "transit",
+  "39d1540316d8": "transit",
+  "ecbc634ee038": "bike_bloor",
+  "28f19fa343ac": "drive",
+  "410420ef4ef6": "bike_bloor",
+  "444c561ab47f": "transit",
+  "6ad6d4edb0da": "drive",
+  "309ab0818def": "transit",
+  "3d9e2bbafb0e": "bike_bloor",
+  "86f380988836": "walk",
+  "af601f8ace80": "transit",
+  "ad642e9510ac": "walk",
+  "32d9be2a840e": "walk",
+  "d630cd032116": "bike_bloor",
+  "01604f84c05e": "transit",
+  "845ea0aedf8c": "walk",
+  "a7d1722f8219": "drive",
+  "5f77dd19d06b": "transit",
+  "a28327754633": "bike_bloor",
+  "435bc1a6b0b5": "walk",
+  "8935a65bce01": "transit",
+  "fd6051928ee6": "walk",
+  "1ed440893f48": "walk",
+  "611b260cf9f4": "walk",
+  "dddb27baf5de": "walk",
+  "8e1f0ed081cd": "walk",
+  "07f4a1508900": "bike_bloor",
+  "43363d2a9ece": "bike_bloor",
+  "6a425ded4b82": "transit",
+  "3ca1c3c80a7f": "transit",
+  "2f7f49ba9dee": "bike_bloor",
+  "5d51eecfde04": "bike_bloor",
+  "9bf9e0fe6cb4": "drive",
+  "e07c55e62a8f": "transit",
+  "4071276e5799": "drive",
+  "59a89f6e3895": "transit",
+  "3b4768266fa9": "bike_bloor",
+  "9e863020211e": "walk",
+  "577b5b6eff4d": "transit",
+  "7892fe2f9ed8": "walk",
+  "62888997a92f": "walk",
+  "95ccef21f362": "bike_bloor",
+  "276d7d5f9026": "transit",
+  "45738ccb7e82": "walk",
+  "b07d3c1f7254": "drive",
+  "609353cc1d54": "transit",
+  "bc3f516454cd": "bike_bloor",
+  "6fbf35f1e990": "walk",
+  "b28cd8d8fcbc": "transit",
+  "c8a101def61a": "walk",
+  "050c132c01af": "walk",
+  "8c053dc9ebfd": "walk",
+  "0160245bdbca": "shop_elsewhere",
+  "e7ef2c0d251c": "walk",
+  "ff10c899868b": "bike_bloor",
+  "f50fb3abea45": "bike_bloor",
+  "208ccfbf1de1": "transit",
+  "a46565b25aa1": "transit",
+  "b15fbde18e39": "bike_bloor",
+  "f22c225d6565": "drive",
+  "5ec5ab720f22": "bike_bloor",
+  "5897e97919ee": "transit",
+  "ea7a62d68c85": "drive",
+  "eb7d356159a7": "transit",
+  "b01d8cd62385": "bike_bloor",
+  "d8f2045869d5": "walk",
+  "40e0cd5d047a": "transit",
+  "5e1f8b931745": "walk",
+  "24fca4482434": "walk",
+  "d714a8af09f3": "bike_bloor",
+  "0eefe034e07c": "transit",
+  "5142556d27f0": "walk",
+  "e9baa5db2828": "drive",
+  "2ac39cfadef1": "transit",
+  "6be5c4804e14": "bike_bloor",
+  "34a3f93e1dd1": "walk",
+  "b85e99cb0df5": "transit",
+  "e7ce1bb5f76f": "walk",
+  "cf9b78a23982": "walk",
+  "de4ab4c6ada6": "walk",
+  "74994d56d039": "shop_elsewhere",
+  "1345d870b244": "walk",
+  "defc750e53e2": "walk",
+  "e74b6f219e8c": "walk",
+  "5d4fc4c05474": "bike_bloor",
+  "381095ece35c": "drive",
+  "1cea0885d60f": "walk",
+  "9bca843afa9d": "walk",
+  "dd8e41cc9a76": "walk",
+  "c17feeddb1c2": "bike_bloor",
+  "c94323d80bcc": "transit",
+  "5b10d840f08f": "drive",
+  "ade48f1924fe": "drive",
+  "e46e3c0a4436": "walk",
+  "0f5c7395d76f": "walk",
+  "bde66963a6b5": "walk",
+  "20277e7f6a6e": "bike_bloor",
+  "fa7d361ab2e8": "transit",
+  "6771b366bbd3": "drive",
+  "933de74b068f": "drive",
+  "23d3341dd79f": "walk",
+  "50e14a727fbe": "walk",
+  "1dad6a27056c": "walk",
+  "aec9248b1820": "bike_bloor",
+  "fd61ef200129": "drive",
+  "4a5b7a5d6f80": "walk",
+  "321f306689b0": "walk",
+  "93ddb736ce76": "walk",
+  "40dc4a7262db": "bike_bloor",
+  "dfd76173ce27": "transit",
+  "3e612094962d": "drive",
+  "5cb8deb5bfb4": "transit",
+  "59ba52ffbe7e": "walk",
+  "7c2bc56e1267": "walk",
+  "c223a46019e0": "walk",
+  "24d7346e3326": "bike_bloor",
+  "ebf9920561f7": "transit",
+  "b0a0716f75e5": "drive",
+  "81b114123f87": "transit",
+  "9dec5f8a25e4": "walk",
+  "af39f625bd1b": "walk",
+  "807942a7e62a": "walk"
+ },
+ "replay_note": "state hash = first 12 hex of sha256(JSON of the /v1/systemone body built by experiment/vultr-decision.js decisionBody); value = Clef choice. Enough to rebuild the Clef paired run offline.",
+ "note": "Second opinion from Vultr Clef on the same legal options; the public run uses the fixture rule / Steven's persona agents. Not a Toronto forecast.",
+ "batch": {
+  "scenarios": [
+   "fare",
+   "bike"
+  ],
+  "calls_total": 340,
+  "errors_total": 0,
+  "wall_ms": 185367,
+  "rate_limit_rpm": 110,
+  "max_in_flight": 6
+ }
+}

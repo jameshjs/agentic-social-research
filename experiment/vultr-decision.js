@@ -8,10 +8,57 @@ const RETRYABLE = new Set([429, 502, 503, 504]);
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/* experiment.v2 (mapped Bathurst–Spadina world, experiment/world-runner.js): the
+ * request carries `world` levers instead of `environment`, and each legal option
+ * was probed in the sandbox (mapped + off-map minutes, distance shared with cars).
+ * The scenario id, seed, persona id and name are withheld: the model sees the
+ * current world state, not the policy's label, and identical states in either
+ * prepared scenario produce the same request. */
+function isWorldRequest(request) {
+  return Boolean(request && request.world && typeof request.world === 'object' && !request.environment);
+}
+
+function worldDecisionState(request) {
+  const { person, trip, world, options } = request;
+  if (!person || !trip || !world) throw new Error('Decision request is missing world state');
+  return {
+    tick: request.tick,
+    person: {
+      role: person.role,
+      fare_category: person.fare_category,
+      has_car: person.has_car,
+      has_bike: person.has_bike,
+      cost_sensitivity: person.cost_sensitivity,
+      time_sensitivity: person.time_sensitivity,
+      bike_safety_sensitivity: person.bike_safety_sensitivity,
+      mode_preference: person.mode_preference,
+      home: person.home,
+    },
+    trip: {
+      purpose: trip.purpose,
+      depart: trip.depart,
+      planned_shop: trip.planned_shop ?? null,
+    },
+    cash_cad: request.cash_cad,
+    world: {
+      adult_fare_cad: world.adult_fare_cad,
+      fair_pass_fare_cad: world.fair_pass_fare_cad,
+      bloor_cycle_track: world.bloor_cycle_track,
+      line2_headway_multiplier: world.line2_headway_multiplier,
+    },
+    legal_options: options.map(worldOption),
+  };
+}
+
+function worldOption({ action, mode, minutes, mapped_minutes, offmap_minutes, cost_cad, shared_with_cars_m, destination, route }) {
+  return { action, mode, minutes, mapped_minutes, offmap_minutes, cost_cad, shared_with_cars_m, destination, route };
+}
+
 function decisionState(request) {
   if (!request || !Array.isArray(request.options) || !request.options.length) {
     throw new Error('A decision request needs legal options');
   }
+  if (isWorldRequest(request)) return worldDecisionState(request);
   const { person, trip, environment, options } = request;
   if (!person || !trip || !environment) throw new Error('Decision request is missing world state');
   return {
@@ -49,19 +96,22 @@ function decisionState(request) {
   };
 }
 
+const V1_INSTRUCTIONS = 'For this one synthetic person and this one trip, choose the most plausible next action from the legal options. Respect the persona’s preferences, money, time, mobility access, safety sensitivity, trip purpose, and current world. A policy does not guarantee a switch. Do not infer a citywide outcome.';
+const V2_INSTRUCTIONS = `${V1_INSTRUCTIONS} Each option was checked in a mapped 619 m section of Bloor St W (Bathurst–Spadina): minutes = mapped_minutes inside the section + offmap_minutes beyond it; cost_cad is what this person pays (fare or parking); shared_with_cars_m is cycling distance in a lane shared with cars; destination equal to planned_shop means the planned shop, "offmap" means somewhere outside the section; defer means not making the trip this period.`;
+
 function decisionBody(request, model = DEFAULT_MODEL) {
   const state = decisionState(request);
-  const criteria = Object.fromEntries(request.options.map((option) => [option.action, {
-    mode: option.mode, cost_cad: option.cost_cad, minutes: option.minutes,
-    destination: option.destination, route_id: option.route_id,
-  }]));
+  const v2 = isWorldRequest(request);
+  const criteria = Object.fromEntries(request.options.map((option) => [option.action, v2
+    ? (({ action, ...rest }) => rest)(worldOption(option))
+    : { mode: option.mode, cost_cad: option.cost_cad, minutes: option.minutes, destination: option.destination, route_id: option.route_id }]));
   return {
     model,
     state,
     questions: {
       action: {
         type: 'choice',
-        instructions: 'For this one synthetic person and this one trip, choose the most plausible next action from the legal options. Respect the persona’s preferences, money, time, mobility access, safety sensitivity, trip purpose, and current world. A policy does not guarantee a switch. Do not infer a citywide outcome.',
+        instructions: v2 ? V2_INSTRUCTIONS : V1_INSTRUCTIONS,
         criteria,
       },
     },
@@ -102,24 +152,34 @@ function createVultrDecisionProvider({
   const endpoint = `${baseUrl.replace(/\/$/, '')}/systemone`;
   return async function decide(request) {
     const body = decisionBody(request, model);
+    const started = Date.now();
     let response;
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      response = await fetchImpl(endpoint, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(timeoutMs),
-      });
+    let attempt = 0;
+    for (; attempt <= maxRetries; attempt++) {
+      try {
+        response = await fetchImpl(endpoint, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(timeoutMs),
+        });
+      } catch (error) {
+        // Network failure or timeout: retry with backoff; never include headers in the message.
+        if (attempt === maxRetries) throw new Error(`Vultr decision request failed: ${error?.name === 'TimeoutError' ? `timed out after ${timeoutMs} ms` : 'network error'}`);
+        await pause(1000 * (2 ** attempt));
+        continue;
+      }
       if (response.ok) break;
       if (!RETRYABLE.has(response.status) || attempt === maxRetries) throw new Error(`Vultr decision HTTP ${response.status}`);
-      const retryAfter = Number(response.headers?.get?.('retry-after'));
+      const header = response.headers?.get?.('retry-after');
+      const retryAfter = header == null || header === '' ? NaN : Number(header);
       await pause(Number.isFinite(retryAfter) && retryAfter >= 0 ? Math.min(retryAfter * 1000, 30000) : 1000 * (2 ** attempt));
     }
     const payload = await response.json();
     const answer = readDecision(payload, request, model);
-    if (onResponse) onResponse({ request, answer, usage: payload.usage ?? null });
+    if (onResponse) onResponse({ request, answer, usage: payload.usage ?? null, latency_ms: Date.now() - started, http_attempts: attempt + 1 });
     return answer;
   };
 }
 
-module.exports = { DEFAULT_BASE_URL, DEFAULT_MODEL, decisionState, decisionBody, readDecision, createVultrDecisionProvider };
+module.exports = { DEFAULT_BASE_URL, DEFAULT_MODEL, isWorldRequest, decisionState, decisionBody, readDecision, createVultrDecisionProvider };

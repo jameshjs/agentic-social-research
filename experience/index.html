@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#07131c" />
     <meta name="description" content="Counterfactual Lab — explore how a city might respond to a policy change through a living simulation and connected impact map." />
     <title>Counterfactual Lab — Ask a city what if</title>
-    <link rel="stylesheet" href="./styles.css?v=agent-ratings-1" />
+    <link rel="stylesheet" href="./styles.css?v=mapped-run-1" />
   </head>
   <body data-phase="intro" data-scenario="fare">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -83,6 +83,7 @@
             <div class="rail-overline">CURRENT QUESTION <span>01 / 02</span></div>
             <h2 id="studyTitle">What if the TTC adult fare rose by 50¢?</h2>
             <p id="studySummary">Follow riders, a neighbourhood shop, and sample fare payments as choices ripple through a small synthetic district near UTSC.</p>
+            <p id="compilerBadge" class="compiler-badge" hidden></p>
             <div class="scenario-switch" role="group" aria-label="Choose demo scenario">
               <button class="switch-button active" type="button" data-scenario-choice="fare" aria-pressed="true">TTC fare <span>↗</span></button>
               <button class="switch-button" type="button" data-scenario-choice="bike" aria-pressed="false">Bloor bike lane <span>◇</span></button>
@@ -90,7 +91,7 @@
             <div class="micro-section-label" id="chainLabel">WATCH THE CHAIN</div>
             <ol id="causalChain" class="causal-chain"></ol>
             <button id="bikeLabButton" class="bike-lab-entry" type="button" hidden><span>◇</span><span>Explore the Bloor street change <small>Compare the street and follow a person</small></span><span aria-hidden="true">↗</span></button>
-            <button id="ttcInspectorButton" class="bike-lab-entry" type="button" hidden><span>✳</span><span>Inspect the living TTC run <small>Follow people, assumptions and reruns</small></span><span aria-hidden="true">↗</span></button>
+            <button id="ttcInspectorButton" class="bike-lab-entry" type="button" hidden><span>✳</span><span><span id="ttcInspectorTitle">Inspect the living TTC run</span> <small id="ttcInspectorHint">Follow people, assumptions and reruns</small></span><span aria-hidden="true">↗</span></button>
             <button id="impactMapButton" class="impact-cta" type="button"><span class="impact-cta-icon">✳</span><span>Open the impact map <small id="impactButtonHint">See the connected effects</small></span><span class="cta-arrow">↗</span></button>
             <button id="personaLabButton" class="research-entry" type="button"><span>◉</span><span>Inspect the persona research <small>Trials, human review, and saved reactions</small></span><span aria-hidden="true">↗</span></button>
             <p class="rail-note"><span>ⓘ</span><span id="railNoteText">Simulated decisions are illustrative, not a validated policy forecast. Click an impact to inspect its assumptions.</span></p>
@@ -102,7 +103,8 @@
             <button class="focus-marker focus-marker--a" id="focusMarkerA" type="button" aria-label="Inspect mobility impact"><span class="focus-ring"></span><span class="focus-label" id="focusLabelA">01 / RIDER DECISION</span></button>
             <button class="focus-marker focus-marker--b" id="focusMarkerB" type="button" aria-label="Inspect local business impact"><span class="focus-ring"></span><span class="focus-label" id="focusLabelB">02 / LOCAL BUSINESS</span></button>
             <div class="world-caption"><span>MAPPED CONTEXT</span><span class="caption-line"></span><span id="worldCaption">People choose. The city changes.</span></div>
-            <div id="mapMotionNote" class="map-motion-note" hidden><strong>Illustrative motion mapped from agents' 1–5 ratings, not simulated trip decisions.</strong> <span id="mapMotionCount"></span> Click a dot for that agent's rating and reason.<span class="map-motion-legend"><i style="background:#a9f4d6"></i>transit<i style="background:#f2e6c9"></i>walk<i style="background:#ffd27a"></i>bike<i style="background:#ff987e"></i>side-street detour<i style="background:#8fb7ff"></i>car</span><p id="mapActorCard" class="map-actor-card" hidden></p></div>
+            <div id="mapMotionNote" class="map-motion-note" hidden><strong id="mapMotionTitle">Illustrative motion mapped from agents' 1–5 ratings, not simulated trip decisions.</strong> <span id="mapMotionCount"></span><span class="map-motion-detail"> Click a dot for that agent's rating and reason.<span class="map-motion-legend"><i style="background:#a9f4d6"></i>transit<i style="background:#f2e6c9"></i>walk<i style="background:#ffd27a"></i>bike<i style="background:#ff987e"></i>side-street detour<i style="background:#8fb7ff"></i>car</span></span><button id="ratingsToggle" class="map-ratings-toggle" type="button" aria-pressed="false" hidden>Show agent 1–5 ratings</button><p id="mapActorCard" class="map-actor-card" hidden></p></div>
+            <div id="mapPersonaCard" class="map-persona-card" hidden role="status" aria-live="polite"></div>
             <div id="mapAttribution" class="map-attribution" hidden>Map data: City of Toronto · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a></div>
             <div class="viewport-bottom">
               <div class="view-toggle" id="viewToggle" role="group" aria-label="Compare city state"><button id="baselineView" type="button" aria-pressed="false">Baseline</button><button id="policyView" class="selected" type="button" aria-pressed="true">With policy</button></div>
@@ -123,9 +125,38 @@
         </div>
 
         <div class="timeline-bar">
-          <div class="timeline-heading"><span>ILLUSTRATIVE CITY REPLAY</span><strong id="timelineLabel">MOTION FRAME 03 / 04</strong></div>
-          <div class="timeline-controls"><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub schematic city animation; recorded decisions appear in the experiment ledger below" /><span>END</span></div>
-          <div class="timeline-time"><span>00</span><span>01</span><span>02</span><span>03</span><span>04</span></div>
+          <div class="timeline-heading"><span id="timelineKicker">ILLUSTRATIVE CITY REPLAY</span><strong id="timelineLabel" aria-live="off">MOTION FRAME 03 / 04</strong></div>
+          <div class="timeline-controls"><button id="replayToggle" class="replay-toggle" type="button" aria-label="Play event replay" aria-pressed="false" hidden>▶</button><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub schematic city animation; recorded decisions appear in the experiment ledger below" /><span>END</span></div>
+          <div id="timelineFrames" class="timeline-time"><span>00</span><span>01</span><span>02</span><span>03</span><span>04</span></div>
+          <div id="timelinePeriods" class="timeline-periods" role="group" aria-label="Jump to a modelled period" hidden></div>
+        </div>
+      </section>
+
+      <section id="runLedger" class="run-ledger" hidden aria-label="Shared decision ledger for the mapped run">
+        <div class="experiment-ledger">
+          <div class="experiment-ledger-head">
+            <div><span id="runLedgerSeed">ONE EVENT LOG</span><h3>What the people in this run did.</h3><small id="runLedgerHost" class="run-ledger-host"></small></div>
+            <p id="runLedgerScope">Choose a changed decision to follow its committed events on the map.</p>
+          </div>
+          <div class="run-ledger-tools">
+            <div id="runRerun" class="run-rerun" role="group" aria-labelledby="rerunHeading">
+              <span id="rerunHeading" class="run-tool-label">CHANGE AN ASSUMPTION · VERSIONED RERUN</span>
+              <div class="run-rerun-row">
+                <label class="sr-only" for="rerunAssumption">Sensitivity assumption</label>
+                <select id="rerunAssumption"></select>
+                <div id="rerunLevels" class="run-rerun-levels" role="group" aria-label="Assumption value"></div>
+                <button id="rerunButton" class="run-rerun-go" type="button">Rerun ↻</button>
+              </div>
+              <p id="rerunNote" class="run-rerun-note"></p>
+              <p id="rerunStatus" class="run-rerun-status" role="status" aria-live="polite"></p>
+              <button id="sweepButton" class="text-link run-sweep-button" type="button" hidden>Sweep on Vultr <span aria-hidden="true">↗</span></button>
+              <div id="sweepResult" class="run-sweep" aria-live="polite" hidden></div>
+            </div>
+            <aside id="clefCard" class="clef-card" hidden aria-label="Vultr Clef second opinion"></aside>
+          </div>
+          <div id="runLedgerChoices" class="experiment-ledger-choices" role="group" aria-label="Changed decisions"></div>
+          <p id="runLedgerSeek" class="run-ledger-seek" role="status" aria-live="polite"></p>
+          <div id="runLedgerPath" class="experiment-ledger-path"></div>
         </div>
       </section>
 
@@ -139,8 +170,8 @@
 
       <section id="ttcWorkbench" class="ttc-workbench" hidden aria-label="TTC agent replay and research workbench">
         <div class="ttc-workbench-head">
-          <div><span class="ttc-workbench-kicker">01 / INSIDE THE SIMULATION</span><h2>Follow a choice.<br /><em>Challenge the assumption.</em></h2></div>
-          <p>This is the trace-backed TTC replay. Select a person to see their decisions, inspect supporting evidence, then edit an assumption and rerun. The map above shows Bathurst–Spadina context; this inspector still uses its earlier synthetic district. Its own replay and charts share one event trace.</p>
+          <div><span id="ttcWorkbenchKicker" class="ttc-workbench-kicker">01 / INSIDE THE SIMULATION</span><h2>Follow a choice.<br /><em>Challenge the assumption.</em></h2></div>
+          <p id="ttcWorkbenchDeck">This is the trace-backed TTC replay. Select a person to see their decisions, inspect supporting evidence, then edit an assumption and rerun. The map above shows Bathurst–Spadina context; this inspector still uses its earlier synthetic district. Its own replay and charts share one event trace.</p>
         </div>
         <div class="ttc-workbench-frame">
           <div class="ttc-workbench-bar"><span><i class="live-pulse"></i> <b id="ttcWorkbenchStatus">PREPARING SEEDED TRACE</b></span><span id="ttcWorkbenchMeta">SYNTHETIC SAMPLE · NOT A FORECAST</span></div>
@@ -155,7 +186,7 @@
             <div class="bike-lab-kicker"><span>02 / A STREET IN QUESTION</span><span>TORONTO · BATHURST TO SPADINA</span></div>
             <h2 class="bike-lab-title">One street.<br /><em>Four possible paths.</em></h2>
           </div>
-            <p class="bike-lab-deck">A protected cycle track connects a person to more than a route. Compare a seeded synthetic run, then explore other possible responses. The street visuals are schematic; the event ledger and charts use recorded choices.</p>
+            <p id="bikeLabDeck" class="bike-lab-deck">A protected cycle track connects a person to more than a route. Compare a seeded synthetic run, then explore other possible responses. The street visuals are schematic; the event ledger and charts use recorded choices.</p>
         </div>
 
         <div class="bike-workbench" aria-label="Bloor scenario workbench">
@@ -168,12 +199,12 @@
               <li><span>04</span><div><strong>Compare branches</strong><small>Select a response and inspect what must be measured before estimating impact.</small></div></li>
             </ol>
             <div class="bike-pipeline-context"><span>OBSERVED TORONTO CONTEXT</span><strong>3,524 <small>passages / day</small></strong><p>At one Bloor counter west of Huron in 2025. A scale cue only; the proposed removal has no measured response here.</p></div>
-            <div class="bike-pipeline-note"><span>◇ EVIDENCE BOUNDARY</span><p>A seeded synthetic event trace is attached below. Its choices and shop responses are assumptions, not a Bloor removal forecast.</p></div>
+            <div class="bike-pipeline-note"><span>◇ EVIDENCE BOUNDARY</span><p id="bikePipelineNote">A seeded synthetic event trace is attached below. Its choices and shop responses are assumptions, not a Bloor removal forecast.</p></div>
           </aside>
 
           <div class="bike-workbench-city">
-              <div class="bike-inspector-head"><strong>Mapped Bloor section</strong><span>OBSERVED STREETS / SYNTHETIC RESULTS</span></div>
-              <div class="bike-world" aria-label="Mapped Bathurst to Spadina street context">
+              <div class="bike-inspector-head"><strong id="bikeWorldHead">Mapped Bloor section</strong><span id="bikeWorldTag">OBSERVED STREETS / SYNTHETIC RESULTS</span></div>
+              <div id="bikeWorldPanel" class="bike-world" aria-label="Mapped Bathurst to Spadina street context">
               <canvas id="bikeWorldCanvas" data-fit="parent" aria-hidden="true"></canvas>
               <canvas id="bloorMapBike" class="bloor-map-canvas" hidden aria-hidden="true"></canvas>
               <div class="bike-world-hud"><span><i></i> BLOOR STREET WEST</span><strong id="bikeWorldState">HYPOTHETICAL REMOVAL</strong></div>
@@ -196,7 +227,7 @@
           </div>
 
         <div class="bike-trace">
-          <div class="bike-trace-head"><div><span>EXPLORE AN ALTERNATIVE</span><h3>What else could happen?</h3></div><p>These selectable branches show additional mechanisms that are not choices in the seeded run. The recorded decisions and their event paths are directly below.</p></div>
+          <div class="bike-trace-head"><div><span>EXPLORE AN ALTERNATIVE</span><h3>What else could happen?</h3></div><p id="bikeTraceDeck">These selectable branches show additional mechanisms that are not choices in the seeded run. The recorded decisions and their event paths are directly below.</p></div>
           <div class="bike-role-switch" role="group" aria-label="Choose a Bloor stakeholder">
             <button type="button" data-bike-role="cyclist" class="selected" aria-pressed="true"><span>01</span> Cyclist</button>
             <button type="button" data-bike-role="delivery" aria-pressed="false"><span>02</span> Driver + delivery</button>
@@ -294,16 +325,22 @@
 
     <dialog id="evidenceDialog" class="evidence-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close evidence panel">×</button></form><div class="eyebrow"><span class="eyebrow-line"></span> WHAT WE KNOW, WHAT WE ASSUME</div><h2 id="evidenceDialogTitle">Evidence has a boundary.</h2><p id="evidenceDialogText"></p><div id="evidenceLinks" class="evidence-links"></div><div class="evidence-warning">The figures in this visual prototype are simulated examples. They are not calibrated Toronto forecasts, causal estimates, or a prediction that a shop will close.</div></dialog>
 
-    <script defer src="./scenarios.js?v=shared-section-1"></script>
+    <script defer src="./scenarios.js?v=mapped-run-1"></script>
     <script defer src="../demo-ui/sim.js"></script>
     <script defer src="./trace-adapter.js?v=shared-section-1"></script>
     <script defer src="../experiment/runner.js"></script>
     <script defer src="../experiment/fixtures.js"></script>
     <script defer src="./experiment-adapter.js?v=live-agents-2"></script>
+    <!-- Canonical mapped engine: James's sandbox, the shared population, the paired runner, its dashboard adapter, and the hypothesis compiler. -->
+    <script defer src="../world/sandbox.js?v=mapped-run-1"></script>
+    <script defer src="../experiment/world-fixtures.js?v=mapped-run-1"></script>
+    <script defer src="../experiment/world-runner.js?v=mapped-run-1"></script>
+    <script defer src="./world-run-adapter.js?v=mapped-run-1"></script>
+    <script defer src="../experiment/scenario-compiler.js?v=mapped-run-1"></script>
     <script defer src="./city.js?v=bloor-workbench"></script>
-    <script defer src="./bloor-map.js?v=agent-ratings-2"></script>
+    <script defer src="./bloor-map.js?v=mapped-run-1"></script>
     <script defer src="../persona-swarm/runtime/agents-client.js"></script>
-    <script defer src="./app.js?v=agent-ratings-4"></script>
+    <script defer src="./app.js?v=mapped-run-1"></script>
     <script defer src="./persona-lab.js?v=1"></script>
   </body>
 </html>

@@ -1,0 +1,586 @@
+{
+  "summary": {
+    "endpoint": "https://api.vultrinference.com/v1/chat/completions",
+    "model": "glm-5.3-flash",
+    "response_format": "json_schema",
+    "reasoning_effort": "low",
+    "prompts": 4,
+    "fallbacks": 0,
+    "expectation_misses": 0,
+    "runnable_specs": 3,
+    "total_latency_ms": 7235,
+    "total_tokens": 4732,
+    "note": "Compilation maps a question to sandbox levers; it is not a policy-effect estimate. Speculative prompts stay not estimable."
+  },
+  "models": [
+    "bge-reranker-v2-m3",
+    "clef",
+    "clef-flash",
+    "deepseek-v4.1-flash",
+    "glm-5.2",
+    "glm-5.3",
+    "glm-5.3-flash",
+    "glm-5.x-menthol",
+    "mimo-v2.6-flash-rl",
+    "mimo-v2.6-pro-rl",
+    "minimax-h3",
+    "minimax-m3",
+    "minimax-music3",
+    "muse-glimmer-30b",
+    "nemotron-3-nano-omni-30b-a3b-reasoning",
+    "nemotron-3.5-content-safety",
+    "qwen3-embedding-4b",
+    "qwen3-tts-12hz-1.7b",
+    "qwen3.8-27b",
+    "qwen3.8-flash-next",
+    "vultron-retriever-core-qwen3.5-4.5b",
+    "vultron-retriever-flash-qwen3.5-0.8b",
+    "whisper-large-v3-turbo",
+    "z-image-turbo"
+  ],
+  "rows": [
+    {
+      "id": "prepared_fare",
+      "prompt": "What if the TTC adult pay-as-you-go fare increased by 50¢?",
+      "provider": "vultr",
+      "model": "glm-5.3-flash",
+      "live": true,
+      "latency_ms": 1681,
+      "attempts": 1,
+      "usage": {
+        "prompt_tokens": 591,
+        "completion_tokens": 546,
+        "total_tokens": 1137,
+        "reasoning_tokens": 36
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      },
+      "execution_path": "known_operators",
+      "geography_fit": "citywide_rule_applies_locally",
+      "levers": [
+        {
+          "lever": "adult_fare_cad",
+          "value": 3.8,
+          "baseline": 3.3,
+          "requested": {
+            "op": "add",
+            "value": 0.5,
+            "unit": "CAD"
+          }
+        }
+      ],
+      "unsupported_reason": null,
+      "runnable_spec": true,
+      "spec_id": "bloor-section-compiled-1ce79369",
+      "spec_intervention": [
+        {
+          "operator": "change_cost",
+          "target": "adult_transit_ride",
+          "delta_cad": 0.5,
+          "unit": "CAD",
+          "lever": "adult_fare_cad"
+        }
+      ],
+      "warnings": [],
+      "attempted": null,
+      "fell_back": false,
+      "expected": {
+        "path": "known_operators",
+        "levers": {
+          "adult_fare_cad": 3.8
+        }
+      },
+      "expectation_met": true,
+      "compiled": {
+        "question": "What if the TTC adult pay-as-you-go fare increased by 50¢?",
+        "interpretation": "Raise the adult TTC PRESTO fare from 3.30 to 3.80 CAD, applied locally to this section.",
+        "geography_fit": "citywide_rule_applies_locally",
+        "execution_path": "known_operators",
+        "interventions": [
+          {
+            "lever": "adult_fare_cad",
+            "op": "set",
+            "value": 3.8,
+            "unit": "CAD",
+            "baseline": 3.3,
+            "requested": {
+              "op": "add",
+              "value": 0.5,
+              "unit": "CAD"
+            },
+            "rationale": "50-cent increase on the adult fare lever; baseline 3.30 becomes 3.80."
+          }
+        ],
+        "affected_groups": [
+          "Adult transit riders on Line 2 through this section",
+          "Riders eligible for Fair Pass (not levered, so unaffected by this change)",
+          "Local businesses near Bathurst and Spadina stations"
+        ],
+        "mechanisms": [
+          {
+            "from": "adult_fare_cad",
+            "to": "transit trip cost for adult riders",
+            "note": "Higher fare raises cost of trips through the section; simulation should examine mode shift and trip frequency, not assume magnitudes."
+          }
+        ],
+        "outcomes": [
+          "Adult ridership on Line 2 through the section",
+          "Station access/egress volumes at Bathurst and Spadina",
+          "Street activity on Bloor St W between Bathurst and Spadina"
+        ],
+        "missing_information": [
+          "Whether the increase applies to all adult fare products or only pay-as-you-go",
+          "Interaction with Fair Pass and other discounted fares",
+          "No fare-elasticity data provided; simulation must not assume one"
+        ],
+        "assumptions": [
+          {
+            "id": "a1",
+            "note": "Interpreted 'increase by 50¢' as op 'add' 0.5 CAD on adult_fare_cad, yielding 3.80."
+          },
+          {
+            "id": "a2",
+            "note": "Citywide fare rule applied locally per rule 2."
+          },
+          {
+            "id": "a3",
+            "note": "Fair Pass (2.10) is not a lever and is left unchanged."
+          }
+        ],
+        "evidence_tier": "assumption_driven",
+        "unsupported_reason": null,
+        "validation": {
+          "ok": true,
+          "errors": [],
+          "notes": []
+        },
+        "compiler": {
+          "provider": "vultr",
+          "model": "glm-5.3-flash",
+          "live": true,
+          "latency_ms": 1681,
+          "attempts": 1,
+          "warnings": [],
+          "prompt_hash": "1ce79369",
+          "usage": {
+            "prompt_tokens": 591,
+            "completion_tokens": 546,
+            "total_tokens": 1137,
+            "reasoning_tokens": 36
+          }
+        }
+      }
+    },
+    {
+      "id": "prepared_bike",
+      "prompt": "What if the protected Bloor Street West bike lanes were removed?",
+      "provider": "vultr",
+      "model": "glm-5.3-flash",
+      "live": true,
+      "latency_ms": 1230,
+      "attempts": 1,
+      "usage": {
+        "prompt_tokens": 588,
+        "completion_tokens": 384,
+        "total_tokens": 972,
+        "reasoning_tokens": 11
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      },
+      "execution_path": "known_operators",
+      "geography_fit": "in_section",
+      "levers": [
+        {
+          "lever": "bloor_cycle_track",
+          "value": "none",
+          "baseline": "protected",
+          "requested": {
+            "op": "set",
+            "value": "none",
+            "unit": "state"
+          }
+        }
+      ],
+      "unsupported_reason": null,
+      "runnable_spec": true,
+      "spec_id": "bloor-section-compiled-ae6a2184",
+      "spec_intervention": [
+        {
+          "operator": "set_lever",
+          "target": "bloor_cycle_track",
+          "value": "none",
+          "lever": "bloor_cycle_track"
+        }
+      ],
+      "warnings": [],
+      "attempted": null,
+      "fell_back": false,
+      "expected": {
+        "path": "known_operators",
+        "levers": {
+          "bloor_cycle_track": "none"
+        }
+      },
+      "expectation_met": true,
+      "compiled": {
+        "question": "What if the protected Bloor Street West bike lanes were removed?",
+        "interpretation": "Change the cycle track on Bloor St W (Bathurst–Spadina) from protected to no cycle track.",
+        "geography_fit": "in_section",
+        "execution_path": "known_operators",
+        "interventions": [
+          {
+            "lever": "bloor_cycle_track",
+            "op": "set",
+            "value": "none",
+            "unit": "state",
+            "baseline": "protected",
+            "requested": {
+              "op": "set",
+              "value": "none",
+              "unit": "state"
+            },
+            "rationale": "Removal of the protected bike lanes on this section."
+          }
+        ],
+        "affected_groups": [
+          "people cycling on Bloor St W",
+          "car drivers",
+          "transit riders on Line 2 and buses",
+          "pedestrians",
+          "local businesses",
+          "residents"
+        ],
+        "mechanisms": [
+          {
+            "from": "removal of protected cycle track",
+            "to": "changes in cycling comfort, safety exposure, and mode choice",
+            "note": "direction and size unknown"
+          },
+          {
+            "from": "freed road space",
+            "to": "reallocation among car lanes, parking, or turn space",
+            "note": "not specified in hypothesis"
+          }
+        ],
+        "outcomes": [
+          "cycling volumes and safety",
+          "car traffic flow",
+          "parking availability",
+          "transit reliability",
+          "street activity"
+        ],
+        "missing_information": [
+          "what happens to the freed space",
+          "baseline cycling volumes",
+          "network connections at Bathurst and Spadina"
+        ],
+        "assumptions": [
+          {
+            "id": "a1",
+            "note": "'Removed' interpreted as bloor_cycle_track set to 'none'; no other levers changed."
+          }
+        ],
+        "evidence_tier": "assumption_driven",
+        "unsupported_reason": null,
+        "validation": {
+          "ok": true,
+          "errors": [],
+          "notes": []
+        },
+        "compiler": {
+          "provider": "vultr",
+          "model": "glm-5.3-flash",
+          "live": true,
+          "latency_ms": 1230,
+          "attempts": 1,
+          "warnings": [],
+          "prompt_hash": "ae6a2184",
+          "usage": {
+            "prompt_tokens": 588,
+            "completion_tokens": 384,
+            "total_tokens": 972,
+            "reasoning_tokens": 11
+          }
+        }
+      }
+    },
+    {
+      "id": "unseen_line2_headway",
+      "prompt": "What if Line 2 trains came half as often?",
+      "provider": "vultr",
+      "model": "glm-5.3-flash",
+      "live": true,
+      "latency_ms": 3025,
+      "attempts": 1,
+      "usage": {
+        "prompt_tokens": 586,
+        "completion_tokens": 1130,
+        "total_tokens": 1716,
+        "reasoning_tokens": 10
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      },
+      "execution_path": "known_operators",
+      "geography_fit": "citywide_rule_applies_locally",
+      "levers": [
+        {
+          "lever": "line2_headway_multiplier",
+          "value": 2,
+          "baseline": 1,
+          "requested": {
+            "op": "set",
+            "value": 2,
+            "unit": "multiplier"
+          }
+        }
+      ],
+      "unsupported_reason": null,
+      "runnable_spec": true,
+      "spec_id": "bloor-section-compiled-60208cf6",
+      "spec_intervention": [
+        {
+          "operator": "set_lever",
+          "target": "line2_headway_multiplier",
+          "value": 2,
+          "lever": "line2_headway_multiplier"
+        }
+      ],
+      "warnings": [],
+      "attempted": null,
+      "fell_back": false,
+      "expected": {
+        "path": "known_operators",
+        "levers": {
+          "line2_headway_multiplier": 2
+        }
+      },
+      "expectation_met": true,
+      "compiled": {
+        "question": "What if Line 2 trains came half as often?",
+        "interpretation": "Line 2 service frequency halved, meaning time between trains doubles.",
+        "geography_fit": "citywide_rule_applies_locally",
+        "execution_path": "known_operators",
+        "interventions": [
+          {
+            "lever": "line2_headway_multiplier",
+            "op": "set",
+            "value": 2,
+            "unit": "multiplier",
+            "baseline": 1,
+            "requested": {
+              "op": "set",
+              "value": 2,
+              "unit": "multiplier"
+            },
+            "rationale": "Half as often means double the headway; baseline multiplier 1 set to 2 within allowed bounds 0.5-2. Applies locally to the Bloor St W section between Bathurst and Spadina, whose endpoints are Line 2 stations (Bathurst, Spadina). No street-level levers changed; all remain at baseline (protected cycle track, 1 car lane/direction, parking on, 90 s cycle, 0.56 green share, 3.30 CAD fare)."
+          }
+        ],
+        "affected_groups": [
+          "Line 2 riders accessing the section via Bathurst and Spadina stations",
+          "People transferring between Line 2 and street-level travel (cycling, walking, driving, TTC buses)",
+          "Cyclists and drivers on Bloor St W in the section",
+          "Local businesses and residents along the corridor"
+        ],
+        "mechanisms": [
+          {
+            "from": "line2_headway_multiplier",
+            "to": "wait_time_and_crowding",
+            "note": "Doubling headway doubles average wait; simulation should examine platform and in-vehicle crowding and reliability effects at Bathurst and Spadina stations."
+          },
+          {
+            "from": "line2_headway_multiplier",
+            "to": "mode_choice",
+            "note": "Simulation should examine whether longer waits shift trips to cycling, walking, driving, buses, or reduce trips on the corridor."
+          },
+          {
+            "from": "line2_headway_multiplier",
+            "to": "street_activity",
+            "note": "Simulation should examine effects on foot traffic and cycling volumes on Bloor St W between Bathurst and Spadina."
+          }
+        ],
+        "outcomes": [
+          "Average and worst-case wait times at Bathurst and Spadina stations",
+          "Line 2 crowding levels on trains serving the section",
+          "Mode share for trips touching the section",
+          "Cycling and vehicle volumes on Bloor St W in the section",
+          "Street-level activity near the two stations"
+        ],
+        "missing_information": [
+          "Current Line 2 base headway (minutes) the multiplier applies to",
+          "Time-of-day service patterns (peak vs off-peak)",
+          "Existing demand levels at Bathurst and Spadina stations",
+          "Capacity of alternative modes to absorb shifted trips"
+        ],
+        "assumptions": [
+          {
+            "id": "A1",
+            "note": "'Half as often' is interpreted as doubling the time between trains, i.e. line2_headway_multiplier set to 2."
+          },
+          {
+            "id": "A2",
+            "note": "The change applies to Line 2 service affecting this section via its endpoint stations; the lever is a citywide TTC rule applied locally."
+          },
+          {
+            "id": "A3",
+            "note": "No street-level or fare changes are implied; all other levers remain at baseline and are not counted as interventions."
+          }
+        ],
+        "evidence_tier": "assumption_driven",
+        "unsupported_reason": null,
+        "validation": {
+          "ok": true,
+          "errors": [],
+          "notes": [
+            {
+              "code": "no_change",
+              "path": "interventions[1]",
+              "message": "adult_fare_cad stays at its baseline 3.3"
+            },
+            {
+              "code": "no_change",
+              "path": "interventions[2]",
+              "message": "bloor_cycle_track stays at its baseline protected"
+            },
+            {
+              "code": "no_change",
+              "path": "interventions[3]",
+              "message": "bloor_car_lanes_per_direction stays at its baseline 1"
+            },
+            {
+              "code": "no_change",
+              "path": "interventions[4]",
+              "message": "on_street_parking stays at its baseline true"
+            },
+            {
+              "code": "no_change",
+              "path": "interventions[5]",
+              "message": "signal_cycle_s stays at its baseline 90"
+            },
+            {
+              "code": "no_change",
+              "path": "interventions[6]",
+              "message": "bloor_green_share stays at its baseline 0.56"
+            }
+          ]
+        },
+        "compiler": {
+          "provider": "vultr",
+          "model": "glm-5.3-flash",
+          "live": true,
+          "latency_ms": 3025,
+          "attempts": 1,
+          "warnings": [],
+          "prompt_hash": "60208cf6",
+          "usage": {
+            "prompt_tokens": 586,
+            "completion_tokens": 1130,
+            "total_tokens": 1716,
+            "reasoning_tokens": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "unseen_minimum_wage",
+      "prompt": "What if Ontario raised the minimum wage by 10%?",
+      "provider": "vultr",
+      "model": "glm-5.3-flash",
+      "live": true,
+      "latency_ms": 1299,
+      "attempts": 1,
+      "usage": {
+        "prompt_tokens": 587,
+        "completion_tokens": 320,
+        "total_tokens": 907,
+        "reasoning_tokens": 9
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      },
+      "execution_path": "speculative",
+      "geography_fit": "outside_section",
+      "levers": [],
+      "unsupported_reason": "Minimum wage is not among the sandbox levers; no known operator applies.",
+      "runnable_spec": false,
+      "spec_id": "bloor-section-speculative-801c8b78",
+      "spec_intervention": null,
+      "warnings": [],
+      "attempted": null,
+      "fell_back": false,
+      "expected": {
+        "path": "speculative",
+        "levers": {}
+      },
+      "expectation_met": true,
+      "compiled": {
+        "question": "What if Ontario raised the minimum wage by 10%?",
+        "interpretation": "A provincial minimum wage increase is not representable by any lever on this Bloor St W section.",
+        "geography_fit": "outside_section",
+        "execution_path": "speculative",
+        "interventions": [],
+        "affected_groups": [
+          "Minimum-wage workers",
+          "Local businesses on Bloor St W",
+          "Transit riders"
+        ],
+        "mechanisms": [
+          {
+            "from": "minimum wage increase",
+            "to": "labour costs for local businesses",
+            "note": "not a lever"
+          },
+          {
+            "from": "wage changes",
+            "to": "transit fare affordability",
+            "note": "fare is a lever but the hypothesis does not set it"
+          }
+        ],
+        "outcomes": [
+          "What a simulation would need to examine: effects on business operations, employment, and travel behaviour on this section"
+        ],
+        "missing_information": [
+          "No lever maps to minimum wage; no mechanism to represent it in this sandbox"
+        ],
+        "assumptions": [
+          {
+            "id": "a1",
+            "note": "Hypothesis interpreted as a provincial wage policy, not a street or transit change"
+          },
+          {
+            "id": "a2",
+            "note": "No lever approximates a minimum wage change"
+          }
+        ],
+        "evidence_tier": "speculative",
+        "unsupported_reason": "Minimum wage is not among the sandbox levers; no known operator applies.",
+        "validation": {
+          "ok": true,
+          "errors": [],
+          "notes": []
+        },
+        "compiler": {
+          "provider": "vultr",
+          "model": "glm-5.3-flash",
+          "live": true,
+          "latency_ms": 1299,
+          "attempts": 1,
+          "warnings": [],
+          "prompt_hash": "801c8b78",
+          "usage": {
+            "prompt_tokens": 587,
+            "completion_tokens": 320,
+            "total_tokens": 907,
+            "reasoning_tokens": 9
+          }
+        }
+      }
+    }
+  ]
+}

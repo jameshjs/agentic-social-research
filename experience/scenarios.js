@@ -1,10 +1,11 @@
 (function () {
-// Bloor remains an illustrative storyboard. The TTC template below supplies copy and
-// source links; its displayed metrics are replaced from the versioned demo trace.
+// Templates for both prepared policies. They supply copy, icons and source links; with the
+// mapped world loaded, world-run-adapter.js replaces every metric, chart and summary from the
+// shared experiment.v2 RunResult. Without it, the earlier trace/v1 adapters fill them instead.
 const fare = {
   id: 'fare',
   prompt: 'What if the TTC adult pay-as-you-go fare increased by 50¢?',
-  aliases: ['What if the adult TTC pay-as-you-go fare increased by $0.50?'],
+  aliases: ['What if the adult TTC pay-as-you-go fare increased by $0.50?', 'What if the adult TTC fare rose by 50 cents, with Fair Pass unchanged?'],
   title: 'What if the TTC adult fare rose by 50¢?',
   summary: 'Explore a fare change on the mapped Bathurst–Spadina section. People and policy responses remain a synthetic trace.',
   breadcrumb: 'BLOOR WEST · BATHURST–SPADINA',
@@ -27,6 +28,17 @@ const fare = {
       ['Bogotá fare response study (journal)', 'https://doi.org/10.1007/s11116-019-10034-6'],
     ],
   },
+  // Used when the canonical mapped run is attached (app.js); `evidence` above stays for the earlier-engine fallback.
+  mappedEvidence: {
+    title: 'Fare response is a question, not a coefficient.',
+    text: 'The adult fare ($3.30 → $3.80) and the unchanged Fair Pass fare are citywide TTC rules applied to the mapped Bathurst–Spadina section: City streets and buildings, OpenStreetMap shops and the Line 2 GTFS schedule. The people, homes, routines, budgets, baskets and fare responses are synthetic and not calibrated to Bathurst–Spadina. The earlier TTC inspector further down uses its own schematic district. Comparable studies motivate heterogeneous responses but supply no Toronto elasticity, shop-sales or City-wide revenue forecast.',
+    links: [
+      ['Mapped world and its sources', '../world/README.md'],
+      ['Locked Toronto observed inputs', '../demo-data.md'],
+      ['Fare research and conflicting retail evidence', '../papers.md'],
+      ['Bogotá fare response study (journal)', 'https://doi.org/10.1007/s11116-019-10034-6'],
+    ],
+  },
   sectors: {
     mobility: { icon: '↗', number: '01 / MOBILITY', title: 'A different route through the city.', description: 'Riders can keep a trip, choose another mode, travel elsewhere, or not travel.' },
     access: { icon: '◇', number: '02 / ACCESS', title: 'Some trips do not happen.', description: 'A lost bus ride may become another trip mode or a deferred journey.' },
@@ -42,6 +54,7 @@ const bike = {
   aliases: [
     'What if protected bike lanes on Bloor Street West between Shaw Street and Avenue Road were removed and road space returned to motor vehicles?',
     'What if the protected Bloor Street West bike lanes between Shaw Street and Avenue Road were removed and road space returned to motor vehicles?',
+    'What if the protected Bloor cycle track between Bathurst and Spadina were removed?',
   ],
   title: 'What if Bloor’s protected bike lanes were removed?',
   summary: 'Explore a hypothetical road change on Bloor West. Follow cyclists, drivers, a shop and the curb as route and visit choices change.',

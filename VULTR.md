@@ -1,76 +1,88 @@
-# Agent brain and Vultr deployment decision — 17 Oct 2026
+# Vultr in Counterfactual Lab — what runs where, with evidence
 
-## Decision for the hackathon
+**Status (17 Oct 2026, 13:10 ET):** live. The public site is served by Vultr. Its engine API and both Vultr Serverless Inference endpoints have been exercised. Every number below comes from a saved file in [`experiment/vultr-runs/`](./experiment/vultr-runs/) or the live `/api/health` response. Re-run the commands in [Replicate it](#replicate-it) to regenerate them. Nothing on this page is a projection.
 
-Use **Steven's measured persona work with one authoritative world** for the live demo. Do not switch his tuning model during the hackathon merely to save API cost: round 3 is signed off and passed all four check-set marks, while the final held-out score is still pending ([record](./persona-swarm/autoresearch/results.tsv), [final status](./persona-swarm/data/record/final.json)). The logged-in `claude` CLI tuning path uses his Claude plan; the separate Anthropic API prototype would bill an API key.
+**Division of labour (team decision):** Steven's Twin-tuned **Claude Haiku persona agents** remain the core human-likeness result. His 100 agents run on his Claude plan through [`persona-swarm/runtime/`](./persona-swarm/RUNTIME.md). Vultr does four other jobs: it hosts the public product, it runs the paired experiments and sensitivity sweeps, it compiles freeform hypotheses into typed scenarios, and it gives an independent typed second opinion on every trip decision (Clef). Claude weights cannot run on Vultr, and we do not claim they do.
 
-1. **Steven's Haiku 5.5 tuning and persona output** remain the core human-likeness demonstration. A Haiku Twin survey score does **not** prove Toronto mobility behavior; the city still needs scenario checks and event-backed actions. Claude's proprietary weights cannot be moved onto a Vultr GPU.
-2. **Vultr cloud compute** should host the canonical Node orchestrator, event log/replay, metrics, and API for the public demo if credits and provisioning permit. This is meaningful Vultr compute without changing Steven's model. Keep an offline replay if the deployment is unavailable.
-3. **Vultr `clef` is an optional, isolated city-decision trial.** The controller gives it legal actions (e.g. bus, bike, drive, skip), receives a score for each, validates a choice, and commits an event. Only route live demo decisions through Clef if the paired TTC/Bloor quality and latency gate below passes. Do not use its scores as estimated human travel propensities. `clef-flash` and direct TypeSafe **Jev** remain challengers.
-4. **Vultr `glm-5.3`/`glm-5.3-flash` are optional cost experiments** for open-ended planning and persona reactions if the team needs a hosted text API and the actual credits cover Serverless Inference. [`persona-swarm/scripts/plan.py`](./persona-swarm/scripts/plan.py) exposes `--provider vultr` for a separate survey prototype; it has passed only offline adapter tests, **not** a live quality check. This must not replace Steven's tuned run without a same-input comparison. The script chooses a survey group and is not yet the general city compiler. Rule-based cohorts populate the rest of the scene.
+## The four Vultr jobs
 
-This protects the measured persona result while giving Vultr a central job. The [Devpost Vultr category](https://hack-the-valley-11.devpost.com/) explicitly mentions one-click deployment, scalable compute and Cloud GPUs, but publishes no GPU requirement. **A small VM merely serving our eight-person fixture is weak prize evidence.** The stronger demonstration is Vultr inference compiling an unprepared policy question and Vultr compute running the paired experiment plus a bounded sensitivity sweep; the judge can inspect which requests and run IDs actually used Vultr. This is a proposed prize strategy, not a deployed feature or a guarantee of an award.
+| # | Vultr product | Endpoint / resource | Job in the product | Evidence |
+| --- | --- | --- | --- | --- |
+| 1 | **Cloud Compute** VM `vc2-1c-2gb`, Toronto (`yto`), Ubuntu 24.04 | `https://155-138-141-130.sslip.io` (Caddy + Let's Encrypt → `api/server.js`) | Serves the public `/experience/` site and the engine API. Runs paired baseline/policy worlds on the mapped Bathurst–Spadina section in two worker threads. Runs bounded assumption sweeps. | `GET /api/health` reports `host: vultr-cloud-compute`, `region: yto`, and the deployed `git_sha`. Every `/api/run` and `/api/sweep` response carries `served_by.host`, `elapsed_ms` and `run_id`. |
+| 2 | **Serverless Inference — chat completions** with JSON-schema structured output | `POST https://api.vultrinference.com/v1/chat/completions`, model `glm-5.3-flash` | **Hypothesis compiler.** Freeform question → schema-constrained proposal over the world's 7 policy levers. Backend validation rejects anything outside lever bounds. Non-spatial questions become *speculative / not estimable*. Called server-side by `POST /api/compile` on the VM. | [`compiler-probe-glm-5.3-flash-2026-10-17.json`](./experiment/vultr-runs/compiler-probe-glm-5.3-flash-2026-10-17.json): 4 prompts (prepared fare, prepared bike, unseen Line 2 headway, unseen minimum wage), **4/4 expected mappings, 0 fallbacks**, 7.2 s total, 4,732 tokens. |
+| 3 | **Serverless Inference — typed decision endpoint** | `POST https://api.vultrinference.com/v1/systemone`, model `clef` | **Second opinion on every agent trip decision.** Each decision is sent with the person's profile, the sandbox-computed minutes, fare and shared-with-cars distance of each legal option. Clef returns one legal choice plus a probability for every option. The paired run decided entirely by Clef is replayed through the same Game Master. | [`clef-world-fare.json`](./experiment/vultr-runs/clef-world-fare.json) and [`clef-world-bike.json`](./experiment/vultr-runs/clef-world-bike.json): **340 live calls, 0 errors**, median 212–216 ms, p95 317–326 ms, 264,773 input tokens. **91.1 % / 90.6 %** agreement with the fixture rule on 224 arm-decisions per scenario. Both paired face-validity checks pass (below). Earlier v1 probe: [`clef-probe-v1-2026-10-17.json`](./experiment/vultr-runs/clef-probe-v1-2026-10-17.json), 16 calls, 0 errors. |
+| 4 | **Vultr API v2** (account automation) | `https://api.vultr.com/v2` via [`ops/vultr.js`](./ops/vultr.js) | Infrastructure as code. It created the inference subscription, uploaded the SSH key and provisioned the VM with cloud-init. It deploys with [`ops/deploy.sh`](./ops/deploy.sh). Keys stay in memory, are streamed over SSH stdin, and are never written to the repo. | `node ops/vultr.js check` reports the credit balance, the subscription and the instance. |
 
-### Best integration order for this product
+### Clef paired face-validity checks (live, 17 Oct)
 
-1. **Make Vultr inference part of the product's main path:** use a [chat model with JSON-schema output](https://api.vultrinference.com/docs/reference/create-chat-completion) to turn the freeform hypothesis into a proposed `ScenarioSpec`. The backend validates operators, units, action bounds and evidence tier before the engine runs. This fills the key unrestricted-prompt gap without replacing Steven's tuned personas. The present `plan.py --provider vultr` is only a group-survey prototype; it does **not** implement this compiler. Probe fare, Bloor and one unseen prompt on identical schemas before stage use.
-2. **Make Vultr compute do visible experiment work:** James's backend on Cloud Compute runs both worlds from the same seed, emits `WorldEvent`/`RunResult`, and serves the city and charts. Add a small parallel sweep over explicitly chosen response/retail assumptions and display the resulting scenario range and runtime; do not call it a statistical confidence interval. This shows why scalable compute matters to policy exploration. The [Vultr category](https://hack-the-valley-11.devpost.com/) names scalable cloud compute as an eligible approach. A static host or tiny cached fixture alone is much weaker.
-3. **Only if the core path is working**, optionally use [Vultr reranking](https://api.vultrinference.com/docs/reference/create-rerank) for actual Papiers passages/notes. Keep source IDs; ranking is relevance only, and a person still judges causal relevance and transfer to Toronto. No authenticated Papiers retrieval exists yet.
-4. **Keep Clef and a self-hosted GPU model as experiments.** Clef is unvalidated for our mobility choices. A Cloud GPU would make sense only for a tested open-weight model or genuine GPU workload after confirming credit eligibility; the current small world engine does not need one. Do not force a GPU into the story or spend the remaining demo window migrating Steven's model.
+These are engineering and face-validity checks on synthetic people, not transport validation.
 
-**Go/no-go:** Once a key exists, cap the structured compiler spike at about 45 minutes: fare, Bloor and one previously unseen prompt must all produce valid `ScenarioSpec` objects that the same engine accepts, with explicit speculative labels where needed. If it fails, keep the compiler offline/other-provider and still deploy the actual paired-run service on Vultr. Do not present three prewritten JSON fixtures as live Vultr compilation. Only add the assumption sweep after the canonical engine and UI consume one `RunResult` end to end.
+- **Fare: Fair Pass riders ignore an adult-only fare rise.** 9 paired Fair Pass states had identical legal options across both arms. They gave **0 choice changes** and a maximum |ΔP(transit)| of 0.0055. Pass.
+- **Bike: safety-sensitive riders never move *onto* Bloor once protection is removed.** 7 paired states had safety sensitivity ≥ 1.5. They gave **0 violations** and a mean ΔP(ride Bloor) of **−0.384**. Pass.
+- **Disagreements are reported, not hidden.** Clef disagrees most with the fixture rule for car owners (50 % agreement) and near-cutoff adults (75–84 %). In the Clef-decided paired runs, the fare policy changed 0 decisions (the fixture rule changed 8). Cycle-track removal changed 4: three moves from Bloor to TTC and one side-street detour (the fixture rule changed 15). The model choice moves the result, which is exactly why the UI labels decision providers.
 
-## What is already implemented
+## Architecture
 
-[`experiment/vultr-decision.js`](./experiment/vultr-decision.js) is a server-side adapter for the bounded `decide(request)` callback in [`experiment/runner.js`](./experiment/runner.js). It sends only the current persona/trip/world state and the legal actions, checks the exact returned model ID, rejects an illegal choice, retries rate limits and temporary errors, and returns `{action, provider, reason}` plus the model distribution and token usage in the replay cache. The world still commits every event and computes metrics; the model cannot author events, totals, or code. The runner reuses a choice for identical states across the paired worlds and can replay saved decisions without a model call.
+```text
+Browser (/experience/, any host)
+   │  same-origin JSON
+   ▼
+Vultr Cloud Compute · Toronto · Caddy HTTPS → api/server.js (Node 22, zero deps)
+   ├─ /experience/ …           static allowlist (site, world map, fixtures, saved Vultr runs)
+   ├─ POST /api/compile ──────► Vultr Serverless Inference · glm-5.3-flash · json_schema
+   │                            → validateCompiled() → toWorldSpec() → runnable spec | speculative
+   ├─ POST /api/run    ──────► worker thread: runWorldExperiment() on James's Game Master sandbox
+   │                            → experiment.v2 RunResult (events → map motion, charts, ledger)
+   ├─ POST /api/sweep  ──────► same engine, ≤5 assumption values, scenario range (not a CI)
+   └─ GET  /api/clef/:scenario  saved Clef second opinion (generated by experiment/run-world-clef.js)
+                                  └► Vultr Serverless Inference · clef · /v1/systemone
 
-[`experiment/run-vultr.js`](./experiment/run-vultr.js) is a **local server-side smoke test**, not a deployed backend. It refuses to emit a clean live result if any decision fell back after an API failure. Tested with a mocked API and existing controller tests; **no live Vultr call has been made** because the team does not yet have an account/key. The public UI is not wired to this adapter. Do not pitch a fixture replay as Vultr inference.
+Steven's persona runtime (persona-swarm/runtime/server.js, :4174) — 100 Haiku agents on his Claude plan
+   └─ live on his laptop (`local`), or forwarded to it from any teammate server (`remote`), or `replay`
+```
 
-## Why these model roles
+Without the backend (e.g. `python3 -m http.server`), the site runs the same `world-runner.js` in the browser and compiles with the offline rules. It labels which path produced each result.
 
-| Candidate | Best role | Reason | Current risk |
-| --- | --- | --- | --- |
-| Vultr `glm-5.3` | Optional Vultr-only planner experiment | Structured chat output for open-ended setup; no Anthropic API spend | Must compare actual plan quality and latency with the same hypotheses |
-| Vultr `glm-5.3-flash` | Optional Vultr-only persona-reaction experiment | Structured chat output at lower published token price | Steven's Haiku survey score does not transfer; needs quote and action review |
-| Claude Opus 5.5 | Optional planner quality reference | Already in Steven's prototype for complex freeform planning | Direct API billing separate from Vultr credits |
-| Claude Haiku 5.5 | Persona tuning baseline / optional fallback | Existing tuned Twin prompt | Survey score does not validate transport choices; direct API billing separate from Vultr credits |
-| Vultr `clef` | **Candidate live bounded action brain** | Native typed choice over 1–255 legal options; returns full probabilities without generated text; runs on Vultr | Unmeasured on our mobility cases; probability values are not calibrated travel propensities |
-| Vultr `clef-flash` | Challenger if `clef` is too slow | Lower published input price | Must demonstrate comparable action quality first |
-| TypeSafe Jev direct API | Comparison for the same bounded task | Compatible `/v1/systemone` shape, likely fast | Direct Jev calls do not demonstrate Vultr inference; separate account/key needed |
-| Self-hosted open-weight model on Vultr Cloud GPU | Optional GPU proof if MLH credit covers it | Meaningful GPU compute and control over serving | Account/credit/region/weights/operations still unverified; a small GPU cannot host the large catalog chat models by default |
+## Replicate it
 
-The public [Vultr model catalog](https://api.vultrinference.com/docs/models) lists `glm-5.3` at **$0.75 input/$3.00 output per million tokens**, `glm-5.3-flash` at **$0.10/$0.35**, `clef` at **$0.10 per million input tokens**, and `clef-flash` at **$0.05 per million input tokens** as of 17 Oct. [The decision endpoint](https://api.vultrinference.com/docs/reference/create-systemone) bills each question's state and options as input and no output tokens. [Haiku 5.5's published API price](https://www.anthropic.com/claude-haiku-5-5) is $0.10 input/$0.50 output per million tokens for prompts up to 100k. List prices are not measured run costs. Check the live model list and account credit before setting a spending cap.
+Prerequisites: Node 22. A Vultr account with an API key under Account → API, with your current IP in its Access Control list. Put `VULTR_API_KEY=<key>` in the repo-root `.env`, which git ignores. Never paste keys into chat, commits or the browser.
 
-**Credit and GPU reality check.** [Vultr's MLH page](https://discover.vultr.com/mlh) says hackers get free event credit and advertises GPU and AI access, as shown in Meet's screenshot. It does **not** give the amount, redemption steps, eligible products, or guarantee a GPU instance will cost zero on this account. [A Serverless Inference overview](https://docs.vultr.com/product-overviews/serverless-inference?section=video) separately advertises $250 in new-account credits, but its offer terms and compatibility with MLH credit were not verified; do not assume the offers stack. [Account setup](https://docs.vultr.com/platform/create-an-account) describes payment verification and time-limited credits. A [Cloud GPU](https://docs.vultr.com/product-overviews/cloud-gpu) is billable compute unless applicable credits cover it, and [stopped instances still bill](https://docs.vultr.com/support/platform/billing/how-am-i-billed-for-my-servers). If adding inference, Serverless avoids model-serving setup; add self-hosted GPU inference only if the exact credit and instance are confirmed.
+```sh
+node ops/vultr.js check                     # credit, key permissions, existing resources
+node ops/vultr.js inference --yes           # create/find the Serverless Inference subscription; list models
+node ops/vultr.js plans yto                 # Toronto CPU plans and prices
+node ops/vultr.js create --yes              # one vc2-1c-2gb Ubuntu VM (≈ $0.014/h) with the deploy SSH key
+ops/deploy.sh                               # rsync allowlisted code, systemd unit, inference key via stdin, Caddy HTTPS
+curl -s https://<ip-with-dashes>.sslip.io/api/health
 
-## First account-to-demo path
+# Live inference proofs (keys injected into the child process only)
+node ops/vultr.js run -- node experiment/probe-vultr-compiler.js            # GLM compiler: 4 prompts
+node ops/vultr.js run -- node experiment/run-world-clef.js both             # Clef: ≈340 calls, ≈3 min, ≈$0.03
+node ops/vultr.js run -- node experiment/probe-vultr.js                     # Clef v1 probe: 16 calls
+```
 
-1. One team member creates the [Vultr account and claims MLH hackathon credits](https://discover.vultr.com/mlh). Confirm the credit amount, whether **Serverless Inference and/or Cloud GPU** are covered, payment verification, and expiry in the actual Console or with the MLH/Vultr rep. No account exists yet; do this before promising a hosted URL. Do not assume a separate new-account offer stacks.
-2. **Deploy the canonical backend**, once James's API is runnable. A Vultr CPU instance hosts the orchestrator, paired runs, event replay, metrics, and cached demos; the frontend calls it over HTTPS. [VX1 compute](https://docs.vultr.com/product-overviews/vx1-cloud-compute) or regular Cloud Compute is suitable. Record instance type, region, live run ID, actual served response and elapsed time for the pitch. A static page or the eight-person fixture alone is a weak prize story; demonstrate the validated general compiler and bounded assumption sweep when they exist.
-3. For optional model experiments, in Vultr Console: **Products → Serverless → Inference → Add Serverless Inference**, then retrieve the subscription key. [Provisioning guide](https://docs.vultr.com/products/compute/serverless-inference/provisioning). Keep the key only in the server environment or local shell, never in `experience/`, commits, screenshots, or a browser request. Check the public `GET https://api.vultrinference.com/v1/models` for available IDs. The [quickstart](https://api.vultrinference.com/docs/get-started/quickstart) warns that unknown **chat** model IDs can silently fall back to a default; the adapters check the returned ID.
-4. For the separate survey prototype, from `persona-swarm/` run `python3 scripts/plan.py --provider vultr "What if the TTC fare rises by 50 cents?"` after regenerating the ignored persona pool and groups; see its README. This uses Vultr chat for both planning and persona responses, and validates the returned model ID. This is **not** proof that the city engine is connected. From the repo root, in a private shell with `VULTR_INFERENCE_API_KEY` exported, run `node experiment/probe-vultr.js --dry-run` to inspect the 8 paired city cases, then `node experiment/probe-vultr.js > /tmp/vultr-clef-probe.json`. To compare `clef-flash`, set `VULTR_DECISION_MODEL=clef-flash` and save a second probe. Review both before the full runs: `node experiment/run-vultr.js bike > /tmp/bike-vultr.json` and `node experiment/run-vultr.js fare > /tmp/fare-vultr.json`. Stderr reports calls, tokens, and fallbacks. Each full output contains a `decision_replay` for a reliable rerun. Never commit a raw token or a trace containing private inputs.
-5. Inspect the probe's **four paired personas in each case** before using live decisions on stage. For fare, check that Fair Pass riders do not respond to a fare that did not change; for Bloor, check that a safety-sensitive cyclist does not become *more* likely to take the unprotected route merely because protection was removed. Review a driver and an unaffected person as negative controls. Report **legal action rate, provider fallbacks, paired consistency, differing group responses, median/p95 decision latency, total run latency, and tokens/cost**. These are engineering and face-validity checks, not empirical transport validation.
-6. Freeze a successful live `RunResult` and show it in the public UI with a visible **live/cached** label. If a Vultr model misses the action/latency gate, keep the measured persona path and the Vultr-hosted orchestrator; do not spend the remaining demo window cycling models. Describe exactly which part ran on Vultr. Avoid claiming a fallback run used Vultr inference.
-7. Keep the two cached cases on the server for network failure. If any optional Vultr inference is promoted, call it only from the backend with its key in server environment variables; give the browser only validated result/event JSON.
+The deploy SSH key is `~/.ssh/vultr_htv_ed25519`; create it with `ssh-keygen -t ed25519 -N "" -f ~/.ssh/vultr_htv_ed25519`. A VPN such as Cloudflare WARP changes your egress IP. When that happens the account API returns `401 Unauthorized IP`: add the new address, then rerun. Full runbook: [ops/DEPLOY.md](./ops/DEPLOY.md). API reference: [api/README.md](./api/README.md).
 
-### Quality gate and fallback
+## Cost so far (list prices, check the console)
 
-**Promote `clef` to demo default only if** all live choices are legal, both scenario runs complete within the roughly 90-second product target, the four paired checks above look plausible after human inspection, and no provider fallback occurs in the saved demo result. Compare `clef-flash` and Haiku on the *same requests*, not against Steven's survey metric. Without a live Vultr model call, claim Vultr inference only if it actually ran; a deployed Vultr orchestrator is a separate, valid cloud-compute contribution. Without any Vultr service, do not claim a live Vultr integration.
+- VM: ≈ $10/month, billed hourly while it exists, **even when stopped**. Destroy it after judging: `node ops/vultr.js destroy ed20bd3a-c885-4874-96ef-302e4b6fe946 --yes`.
+- Clef: $0.10 per million input tokens. 356 calls and ≈ 273 k input tokens cost ≈ $0.03.
+- GLM-5.3-flash: $0.10 / $0.35 per million input/output tokens. Each compile costs under $0.001. The server caps live compiles at 200/day and 6/min per IP.
+- The account started with $100 of credit.
 
-**Promote `glm-5.3`/`glm-5.3-flash` only after the same two prepared hypotheses plus one new prompt** produce legal structured plans, distinct persona reactions grounded in their actual sheets, no invented facts, and acceptable stage latency. Compare against the Anthropic prototype on identical inputs; a Twin benchmark score obtained with Haiku is a baseline for that model, not validation of GLM. Count failures and inspect demographic slices before choosing a live default.
+## What we do not claim
 
-The model's distribution is **not** an estimated Toronto mode-share or intervention effect. Any actual policy effect remains assumption-driven and the public result must keep its evidence tier, source links, and `not_estimable` metrics.
+- **Not a GPU workload.** The engine is CPU-bound and small, so a GPU would be theatre.
+- **Clef does not drive the default public run.** The default run uses the explicit fixture rule. Steven's Haiku agents supply the live persona reactions. Clef is a recorded, labelled second opinion whose paired run can be replayed. Its probabilities are not calibrated Toronto mode shares.
+- **Compiler output is a proposal.** It maps a question to levers. The backend validator, not the model, decides what runs. Questions without a lever stay *speculative / not estimable*.
+- **No forecast.** Every run is 19 synthetic people in a 619 m sandbox. Nothing in this pipeline makes it a Toronto forecast.
 
-## Operational notes
+## Devpost text (accurate; paste as is)
 
-- Serverless Inference [defaults to 120 requests/minute per model and up to 16 concurrent chat requests](https://api.vultrinference.com/docs/concepts/limits); decision endpoint limits should be confirmed for the subscription. With a mocked always-valid provider, the current 8-person × 2-trip × 4-tick fixture makes **112 distinct provider calls per scenario** after identical-state replay (128 total decisions). Latency, more than list-price tokens, may be the binding constraint; measure a real full run before stage use. The adapter respects `Retry-After` and retries temporary failures; the CLI fails if any action used a fallback.
-- A CPU VM should run the shared service, event replay, metrics, and evidence orchestration. The frontend must never call Vultr with an API key. Do not split economic metric computation into a separate LLM answer.
-- Vultr [bills deployed servers at least one hour and continues billing stopped servers](https://docs.vultr.com/support/platform/billing/how-am-i-billed-for-my-servers); destroy unused trial instances after the event. Do not assume promotional credits cover every product.
-- Include **[MLH] Best Use of Vultr** in the Devpost category selection when a real Vultr service powers the working project. Record the actual model, instance type, region, and live request/result screenshot for the write-up. The submission also needs a GitHub code link and must respect the earlier published **Sunday 8:00 am EDT** cutoff.
-
-## Sources checked
-
-- [Hack the Valley 11 prizes and judging](https://hack-the-valley-11.devpost.com/)
-- [Vultr Serverless Inference quickstart](https://api.vultrinference.com/docs/get-started/quickstart), [current model/pricing list](https://api.vultrinference.com/docs/models), [structured chat](https://api.vultrinference.com/docs/reference/create-chat-completion), [rerank endpoint](https://api.vultrinference.com/docs/reference/create-rerank), [typed decision endpoint](https://api.vultrinference.com/docs/reference/create-systemone), [limits](https://api.vultrinference.com/docs/concepts/limits)
-- [Vultr MLH credits](https://discover.vultr.com/mlh), [Serverless provisioning](https://docs.vultr.com/products/compute/serverless-inference/provisioning), [VX1 compute](https://docs.vultr.com/product-overviews/vx1-cloud-compute), [server billing](https://docs.vultr.com/support/platform/billing/how-am-i-billed-for-my-servers)
-- [Anthropic Haiku 5.5 release and pricing](https://www.anthropic.com/claude-haiku-5-5), [TypeSafe System One API](https://api.typesafe.ai/redoc)
+> **Best Use of Vultr.** Vultr is the engine room of Counterfactual Lab:
+> - **Cloud Compute (Toronto).** Serves the live site and the experiment API. Each "what if" runs as paired baseline and policy worlds on a rule-enforcing map of Bloor St W from Bathurst to Spadina. Bounded sensitivity sweeps run there too. Every response is stamped with the Vultr host and its runtime.
+> - **Serverless Inference, GLM-5.3-flash with JSON-schema output.** Compiles any freeform policy question into a validated scenario: 4/4 correct on our probe, including two unseen prompts, with zero fallbacks.
+> - **Serverless Inference, Clef typed decisions.** Clef gave a second opinion on all 448 agent trip decisions across both policies: 340 live calls, 0 errors, ≈215 ms median. It agreed with our rule 91% of the time and passed both paired sanity checks: Fair Pass riders ignore an adult-only fare rise, and cautious cyclists never move onto an unprotected Bloor.
+> - **Vultr API.** Our scripts provision the inference subscription and the VM and redeploy them reproducibly.
+>
+> The persona agents themselves are Claude Haiku, tuned on Twin-2K-500. Vultr does the compiling, simulating, hosting and model cross-checking around them.
