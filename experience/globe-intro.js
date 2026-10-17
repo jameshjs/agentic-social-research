@@ -31,6 +31,7 @@
     console.warn('[globe] drawn landing kept:', reason || 'unavailable');
     if (map) { try { map.remove(); } catch (error) { /* already gone */ } }
     stage.remove();
+    document.body.classList.remove('globe-on');
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);
   }
@@ -64,12 +65,10 @@
     const tilt = smooth(span(t, 0.6, 1));          // then tilt and level Bloor
     const wide = window.innerWidth > 760;
     return {
-      center: [lerp(-38, CENTER[0], travel), lerp(24, CENTER[1], travel)],
+      center: [lerp(-52, CENTER[0], travel), lerp(28, CENTER[1], travel)],
       zoom: lerp(z0, z1, smooth(t)),
       pitch: lerp(0, wide ? 58 : 50, tilt),
       bearing: lerp(0, BLOOR_BEARING, tilt),
-      // Keep the globe right of the headline on slide one; centre the street by slide two.
-      padding: { left: wide ? window.innerWidth * 0.36 * (1 - travel) : 0, right: 0, top: wide ? 0 : window.innerHeight * 0.28 * (1 - travel), bottom: 0 },
     };
   }
 
@@ -97,6 +96,30 @@
   function syncPhase() {
     const phase = document.body.dataset.phase;
     stage.classList.toggle('is-off', phase !== 'intro' && phase !== 'composer');
+  }
+
+  // The dark base style is near-black; lift land, water, borders and labels so the Earth reads at globe scale,
+  // then let them settle darker as the camera reaches street level.
+  function brighten() {
+    const set = (id, prop, value) => { if (map.getLayer(id)) map.setPaintProperty(id, prop, value); };
+    set('background', 'background-color', ['interpolate', ['linear'], ['zoom'], 0, '#4d8a93', 6, '#2c5660', 11, '#1b343c', 15, '#13252c']);
+    set('water', 'fill-color', ['interpolate', ['linear'], ['zoom'], 0, '#14415c', 8, '#0f3348', 13, '#0b2433']);
+    set('landcover_ice_shelf', 'fill-color', '#9fc3c8');
+    set('landcover_glacier', 'fill-color', '#b9d6da');
+    for (const id of ['boundary_country_z0-4', 'boundary_country_z5-']) set(id, 'line-color', '#8fc7c4');
+    set('boundary_state', 'line-color', '#6c9ea0');
+    for (const layer of map.getStyle().layers) {
+      if (layer.type === 'symbol' && /^place_|water_name/.test(layer.id)) {
+        set(layer.id, 'text-color', '#d7ecec');
+        set(layer.id, 'text-halo-color', '#0b2028');
+      }
+    }
+    try {
+      map.setSky({
+        'sky-color': '#0b2230', 'horizon-color': '#8affd5', 'fog-color': '#0f2c3a', 'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.6, 'fog-ground-blend': 0.8,
+        'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 6, 0.6, 9, 0],
+      });
+    } catch (error) { /* older renderers skip the glow */ }
   }
 
   function addLayers() {
@@ -149,6 +172,7 @@
     } catch (error) { clearTimeout(timer); return giveUp(error.message); }
     map.on('style.load', () => {
       try { map.setProjection({ type: 'globe' }); } catch (error) { /* flat map still zooms */ }
+      try { brighten(); } catch (error) { /* keeps the dark base colours */ }
       try { addLayers(); } catch (error) { /* the zoom works without the highlight */ }
     });
     map.on('error', (event) => console.warn('[globe]', event.error && event.error.message));
@@ -158,6 +182,7 @@
       current = target = scrollProgress();
       render();
       stage.classList.add('is-ready');
+      document.body.classList.add('globe-on');   // the globe replaces the drifting clouds
     });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
