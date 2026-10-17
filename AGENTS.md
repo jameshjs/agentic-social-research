@@ -6,15 +6,16 @@ Read [README.md](./README.md), [prd.md](./prd.md), and [research.md](./research.
 
 - This is a **general hypothesis-to-simulation product**. Any freeform hypothesis must start a run. The TTC fare case is one demonstration, not the application architecture.
 - Autonomously generate hypothesis-specific, persistent personas for every visible person. A subset uses LLM reasoning; other individuals may use profile-conditioned rules.
-- Agents must make state-changing decisions and interact through a shared world/event log. The visual city and charts must consume that same log/result JSON.
+- Agents must make state-changing decisions and interact through a shared world/event log. The visual city, economic charts, and decision brief must consume that same log/result JSON.
 - The **live city is the primary UI**: moving people, buses, cars, homes, shops, and workplaces are product requirements, not decoration.
 - Source-backed and speculative runs must be labeled differently. A result observed inside the simulation is not automatically a real-world forecast.
+- The economic dashboard is a core product surface: baseline/proposal metrics for households, firms, public budget, and access where applicable; subgroup comparison; scenario sensitivity; units, time horizon, calculation, and provenance. Unsupported projections, NPV, GDP, or city-wide totals must be explicitly not estimable.
 - Human research notes, a question/challenge from agents, and a versioned rerun are required for the primary Papiers track.
 - One demo scenario must use actual Toronto urban data for the School of Cities track. See [research.md](./research.md) for the sponsor's data catalogue and direct links.
 
 ## Build decisions
 
-- Agree `ScenarioSpec`, `PersonaSpec`, `WorldEvent`, and `RunResult` contracts early; requirements are in PRD §11.
+- Agree `ScenarioSpec`, `PersonaSpec`, `WorldEvent`, `MetricDefinition`, `MetricPoint`, and `RunResult` contracts early; requirements are in PRD §11.
 - Support a known-operator path and a generic speculative JSON-action fallback. Do not execute model-authored code.
 - Make baseline and intervention replayable from the same seed and initial state.
 - Keep API keys server-side and retain an offline/cached demo.

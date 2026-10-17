@@ -1,6 +1,6 @@
 # Counterfactual Lab — Hack the Valley 11
 
-A general, human-guided social simulation product. Enter **any hypothesis**; the system generates relevant synthetic personas, lets them act and interact in a live city, compares baseline with intervention, and explains the simulated effects. When evidence is thin, it still runs and labels the output as speculative. The live world is the primary interface; a cited research brief is secondary.
+A general, human-guided social simulation and policy decision product. Enter **any hypothesis**; the system generates relevant synthetic personas, lets them act and interact in a live city, compares baseline with intervention, and explains the simulated effects. A linked economic dashboard shows household, business, public-budget, and access impacts with charts, scenario trajectories, subgroup comparisons, and uncertainty. When evidence is thin, it still runs and labels the output as speculative. The live world is the primary interface; the decision dashboard and cited brief explain what a policymaker could and could not conclude.
 
 ## Start here
 
@@ -15,8 +15,9 @@ A general, human-guided social simulation product. Enter **any hypothesis**; the
 - **Additional category:** sustainable FinTech & Economic Inclusion, if the demo actually explains household/business economic effects.
 - **Generality proof:** two different live hypotheses pass through one system, plus an unprepared prompt exercises the speculative fallback.
 - **Visual proof:** buses, cars, people, homes, shops, and workplaces react to logged agent decisions. Visual changes and metrics come from the same run result.
+- **Decision proof:** A city action links to a charted economic effect; the dashboard compares status quo and proposal, affected groups, future scenario paths, assumptions, and missing evidence. Unsupported forecasts are marked not estimable.
 - **Demo pair:** Toronto transit fare change and a hypothetical Ontario minimum wage change affecting Toronto; an unprepared prompt tests the generic speculative path.
-- **Owners:** Adit — city frontend; Steven — personas and AI decisions; James — world engine/orchestrator/backend; Meet — hypothesis compiler, evidence and human research loop, integration, pitch, and submission.
+- **Owners:** Aadit — city and dashboard frontend; Steven — personas and AI decisions; James — world engine, metric computation, orchestrator, and backend; Meet — hypothesis compiler, metric definitions, evidence and human research loop, integration, pitch, and submission.
 
 ## Event-critical facts
 
