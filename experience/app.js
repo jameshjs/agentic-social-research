@@ -32,7 +32,7 @@ function useFareTrace(trace) {
 
 function ensureFareInspector() {
   const inspector = $('#ttcInspector');
-  if (!inspector.getAttribute('src')) inspector.src = '../demo-ui/?embedded=1';
+  if (!inspector.getAttribute('src')) inspector.src = '../demo-ui/?embedded=1&v=cinematic-2';
 }
 
 // Storyboard branches demonstrate causal questions until the shared WorldEvent log is connected.
