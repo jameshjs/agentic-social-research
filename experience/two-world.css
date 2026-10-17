@@ -15,9 +15,9 @@ body.demo-view #agentsNote{display:none!important}
 
 /* ---------- lab (demo view): the 3D view, then the decision brief ---------- */
 body.demo-view .lab-status,body.demo-view .lab-scenarios{display:none!important}
-body.demo-view .lab-shell{padding-top:76px;padding-bottom:16px;min-height:0}
+body.demo-view .lab-shell{padding-top:76px;padding-bottom:16px;min-height:0;padding-left:clamp(10px,1.4vw,22px);padding-right:clamp(10px,1.4vw,22px)}
 body.demo-view .lab-layout{margin-top:10px}
-body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{height:calc(100vh - 300px);min-height:460px}
+body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{height:calc(100vh - 110px);min-height:600px}
 body.demo-view .view3d-toggle{display:none!important}                         /* 3D only */
 body.demo-view .simulation-viewport.is-3d .motion-button{display:none!important}  /* the 3D view has its own play button */
 body.demo-view .timeline-bar{display:none!important}                          /* one timeline: the 3D view's */

@@ -30,6 +30,17 @@
     .impact-tour-card[hidden]{display:none}
     .impact-tour-phase{display:block;font:700 9px 'Space Grotesk',sans-serif;letter-spacing:.15em;color:#a8f4d1;text-transform:uppercase}
     .impact-tour-card strong{display:block;margin:2px 0;font-size:16px;line-height:1.2}
+    .impact-tour-card{border-width:2px}
+    .impact-tour-card.is-baseline{border-color:#4fe3ff;box-shadow:0 0 0 4px #4fe3ff22,0 12px 36px #0008}
+    .impact-tour-card.is-baseline .impact-tour-phase{color:#4fe3ff}
+    .impact-tour-card.is-policy{border-color:#ff3df0;box-shadow:0 0 0 4px #ff3df022,0 12px 36px #0008}
+    .impact-tour-card.is-policy .impact-tour-phase{color:#ff8ff3}
+    .impact-tour-card.is-switch{border-color:#ffe14d;background:#2a2410ee}
+    .impact-tour-card.is-switch .impact-tour-phase{color:#ffe14d}
+    .impact-tour-card strong{font-size:19px}
+    .impact-tour-card p{margin:4px 0 0;color:#d4e6e3;font:500 13px/1.4 'Space Grotesk',sans-serif}
+    .impact-tour-change{display:block;margin:4px 0 2px;font:600 clamp(22px,2.6vw,34px)/1.1 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#ff9ff3}
+    .impact-tour-change i{font-style:normal;color:#fff;opacity:.7;margin:0 .2em}
     @media(max-width:760px){.impact-tour button{top:75px;padding:8px 11px;font-size:10px}.impact-tour-card{bottom:58px;padding:8px 10px}.impact-tour-card strong{font-size:13px}}`;
   document.head.appendChild(style);
 
@@ -52,71 +63,70 @@
   const escape = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const bikeRun = (r) => Object.hasOwn(r.scenario.levers.intervention || {}, 'bloor_cycle_track');
   const choiceText = (s) => ({ transit: 'takes TTC', drive: 'drives', bike_bloor: 'cycles on Bloor', bike_side_street: 'cycles via side streets', walk: 'walks', shop_elsewhere: 'shops elsewhere', defer: 'defers the trip' }[s] || `chooses ${s}`);
+  // One person whose choice the policy changed: for the fare, a TTC rider who switches (driving first, the
+  // clearest contrast); for the bike lane, a Bloor cyclist who leaves the track.
   function highlight(r) {
     const bike = bikeRun(r);
     const changed = r.changed_decisions.filter((d) => d.tick >= r.scenario.policy_start);
-    const bathurstTransit = (d) => r.personas.find((p) => p.id === d.actor)?.routine
-      ?.find((trip) => trip.id === d.trip_id)?.options
-      ?.some((option) => option.action === 'transit' && option.legs?.some((leg) => leg.to === 'stn_bathurst'));
-    return (bike
-      ? changed.find((d) => d.baseline.action === 'bike_bloor' && d.intervention.action === 'bike_side_street')
-      : changed.find((d) => d.baseline.action === 'transit' && d.intervention.action === 'bike_bloor' && bathurstTransit(d))
-        || changed.find((d) => d.baseline.action === 'transit' && d.intervention.action === 'bike_bloor'))
-      || changed.find((d) => bike ? d.baseline.action === 'bike_bloor' : d.baseline.action === 'transit')
-      || changed[0];
+    const pick = (from, to) => changed.find((d) => d.baseline.action === from && (!to || d.intervention.action === to));
+    return (bike ? pick('bike_bloor', 'bike_side_street') || pick('bike_bloor', 'transit') || pick('bike_bloor')
+      : pick('transit', 'drive') || pick('transit', 'bike_bloor') || pick('transit')) || changed[0];
   }
-  function showPhase(r, d, phase, focus = 'person') {
+  // What this trip cost and how long it took in one arm, from the run's own events.
+  function tripFacts(r, d, armName) {
+    const ev = r.runs[armName].events.filter((e) => e.actor === d.actor && e.tick === d.tick);
+    const choose = ev.find((e) => e.action === 'choose_trip' && e.trip_id === d.trip_id);
+    const done = ev.find((e) => e.action === 'trip_completed' && e.trip_id === d.trip_id);
+    const inTrip = (e) => choose && e.t >= choose.t && (!done || e.t <= done.t);
+    const fare = ev.filter((e) => e.action === 'pay_fare' && inTrip(e)).reduce((n, e) => n + e.amount_cad, 0);
+    const cost = ev.filter((e) => e.action === 'pay_travel_cost' && inTrip(e)).reduce((n, e) => n + e.amount_cad, 0);
+    const bits = [];
+    if (fare) bits.push(`pays a $${fare.toFixed(2)} fare`);
+    if (cost) bits.push(`pays $${cost.toFixed(2)} to drive and park`);
+    if (done && done.total_minutes) bits.push(`${Math.round(done.total_minutes)} min door to door`);
+    if (!done) bits.push('this trip no longer happens on Bloor');
+    return bits.join(' · ');
+  }
+  const sum = (r, armName, id) => r.runs[armName].metrics.by_tick.filter((t) => t.tick >= r.scenario.policy_start).reduce((n, t) => n + (t[id] || 0), 0);
+  function card(phase, label, title, sub, big) {
+    tourCard.className = `impact-tour-card is-${phase}`;
+    tourCard.innerHTML = `<span class="impact-tour-phase">${label}</span>${big ? `<b class="impact-tour-change">${big}</b>` : ''}<strong>${title}</strong>${sub ? `<p>${sub}</p>` : ''}`;
+    tourCard.hidden = false;
+  }
+  function showPhase(r, d, phase) {
     const bike = bikeRun(r), baseline = phase === 'baseline';
-    const person = r.personas.find((p) => p.id === d.actor);
-    const name = escape(person?.name || d.actor);
-    const action = baseline ? d.baseline.action : d.intervention.action;
-    const label = baseline ? '01 / BASELINE' : bike ? '02 / POLICY · FOLLOW THE CHANGED ROUTE' : focus === 'stop' ? '02 / POLICY · SAME SCHEDULE' : '03 / FOLLOW THE CHANGED CHOICE';
-    const title = bike ? action === 'bike_bloor' ? `${name} rides in the protected track.`
-      : action === 'bike_side_street' ? `${name} rides beside traffic on a side street.` : `${name} ${escape(choiceText(action))}.`
-      : focus === 'stop' ? baseline ? 'Route 7 arrives at Bathurst.' : 'Same bus. A different trip mix.'
-        : `${name} ${escape(choiceText(action))}.`;
-    tourCard.innerHTML = `<span class="impact-tour-phase">${label}</span><strong>${title}</strong>`;
-    tourCard.hidden = false;
-    send({ type: 'viewer3d:impact-phase', arm: phase === 'baseline' ? 'baseline' : 'policy', actor: d.actor, trip: d.trip_id, tick: d.tick, kind: bike ? 'bike' : 'fare', focus });
-  }
-  // Up to three more people whose choice changed, each a different shift from the lead's and each other's
-  // (Bloor → TTC, Bloor → shops elsewhere, …), starting with the mode the policy touches.
-  function others(r, lead) {
-    const mode = bikeRun(r) ? 'bike_bloor' : 'transit';
-    const shift = (d) => `${d.baseline.action}>${d.intervention.action}`;
-    const shifts = new Set([shift(lead)]), out = [];
-    const changed = r.changed_decisions.filter((d) => d.tick >= r.scenario.policy_start && d.actor !== lead.actor)
-      .sort((a, b) => (b.baseline.action === mode) - (a.baseline.action === mode));
-    for (const d of changed) {
-      if (shifts.has(shift(d)) || out.some((x) => x.actor === d.actor)) continue;
-      shifts.add(shift(d)); out.push(d);
-      if (out.length === 3) break;
+    const name = escape(r.personas.find((p) => p.id === d.actor)?.name || d.actor);
+    const levers = r.scenario.levers;
+    if (phase === 'policy-intro') {
+      const what = bike ? 'The protected cycle track is removed' : `The adult fare goes from $${levers.baseline.adult_fare_cad.toFixed(2)} to $${levers.intervention.adult_fare_cad.toFixed(2)}`;
+      card('switch', 'Now switch on the policy', `${what}.`, `Same ${name}, same day, same seed. Watch what changes.`);
+      send({ type: 'viewer3d:arm', arm: 'policy' });
+      return;
     }
-    return out;
+    const armName = baseline ? 'baseline' : 'intervention';
+    const action = baseline ? d.baseline.action : d.intervention.action;
+    const label = baseline ? '01 · Without the policy' : bike ? '02 · Track removed' : '02 · With the higher fare';
+    const big = baseline ? '' : `${escape(choiceText(d.baseline.action))} <i>→</i> ${escape(choiceText(d.intervention.action))}`;
+    card(baseline ? 'baseline' : 'policy', label, `${name} ${escape(choiceText(action))}.`, escape(tripFacts(r, d, armName)), big);
+    send({ type: 'viewer3d:impact-phase', arm: baseline ? 'baseline' : 'policy', actor: d.actor, trip: d.trip_id, tick: d.tick, kind: bike ? 'bike' : 'fare', focus: 'person' });
   }
-  // Same follow shot as the lead. A trip that leaves Bloor under the policy (shops elsewhere, stays home)
-  // has nothing to follow there, so it is shown on Baseline.
-  function showOther(r, list, i) {
-    const d = list[i], name = r.personas.find((p) => p.id === d.actor)?.name || d.actor;
-    const gone = ['shop_elsewhere', 'defer'].includes(d.intervention.action);
-    tourCard.innerHTML = `<span class="impact-tour-phase">Also changed · ${i + 1} / ${list.length} · ${escape(name)}${gone ? ' · baseline' : ''}</span><strong>${escape(choiceText(d.baseline.action))} → ${escape(choiceText(d.intervention.action))}</strong>`;
-    tourCard.hidden = false;
-    send({ type: 'viewer3d:impact-phase', arm: gone ? 'baseline' : 'policy', actor: d.actor, trip: d.trip_id, tick: d.tick, kind: bikeRun(r) ? 'bike' : 'fare', focus: 'person' });
+  function showSummary(r) {
+    const bike = bikeRun(r), id = bike ? 'bloor_bike_trips' : 'transit_trips';
+    const a = Math.round(sum(r, 'baseline', id)), b = Math.round(sum(r, 'intervention', id));
+    const people = new Set(r.changed_decisions.map((c) => c.actor)).size;
+    card('policy', 'Across the whole run', `${bike ? 'Bloor bike trips' : 'TTC trips'}: ${a} → ${b}`, `${people} of ${r.population.count} people changed a choice · simulated, not a forecast`);
   }
   tourButton.addEventListener('click', () => {
     const r = isMapped(last) ? last : window.CounterfactualCurrentRun;
     if (!ready || !isMapped(r)) return;
     stopTour();
     const d = highlight(r); if (!d) return;
-    const bike = bikeRun(r), more = others(r, d);
-    const beats = [[() => showPhase(r, d, 'baseline', bike ? 'person' : 'stop'), 7600], [() => showPhase(r, d, 'policy', bike ? 'person' : 'stop'), bike ? 7000 : 5900]];
-    if (!bike) beats.push([() => showPhase(r, d, 'policy', 'person'), 7000]);
-    more.forEach((x, i) => beats.push([() => showOther(r, more, i), 6500]));
-    tourButton.textContent = '↻ Replay policy impact';
-    const step = (i) => {
-      if (i === beats.length) { stopTour(); return; }
-      beats[i][0]();
-      tourTimer = setTimeout(() => step(i + 1), beats[i][1]);
+    const beats = [[() => showPhase(r, d, 'baseline'), 9000], [() => showPhase(r, d, 'policy-intro'), 2600], [() => showPhase(r, d, 'policy'), 10000], [() => showSummary(r), 6000]];
+    tourButton.textContent = '↻ Replay';
+    const step = (k) => {
+      if (k === beats.length) { stopTour(); return; }
+      beats[k][0]();
+      tourTimer = setTimeout(() => step(k + 1), beats[k][1]);
     };
     step(0);
   });
