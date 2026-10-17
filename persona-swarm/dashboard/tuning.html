@@ -32,10 +32,10 @@
   .tn-table td.tn-msg { padding: var(--cds-pad-lg) var(--cds-pad-sm); }
   .tn-list { table-layout: fixed; }
   .tn-list th.tn-c-round { width: 2.75rem; }
-  .tn-list th.tn-c-verdict { width: 6.25rem; }
+  .tn-list th.tn-c-verdict { width: 9.5rem; }
   .tn-list th.tn-c-moved { width: 17rem; }
   .tn-list th.tn-c-papers { width: 8rem; }
-  .tn-list th.tn-c-review { width: 13rem; }
+  .tn-list th.tn-c-review { width: 11.5rem; }
   .tn-list td.tn-c-round { font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
   .tn-list td.tn-c-papers { font-size: var(--cds-font-size-caption); }
   .tn-list td.tn-c-change, .tn-list td.tn-c-papers, .tn-list td.tn-c-review { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -65,6 +65,9 @@
   .tn-pill-kept { color: var(--color-ok); border-color: currentColor; }
   .tn-pill-trial { color: var(--color-warn); border-color: currentColor; border-style: dashed; }
   .tn-pill-discarded, .tn-pill-baseline { color: var(--color-fg-muted); }
+  .tn-vnote { margin-top: 2px; font-size: 11px; line-height: 1.3; color: var(--color-fg-muted); }
+  .tn-why { max-width: 80ch; }
+  .tn-vlabel { min-width: 4.75rem; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
   .tn-chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .tn-chip { display: inline-block; padding: 1px 6px; border-radius: 4px; white-space: nowrap; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
   .tn-up { color: var(--color-ok); background: color-mix(in srgb, var(--color-ok) 13%, transparent); }
@@ -120,12 +123,12 @@
   .tn-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
   .tn-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .tn-legend svg { flex: none; overflow: visible; }
-  .tn-mults { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cds-gap-md); }
-  @container (min-width: 30rem) { .tn-mults { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @container (min-width: 60rem) { .tn-mults { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-  .tn-mult { margin: 0; display: grid; gap: 4px; min-width: 0; }
+  .tn-pickl { display: flex; align-items: center; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .tn-one { margin: 0; display: grid; gap: 4px; min-width: 0; }
+  .tn-pt-ring { fill: none; stroke: var(--color-fg); stroke-width: 1.5; }
+  .tn-pt-label { fill: var(--color-fg-muted); font-size: 10px; font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
   .tn-mcap { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex-wrap: wrap; }
-  .tn-plot { position: relative; min-height: 128px; }
+  .tn-plot { position: relative; min-height: 280px; }
   .tn-plot svg { display: block; }
   .tn-gridl { stroke: var(--cds-chart-grid, var(--color-border-line)); stroke-width: 1; }
   .tn-tick { fill: var(--color-fg-muted); font-size: 10px; font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; }
@@ -156,6 +159,7 @@
     <div class="tn-head">
       <h2 class="tn-h2" id="tn-h-bar">Current bar</h2>
       <p class="tn-note">Set by round <span data-source="bars" data-field="round">—</span><span id="tn-bar-runs"></span>. A round is kept when one check rises past its noise (±), none falls past it, and benchmark marks passed don't fall.</p>
+      <p class="tn-note tn-why" id="tn-why" data-source="rechecks" data-field="summary" data-where="id=re-benchmark"></p>
     </div>
     <dl class="tn-four">
       <div class="tn-barv"><dt class="tn-k">Right person</dt><dd><span class="tn-v" data-source="bars" data-field="right_person">—</span><span class="tn-pm">± <span data-source="bars" data-field="noise_right_person">—</span></span></dd></div>
@@ -200,7 +204,7 @@
         <div class="tn-step-v"><div class="tn-mv" data-source="rounds" data-field="change">—</div></div>
       </li>
       <li class="tn-step">
-        <div class="tn-step-k">Result <span class="tn-mv" data-source="round_checks" data-field="verdict">—</span></div>
+        <div class="tn-step-k">Result <span class="tn-mv" data-source="round_checks" data-field="verdict">—</span> <span class="tn-note" id="tn-vnote" data-source="round_checks" data-field="verdict_note"></span></div>
         <div class="tn-step-v"><div class="tn-four" id="tn-vs" data-source="round_checks"></div></div>
       </li>
       <li class="tn-step" id="tn-review-step">
@@ -220,17 +224,31 @@
   </section>
 
   <section class="tn-card" id="tn-checks" aria-labelledby="tn-h-checks">
-    <div class="tn-head">
-      <h2 class="tn-h2" id="tn-h-checks">Checks by round</h2>
-      <p class="tn-note">Each point is one round's score. The dashed line is the bar in force and the shaded band its noise, so a point outside the band moved past noise. Select a point to open that round.</p>
+    <div class="tn-dhead">
+      <div class="tn-head">
+        <h2 class="tn-h2" id="tn-h-checks">Checks by round</h2>
+        <p class="tn-note">Each point is a round's first-run score. The dashed line is the bar that round was judged against and the shaded band its noise, so a point outside the band moved past noise. Select a point to open that round.</p>
+      </div>
+      <label class="tn-pickl" for="tn-check">Check
+        <select class="tn-select" id="tn-check">
+          <option value="right_person">Right person</option>
+          <option value="right_spread">Right spread</option>
+          <option value="right_group_gaps">Right group gaps</option>
+          <option value="steady">Steady</option>
+        </select>
+      </label>
     </div>
     <div class="tn-legend">
       <span><svg width="10" height="10" aria-hidden="true"><circle class="tn-pt-flat" cx="5" cy="5" r="4"></circle></svg>Within noise</span>
       <span><svg width="10" height="10" aria-hidden="true"><path class="tn-pt-up" d="M5 0 10 9H0Z"></path></svg>Rose past noise</span>
       <span><svg width="10" height="10" aria-hidden="true"><path class="tn-pt-down" d="M5 10 10 1H0Z"></path></svg>Fell past noise</span>
+      <span><svg width="14" height="14" aria-hidden="true"><circle class="tn-pt-ring" cx="7" cy="7" r="6"></circle><circle class="tn-pt-flat" cx="7" cy="7" r="3"></circle></svg>Kept round</span>
       <span><svg width="16" height="10" aria-hidden="true"><rect class="tn-band" x="0" y="1" width="16" height="8"></rect><line class="tn-barline" x1="0" x2="16" y1="5" y2="5"></line></svg>Bar and noise</span>
     </div>
-    <div class="tn-mults" id="tn-mults" data-source="rounds round_checks bars"></div>
+    <figure class="tn-one">
+      <figcaption class="tn-mcap"><span class="tn-h3" id="tn-chart-name">Right person</span><span class="tn-note" id="tn-chart-bar"></span></figcaption>
+      <div class="tn-plot" id="tn-plot" data-source="rounds round_checks bars"></div>
+    </figure>
   </section>
 
   <section class="tn-card" id="tn-final-card" aria-labelledby="tn-h-final">
@@ -240,30 +258,76 @@
 </div>
 
 <script>
-dash.calc("bars", {
-  title: "Bar each round was judged against",
-  description: "The scores a round was compared with, by the first round they applied to: each kept round's own run, and from round 7 the mean of round 3's two runs; with each check's noise from round 0's two runs.",
+dash.calc("rechecks", {
+  title: "Re-benchmark and re-checks",
+  description: "Round 3 re-run 5 times: their mean is the bar for re-checks, and twice their standard deviation is the noise from round 10 on. Rounds 4, 7, 8 and 9 re-checked as the mean of 2 runs against that bar with the keep rule. Copied from autoresearch/rounds/rebench/bar.json and rejudged.json.",
   inputs: ["rounds"],
   fn: (rounds) => {
+    // shortcut: typed in from autoresearch/rounds/rebench/{bar,rejudged}.json at 4 decimals; read them from the record once export_record.py exports them
+    const BAR = {"runs": 5, "right_person": 0.8113, "right_spread": 0.8652, "right_group_gaps": 0.7975, "steady": 0.9708, "marks_passed": 3};
+    const NOISE = {"right_person": 0.0114, "right_spread": 0.014, "right_group_gaps": 0.083, "steady": 0.0086};
+    const NOISE_FROM = 10;   // the re-benchmark ran after round 9, so later bars carry its noise
+    const GAPS_RUNS = [0.8519, 0.7901, 0.7654, 0.7531, 0.8272];   // round 3's group gaps, run by run
+    const MEANS = {
+      "004": {"right_person": 0.8242, "right_spread": 0.8689, "right_group_gaps": 0.7901, "steady": 0.9575, "marks_passed": 3},
+      "007": {"right_person": 0.8157, "right_spread": 0.8558, "right_group_gaps": 0.7654, "steady": 0.963, "marks_passed": 3},
+      "008": {"right_person": 0.8118, "right_spread": 0.8577, "right_group_gaps": 0.7901, "steady": 0.971, "marks_passed": 3},
+      "009": {"right_person": 0.8203, "right_spread": 0.8801, "right_group_gaps": 0.7593, "steady": 0.9705, "marks_passed": 3},
+    };
+    const CHECKS = ["right_person", "right_spread", "right_group_gaps", "steady"];
+    const list = (a) => (a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]);
+    const bar = { id: "re-benchmark", round: "003", runs: BAR.runs, noise_from: NOISE_FROM, ...BAR };
+    for (const c of CHECKS) bar["noise_" + c] = NOISE[c];
+    const out = [bar];
+    for (const r of rounds) {
+      const round = String(r.round).trim(), m = MEANS[round];
+      if (!m) continue;
+      const row = { id: round, round, runs: 2, marks_passed: m.marks_passed };
+      let up = false, down = false;
+      for (const c of CHECKS) {
+        const d = Math.round((m[c] - BAR[c]) * 1e4) / 1e4, past = d > NOISE[c] + 1e-9 ? 1 : d < -NOISE[c] - 1e-9 ? -1 : 0;
+        Object.assign(row, { [c]: m[c], ["d_" + c]: d, ["past_" + c]: past });
+        up = up || past > 0; down = down || past < 0;
+      }
+      row.kept = up && !down && m.marks_passed >= BAR.marks_passed;   // the keep rule
+      out.push(row);
+    }
+    const checked = out.slice(1).map((x) => Number(x.round)), passed = out.slice(1).filter((x) => x.kept).map((x) => Number(x.round));
+    const rest = GAPS_RUNS.slice(1);
+    bar.summary = `Round 3's first group-gaps score (${GAPS_RUNS[0].toFixed(3)}) was lucky: ${rest.length} more runs scored ${Math.min(...rest).toFixed(3)}–${Math.max(...rest).toFixed(3)}. `
+      + `Its ${BAR.runs}-run mean became the bar for re-checks and noise is now twice the standard deviation of those runs; `
+      + `of rounds ${list(checked)} re-checked against it (mean of 2 runs), ${passed.length ? `round ${list(passed)} passed` : "none passed"}.`;
+    return out;
+  },
+});
+
+dash.calc("bars", {
+  title: "Bar each round was judged against",
+  description: "The scores a round was compared with, by the first round they applied to: each kept round's own run, from round 7 the mean of round 3's two runs, and from round 10 round 9's re-check mean; noise from round 0's two runs, and from the 5-run re-benchmark for bars from round 10.",
+  inputs: ["rounds", "rechecks"],
+  fn: (rounds, rechecks) => {
     // noise: autoresearch/rounds/000-start/decision.json, at the 4 decimals the rows carry
     const NOISE = { right_person: 0.0150, right_spread: 0.0100, right_group_gaps: 0.0494, steady: 0.0100 };
     // shortcut: re-measures are typed in from rounds/003-spending-habits/decision.json ("remeasured": compare round 7 on with the mean); read them from the record once export_record.py exports them
     const REMEASURED = { "003": { from: 7, runs: 2, right_person: 0.8072, right_spread: 0.8692, right_group_gaps: 0.8210, steady: 0.9720, marks_passed: 4 } };
     const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
     const kept = (r) => ["yes", "baseline"].includes(String(r.kept == null ? "" : r.kept).trim().toLowerCase());
+    const rebench = rechecks.find((x) => x.id === "re-benchmark");
     const out = [];
     for (const r of rounds.filter((x) => num(x.round) !== null && kept(x))) {
-      const round = String(r.round).trim(), m = REMEASURED[round];
+      const round = String(r.round).trim(), m = REMEASURED[round], rc = rechecks.find((x) => x.id === round && x.kept);
       const runs = [{ id: round, from: num(r.round) + 1, runs: 1, src: r }];
       if (m) runs.push({ id: round + " mean", from: m.from, runs: m.runs, src: m });
+      if (rc) runs.push({ id: round + " mean", from: num(r.round) + 1, runs: rc.runs, src: rc });   // a re-check mean replaces its single run
       for (const b of runs) {
         const row = { id: b.id, round, from: b.from, runs: b.runs };
         for (const k of ["right_person", "right_spread", "right_group_gaps", "steady", "marks_passed"]) row[k] = num(b.src[k]);
-        for (const k in NOISE) row["noise_" + k] = NOISE[k];
+        const late = rebench && b.from >= rebench.noise_from;
+        for (const k in NOISE) row["noise_" + k] = late ? rebench["noise_" + k] : NOISE[k];
         out.push(row);
       }
     }
-    return out.sort((a, b) => a.from - b.from);
+    return out.filter((b, i) => !out.some((o, j) => j > i && o.from === b.from)).sort((a, b) => a.from - b.from);
   },
 });
 
@@ -351,9 +415,9 @@ dash.calc("papiers_sources", {
 
 dash.calc("round_checks", {
   title: "Each round against its bar",
-  description: "Each round's change in every check from the bar it was judged against, whether it moved past that check's noise, its verdict, the Papiers papers it used, and the review typed after it (taken from its coach notes, without the reviewer's name).",
-  inputs: ["rounds", "bars", "papiers_sources"],
-  fn: (rounds, bars, papiers_sources) => {
+  description: "Each round's change in every check from the bar it was judged against, whether it moved past that check's noise, its verdict and any re-check after the re-benchmark, the Papiers papers it used, and the review typed after it (taken from its coach notes, without the reviewer's name).",
+  inputs: ["rounds", "bars", "papiers_sources", "rechecks"],
+  fn: (rounds, bars, papiers_sources, rechecks) => {
     const CHECKS = [["right_person", "right person"], ["right_spread", "right spread"], ["right_group_gaps", "group gaps"], ["steady", "steady"]];
     const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
     const signed = (n) => { const s = Math.abs(n).toFixed(3); return s === "0.000" ? s : (n > 0 ? "+" : "−") + s; };
@@ -366,8 +430,14 @@ dash.calc("round_checks", {
       const out = {
         round: String(r.round).trim(), bar_id: bar ? bar.id : null,
         bar_label: !bar ? null : `round ${num(bar.round)}` + (bar.runs > 1 ? " mean" : ""),
-        verdict: kind === "baseline" ? "Baseline" : kind === "yes" ? (signer ? "Kept" : "On trial") : kind === "no" ? "Discarded" : "Pending",
+        verdict: kind === "baseline" ? "Baseline" : kind === "yes" ? (signer ? "Kept" : "Kept (on trial)") : kind === "no" ? "Discarded" : "Pending",
       };
+      // a 2-run re-check against the 5-run re-benchmark; the table keeps the first run's judgment
+      const rc = rechecks.find((x) => x.id === out.round), rb = rechecks.find((x) => x.id === "re-benchmark");
+      if (rc && rb) {
+        out.verdict_note = rc.kept ? "after re-benchmark · first run: discarded" : "re-checked: still discarded";
+        for (const [c] of CHECKS) Object.assign(out, { ["rc_" + c]: rc[c], ["rc_d_" + c]: rc["d_" + c], ["rc_past_" + c]: rc["past_" + c], ["rc_bar_" + c]: rb[c], ["rc_noise_" + c]: rb["noise_" + c] });
+      }
       const chips = [];
       for (const [c, name] of CHECKS) {
         const v = num(r[c]), b = bar ? bar[c] : null, noise = bar ? bar["noise_" + c] : null;
@@ -387,7 +457,8 @@ dash.calc("round_checks", {
       const notes = String(r.coach_notes == null ? "" : r.coach_notes).trim(), at = notes.lastIndexOf("Next:"), head = at < 0 ? "" : notes.slice(0, at);
       const who = [...head.matchAll(/(?:^|[.!?)]\s+)([A-Z][A-Za-z'-]*):\s/g)].pop() || [...head.matchAll(/(?:^|\s)([A-Z][A-Za-z'-]*):\s/g)].pop();
       out.review = who ? head.slice(who.index + who[0].length).trim() : null;
-      out.review_next = who ? notes.slice(at + 5).trim() : null;
+      const tail = notes.slice(at + 5), stop = tail.search(/\s[A-Z][A-Za-z'-]*:\s/);   // a later "<Name>: " entry is a separate note
+      out.review_next = who ? (stop < 0 ? tail : tail.slice(0, stop)).trim() : null;
       out.review_summary = who ? out.review : n >= REVIEWS_FROM ? "Awaiting review" : null;
       return out;
     });
@@ -396,19 +467,18 @@ dash.calc("round_checks", {
 
 dash.calc("tuning_summary", {
   title: "Tuning summary",
-  description: "One row: the latest round out of the plan's 10, and changes kept and discarded so far.",
+  description: "One row: the latest round, and changes kept and discarded so far.",
   inputs: ["rounds"],
   fn: (rounds) => {
-    const TOTAL = 10;
     const num = (v) => { const s = v == null ? "" : String(v).trim(); const n = Number(s); return s !== "" && Number.isFinite(n) ? n : null; };
     const kind = (r) => String(r.kept == null ? "" : r.kept).trim().toLowerCase();
     const rows = rounds.filter((r) => num(r.round) !== null);
     const n = rows.length ? Math.max(...rows.map((r) => num(r.round))) : null;
     const nYes = rows.filter((r) => kind(r) === "yes").length, nNo = rows.filter((r) => kind(r) === "no").length;
     const takeaway = n === null ? "No rounds recorded yet. The record fills in as the loop runs."
-      : n === 0 ? `Round 0 of ${TOTAL}: the starting instructions set the first bar.`
-      : `Round ${n} of ${TOTAL}: ${nYes} ${nYes === 1 ? "change" : "changes"} kept, ${nNo} discarded.`;
-    return [{ takeaway, latest_round: n, kept_n: nYes, discarded_n: nNo, rounds_total: TOTAL }];
+      : n === 0 ? "Round 0: the starting instructions set the first bar."
+      : `Round ${n}: ${nYes} ${nYes === 1 ? "change" : "changes"} kept, ${nNo} discarded.`;
+    return [{ takeaway, latest_round: n, kept_n: nYes, discarded_n: nNo }];
   },
 });
 </script>
@@ -482,7 +552,9 @@ dash.calc("tuning_summary", {
       tr.dataset.key = key(r); tr.tabIndex = 0;
       tr.appendChild(el("td", "tn-c-round", short(r)));
       tr.appendChild(el("td", "tn-c-change", text(r.change))).title = text(r.change);
-      tr.appendChild(el("td", "tn-c-verdict")).appendChild(pill(c.verdict));
+      const vd = tr.appendChild(el("td", "tn-c-verdict"));
+      vd.appendChild(pill(c.verdict));
+      if (c.verdict_note) vd.appendChild(el("div", "tn-vnote", c.verdict_note));
       chips(tr.appendChild(el("td", "tn-c-moved")).appendChild(el("div", "tn-chips")), c.moved);
       tr.appendChild(el("td", "tn-c-papers" + (c.papers ? "" : " tn-dim"), text(c.papers))).title = c.papers || "";
       const rv = tr.appendChild(el("td", "tn-c-review" + (c.review_summary ? "" : " tn-dim")));
@@ -541,16 +613,22 @@ dash.calc("tuning_summary", {
       const cell = box.appendChild(el("div", "tn-vcell"));
       const mark = (e, f) => { e.dataset.source = "round_checks"; e.dataset.where = where(r); e.dataset.field = f; return e; };
       cell.appendChild(el("div", "tn-k", name));
-      const row = cell.appendChild(el("div", "tn-vrow"));
-      row.appendChild(mark(el("span", "tn-vnum", f3(c[k])), k));
-      const past = c["past_" + k] || 0;
-      if (c["d_" + k] != null) row.appendChild(mark(el("span", "tn-chip " + (past > 0 ? "tn-up" : past < 0 ? "tn-down" : "tn-flat"), (past > 0 ? "▲ " : past < 0 ? "▼ " : "") + signed(c["d_" + k])), "d_" + k));
-      const note = cell.appendChild(el("div", "tn-note"));
-      if (c["bar_" + k] == null) { note.textContent = "Sets the first bar"; continue; }
-      note.append(`vs ${c.bar_label}: `);
-      note.appendChild(mark(el("span", null, f3(c["bar_" + k])), "bar_" + k));
-      note.append(" ± ");
-      note.appendChild(mark(el("span", null, f3(c["noise_" + k])), "noise_" + k));
+      const line = (pre, label) => {
+        const row = cell.appendChild(el("div", "tn-vrow"));
+        if (label) row.appendChild(el("span", "tn-vlabel", label));
+        row.appendChild(mark(el("span", "tn-vnum", f3(c[pre + k])), pre + k));
+        const past = c[pre + "past_" + k] || 0;
+        if (c[pre + "d_" + k] != null) row.appendChild(mark(el("span", "tn-chip " + (past > 0 ? "tn-up" : past < 0 ? "tn-down" : "tn-flat"), (past > 0 ? "▲ " : past < 0 ? "▼ " : "") + signed(c[pre + "d_" + k])), pre + "d_" + k));
+        const note = cell.appendChild(el("div", "tn-note"));
+        if (c[pre + "bar_" + k] == null) { note.textContent = "Sets the first bar"; return; }
+        note.append(`vs ${pre ? "re-benchmark" : c.bar_label}: `);
+        note.appendChild(mark(el("span", null, f3(c[pre + "bar_" + k])), pre + "bar_" + k));
+        note.append(" ± ");
+        note.appendChild(mark(el("span", null, f3(c[pre + "noise_" + k])), pre + "noise_" + k));
+      };
+      const rc = c["rc_" + k] != null;
+      line("", rc ? "First run" : null);
+      if (rc) line("rc_", "2-run mean");
     }
   }
   // each cited id as its paper and snippet; the id and full title open on demand
@@ -605,89 +683,98 @@ dash.calc("tuning_summary", {
       else if (f === "verdict") e.appendChild(pill(v));
       else e.textContent = f === "check_targeted" ? label(v) : text(v);
     });
+    const vn = $("tn-vnote");
+    vn.textContent = r && c.verdict_note ? c.verdict_note : "";
+    if (r) vn.setAttribute("data-where", where(r)); else vn.removeAttribute("data-where");
     drawVs(r, c);
     drawSources(r);
     drawReview(r, c);
     drawDiff(r);
   }
 
-  // ---- one small chart per check: scores, the bar in force and its noise band
+  // ---- one chart for the check picked in the dropdown: scores, the bar in force and its noise band
+  let check = "right_person";   // shortcut: the pick lasts for the visit only, since dashboard pages may not use storage
+  $("tn-check").addEventListener("change", (e) => { check = e.target.value; drawChecks(); });
   function drawChecks() {
-    const box = $("tn-mults");
+    const plot = $("tn-plot"), k = check, name = (CHECKS.find(([c]) => c === k) || CHECKS[0])[1];
     hideTip();
-    box.textContent = "";
-    if (!rows.length) { box.appendChild(msg(blank)); return; }
-    const maxR = Math.max(10, d3.max(rows, (r) => num(r.round)));
-    // each band spans the rounds judged against that bar
-    const segs = bars.map((b, i) => ({ b, from: b.from - 0.5, to: Math.min(maxR, i + 1 < bars.length ? bars[i + 1].from - 0.5 : maxR) }));
+    plot.textContent = "";
+    $("tn-check").value = k;
+    $("tn-chart-name").textContent = name;
     const cur = bars[bars.length - 1];
-    for (const [k, name] of CHECKS) {
-      const fig = box.appendChild(el("figure", "tn-mult"));
-      const capt = fig.appendChild(el("figcaption", "tn-mcap"));
-      capt.appendChild(el("span", "tn-h3", name));
-      capt.appendChild(el("span", "tn-note", cur ? `bar ${f3(cur[k])} ± ${f3(cur["noise_" + k])}` : ""));
-      const plot = fig.appendChild(el("div", "tn-plot"));
-      const pts = rows.map((r) => {
-        const c = checks.get(key(r)) || {};
-        return { r, c, x: num(r.round), v: num(r[k]), past: c["past_" + k] || 0, base: c["bar_" + k] == null };
-      }).filter((d) => d.v !== null);
-      const vals = [...pts.map((d) => d.v), ...segs.flatMap((s) => [s.b[k] - s.b["noise_" + k], s.b[k] + s.b["noise_" + k]])].filter(Number.isFinite);
-      const [lo, hi] = d3.extent(vals), pad = Math.max((hi - lo) * 0.12, 0.005);
-      const W = Math.max(200, plot.clientWidth || 260), H = 128, mt = 8, mb = 20;
-      const y = d3.scaleLinear([lo - pad, hi + pad], [H - mb, mt]);
-      const yt = y.ticks(4), fmt = d3.format("." + d3.precisionFixed(yt.length > 1 ? yt[1] - yt[0] : 0.01) + "f");
-      const moved = (s) => pts.filter((d) => d.past === s).map((d) => short(d.r));
-      const svg = d3.select(plot).append("svg").attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img")
-        .attr("aria-label", `${name} by round. ` + (cur ? `Bar ${f3(cur[k])}, noise ${f3(cur["noise_" + k])}. ` : "")
-          + (moved(1).length ? `Rose past noise in round ${moved(1).join(", ")}. ` : "") + (moved(-1).length ? `Fell past noise in round ${moved(-1).join(", ")}.` : ""));
-      // left margin from the widest tick label as drawn
-      const probe = svg.append("text").attr("class", "tn-tick");
-      const ml = d3.max(yt, (t) => probe.text(fmt(t)).node().getComputedTextLength()) + 8;
-      probe.remove();
-      const x = d3.scaleLinear([0, maxR], [ml + 6, W - 8]);
-      svg.append("g").selectAll("line").data(yt).join("line").attr("class", "tn-gridl")
-        .attr("x1", ml).attr("x2", W - 4).attr("y1", (t) => y(t)).attr("y2", (t) => y(t));
-      svg.append("g").selectAll("text").data(yt).join("text").attr("class", "tn-tick").attr("text-anchor", "end")
-        .attr("x", ml - 4).attr("y", (t) => y(t) + 3).text(fmt);
-      const every = x(1) - x(0) >= 16 ? 1 : 2;
-      svg.append("g").selectAll("text").data(d3.range(0, maxR + 1, every)).join("text").attr("class", "tn-tick").attr("text-anchor", "middle")
-        .attr("x", (t) => x(t)).attr("y", H - 5).text((t) => t);
-      for (const s of segs) {
-        const b = s.b[k], n = s.b["noise_" + k];
-        if (b === null || n === null) continue;
-        svg.append("rect").attr("class", "tn-band").attr("x", x(s.from)).attr("width", Math.max(0, x(s.to) - x(s.from)))
-          .attr("y", y(b + n)).attr("height", Math.max(0, y(b - n) - y(b + n)));
-        svg.append("line").attr("class", "tn-barline").attr("x1", x(s.from)).attr("x2", x(s.to)).attr("y1", y(b)).attr("y2", y(b));
-      }
-      const on = pts.find((d) => key(d.r) === picked);
-      if (on) svg.append("line").attr("class", "tn-pick-rule").attr("x1", x(on.x)).attr("x2", x(on.x)).attr("y1", mt).attr("y2", H - mb);
-      const sym = (d) => d3.symbol(d.past ? d3.symbolTriangle : d3.symbolCircle, d.past ? 70 : 42)();
-      svg.append("g").selectAll("path").data(pts).join("path")
-        .attr("class", (d) => "tn-pt " + (d.base ? "tn-pt-base" : d.past > 0 ? "tn-pt-up" : d.past < 0 ? "tn-pt-down" : "tn-pt-flat") + (d === on ? " tn-pt-on" : ""))
-        .attr("d", sym).attr("transform", (d) => `translate(${x(d.x)},${y(d.v)})` + (d.past < 0 ? " rotate(180)" : ""));
-
-      const tip = d3.select(plot).append("div").attr("class", "tn-tip").style("display", "none");
-      const near = (ev) => { const px = d3.pointer(ev, svg.node())[0]; return d3.least(pts, (d) => Math.abs(x(d.x) - px)); };   // d3.pointer gives viewBox units
-      const hide = () => tip.style("display", "none");
-      const show = (ev) => {
-        const d = near(ev);
-        if (!d) return hide();
-        hideTip(); hideTip = hide;
-        tip.style("display", null).text("");
-        tip.append("div").attr("class", "tn-tip-t").text(`Round ${short(d.r)} · ${d.c.verdict || "Pending"}`);
-        tip.append("div").text(d.base ? `${f3(d.v)}, sets the first bar` : `${f3(d.v)}, ${signed(d.c["d_" + k])} vs ${d.c.bar_label} ${f3(d.c["bar_" + k])}`);
-        if (!d.base) tip.append("div").attr("class", "tn-tip-t").text(d.past ? `Past its noise of ${f3(d.c["noise_" + k])}` : `Within its noise of ${f3(d.c["noise_" + k])}`);
-        const sx = plot.clientWidth / W, w = tip.node().offsetWidth, h = tip.node().offsetHeight;
-        const left = x(d.x) * sx + 10 + w > plot.clientWidth ? x(d.x) * sx - w - 10 : x(d.x) * sx + 10;
-        tip.style("left", `${Math.max(0, left)}px`).style("top", `${Math.max(0, Math.min(y(d.v) * sx - h / 2, plot.clientHeight - h))}px`);
-      };
-      svg.append("rect").attr("x", ml).attr("y", 0).attr("width", W - ml).attr("height", H).attr("fill", "transparent")
-        .style("cursor", "pointer").style("touch-action", "pan-y")
-        .on("pointermove", show).on("pointerleave", (ev) => { if (ev.pointerType === "mouse") hide(); })
-        .on("click", (ev) => { const d = near(ev); if (d) choose(key(d.r), true); });
+    $("tn-chart-bar").textContent = cur ? `current bar ${f3(cur[k])} ± ${f3(cur["noise_" + k])}, from round ${cur.from}` : "";
+    if (!rows.length) { plot.appendChild(msg(blank)); return; }
+    // one round past the latest, so the bar the next round will face is drawn too
+    const maxR = d3.max(rows, (r) => num(r.round)) + 1;
+    // each band spans the rounds judged against that bar
+    const segs = bars.map((b, i) => ({ b, from: b.from - 0.5, to: i + 1 < bars.length ? bars[i + 1].from - 0.5 : maxR + 0.5 }));
+    const pts = rows.map((r) => {
+      const c = checks.get(key(r)) || {};
+      return { r, c, x: num(r.round), v: num(r[k]), past: c["past_" + k] || 0, base: c["bar_" + k] == null, kept: /^(Kept|Baseline)/.test(c.verdict || "") };
+    }).filter((d) => d.v !== null);
+    const vals = [...pts.map((d) => d.v), ...segs.flatMap((s) => [s.b[k] - s.b["noise_" + k], s.b[k] + s.b["noise_" + k]])].filter(Number.isFinite);
+    const [lo, hi] = d3.extent(vals), pad = Math.max((hi - lo) * 0.12, 0.005);
+    const W = Math.max(320, plot.clientWidth || 640), H = 280, mt = 22, mb = 34;
+    const y = d3.scaleLinear([lo - pad, hi + pad], [H - mb, mt]);
+    const yt = y.ticks(5), fmt = d3.format("." + d3.precisionFixed(yt.length > 1 ? yt[1] - yt[0] : 0.01) + "f");
+    const moved = (sg) => pts.filter((d) => d.past === sg).map((d) => short(d.r));
+    const svg = d3.select(plot).append("svg").attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img")
+      .attr("aria-label", `${name} by round. ` + (cur ? `Current bar ${f3(cur[k])}, noise ${f3(cur["noise_" + k])}. ` : "")
+        + (moved(1).length ? `Rose past noise in round ${moved(1).join(", ")}. ` : "") + (moved(-1).length ? `Fell past noise in round ${moved(-1).join(", ")}.` : ""));
+    // left margin from the widest tick label as drawn
+    const probe = svg.append("text").attr("class", "tn-tick");
+    const ml = d3.max(yt, (t) => probe.text(fmt(t)).node().getComputedTextLength()) + 10;
+    probe.remove();
+    const x = d3.scaleLinear([-0.5, maxR + 0.5], [ml + 4, W - 8]);
+    svg.append("g").selectAll("line").data(yt).join("line").attr("class", "tn-gridl")
+      .attr("x1", ml).attr("x2", W - 8).attr("y1", (t) => y(t)).attr("y2", (t) => y(t));
+    svg.append("g").selectAll("text").data(yt).join("text").attr("class", "tn-tick").attr("text-anchor", "end")
+      .attr("x", ml - 6).attr("y", (t) => y(t) + 3).text(fmt);
+    svg.append("text").attr("class", "tn-tick").attr("x", ml - 6).attr("y", 10).attr("text-anchor", "start").text(`${name} score`);
+    const every = x(1) - x(0) >= 18 ? 1 : 2;
+    svg.append("g").selectAll("text").data(d3.range(0, maxR + 1, every)).join("text").attr("class", "tn-tick").attr("text-anchor", "middle")
+      .attr("x", (t) => x(t)).attr("y", H - mb + 16).text((t) => t);
+    svg.append("text").attr("class", "tn-tick").attr("x", (ml + W) / 2).attr("y", H - 3).attr("text-anchor", "middle").text("Round");
+    for (const sg of segs) {
+      const b = sg.b[k], n = sg.b["noise_" + k];
+      if (b === null || n === null) continue;
+      svg.append("rect").attr("class", "tn-band").attr("x", x(sg.from)).attr("width", Math.max(0, x(sg.to) - x(sg.from)))
+        .attr("y", y(b + n)).attr("height", Math.max(0, y(b - n) - y(b + n)));
+      svg.append("line").attr("class", "tn-barline").attr("x1", x(sg.from)).attr("x2", x(sg.to)).attr("y1", y(b)).attr("y2", y(b));
     }
+    const on = pts.find((d) => key(d.r) === picked);
+    if (on) svg.append("line").attr("class", "tn-pick-rule").attr("x1", x(on.x)).attr("x2", x(on.x)).attr("y1", mt).attr("y2", H - mb);
+    svg.append("g").selectAll("circle").data(pts.filter((d) => d.kept)).join("circle").attr("class", "tn-pt-ring")
+      .attr("cx", (d) => x(d.x)).attr("cy", (d) => y(d.v)).attr("r", 9);
+    const sym = (d) => d3.symbol(d.past ? d3.symbolTriangle : d3.symbolCircle, d.past ? 80 : 50)();
+    svg.append("g").selectAll("path").data(pts).join("path")
+      .attr("class", (d) => "tn-pt " + (d.base ? "tn-pt-base" : d.past > 0 ? "tn-pt-up" : d.past < 0 ? "tn-pt-down" : "tn-pt-flat") + (d === on ? " tn-pt-on" : ""))
+      .attr("d", sym).attr("transform", (d) => `translate(${x(d.x)},${y(d.v)})` + (d.past < 0 ? " rotate(180)" : ""));
+    // value labels above each point, below when the point sits at the top
+    svg.append("g").selectAll("text").data(pts).join("text").attr("class", "tn-pt-label").attr("text-anchor", "middle")
+      .attr("x", (d) => x(d.x)).attr("y", (d) => { const gap = d.kept ? 15 : 11; return y(d.v) - gap - 4 < mt ? y(d.v) + gap + 9 : y(d.v) - gap; }).text((d) => f3(d.v));
+
+    const tip = d3.select(plot).append("div").attr("class", "tn-tip").style("display", "none");
+    const near = (ev) => { const px = d3.pointer(ev, svg.node())[0]; return d3.least(pts, (d) => Math.abs(x(d.x) - px)); };   // d3.pointer gives viewBox units
+    const hide = () => tip.style("display", "none");
+    const show = (ev) => {
+      const d = near(ev);
+      if (!d) return hide();
+      hideTip(); hideTip = hide;
+      tip.style("display", null).text("");
+      tip.append("div").attr("class", "tn-tip-t").text(`Round ${short(d.r)} · ${d.c.verdict || "Pending"}`);
+      tip.append("div").text(d.base ? `${f3(d.v)}, sets the first bar` : `${f3(d.v)}, ${signed(d.c["d_" + k])} vs ${d.c.bar_label} ${f3(d.c["bar_" + k])}`);
+      if (!d.base) tip.append("div").attr("class", "tn-tip-t").text(d.past ? `Past its noise of ${f3(d.c["noise_" + k])}` : `Within its noise of ${f3(d.c["noise_" + k])}`);
+      const sx = plot.clientWidth / W, w = tip.node().offsetWidth, h = tip.node().offsetHeight;
+      const left = x(d.x) * sx + 12 + w > plot.clientWidth ? x(d.x) * sx - w - 12 : x(d.x) * sx + 12;
+      tip.style("left", `${Math.max(0, left)}px`).style("top", `${Math.max(0, Math.min(y(d.v) * sx - h / 2, plot.clientHeight - h))}px`);
+    };
+    svg.append("rect").attr("x", ml).attr("y", 0).attr("width", W - ml).attr("height", H).attr("fill", "transparent")
+      .style("cursor", "pointer").style("touch-action", "pan-y")
+      .on("pointermove", show).on("pointerleave", (ev) => { if (ev.pointerType === "mouse") hide(); })
+      .on("click", (ev) => { const d = near(ev); if (d) choose(key(d.r), true); });
   }
-  document.addEventListener("pointerdown", (e) => { if (!$("tn-mults").contains(e.target)) hideTip(); });
+  document.addEventListener("pointerdown", (e) => { if (!$("tn-plot").contains(e.target)) hideTip(); });
 
   function choose(round, scroll) {
     picked = round;
@@ -768,7 +855,7 @@ dash.calc("tuning_summary", {
 
   // ---- redraw everything from the datasets
   function render() {
-    const R = dash.data("rounds"), C = dash.data("round_checks"), B = dash.data("bars"), P = dash.data("papiers_sources"), S = dash.data("tuning_summary"), F = dash.data("final");
+    const R = dash.data("rounds"), C = dash.data("round_checks"), B = dash.data("bars"), P = dash.data("papiers_sources"), RC = dash.data("rechecks"), S = dash.data("tuning_summary"), F = dash.data("final");
     const ok = R.status === "ok";
     rows = ok ? (R.data || []).filter((r) => r && num(r.round) !== null).sort((a, b) => num(a.round) - num(b.round)) : [];
     checks = new Map(ok && C.status === "ok" ? (C.data || []).map((c) => [String(c.round), c]) : []);
@@ -777,7 +864,8 @@ dash.calc("tuning_summary", {
     blank = ok ? "No rounds recorded yet. They appear here as each tuning round ends." : statusNote(R.status, "the tuning record");
     const sum = ok && S.status === "ok" && S.data && S.data[0] ? S.data[0] : null;
     root.querySelectorAll('[data-source="tuning_summary"]').forEach((e) => { e.textContent = sum ? text(sum[e.dataset.field]) : "—"; });
-    $("tn-status").textContent = !ok ? blank : [C, B, P, S].some((x) => x.status === "error") ? "Some comparisons could not be worked out." : "";
+    $("tn-why").textContent = ok && RC.status === "ok" ? ((RC.data || []).find((x) => x.id === "re-benchmark") || {}).summary || "" : "";
+    $("tn-status").textContent = !ok ? blank : [C, B, P, RC, S].some((x) => x.status === "error") ? "Some comparisons could not be worked out." : "";
     if (!rows.some((r) => key(r) === picked)) picked = rows.length ? key(rows[rows.length - 1]) : null;
     drawBar();
     drawTable();
