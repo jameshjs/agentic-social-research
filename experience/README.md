@@ -8,6 +8,14 @@ This is the **one public entry point** for the hackathon demo. The cinematic ent
 
 **Where runs execute.** `app.js` looks for the engine API at `/api/health`: first on the same origin (the Vultr VM or `node api/server.js`), then, on a localhost page, at the public Vultr engine (CORS is allowed only from localhost origins). If neither answers, the same modules run in the browser. `?engine=off` forces the browser, `?engine=<url>` picks a backend, and the status line says which host served the run. **Fallback:** if `data/world/` cannot load, the earlier engines (the `demo-ui` TTC trace and the 8-person `experiment.v1` Bloor fixture) run exactly as before. The embedded TTC inspector is kept as a labelled earlier prototype. In mapped mode its reruns update only its own status bar.
 
+## Two World demo pass (17 Oct)
+
+The default demo view now runs landing → prompt → 3D. The changes live in `two-world.css` and `two-world.js`, plus text edits in `index.html` and one routing function in `app.js`. Researcher view (`?detail=1`) still shows every section.
+- **Landing:** a real Toronto skyline under real clouds that part as you scroll. Both photos come from Wikimedia Commons under CC BY-SA 4.0 and are credited on the page and in `assets/CREDITS.md`. The brand is "two.world", with a shorter hero and prompt.
+- **No scenario buttons:** a typed question about the TTC fare or the Bloor bike lane opens the matching prepared run (`preparedIntent` in `app.js`). Anything else uses the compiler path.
+- **Lab:** shows only the 3D view, made larger and with no 2D toggle, under a single timeline. Everything below it (people strip, report, ledger, footer) is hidden in the demo view.
+- **The 100-agent panel:** sits right after the prompt, without its caveat line or its mean/flagged line.
+
 ## Run it
 
 From the repository root:

@@ -4,9 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#07131c" />
-    <meta name="description" content="Counterfactual Lab — explore how a city might respond to a policy change through a living simulation and connected impact map." />
-    <title>Counterfactual Lab — Ask a city what if</title>
+    <meta name="description" content="Two World — see a policy change play out on a real Toronto street, with and without it." />
+    <title>Two World — Ask a city what if</title>
     <link rel="stylesheet" href="./styles.css?v=demo-view-1" />
+    <link rel="stylesheet" href="./two-world.css?v=1" />
   </head>
   <body data-phase="intro" data-scenario="fare">
     <!-- Sets body.demo-view (default) or Researcher view before the first paint. -->
@@ -20,18 +21,20 @@
       <div class="city-haze"></div>
     </div>
 
+    <div class="skyline-photo" aria-hidden="true"></div>
+
     <div class="cloud-field" aria-hidden="true">
+      <span class="cloud-photo cloud-photo--l"></span><span class="cloud-photo cloud-photo--r"></span>
       <span class="cloud cloud--a"></span><span class="cloud cloud--b"></span>
       <span class="cloud cloud--c"></span><span class="cloud cloud--d"></span>
       <span class="cloud cloud--e"></span><span class="cloud cloud--f"></span>
     </div>
 
     <header class="site-header">
-      <a class="brand" href="#intro" aria-label="Counterfactual Lab home">
+      <a class="brand" href="#intro" aria-label="Two World home">
         <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-        <span class="brand-word">counterfactual<span class="brand-dot">.</span><small>LAB</small></span>
+        <span class="brand-word">two<span class="brand-dot">.</span>world</span>
       </a>
-      <div class="header-center"><span class="live-pulse"></span> A LIVING CITY MODEL <span class="header-rule"></span> TORONTO / 2026</div>
       <div class="header-actions">
         <button id="researchToggle" class="research-toggle" type="button" aria-pressed="false" title="Show every section, rail and tool (?detail=1)"><span class="research-toggle-track" aria-hidden="true"><span></span></span><span class="research-toggle-label">Researcher view</span></button>
         <button id="headerExplore" class="header-action" type="button">Explore a scenario <span aria-hidden="true">↗</span></button>
@@ -42,28 +45,25 @@
     <main id="main">
       <section id="intro" class="intro-chapter" aria-label="Introduce a hypothesis">
         <div class="intro-sticky">
-          <div class="city-coordinates" aria-hidden="true"><span>43° 46′ 38″ N</span><span>79° 11′ 16″ W</span></div>
+          <div class="city-coordinates" aria-hidden="true"><span>43° 39′ 54″ N</span><span>79° 24′ 40″ W</span></div>
 
           <div class="intro-message">
-            <div class="eyebrow"><span class="eyebrow-line"></span> CIVIC FUTURES, MADE VISIBLE</div>
             <h1>What if a city<br /><em>could think ahead?</em></h1>
-            <p>A living lab for the decisions that move people, money, and possibility through a city.</p>
-            <button id="enterButton" class="round-link" type="button"><span>Enter the city</span><span class="round-icon" aria-hidden="true">↓</span></button>
+            <p>A living lab for the decisions that move people.</p>
+            <button id="enterButton" class="round-link" type="button" hidden><span>Enter the city</span><span class="round-icon" aria-hidden="true">↓</span></button>
           </div>
 
           <div class="composer-scene" id="composerScene" inert aria-hidden="true">
             <div class="composer-heading">
-              <div class="eyebrow"><span class="eyebrow-line"></span> START WITH A QUESTION</div>
-              <h2>Change one thing.<br /><em>Watch everything else move.</em></h2>
-              <p>Type a policy, or pick one of two Toronto cases.</p>
+              <h2>Every future begins<br /><em>with a better question.</em></h2>
             </div>
             <form id="hypothesisForm" class="hypothesis-card">
-              <label for="hypothesisInput">YOUR HYPOTHESIS</label>
+              <label for="hypothesisInput" class="sr-only">Your question</label>
               <div class="composer-input-row">
-                <textarea id="hypothesisInput" rows="2" maxlength="280" placeholder="What if we changed the city…?" aria-describedby="composerHint"></textarea>
+                <textarea id="hypothesisInput" rows="2" maxlength="280" placeholder="What if we changed the city…?"></textarea>
                 <button id="runButton" class="run-button" type="submit" aria-label="Run hypothesis"><span>Run the city</span><span class="run-arrow" aria-hidden="true">↗</span></button>
               </div>
-              <div class="composer-footer"><span id="composerHint">Freeform questions are exploratory. Sample scenarios are prepared demos.</span><span>↵ TO RUN</span></div>
+              <span id="composerHint" hidden></span>
             </form>
             <div class="scenario-picks" aria-label="Prepared Toronto scenarios">
               <span>OR START WITH</span>
@@ -73,7 +73,7 @@
           </div>
 
           <div class="scroll-cue"><span class="scroll-track"><span></span></span><span>SCROLL TO REVEAL</span><span>01 / 03</span></div>
-          <div class="scene-credit">A city is more than its skyline <span>✳</span></div>
+          <div class="scene-credit">Photos: Toronto skyline by Jchmrt, clouds by Famartin · CC BY-SA 4.0 · Wikimedia Commons</div>
         </div>
       </section>
 
@@ -364,7 +364,7 @@
         <p class="persona-boundary">These saved reactions are from synthetic US persona cards with assigned transit contexts. They are separate from the TTC city's seeded actors and are not Toronto survey data, observed behaviour, or inputs to its event trace. Their near-uniform opposition motivated the later persona evaluation.</p>
       </section>
 
-      <section id="about" class="about-strip"><div>EVERY FUTURE BEGINS<br /><em>WITH A BETTER QUESTION.</em></div><p>A research prototype for testing assumptions and trade-offs. Not a real-world prediction.</p><a id="askAnother" href="#intro">ASK ANOTHER QUESTION ↗</a></section>
+      <section id="about" class="about-strip"><div>CHANGE ONE THING.<br /><em>WATCH EVERYTHING ELSE MOVE.</em></div><p>A research prototype for testing assumptions and trade-offs. Not a real-world prediction.</p><a id="askAnother" href="#intro">ASK ANOTHER QUESTION ↗</a></section>
     </main>
 
     <div id="investigation" class="investigation" hidden role="status" aria-live="polite">
@@ -389,8 +389,9 @@
     <script defer src="./city.js?v=bloor-workbench"></script>
     <script defer src="./bloor-map.js?v=mapped-run-1"></script>
     <script defer src="../persona-swarm/runtime/agents-client.js"></script>
-    <script defer src="./app.js?v=demo-view-1"></script>
+    <script defer src="./app.js?v=two-world-1"></script>
     <script defer src="./persona-lab.js?v=2"></script>
     <script defer src="./viewer3d-bridge.js?v=demo-view-1"></script>
+    <script defer src="./two-world.js?v=1"></script>
   </body>
 </html>

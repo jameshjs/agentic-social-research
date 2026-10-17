@@ -1,0 +1,49 @@
+/* Two World: landing photos, a shorter prompt page, and a 3D-only lab (Aadit's 17 Oct pass).
+   Landing and prompt rules apply in both views; the lab rules apply to the default demo view only,
+   so Researcher view (?detail=1) still shows every section. Photos: see assets/CREDITS.md. */
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- landing: real Toronto skyline under real clouds that part as you scroll ---------- */
+.skyline-photo{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,#07131ccc 0%,#07131c33 22%,#07131c00 45%,#07131c66 78%,#07131cf0 100%),
+    url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Sunset_Toronto_Skyline_Panorama_Crop_from_Snake_Island.jpg/3840px-Sunset_Toronto_Skyline_Panorama_Crop_from_Snake_Island.jpg') center 58%/cover no-repeat,#0b1a26;
+  transform:scale(calc(1.08 - var(--reveal)*.08));transition:opacity .6s ease}
+body:not([data-phase="intro"]):not([data-phase="composer"]):not([data-phase="investigating"]) .skyline-photo{opacity:0}
+.city-stage{opacity:0}
+body:not([data-phase="intro"]):not([data-phase="composer"]) .city-stage{opacity:1}
+.cloud-field{opacity:clamp(0,calc(1 - var(--reveal)*1.5),1)!important;filter:none!important}
+.cloud-field .cloud{display:none}
+.cloud-photo{position:absolute;top:-6vh;bottom:-6vh;width:64vw;
+  background:url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/2021-10-05_12_46_58_The_top_of_a_stratus_cloud_layer_over_Ashburn%2C_Loudoun_County%2C_Virginia_viewed_from_an_airplane_which_had_just_taken_off_from_Washington_Dulles_International_Airport.jpg/1920px-thumbnail.jpg') center 78%/cover no-repeat;
+  filter:brightness(.82) saturate(.8);will-change:transform}
+.cloud-photo--l{left:-8vw;transform:translate3d(calc(var(--reveal)*-80vw),0,0) scale(calc(1 + var(--reveal)*.35));
+  -webkit-mask-image:linear-gradient(90deg,#000 62%,transparent);mask-image:linear-gradient(90deg,#000 62%,transparent)}
+.cloud-photo--r{right:-8vw;background-position:right 78%;transform:translate3d(calc(var(--reveal)*80vw),0,0) scale(calc(1 + var(--reveal)*.35));
+  -webkit-mask-image:linear-gradient(270deg,#000 62%,transparent);mask-image:linear-gradient(270deg,#000 62%,transparent)}
+.cloud-field::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#07131cd9 0%,#07131c80 45%,#07131c26 100%)}
+.intro-message h1,.intro-message p{text-shadow:0 2px 24px #07131caa}
+.scene-credit{font:500 10px 'DM Sans',sans-serif;letter-spacing:.2px;color:#cdd9dbcc;max-width:46vw;text-align:right}
+
+/* ---------- prompt page: just the question and one Run button ---------- */
+.scenario-picks{display:none!important}
+.composer-heading h2{margin-bottom:26px}
+
+/* ---------- 100-agent panel: no survey caveat line, no mean/flagged line ---------- */
+#agentPoll .persona-reaction-head > p,#agentPollStats{display:none!important}
+
+/* ---------- lab (demo view): a big 3D box and nothing under it ---------- */
+body.demo-view .lab-status,body.demo-view .lab-scenarios{display:none!important}
+body.demo-view .lab-shell{padding-top:76px;padding-bottom:16px;min-height:0}
+body.demo-view .lab-layout{margin-top:10px}
+body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{height:calc(100vh - 150px);min-height:520px}
+body.demo-view .view3d-toggle{display:none!important}                         /* 3D only */
+body.demo-view .simulation-viewport.is-3d .motion-button{display:none!important}  /* the 3D view has its own play button */
+body.demo-view .timeline-bar{display:none!important}                          /* one timeline: the 3D view's */
+body.demo-view #peopleStrip,body.demo-view #labCredit,body.demo-view #runLedger,body.demo-view #ttcWorkbench,body.demo-view #bikeLab,
+body.demo-view #impact,body.demo-view #personaLab,body.demo-view #about{display:none!important}
+@media(max-width:760px){body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{height:72vh;min-height:420px}}
+
+/* ---------- header: no separator line, no "Enter the city" ---------- */
+.site-header{border-bottom:0!important}
+#enterButton{display:none!important}
