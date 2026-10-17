@@ -1,0 +1,174 @@
+{
+ "tuning": {
+  "set_name": "tuning",
+  "families": [
+   "policy",
+   "pricing"
+  ],
+  "n_respondents": 40,
+  "n_items": 2000,
+  "right_person": 0.7527010804321729,
+  "agent_match_rate": 0.627,
+  "human_consistency": 0.833,
+  "missing_share": 0.0,
+  "right_spread": 0.7592128799762621,
+  "spread_items": 50,
+  "right_group_gaps": 0.568,
+  "group_gaps_considered": 125,
+  "baselines": {
+   "most_common": 0.7160864345738295,
+   "demographic": 0.8541416566626651,
+   "most_similar": 0.6506602641056423,
+   "no_persona": null
+  },
+  "marks": {
+   "right_person": true,
+   "right_spread": false,
+   "right_group_gaps": false,
+   "beats_baselines": false
+  },
+  "marks_passed": 1,
+  "steady": null,
+  "steady_status": "not_run",
+  "invalid": false,
+  "by_family": {
+   "policy": {
+    "n_items": 400,
+    "right_person": 0.8405405405405405,
+    "agent_match_rate": 0.7775,
+    "human_consistency": 0.925,
+    "missing_share": 0.0,
+    "right_spread": 0.2461990526412388,
+    "spread_items": 10,
+    "right_group_gaps": 0.2222222222222222,
+    "group_gaps_considered": 18,
+    "baselines": {
+     "most_common": 0.8405405405405405,
+     "demographic": 0.8837837837837837,
+     "most_similar": 0.8081081081081081,
+     "no_persona": null
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": false,
+     "right_group_gaps": false,
+     "beats_baselines": false
+    },
+    "marks_passed": 1
+   },
+   "pricing": {
+    "n_items": 1600,
+    "right_person": 0.7276234567901234,
+    "agent_match_rate": 0.589375,
+    "human_consistency": 0.81,
+    "missing_share": 0.0,
+    "right_spread": 0.8874663368100177,
+    "spread_items": 40,
+    "right_group_gaps": 0.6261682242990654,
+    "group_gaps_considered": 107,
+    "baselines": {
+     "most_common": 0.6805555555555556,
+     "demographic": 0.845679012345679,
+     "most_similar": 0.6057098765432098,
+     "no_persona": null
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": false,
+     "beats_baselines": false
+    },
+    "marks_passed": 2
+   }
+  },
+  "experiment_effects": null,
+  "scorer_sha256": "4f35d4828cdab965f95e02cc665fe8065fda01f374a77fcaed861cfd1f84e210",
+  "rewordings_sha256": "18e1904fa3653dfd38e0b895fb47ee91e0bb95327d2f90198edb008bcac8deae"
+ },
+ "check": {
+  "set_name": "check",
+  "families": [
+   "policy",
+   "pricing"
+  ],
+  "n_respondents": 100,
+  "n_items": 5000,
+  "right_person": 0.7326779026217228,
+  "agent_match_rate": 0.626,
+  "human_consistency": 0.8544,
+  "missing_share": 0.0,
+  "right_spread": 0.7583093295356907,
+  "spread_items": 50,
+  "right_group_gaps": 0.6352941176470588,
+  "group_gaps_considered": 85,
+  "baselines": {
+   "most_common": 0.6207865168539326,
+   "demographic": 0.6051029962546817,
+   "most_similar": 0.6477059925093633,
+   "no_persona": null
+  },
+  "marks": {
+   "right_person": true,
+   "right_spread": false,
+   "right_group_gaps": false,
+   "beats_baselines": true
+  },
+  "marks_passed": 2,
+  "steady": null,
+  "steady_status": "not_run",
+  "invalid": false,
+  "by_family": {
+   "policy": {
+    "n_items": 1000,
+    "right_person": 0.7882483370288248,
+    "agent_match_rate": 0.711,
+    "human_consistency": 0.902,
+    "missing_share": 0.0,
+    "right_spread": 0.1930245925254434,
+    "spread_items": 10,
+    "right_group_gaps": 0.3333333333333333,
+    "group_gaps_considered": 18,
+    "baselines": {
+     "most_common": 0.7605321507760532,
+     "demographic": 0.7450110864745011,
+     "most_similar": 0.761640798226164,
+     "no_persona": null
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": false,
+     "right_group_gaps": false,
+     "beats_baselines": true
+    },
+    "marks_passed": 2
+   },
+   "pricing": {
+    "n_items": 4000,
+    "right_person": 0.7178041543026706,
+    "agent_match_rate": 0.60475,
+    "human_consistency": 0.8425,
+    "missing_share": 0.0,
+    "right_spread": 0.8996305137882527,
+    "spread_items": 40,
+    "right_group_gaps": 0.7164179104477612,
+    "group_gaps_considered": 67,
+    "baselines": {
+     "most_common": 0.5833827893175074,
+     "demographic": 0.5676557863501484,
+     "most_similar": 0.6172106824925816,
+     "no_persona": null
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": false,
+     "beats_baselines": true
+    },
+    "marks_passed": 3
+   }
+  },
+  "experiment_effects": null,
+  "scorer_sha256": "4f35d4828cdab965f95e02cc665fe8065fda01f374a77fcaed861cfd1f84e210",
+  "rewordings_sha256": "18e1904fa3653dfd38e0b895fb47ee91e0bb95327d2f90198edb008bcac8deae"
+ }
+}

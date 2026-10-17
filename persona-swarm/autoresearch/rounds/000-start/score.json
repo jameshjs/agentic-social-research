@@ -1,0 +1,174 @@
+{
+ "tuning": {
+  "set_name": "tuning",
+  "families": [
+   "policy",
+   "pricing"
+  ],
+  "n_respondents": 40,
+  "n_items": 2000,
+  "right_person": 0.7977190876350541,
+  "agent_match_rate": 0.6645,
+  "human_consistency": 0.833,
+  "missing_share": 0.0,
+  "right_spread": 0.9658685986307544,
+  "spread_items": 50,
+  "right_group_gaps": 0.672,
+  "group_gaps_considered": 125,
+  "baselines": {
+   "most_common": 0.7160864345738295,
+   "demographic": 0.8541416566626651,
+   "most_similar": 0.6506602641056423,
+   "no_persona": 0.7527010804321729
+  },
+  "marks": {
+   "right_person": true,
+   "right_spread": true,
+   "right_group_gaps": false,
+   "beats_baselines": false
+  },
+  "marks_passed": 2,
+  "steady": null,
+  "steady_status": "not_run",
+  "invalid": false,
+  "by_family": {
+   "policy": {
+    "n_items": 400,
+    "right_person": 0.7837837837837838,
+    "agent_match_rate": 0.725,
+    "human_consistency": 0.925,
+    "missing_share": 0.0,
+    "right_spread": 0.9075033963483407,
+    "spread_items": 10,
+    "right_group_gaps": 1.0,
+    "group_gaps_considered": 18,
+    "baselines": {
+     "most_common": 0.8405405405405405,
+     "demographic": 0.8837837837837837,
+     "most_similar": 0.8081081081081081,
+     "no_persona": 0.8405405405405405
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": true,
+     "beats_baselines": false
+    },
+    "marks_passed": 3
+   },
+   "pricing": {
+    "n_items": 1600,
+    "right_person": 0.8016975308641975,
+    "agent_match_rate": 0.649375,
+    "human_consistency": 0.81,
+    "missing_share": 0.0,
+    "right_spread": 0.9804598992013578,
+    "spread_items": 40,
+    "right_group_gaps": 0.616822429906542,
+    "group_gaps_considered": 107,
+    "baselines": {
+     "most_common": 0.6805555555555556,
+     "demographic": 0.845679012345679,
+     "most_similar": 0.6057098765432098,
+     "no_persona": 0.7276234567901234
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": false,
+     "beats_baselines": false
+    },
+    "marks_passed": 2
+   }
+  },
+  "experiment_effects": null,
+  "scorer_sha256": "4f35d4828cdab965f95e02cc665fe8065fda01f374a77fcaed861cfd1f84e210",
+  "rewordings_sha256": "45136ba1ef58e2287a6c1e193368568c44c6444b6c2d005b413999dbe904ec65"
+ },
+ "check": {
+  "set_name": "check",
+  "families": [
+   "policy",
+   "pricing"
+  ],
+  "n_respondents": 100,
+  "n_items": 5000,
+  "right_person": 0.8061797752808989,
+  "agent_match_rate": 0.6888,
+  "human_consistency": 0.8544,
+  "missing_share": 0.0,
+  "right_spread": 0.9667395366633219,
+  "spread_items": 50,
+  "right_group_gaps": 0.7647058823529411,
+  "group_gaps_considered": 85,
+  "baselines": {
+   "most_common": 0.6207865168539326,
+   "demographic": 0.6051029962546817,
+   "most_similar": 0.6477059925093633,
+   "no_persona": 0.7326779026217228
+  },
+  "marks": {
+   "right_person": true,
+   "right_spread": true,
+   "right_group_gaps": false,
+   "beats_baselines": true
+  },
+  "marks_passed": 3,
+  "steady": 0.959,
+  "steady_status": "ok",
+  "invalid": false,
+  "by_family": {
+   "policy": {
+    "n_items": 1000,
+    "right_person": 0.7993348115299335,
+    "agent_match_rate": 0.721,
+    "human_consistency": 0.902,
+    "missing_share": 0.0,
+    "right_spread": 0.8882865360141841,
+    "spread_items": 10,
+    "right_group_gaps": 0.9444444444444444,
+    "group_gaps_considered": 18,
+    "baselines": {
+     "most_common": 0.7605321507760532,
+     "demographic": 0.7450110864745011,
+     "most_similar": 0.761640798226164,
+     "no_persona": 0.7882483370288248
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": true,
+     "beats_baselines": true
+    },
+    "marks_passed": 4
+   },
+   "pricing": {
+    "n_items": 4000,
+    "right_person": 0.8080118694362017,
+    "agent_match_rate": 0.68075,
+    "human_consistency": 0.8425,
+    "missing_share": 0.0,
+    "right_spread": 0.9863527868256063,
+    "spread_items": 40,
+    "right_group_gaps": 0.7164179104477612,
+    "group_gaps_considered": 67,
+    "baselines": {
+     "most_common": 0.5833827893175074,
+     "demographic": 0.5676557863501484,
+     "most_similar": 0.6172106824925816,
+     "no_persona": 0.7178041543026706
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": false,
+     "beats_baselines": true
+    },
+    "marks_passed": 3
+   }
+  },
+  "experiment_effects": null,
+  "scorer_sha256": "4f35d4828cdab965f95e02cc665fe8065fda01f374a77fcaed861cfd1f84e210",
+  "rewordings_sha256": "45136ba1ef58e2287a6c1e193368568c44c6444b6c2d005b413999dbe904ec65"
+ }
+}
