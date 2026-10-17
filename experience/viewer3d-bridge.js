@@ -41,6 +41,12 @@
     .impact-tour-card p{margin:4px 0 0;color:#d4e6e3;font:500 13px/1.4 'Space Grotesk',sans-serif}
     .impact-tour-change{display:block;margin:4px 0 2px;font:600 clamp(22px,2.6vw,34px)/1.1 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#ff9ff3}
     .impact-tour-change i{font-style:normal;color:#fff;opacity:.7;margin:0 .2em}
+    .arm-badge{position:absolute;z-index:6;top:16px;left:50%;transform:translateX(-50%);display:none;padding:7px 14px;border:2px solid;border-radius:999px;background:#08202ae6;color:#d4e6e3;font:600 11px 'Space Grotesk',sans-serif;letter-spacing:.04em;pointer-events:none;white-space:nowrap}
+    .arm-badge b{margin-right:6px;letter-spacing:.14em}
+    .arm-badge.is-baseline{border-color:#4fe3ff}.arm-badge.is-baseline b{color:#4fe3ff}
+    .arm-badge.is-policy{border-color:#ff5fe0}.arm-badge.is-policy b{color:#ff8ff3}
+    .simulation-viewport.is-3d .arm-badge{display:block}
+    @media(max-width:760px){.arm-badge{top:auto;bottom:14px;font-size:10px;padding:5px 10px}}
     @media(max-width:760px){.impact-tour button{top:75px;padding:8px 11px;font-size:10px}.impact-tour-card{bottom:58px;padding:8px 10px}.impact-tour-card strong{font-size:13px}}`;
   document.head.appendChild(style);
 
@@ -54,11 +60,22 @@
   tour.innerHTML = '<button type="button" aria-label="Play the policy impact tour">▶ See policy impact</button><div class="impact-tour-card" aria-live="polite" hidden></div>';
   viewport.appendChild(tour);
   const tourButton = tour.querySelector('button'), tourCard = tour.querySelector('.impact-tour-card');
+  // Which world is on screen, always visible over the 3D view (same colours as the tour card and routes).
+  const badge = document.createElement('div');
+  badge.className = 'arm-badge';
+  viewport.appendChild(badge);
+  const showArm = () => {
+    const before = arm() === 'baseline';
+    badge.className = `arm-badge ${before ? 'is-baseline' : 'is-policy'}`;
+    badge.innerHTML = before ? '<b>BEFORE</b> current rules' : '<b>AFTER</b> with the policy';
+  };
   let tourTimer = null;
   const stopTour = () => {
+    const running = Boolean(tourTimer);
     if (tourTimer) clearTimeout(tourTimer);
     tourTimer = null;
     tourCard.hidden = true;
+    if (running) send({ type: 'viewer3d:tour-end' });
   };
   const escape = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const bikeRun = (r) => Object.hasOwn(r.scenario.levers.intervention || {}, 'bloor_cycle_track');
@@ -87,6 +104,15 @@
     if (!done) bits.push('this trip no longer happens on Bloor');
     return bits.join(' · ');
   }
+  // Why the policy arm turned down the old choice, from that arm's own choose_trip options.
+  function declined(r, d) {
+    const choose = r.runs.intervention.events.find((e) => e.actor === d.actor && e.tick === d.tick && e.action === 'choose_trip' && e.trip_id === d.trip_id);
+    const old = choose?.options?.find((o) => o.action === d.baseline.action);
+    if (!old) return '';
+    if (old.shared_with_cars_m) return `Bloor would now mean ${Math.round(old.shared_with_cars_m)} m in car traffic`;
+    if (old.cost_cad) return `${d.baseline.action === 'transit' ? 'TTC' : choiceText(d.baseline.action)} would now cost $${old.cost_cad.toFixed(2)}`;
+    return '';
+  }
   const sum = (r, armName, id) => r.runs[armName].metrics.by_tick.filter((t) => t.tick >= r.scenario.policy_start).reduce((n, t) => n + (t[id] || 0), 0);
   function card(phase, label, title, sub, big) {
     tourCard.className = `impact-tour-card is-${phase}`;
@@ -99,22 +125,24 @@
     const levers = r.scenario.levers;
     if (phase === 'policy-intro') {
       const what = bike ? 'The protected cycle track is removed' : `The adult fare goes from $${levers.baseline.adult_fare_cad.toFixed(2)} to $${levers.intervention.adult_fare_cad.toFixed(2)}`;
-      card('switch', 'Now switch on the policy', `${what}.`, `Same ${name}, same day, same seed. Watch what changes.`);
-      send({ type: 'viewer3d:arm', arm: 'policy' });
+      card('switch', 'Now switch on the policy', `${what}.`, `Same ${name}, same day, same seed, same spot. Watch what changes.`);
+      send({ type: 'viewer3d:tour-hold' });
       return;
     }
     const armName = baseline ? 'baseline' : 'intervention';
     const action = baseline ? d.baseline.action : d.intervention.action;
-    const label = baseline ? '01 · Without the policy' : bike ? '02 · Track removed' : '02 · With the higher fare';
+    const label = baseline ? '01 · Before · current rules' : bike ? '02 · After · track removed' : '02 · After · higher fare';
     const big = baseline ? '' : `${escape(choiceText(d.baseline.action))} <i>→</i> ${escape(choiceText(d.intervention.action))}`;
-    card(baseline ? 'baseline' : 'policy', label, `${name} ${escape(choiceText(action))}.`, escape(tripFacts(r, d, armName)), big);
+    const facts = [tripFacts(r, d, armName), baseline ? '' : declined(r, d)].filter(Boolean).join(' · ');
+    card(baseline ? 'baseline' : 'policy', label, `${name} ${escape(choiceText(action))}.`, escape(facts), big);
     send({ type: 'viewer3d:impact-phase', arm: baseline ? 'baseline' : 'policy', actor: d.actor, trip: d.trip_id, tick: d.tick, kind: bike ? 'bike' : 'fare', focus: 'person' });
   }
   function showSummary(r) {
     const bike = bikeRun(r), id = bike ? 'bloor_bike_trips' : 'transit_trips';
     const a = Math.round(sum(r, 'baseline', id)), b = Math.round(sum(r, 'intervention', id));
     const people = new Set(r.changed_decisions.map((c) => c.actor)).size;
-    card('policy', 'Across the whole run', `${bike ? 'Bloor bike trips' : 'TTC trips'}: ${a} → ${b}`, `${people} of ${r.population.count} people changed a choice · simulated, not a forecast`);
+    const days = new Set(r.runs.baseline.metrics.by_tick.filter((t) => t.tick >= r.scenario.policy_start).map((t) => t.tick)).size;
+    card('policy', `All ${r.population.count} people · ${days} days after the change`, `${bike ? 'Bloor bike trips' : 'TTC trips'}: ${a} → ${b}`, `${people} of ${r.population.count} people changed a choice · simulated, not a forecast`);
   }
   tourButton.addEventListener('click', () => {
     const r = isMapped(last) ? last : window.CounterfactualCurrentRun;
@@ -141,7 +169,7 @@
     if (open && !frame) {
       frame = document.createElement('iframe');
       frame.className = 'view3d-frame'; frame.title = '3D view of the mapped run';
-      frame.src = '../world/viewer3d/?embed=1&v=street-tour-7';
+      frame.src = '../world/viewer3d/?embed=1&v=street-tour-10';
       viewport.appendChild(frame);
     }
     viewport.classList.toggle('is-3d', open);
@@ -155,13 +183,19 @@
   window.addEventListener('message', (event) => {
     if (event.origin !== origin || !frame || event.source !== frame.contentWindow || !event.data) return;
     if (event.data.type === 'viewer3d:ready') { ready = true; sendRun(); send({ type: 'viewer3d:arm', arm: arm() }); tour.classList.toggle('is-ready', isMapped(last || window.CounterfactualCurrentRun)); }
-    if (event.data.type === 'viewer3d:arm' && event.data.arm !== arm()) document.getElementById(event.data.arm === 'baseline' ? 'baselineView' : 'policyView')?.click();
+    if (event.data.type === 'viewer3d:arm' && event.data.arm !== arm()) { echo = true; document.getElementById(event.data.arm === 'baseline' ? 'baselineView' : 'policyView')?.click(); echo = false; }
   });
-  for (const id of ['baselineView', 'policyView']) document.getElementById(id)?.addEventListener('click', () => setTimeout(() => send({ type: 'viewer3d:arm', arm: arm() }), 0));
+  // A person pressing the toggle mid-tour takes over: the tour stops so its card cannot contradict the scene.
+  let echo = false;
+  for (const id of ['baselineView', 'policyView']) document.getElementById(id)?.addEventListener('click', () => {
+    if (!echo) stopTour();
+    setTimeout(() => send({ type: 'viewer3d:arm', arm: arm() }), 0);
+  });
   // The page also changes arm without a click (a new run opens on Baseline in the demo view; following a ledger event
   // switches arm), so follow the toggle's own state as well. The viewer ignores an arm it already shows.
   const baselineButton = document.getElementById('baselineView');
-  if (baselineButton) new MutationObserver(() => send({ type: 'viewer3d:arm', arm: arm() })).observe(baselineButton, { attributes: true, attributeFilter: ['class'] });
+  if (baselineButton) new MutationObserver(() => { showArm(); send({ type: 'viewer3d:arm', arm: arm() }); }).observe(baselineButton, { attributes: true, attributeFilter: ['class'] });
+  showArm();
   // A changed decision chosen in the ledger: fly to that person in 3D.
   document.getElementById('runLedgerChoices')?.addEventListener('click', (event) => {
     const label = event.target.closest('button')?.querySelector('strong')?.textContent || '';

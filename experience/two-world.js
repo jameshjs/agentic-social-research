@@ -425,7 +425,7 @@
         el('section', { class: 'tw-card' }, [
           txt('h3', null, 'Why it was not run'),
           txt('p', 'tw-measure-text', reason || 'No mapped Bathurst–Spadina lever directly represents this question.'),
-          scenario.compilerBadge ? txt('p', 'tw-note', `Read by: ${scenario.compilerBadge}.`) : null,
+          scenario.compilerBadge ? txt('p', 'tw-note', scenario.compilerBadge) : null,
         ]),
         el('section', { class: 'tw-card' }, [
           txt('h3', null, 'What a simulation would need'),
