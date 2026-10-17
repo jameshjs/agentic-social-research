@@ -52,6 +52,39 @@ async def claude_json(system, prompt, schema, model=MODEL, effort=EFFORT):
         return None, {**meta, "error": str(d.get("result"))[:300]}
     return d["structured_output"], meta
 
+def read_env():
+    """persona-swarm/.env as a dict. Not copied into os.environ: an exported ANTHROPIC_API_KEY would move every
+    `claude -p` call above from the Claude plan to API billing."""
+    path = ROOT / ".env"
+    if not path.exists():
+        return {}
+    return {k.strip(): v.strip().strip("'\"") for k, _, v in (l.partition("=") for l in path.read_text().splitlines())
+            if k.strip() and not k.lstrip().startswith("#")}
+
+_client = None
+
+async def api_json(system, prompt, schema, model=MODEL, effort=EFFORT):
+    """Same contract as claude_json, through the Anthropic API with ANTHROPIC_API_KEY from persona-swarm/.env.
+    Opt-in backend for the hosted demo; the tuning loop stays on claude_json."""
+    global _client
+    import anthropic  # only this backend needs the package
+    if _client is None:
+        _client = anthropic.AsyncAnthropic(api_key=read_env().get("ANTHROPIC_API_KEY") or None)  # None: SDK's own lookup
+    # Opus can decline on a safety classifier; "default" re-runs it server-side on the recommended fallback model.
+    # Haiku has no server-side fallback, so its refusals come back as errors below.
+    fallback = {"betas": ["server-side-fallback-2026-07-01"], "extra_body": {"fallbacks": "default"}} \
+        if model.startswith("claude-opus") else {}
+    try:
+        r = await _client.beta.messages.create(
+            model=model, max_tokens=16000, system=system, messages=[{"role": "user", "content": prompt}],
+            output_config={"effort": effort, "format": {"type": "json_schema", "schema": schema}}, **fallback)
+    except anthropic.APIError as e:  # the SDK has already retried 429s, 5xx and dropped connections
+        return None, {"error": f"{type(e).__name__}: {e}"[:300]}
+    meta = {"input_tokens": r.usage.input_tokens, "output_tokens": r.usage.output_tokens}
+    if r.stop_reason != "end_turn":  # refusal, or max_tokens cut the JSON off
+        return None, {**meta, "error": f"stop_reason {r.stop_reason}"}
+    return json.loads(next(b.text for b in r.content if b.type == "text")), meta
+
 def load_jsonl(path):
     # every caller needs the persona pool; a missing file should fail by name (rerun fetch_personas.py), not as []
     return [json.loads(line) for line in path.read_text().splitlines()]

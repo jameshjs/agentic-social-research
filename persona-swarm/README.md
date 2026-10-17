@@ -181,6 +181,15 @@ python3 scripts/export_reactions.py   # runs → data/dashboard/reactions.csv fo
 python3 scripts/test_swarm.py         # offline self-check, no model calls
 ```
 
+**Anthropic API backend (hosted demo).** `scripts/plan.py` takes a freeform hypothesis: one Opus 5.5 call picks the
+most affected group and words the proposal, then each persona in it reacts through Haiku 5.5. Calls bill to the API
+key, not a Claude plan. Run `pip install anthropic` and put `ANTHROPIC_API_KEY` in `persona-swarm/.env` (see
+`.env.example`). The tuning loop and `react.py` stay on the CLI.
+
+```bash
+python3 scripts/plan.py "Raising TTC fares by 50 cents will push low-income riders to drive"
+```
+
 What it taught us, which is the starting point for `instructions.md`:
 1. **Only ask what the persona's data can answer.** Money questions made personas invent debts and children in 17% of
    answers.

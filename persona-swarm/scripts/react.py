@@ -45,9 +45,10 @@ def quote_check(sheet, quote):
 def slug(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:60] or "policy"
 
-async def react(group_id, policy, contexts=None, run=None):
+async def react(group_id, policy, contexts=None, run=None, call=claude_json, model=MODEL):
     """contexts: optional {uuid: {"label": ..., "text": ...}}, scenario facts added to that persona's sheet as its
-    current situation (e.g. transit use, car access). run: optional output name instead of the policy slug."""
+    current situation (e.g. transit use, car access). run: optional output name instead of the policy slug.
+    call: claude_json (CLI, default) or run_swarm.api_json (Anthropic API)."""
     contexts = contexts or {}
     policy = " ".join(policy.split())
     if not policy or len(policy) > MAX_POLICY_CHARS:
@@ -63,7 +64,7 @@ async def react(group_id, policy, contexts=None, run=None):
         p = {**pool[card["uuid"]], "situation": ctx["text"]} if ctx else pool[card["uuid"]]
         base = {"persona": card, "context": ctx}
         async with sem:
-            answer, meta = await claude_json(persona_prompt(p), question(policy), SCHEMA)
+            answer, meta = await call(persona_prompt(p), question(policy), SCHEMA, model)
         if answer is None:  # one failed persona must not sink the group; the frontend shows it as missing
             return {**base, "error": meta.get("error")}
         return {**base, **answer, "quote_check": quote_check(persona_sheet(p), answer.get("sheet_quote", ""))}
@@ -73,7 +74,7 @@ async def react(group_id, policy, contexts=None, run=None):
     result = {
         "group": {k: groups[group_id][k] for k in ("id", "label", "size")}, "policy": policy, "run": run,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "model": MODEL, "effort": EFFORT, "prompt_version": PROMPT_VERSION,
+        "model": model, "backend": call.__name__, "effort": EFFORT, "prompt_version": PROMPT_VERSION,
         "summary": {"responded": len(ok), "failed": len(responses) - len(ok),
                     "stance": {s: sum(r["stance"] == s for r in ok) for s in STANCES},
                     "quote_grounded": sum(r["quote_check"] == "grounded" for r in ok)},
