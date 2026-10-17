@@ -88,6 +88,7 @@
             </div>
             <div class="micro-section-label" id="chainLabel">WATCH THE CHAIN</div>
             <ol id="causalChain" class="causal-chain"></ol>
+            <button id="bikeLabButton" class="bike-lab-entry" type="button" hidden><span>◇</span><span>Explore the Bloor street change <small>Compare the street and follow a person</small></span><span aria-hidden="true">↗</span></button>
             <button id="impactMapButton" class="impact-cta" type="button"><span class="impact-cta-icon">✳</span><span>Open the impact map <small id="impactButtonHint">See the connected effects</small></span><span class="cta-arrow">↗</span></button>
             <p class="rail-note"><span>ⓘ</span><span id="railNoteText">Simulated decisions are illustrative, not a validated policy forecast. Click an impact to inspect its assumptions.</span></p>
           </aside>
@@ -120,6 +121,56 @@
           <div class="timeline-controls"><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub illustrative city animation; no event log attached" /><span>END</span></div>
           <div class="timeline-time"><span>00</span><span>01</span><span>02</span><span>03</span><span>04</span></div>
         </div>
+      </section>
+
+      <section id="bikeLab" class="bike-lab" hidden aria-label="Bloor bike lane scenario explorer">
+        <div class="bike-lab-head">
+          <div>
+            <div class="bike-lab-kicker"><span>02 / A STREET IN QUESTION</span><span>TORONTO · SHAW ST TO AVENUE RD</span></div>
+            <h2 class="bike-lab-title">One street.<br /><em>Four possible paths.</em></h2>
+          </div>
+          <p class="bike-lab-deck">A protected cycle track connects a person to more than a route. Explore how a hypothetical redesign could change a trip, a stop at a shop, and the curb outside. This is a schematic, illustrative replay.</p>
+        </div>
+
+        <div class="bike-stage" id="bikeStage" data-view="policy">
+          <div class="bike-stage-top"><span><i></i> BLOOR STREET WEST / SCHEMATIC SECTION</span><span>STEADY-STATE ILLUSTRATION · NOT AN ENGINEERING PLAN</span></div>
+          <div class="bike-stage-visual" role="group" aria-label="Schematic Bloor street layout comparison">
+            <img class="bike-art bike-art--baseline" src="./bloor-protected.svg" alt="" loading="lazy" />
+            <img class="bike-art bike-art--policy" src="./bloor-proposal.svg" alt="" loading="lazy" />
+            <div class="bike-stage-overlay"><span id="bikeStageIndex">02 / PROPOSED WORLD</span><strong id="bikeStageTitle">The protected track is removed.</strong><small id="bikeStageSubtitle">A hypothetical motor-vehicle and curb layout; exact geometry is unverified.</small></div>
+          </div>
+          <div class="bike-stage-footer">
+            <div class="bike-view-toggle" role="group" aria-label="Compare Bloor street layouts"><button id="bikeViewBaseline" type="button" aria-pressed="false"><span>01</span> Existing protected track</button><button id="bikeViewPolicy" class="selected" type="button" aria-pressed="true"><span>02</span> Hypothetical removal</button></div>
+            <span class="bike-stage-location">NEAR HURON / BATHURST <span>↗</span> ILLUSTRATIVE DISTRICT</span>
+          </div>
+        </div>
+
+        <div class="bike-trace">
+          <div class="bike-trace-head"><div><span>FOLLOW THE DECISION</span><h3>Who moves differently?</h3></div><p>Choose a person, then choose a possible response. These branches demonstrate mechanisms; they are not decisions from a connected agent event log.</p></div>
+          <div class="bike-role-switch" role="group" aria-label="Choose a Bloor stakeholder">
+            <button type="button" data-bike-role="cyclist" class="selected" aria-pressed="true"><span>01</span> Cyclist</button>
+            <button type="button" data-bike-role="delivery" aria-pressed="false"><span>02</span> Driver + delivery</button>
+            <button type="button" data-bike-role="merchant" aria-pressed="false"><span>03</span> Local shop</button>
+          </div>
+          <div class="bike-trace-grid">
+            <div class="bike-path-panel"><span class="bike-panel-label">POSSIBLE RESPONSES / SELECT ONE</span><div id="bikePaths" class="bike-paths"></div><div class="bike-path-note">Illustrative route choice · not a measured probability or forecast</div></div>
+            <div class="bike-trace-card" aria-live="polite">
+              <div class="bike-trace-card-top"><span id="bikeRoleLabel">LESS-CONFIDENT CYCLIST</span><span>ILLUSTRATIVE BRANCH</span></div>
+              <h4 id="bikePathTitle">A trip changes shape.</h4>
+              <p id="bikePathDescription"></p>
+              <div id="bikeStepFlow" class="bike-step-flow"></div>
+              <div class="bike-trace-card-bottom"><span id="bikeOutcomeLabel">WHAT TO VERIFY</span><strong id="bikeOutcomeText"></strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bike-evidence-grid">
+          <article class="bike-evidence-card bike-evidence-card--observed"><div class="bike-evidence-overline"><span>◆ OBSERVED / CITY OF TORONTO</span><span>2025 · ONE COUNTER</span></div><strong>3,524<span> / day</span></strong><p>Average cyclist <b>passages</b> at the permanent Bloor counter west of Huron Street. This is a scale cue, not unique riders, corridor trips, or a removal effect.</p><a href="https://www.toronto.ca/wp-content/uploads/2026/03/96e8-2025-Toronto-Cycling-Year-in-Review-FINAL.pdf" target="_blank" rel="noopener noreferrer">Read the City source ↗</a></article>
+          <article class="bike-evidence-card"><div class="bike-evidence-overline"><span>◇ RESEARCH / RETAIL CONTEXT</span><span>2015–17 · MADISON–MONTROSE</span></div><strong class="bike-evidence-word">A shop is not a shortcut.</strong><p>Visitor mode and merchant surveys show why arrival mix matters. Bloor and the Danforth comparison both improved after installation; those data cannot predict sales after removal.</p><a href="https://ero.ontario.ca/public/public_uploads/2024-10/Bloor-Economic-Impact-Study-Full-Report-2019-09-03_0.pdf" target="_blank" rel="noopener noreferrer">Inspect the retail study ↗</a></article>
+          <article class="bike-evidence-card bike-evidence-card--limits"><div class="bike-evidence-overline"><span>! DECISION GAPS</span><span>NOT ESTIMABLE HERE</span></div><strong class="bike-evidence-word">What remains unknown.</strong><p>Local removal cost, injuries, emissions and actual shop margin need a street design, exposure and transaction data. The City’s multi-corridor cost estimate is not a Bloor-segment estimate.</p><a href="../bloor-bike-demo.md" target="_blank" rel="noopener noreferrer">See assumptions &amp; sources ↗</a></article>
+        </div>
+
+        <div class="bike-next"><div><span>FROM A STREET TO A SYSTEM</span><strong>Trace where the effects could travel.</strong></div><button id="bikeImpactButton" type="button">Open the connected impact map <span aria-hidden="true">↗</span></button></div>
       </section>
 
       <section id="impact" class="impact-section" hidden aria-label="Connected impact map">

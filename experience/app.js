@@ -9,6 +9,37 @@ let current = preparedScenarios.fare;
 let phase = 'intro';
 let investigationToken = 0;
 let activeSector = 'mobility';
+let activeBikeRole = 'cyclist';
+let activeBikePath = 'stay';
+
+// Storyboard branches demonstrate causal questions until the shared WorldEvent log is connected.
+const bikeStories = {
+  cyclist: {
+    label: 'LESS-CONFIDENT CYCLIST',
+    paths: [
+      { id: 'stay', label: 'Continue on Bloor', icon: '↗', title: 'The same destination, a different ride.', description: 'This cyclist still takes Bloor in the proposed layout. Their route is shorter than a detour, but the loss of separation changes what they must assess before leaving.', steps: ['Protection removed', 'Choose Bloor', 'Arrive or turn back', 'Shop entry?'], outcome: 'Current comfort, exposure and completed arrival; do not infer an injury count.' },
+      { id: 'detour', label: 'Take a detour', icon: '◇', title: 'A longer path may change the stop.', description: 'An alternate street could preserve a cycling trip while moving the rider away from a planned Bloor stop. The direction and size of the change need current routes and origins.', steps: ['Protection removed', 'Choose alternate', 'Time changes', 'Destination choice'], outcome: 'Current route suitability and origin–destination trips; historic rerouting is not a reverse coefficient.' },
+      { id: 'ttc', label: 'Switch to TTC', icon: '≋', title: 'One bicycle trip becomes a fare decision.', description: 'A person may still reach the same destination by transit. Their household may pay a fare; any TTC receipt is the other side of that same transaction.', steps: ['Protection removed', 'Choose TTC', 'Pay fare', 'Arrive or bypass'], outcome: 'Fare product, trip purpose and destination before claiming an economic effect.' },
+      { id: 'defer', label: 'Defer the trip', icon: '×', title: 'The missing arrival is the signal.', description: 'A discretionary trip may happen later or not at all. A shop effect exists only if this person would have entered and bought something in the baseline world.', steps: ['Protection removed', 'Reconsider trip', 'Defer', 'No visit yet'], outcome: 'Which trips were discretionary and whether a purchase would have occurred.' },
+    ],
+  },
+  delivery: {
+    label: 'DRIVER + DELIVERY',
+    paths: [
+      { id: 'zero', label: 'No time gain', icon: '0', title: 'More road space does not guarantee speed.', description: 'A driver can still face the same intersection delay in the proposed layout. This branch deliberately shows zero time benefit, a valid sensitivity case.', steps: ['Lane reallocated', 'Route unchanged', 'Same travel time', 'No time benefit'], outcome: 'Traffic operations and junction delay under a specific engineered design.' },
+      { id: 'pickup', label: 'Easier pickup', icon: '↗', title: 'The curb might work differently.', description: 'A driver with a heavy purchase could benefit from a better pickup location, if the redesign actually supplies one. Parking and loading effects need an explicit curb inventory.', steps: ['Curb redesigned', 'Find loading spot', 'Pick up purchase', 'Record cost'], outcome: 'Curb-space inventory, loading rules, parking payments and actual pickup events.' },
+      { id: 'courier', label: 'Delivery reroutes', icon: '◇', title: 'A courier also has a route choice.', description: 'A cyclist delivering goods might take a longer path or share the proposed mixed-traffic section. Earnings change only if time and paid-job rules are measured.', steps: ['Protection removed', 'Choose route', 'Complete delivery?', 'Record time'], outcome: 'Current delivery routes, job pay rules and completed delivery events.' },
+    ],
+  },
+  merchant: {
+    label: 'LOCAL SHOP OWNER',
+    paths: [
+      { id: 'same', label: 'Sales unchanged', icon: '0', title: 'A changed street can leave sales unchanged.', description: 'Customers can change travel mode and still enter the same shop. A zero-retail-response case protects the analysis from assuming every route change is a lost sale.', steps: ['Arrival mix shifts', 'Visits continue', 'Purchases hold', 'Margin unchanged'], outcome: 'Current customer mode, visit and transaction data; model zero retail response.' },
+      { id: 'mix', label: 'Visitor mix shifts', icon: '↗', title: 'A new mix reaches the counter.', description: 'Fewer cycling arrivals and more walking, TTC or driving arrivals could offset each other. The shop ledger should follow completed visits and purchases, then compute partial margin.', steps: ['Routes change', 'Arrivals by mode', 'Purchases', 'Partial margin'], outcome: 'Mode-specific arrivals, conversion and variable costs at this shop.' },
+      { id: 'disruption', label: 'Construction period', icon: '!', title: 'The transition is its own scenario.', description: 'Street reconstruction could temporarily change access and loading before any steady-state layout exists. This panel does not estimate the duration or cost.', steps: ['Design decision', 'Construction phase', 'Access changes', 'Remeasure'], outcome: 'A real construction plan, duration and Bloor-segment cost.' },
+    ],
+  },
+};
 
 function setPhase(value) {
   phase = value;
@@ -43,6 +74,7 @@ function resetToIntro() {
   investigationToken++;
   $('#investigation').hidden = true;
   $('#lab').hidden = true;
+  $('#bikeLab').hidden = true;
   $('#impact').hidden = true;
   scene.setSector(null);
   scene.setScenario('fare');
@@ -85,6 +117,8 @@ async function runScenario(scenario, promptOverride = null) {
 }
 
 function renderLab() {
+  $('#bikeLab').hidden = current.id !== 'bike';
+  $('#bikeLabButton').hidden = current.id !== 'bike';
   $('#scenarioBreadcrumb').textContent = current.breadcrumb;
   $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : 'PREPARED DEMO REPLAY';
   $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT' : 'ILLUSTRATIVE SAMPLE';
@@ -140,8 +174,8 @@ function renderLab() {
   renderSector();
   renderOverview();
   scene.setSector(null);
-  scene.setMode('policy');
-  setViewSelection('policy');
+  setCityMode('policy');
+  if (current.id === 'bike') setBikeRole('cyclist');
   const moving = scene.setMotion(true);
   $('#motionButton').textContent = moving ? 'Ⅱ' : '▶';
   $('#motionButton').setAttribute('aria-label', moving ? 'Pause city animation' : 'Play city animation');
@@ -299,6 +333,67 @@ function setViewSelection(mode) {
   }
 }
 
+function setCityMode(mode) {
+  scene.setMode(mode);
+  setViewSelection(mode);
+  $('#bikeStage').dataset.view = mode;
+  for (const [choice, selector] of [['baseline', '#bikeViewBaseline'], ['policy', '#bikeViewPolicy']]) {
+    const selected = choice === mode;
+    $(selector).classList.toggle('selected', selected);
+    $(selector).setAttribute('aria-pressed', String(selected));
+  }
+  $('#bikeStageIndex').textContent = mode === 'baseline' ? '01 / EXISTING STREET' : '02 / PROPOSED WORLD';
+  $('#bikeStageTitle').textContent = mode === 'baseline' ? 'A protected path through Bloor.' : 'The protected track is removed.';
+  $('#bikeStageSubtitle').textContent = mode === 'baseline'
+    ? 'Present-day protected cycling space, shown schematically.'
+    : 'A hypothetical motor-vehicle and curb layout; exact geometry is unverified.';
+}
+
+function setBikePath(pathId) {
+  const story = bikeStories[activeBikeRole].paths.find(path => path.id === pathId);
+  if (!story) return;
+  activeBikePath = pathId;
+  $$('#bikePaths button').forEach(button => {
+    const selected = button.dataset.bikePath === pathId;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  $('#bikeRoleLabel').textContent = bikeStories[activeBikeRole].label;
+  $('#bikePathTitle').textContent = story.title;
+  $('#bikePathDescription').textContent = story.description;
+  $('#bikeOutcomeText').textContent = story.outcome;
+  $('#bikeStepFlow').replaceChildren(...story.steps.map((step, index) => {
+    const item = document.createElement('span');
+    item.className = 'bike-step';
+    item.textContent = step;
+    item.dataset.step = String(index + 1).padStart(2, '0');
+    return item;
+  }));
+}
+
+function setBikeRole(roleId) {
+  const role = bikeStories[roleId];
+  if (!role) return;
+  activeBikeRole = roleId;
+  $$('[data-bike-role]').forEach(button => {
+    const selected = button.dataset.bikeRole === roleId;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  const pathContainer = $('#bikePaths');
+  pathContainer.replaceChildren(...role.paths.map(path => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.bikePath = path.id;
+    button.innerHTML = `<span class="bike-path-icon" aria-hidden="true"></span><span class="bike-path-text"></span><span class="bike-path-arrow" aria-hidden="true">↗</span>`;
+    button.querySelector('.bike-path-icon').textContent = path.icon;
+    button.querySelector('.bike-path-text').textContent = path.label;
+    button.addEventListener('click', () => setBikePath(path.id));
+    return button;
+  }));
+  setBikePath(role.paths[0].id);
+}
+
 $('#enterButton').addEventListener('click', goToComposer);
 $('#headerExplore').addEventListener('click', () => { resetToIntro(); goToComposer(); });
 $('.brand').addEventListener('click', resetToIntro);
@@ -319,13 +414,22 @@ $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', 
   runScenario(chosen);
 }));
 $('#impactMapButton').addEventListener('click', () => { $('#impact').hidden = false; setPhase('impact'); scene.setSector(activeSector); $('#impact').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' }); });
+$('#bikeLabButton').addEventListener('click', () => $('#bikeLab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
+$('#bikeImpactButton').addEventListener('click', () => {
+  const sector = activeBikeRole === 'merchant' ? 'commerce' : activeBikeRole === 'delivery' ? 'public' : 'mobility';
+  chooseSector(sector);
+  $('#impactMapButton').click();
+});
+$$('[data-bike-role]').forEach(button => button.addEventListener('click', () => setBikeRole(button.dataset.bikeRole)));
+$('#bikeViewBaseline').addEventListener('click', () => setCityMode('baseline'));
+$('#bikeViewPolicy').addEventListener('click', () => setCityMode('policy'));
 $('#backToCity').addEventListener('click', () => { setPhase('lab'); scene.setSector(null); $('#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' }); });
 $$('.sector-node').forEach(node => {
   node.addEventListener('click', () => chooseSector(node.dataset.sector));
   node.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); chooseSector(node.dataset.sector); } });
 });
-$('#baselineView').addEventListener('click', () => { scene.setMode('baseline'); setViewSelection('baseline'); });
-$('#policyView').addEventListener('click', () => { scene.setMode('policy'); setViewSelection('policy'); });
+$('#baselineView').addEventListener('click', () => setCityMode('baseline'));
+$('#policyView').addEventListener('click', () => setCityMode('policy'));
 $('#motionButton').addEventListener('click', () => { const running = scene.toggleMotion(); $('#motionButton').textContent = running ? 'Ⅱ' : '▶'; $('#motionButton').setAttribute('aria-label', running ? 'Pause city animation' : 'Play city animation'); });
 $('#timeScrubber').addEventListener('input', () => updateTimeline(true));
 setInterval(() => {
@@ -340,6 +444,8 @@ $('#focusMarkerB').addEventListener('click', () => { activeSector = 'commerce'; 
 window.addEventListener('scroll', updateReveal, { passive: true });
 window.addEventListener('resize', updateReveal, { passive: true });
 updateReveal();
+const linkedDemo = new URLSearchParams(window.location.search).get('demo');
+if (linkedDemo && preparedScenarios[linkedDemo]) runScenario(linkedDemo);
 
 // Preview helpers for in-app QA; no production data is exposed.
 window.counterfactualPreview = { runScenario, scene, goToComposer, openEvidence };

@@ -10,7 +10,7 @@ From the repository root:
 python3 -m http.server 4173 --bind 127.0.0.1
 ```
 
-Open `http://127.0.0.1:4173/experience/`. No package install or build is required. The in-app browser may block direct `file://` navigation, so the local HTTP server is the supported preview route. JavaScript and graphics are self-contained; the optional Google font request has system-font fallbacks.
+Open `http://127.0.0.1:4173/experience/`. Add `?demo=bike` to launch directly into the prepared Bloor replay. No package install or build is required. The in-app browser may block direct `file://` navigation, so the local HTTP server is the supported preview route. JavaScript and graphics are self-contained; the optional Google font request has system-font fallbacks.
 
 ## What works now
 
@@ -20,6 +20,7 @@ Open `http://127.0.0.1:4173/experience/`. No package install or build is require
 4. **Living city illustration:** canvas frames draw buildings, shops, homes, roads, buses, cars, bicycles, people, trees, and moving example trails. Play/pause and timeline scrubbing change animated actor positions; baseline/proposal switches alter prepared street views. Markers open a corresponding sector.
 5. **Impact map:** five connected sectors open a large chart and evidence note. A second grid shows all five baseline/policy charts at once; each card opens the relevant sector.
 6. **Responsive and accessible:** keyboard reachable controls, dialog semantics, visible focus, mobile layout, a reduced-motion path, frame-rate throttling on smaller screens, and capped device pixel ratio.
+7. **Bloor street explorer:** a dedicated schematic before/after street scene, synchronized with the main city toggle; clickable cyclist, driver/delivery and merchant response branches; separate observed-data and research source cards; and explicit gaps for local removal cost, injuries, emissions and shop margin. Every branch is an **illustrative storyboard**, not a `WorldEvent` or measured response.
 
 ## Truth in the demo
 
@@ -29,7 +30,7 @@ Before presenting this as a working policy simulator, James/Steven/Meet must sup
 
 ## Integration handoff
 
-- **Aadit:** reuse this shell, city illustration or camera/overlay ideas around the existing detailed city inspector. The current canvas is a visually rich prototype; use actual world events for production animation. The clickable sector map and chart components can move into React later without redesigning the interaction.
+- **Aadit:** reuse this shell, city illustration or camera/overlay ideas around the existing detailed city inspector. The Bloor street explorer is a schematic proposal view; replace its illustrative branch chips with actual event-backed actor decisions when the world engine is connected. The clickable sector map and chart components can move into React later without redesigning the interaction.
 - **James:** provide `RunResult` with scenario ID, coordinates, actors, `WorldEvent`s, baseline/policy `MetricPoint`s, sector/edge trace IDs and source/assumption IDs. Extend visual cues for bicycle and subway actions, or supply a typed mode/route payload that the renderer can map safely.
 - **Steven:** connect scenario-specific personas and choices to the actor markers and event trail; do not animate a trip or shop sale that did not occur in the authoritative world.
 - **Meet:** wire the compiler/evidence packet and real Toronto source badges. The current arbitrary prompt path intentionally does not claim a backend response.

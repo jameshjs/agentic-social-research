@@ -60,7 +60,7 @@ const bike = {
   mini: [
     { label: 'Cyclist detour time', value: '+6 min', tone: 'negative' },
     { label: 'Sample shop visits', value: '−3%', tone: 'negative' },
-    { label: 'Driver travel time', value: '0% case', tone: 'positive' },
+    { label: 'Driver travel time', value: '0% gain case', tone: 'neutral' },
   ],
   narrative: 'The street overlay and values are a hypothetical sample run. Historical lane-installation observations cannot be reversed into a removal forecast.',
   sourceRibbon: 'City Bloor counts and studies; removal response remains an assumption',
