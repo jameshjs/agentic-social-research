@@ -14,6 +14,7 @@ A general, human-guided social simulation and policy decision product. Enter **a
 6. [Consolidated city experience](./experience/README.md) — the canonical `/experience/` route contains the cinematic entry, TTC trace-backed inspector and linked charts, illustrative Bloor explorer, and Steven's inspectable persona research record. The general shared engine remains pending.
 7. [Coding-agent instructions](./AGENTS.md) and [Claude Code instructions](./CLAUDE.md) — shared implementation contract, owner boundaries, and safe Git sync. The committed [Claude hook](./.claude/hooks/sync-main.py) fetches before each prompt and fast forwards only a clean `main`.
 8. [Fare-demo paper and evidence pack](./papers.md) with a [machine-readable source index](./data/ttc_fare_evidence.json) and [offline EvidencePacket fixture](./data/ttc_fare_evidence_packet.json) — 15 relevant studies/reports, what each supports, conflicting evidence, and explicit transfer limits. [Papiers CLI setup](./papiers-setup.md) shows how to curate them in the team's library and demonstrate a real human note.
+9. [Final demo runbook](./FINAL_DEMO.md) — the current four-minute walkthrough, honest claim boundaries, remaining completion gates, and the submission checklist.
 
 ## Confirmed direction
 
