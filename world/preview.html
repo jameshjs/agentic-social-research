@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bloor Section Sandbox</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --ink: #1d2126; --muted: #5d6670; --line: #d9dcdf;
+    --road: #c9ccd0; --walk: #e9e3d6; --track: #2f9e6f; --res: #b9c7d8; --mixed: #e2b86b; --nonres: #a99fc4; --unknown: #cfd5db;
+    --food: #d9534f; --retail: #2c7be5; --service: #7a5af8; --vacant: #8a8f96; --signal: #e8590c; --agent: #111;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151a; --panel: #1b2027; --ink: #e8eaed; --muted: #9aa3ad; --line: #2c333c;
+      --road: #3a414b; --walk: #2d2a24; --track: #3fbf88; --res: #4a5d75; --mixed: #9c7a3c; --nonres: #5e5482; --unknown: #39424d;
+      --food: #ff7b72; --retail: #58a6ff; --service: #b392f0; --vacant: #6e7681; --signal: #ff8c42; --agent: #fff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151a; --panel: #1b2027; --ink: #e8eaed; --muted: #9aa3ad; --line: #2c333c;
+    --road: #3a414b; --walk: #2d2a24; --track: #3fbf88; --res: #4a5d75; --mixed: #9c7a3c; --nonres: #5e5482; --unknown: #39424d;
+    --food: #ff7b72; --retail: #58a6ff; --service: #b392f0; --vacant: #6e7681; --signal: #ff8c42; --agent: #fff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; }
+  header { padding: 14px 16px 6px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; }
+  h1 { font-size: 18px; margin: 0; }
+  .sub { color: var(--muted); font-size: 13px; }
+  main { padding: 0 16px 24px; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) 300px; }
+  @media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
+  canvas { width: 100%; display: block; border-radius: 8px; background: var(--bg); touch-action: none; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 6px 0; }
+  label { font-size: 13px; color: var(--muted); display: inline-flex; gap: 4px; align-items: center; }
+  select, button, input[type=range] { font: inherit; color: var(--ink); }
+  select, button { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+  button { cursor: pointer; }
+  .legend span { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; font-size: 12px; color: var(--muted); }
+  .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  td, th { text-align: left; padding: 3px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .tag { font-size: 11px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
+  #info { font-size: 12px; min-height: 40px; }
+  .err { color: var(--food); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Bloor St W sandbox · Bathurst → Spadina</h1>
+  <span class="sub">619 m section built from Toronto open data and OSM. Map is street-aligned (Bloor runs left to right; north is up).</span>
+  <button id="theme" aria-label="Toggle colour theme">◐</button>
+</header>
+<main>
+  <section class="card">
+    <div class="row">
+      <label><input type="checkbox" id="lBuild" checked> buildings</label>
+      <label><input type="checkbox" id="lHeat"> population heat map <span class="tag">estimate</span></label>
+      <label><input type="checkbox" id="lBiz" checked> businesses</label>
+      <label><input type="checkbox" id="lGraph" checked> street graph</label>
+      <label><input type="checkbox" id="lAgents" checked> agent paths</label>
+    </div>
+    <canvas id="map" height="520" aria-label="Map of the Bloor section"></canvas>
+    <div class="legend row" id="legend"></div>
+    <div id="info" class="sub">Tap a building or business for details.</div>
+  </section>
+  <aside class="card">
+    <div class="row"><label>Time <input type="range" id="time" min="21600" max="71100" step="15" value="28800"></label> <b id="clock">08:00</b></div>
+    <div class="row"><label>Cycle track
+      <select id="track"><option>protected</option><option>painted</option><option>none</option></select></label>
+      <label>Car lanes/dir <select id="lanes"><option>1</option><option>2</option></select></label></div>
+    <div class="row"><button id="run">Run 4 sample agents</button></div>
+    <table id="trips"><thead><tr><th>agent</th><th>mode</th><th>min</th><th>wait s</th><th>shared m</th></tr></thead><tbody></tbody></table>
+    <p class="sub">Sample agents follow the default shortest-legal-path rule, not a persona. "Shared m" is metres cycled in car lanes: exposure, not injuries.</p>
+    <h3 style="font-size:14px;margin:12px 0 4px">At this time</h3>
+    <table id="now"></table>
+    <h3 style="font-size:14px;margin:12px 0 4px">Calibration (observed)</h3>
+    <table id="cal"></table>
+    <p class="sub">Signal timing is <b>assumed</b> (90 s cycle). Counts: 25 Jun 2025. Buildings: City 3D Massing 2025. Businesses: © OpenStreetMap contributors (ODbL).</p>
+  </aside>
+</main>
+<script src="./sandbox.js"></script>
+<script>
+(async function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  try { const t = localStorage.getItem('bloor-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  $('theme').onclick = () => {
+    const dark = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() === '#12151a';
+    document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('bloor-theme', document.documentElement.dataset.theme); } catch (e) {}
+    draw();
+  };
+  let W;
+  try { W = await (await fetch('../data/world/bloor_spadina_bathurst.json')).json(); }
+  catch (e) { $('info').innerHTML = '<span class="err">Could not load the world JSON. Serve the repository root (for example python3 -m http.server 4173) and open /world/preview.html.</span>'; return; }
+  const { createSandbox, calibrationReport, hms } = window.BloorSandbox;
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const cv = $('map'), ctx = cv.getContext('2d');
+  const view = { x0: -120, x1: 740, y0: -260, y1: 260 };
+  let sb = null, trips = [];
+  const pick = [];
+
+  function size() {
+    const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cv.width = r.width * dpr; cv.height = Math.min(560, Math.max(320, r.width * 0.62)) * dpr;
+    cv.style.height = cv.height / dpr + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function P(x, y) {
+    const w = cv.width / (window.devicePixelRatio || 1), h = cv.height / (window.devicePixelRatio || 1);
+    const s = Math.min(w / (view.x1 - view.x0), h / (view.y1 - view.y0));
+    return [(x - view.x0) * s + (w - (view.x1 - view.x0) * s) / 2, (view.y1 - y) * s + (h - (view.y1 - view.y0) * s) / 2, s];
+  }
+  function poly(pts, fill, stroke) {
+    ctx.beginPath(); pts.forEach(([x, y], i) => { const [px, py] = P(x, y); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
+  }
+  function line(a, b, color, width, dash) {
+    const [x1, y1] = P(a.x, a.y), [x2, y2] = P(b.x, b.y);
+    ctx.beginPath(); ctx.setLineDash(dash || []); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke(); ctx.setLineDash([]);
+  }
+  const USE = { residential: '--res', mixed: '--mixed', non_residential: '--nonres', unknown: '--unknown' };
+  const CAT = { food_service: '--food', food_retail: '--food', retail: '--retail', service: '--service', office: '--service', vacant: '--vacant' };
+
+  function draw() {
+    size(); pick.length = 0;
+    const w = cv.width, h = cv.height; ctx.clearRect(0, 0, w, h);
+    const t = +$('time').value;
+    // Road corridor.
+    poly([[view.x0, -16], [view.x1, -16], [view.x1, 16], [view.x0, 16]], css('--walk'));
+    poly([[view.x0, -9], [view.x1, -9], [view.x1, 9], [view.x0, 9]], css('--road'));
+    for (const n of W.bloor.intersections) poly([[n.x - 7, -260], [n.x + 7, -260], [n.x + 7, 260], [n.x - 7, 260]], css('--road'));
+    if ($('lHeat').checked) {
+      const g = W.population.grid, max = Math.max(...g.cells.map((c) => c.residents_est));
+      for (const c of g.cells) {
+        const x = g.origin[0] + c.i * g.cell_m, y = g.origin[1] + c.j * g.cell_m, a = Math.min(0.85, 0.12 + 0.8 * c.residents_est / max);
+        poly([[x, y], [x + g.cell_m, y], [x + g.cell_m, y + g.cell_m], [x, y + g.cell_m]], `rgba(232,89,12,${a})`);
+      }
+    }
+    if ($('lBuild').checked) {
+      ctx.lineWidth = 0.5;
+      for (const b of W.buildings.items) {
+        poly(b.footprint, $('lHeat').checked ? 'transparent' : css(USE[b.use]), css('--line'));
+        pick.push({ kind: 'building', x: b.centroid[0], y: b.centroid[1], r: 10, item: b });
+      }
+    }
+    if ($('lGraph').checked && sb) {
+      for (const e of sb.graph.edges.values()) {
+        if (e.id.endsWith('<')) continue;
+        const a = sb.graph.nodes.get(e.from), b = sb.graph.nodes.get(e.to);
+        if (e.transit) { line(a, b, css('--service'), 3, [6, 4]); continue; }
+        const c = e.modes.includes('car') ? css('--muted') : e.modes.includes('bike') ? css('--track') : e.crosswalk ? css('--ink') : css('--mixed');
+        line(a, b, c, e.crosswalk === 'across_bloor' ? 3 : e.modes.includes('bike') && !e.modes.includes('car') ? 2.5 : 1.2, e.crosswalk ? [3, 2] : null);
+      }
+      for (const n of sb.graph.nodes.values()) if (n.kind === 'entrance' || n.kind === 'station') {
+        const [x, y] = P(n.x, n.y); ctx.fillStyle = css('--service'); ctx.fillRect(x - 4, y - 4, 8, 8);
+      }
+    }
+    // Signals coloured by the (assumed) phase at the chosen time.
+    for (const s of W.signals.items.filter((s) => s.on_bloor && !s.private_access)) {
+      const ph = sb ? sb.signalAt(s.px, t).phase : 'bloor_green';
+      const [x, y] = P(s.x, s.y); ctx.beginPath(); ctx.arc(x, y, 6, 0, 7);
+      ctx.fillStyle = ph === 'bloor_green' ? css('--track') : ph.endsWith('clearance') ? '#f2c94c' : css('--food'); ctx.fill();
+      ctx.strokeStyle = css('--ink'); ctx.lineWidth = 1; ctx.stroke();
+      pick.push({ kind: 'signal', x: s.x, y: s.y, r: 8, item: s });
+    }
+    if ($('lBiz').checked) for (const b of W.businesses.items) {
+      const [x, y] = P(b.x, b.y); ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 7); ctx.fillStyle = css(CAT[b.category] || '--muted'); ctx.fill();
+      pick.push({ kind: 'business', x: b.x, y: b.y, r: 5, item: b });
+    }
+    if ($('lAgents').checked && sb) {
+      const colors = ['--food', '--retail', '--track', '--service'];
+      trips.forEach((tr, k) => {
+        const ev = sb.events.filter((e) => e.actor === tr.actor && e.type === 'moved');
+        for (const e of ev) line(sb.graph.nodes.get(e.from), sb.graph.nodes.get(e.to), css(colors[k % 4]), 4);
+      });
+    }
+    ctx.fillStyle = css('--muted'); ctx.font = '11px system-ui';
+    for (const n of W.bloor.intersections) { const [x, y] = P(n.x, 240); ctx.fillText(n.streets.join(' / '), x + 9, y); }
+    const [lx, ly] = P(view.x0 + 8, 30); ctx.fillText('Bloor St W', lx, ly);
+    legend();
+  }
+  function legend() {
+    const items = $('lHeat').checked ? [['--signal', 'more residents (estimated)']] :
+      [['--res', 'residential'], ['--mixed', 'mixed'], ['--nonres', 'non-residential'], ['--unknown', 'untagged']];
+    items.push(['--food', 'food'], ['--retail', 'retail'], ['--service', 'service / subway'], ['--track', 'cycle track / green']);
+    $('legend').innerHTML = items.map(([c, l]) => `<span><i class="sw" style="background:var(${c})"></i>${l}</span>`).join('');
+  }
+  function rebuild() {
+    sb = createSandbox(W, { policy: { bloor_cycle_track: $('track').value, bloor_car_lanes_per_direction: +$('lanes').value } });
+    trips = []; $('trips').tBodies[0].innerHTML = ''; draw(); now();
+  }
+  function now() {
+    const t = +$('time').value, f = sb.flowAt(t);
+    $('clock').textContent = hms(t);
+    const rows = f ? [['interval', f.start], ['cars in, eastbound', f.eb_vehicles_in], ['cars in, westbound', f.wb_vehicles_in],
+      ['bikes at Bathurst (eb)', f.eb_bikes_approach_bathurst], ['bikes at Spadina (wb)', f.wb_bikes_approach_spadina],
+      ['people crossing Bloor at Bathurst', f.peds_crossing_bloor_bathurst]] : [['interval', 'outside count hours']];
+    $('now').innerHTML = rows.map(([k, v]) => `<tr><td>${k}</td><td><b>${v}</b> <span class="sub">/15 min</span></td></tr>`).join('');
+  }
+  $('run').onclick = () => {
+    rebuild();
+    const t = +$('time').value;
+    const door = [...sb.graph.doors.values()].map((id) => sb.graph.nodes.get(id)).find((n) => n.side === 'south' && n.x > 300);
+    const plan = [['cyclist', 'bike', 'portal_north_0', 'portal_north_7'], ['driver', 'car', 'portal_south_0', 'portal_north_7'],
+      ['subway rider', 'transit', 'portal_south_0', 'portal_north_7'], ['shopper', 'walk', 'portal_north_3', door.id]];
+    for (const [id, mode, at, to] of plan) { sb.addAgent({ id, mode, at, t }); trips.push(sb.travel(id, to)); }
+    if (trips[3].type === 'trip_completed') sb.enter('shopper', door.business_ids[0]);
+    $('trips').tBodies[0].innerHTML = trips.map((r) => r.type === 'trip_completed'
+      ? `<tr><td>${r.actor}</td><td>${r.mode}</td><td>${(r.duration_s / 60).toFixed(1)}</td><td>${Math.round(r.wait_s)}</td><td>${Math.round(r.shared_with_cars_m)}</td></tr>`
+      : `<tr><td>${r.actor}</td><td colspan="4">${r.type}</td></tr>`).join('');
+    draw();
+  };
+  const cal = calibrationReport(W).net_side_street_gain_pct;
+  $('cal').innerHTML = [['cars eastbound, Bathurst → Spadina', cal.eb_vehicles], ['cars westbound, Spadina → Bathurst', cal.wb_vehicles], ['bikes eastbound', cal.eb_bikes], ['bikes westbound', cal.wb_bikes]]
+    .map(([k, v]) => `<tr><td>${k}</td><td><b>${v > 0 ? '+' : ''}${v}%</b></td></tr>`).join('') + '<tr><td colspan="2" class="sub">Net gain between entering and reaching the far end: the side-street exchange a routed model must reproduce.</td></tr>';
+  cv.addEventListener('click', (ev) => {
+    const r = cv.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top;
+    let best = null, bd = 1e9;
+    for (const p of pick) { const [x, y] = P(p.x, p.y); const d = Math.hypot(x - mx, y - my); if (d < bd && d < 14) { bd = d; best = p; } }
+    if (!best) return;
+    const it = best.item;
+    $('info').innerHTML = best.kind === 'building'
+      ? `<b>Building</b> ${it.address || ''} · ${it.use} (OSM: ${it.osm_building || 'untagged'}) · ${it.height_m} m, ~${it.floors_est} floors · residents ≈ ${it.residents_est ?? 'n/a'} <span class="tag">estimate</span> · ${it.business_ids.length} businesses`
+      : best.kind === 'business' ? `<b>${it.name || it.kind}</b> · ${it.category} (${it.kind}) · ${it.address || ''} · ${it.side} side`
+      : `<b>Signal PX ${it.px}</b> ${it.name} · pedestrian speed ${it.ped_walk_speed} · phase timing assumed`;
+  });
+  for (const id of ['lBuild', 'lHeat', 'lBiz', 'lGraph', 'lAgents']) $(id).onchange = draw;
+  $('time').oninput = () => { now(); draw(); };
+  $('track').onchange = rebuild; $('lanes').onchange = rebuild;
+  window.addEventListener('resize', draw);
+  rebuild();
+})();
+</script>
+</body>
+</html>
