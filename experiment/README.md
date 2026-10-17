@@ -1,8 +1,35 @@
-# Paired city experiment — integration slice
+# Paired city experiment
 
-This is the **second stage** of the project: run a city policy experiment after persona creation and survey-task evaluation. Both prepared questions use one controller in [`runner.js`](./runner.js) and different data in [`fixtures.js`](./fixtures.js). No API key, network service, or package install is needed for the deterministic fallback.
+## Canonical: `experiment.v2` on the mapped Bathurst–Spadina world
 
-**Current integration target (17 Oct):** Keep these paired/event-derived tests as a migration baseline, but run both fare and cycle-track policies in James's candidate **Bathurst–Spadina** `world/` graph and surface them through the existing `/experience/` website. The current fixtures are still synthetic and do not yet use that map. One canonical event/result contract must replace the two UI trace engines before the public demo can claim a shared world.
+[`world-runner.js`](./world-runner.js) is the engine behind `/experience/` for both prepared policies and for compiled prompts. [`world-fixtures.js`](./world-fixtures.js) holds **one** shared population: 19 synthetic people, 12 with homes on mapped side streets and 7 visitors. It also holds six real OSM shops with synthetic staffing thresholds and the two policy specs, which differ only in their intervention.
+
+```sh
+node experiment/run-world.js fare > /tmp/fare.json        # or bike; prints one experiment.v2 RunResult
+node --test experiment/test-world-runner.js               # replay, pairing, Game Master integrity, ledgers, mechanisms
+node experiment/run-world.js fare > experiment/sample-world-fare.json   # regenerate snapshots after a runner or world change
+node experiment/run-world.js bike > experiment/sample-world-bike.json
+```
+
+**How a run works.**
+
+1. Each modelled weekday, each arm builds James's sandbox ([`world/sandbox.js`](../world/sandbox.js)) with that tick's levers. Calibrated background traffic is computed once per lever set and shared.
+2. For every trip, each option in the fixture is probed in a scratch sandbox. An option is a list of legs such as `walk → stn_bathurst`, `ride line2_eb`, `walk → door:<business>`. The probe returns in-map minutes, fare and shared-with-cars distance. Options that are closed, over budget or infeasible are dropped. Defer is always legal.
+3. A choice comes from the explicit fixture score or from an optional bounded `decide(request)`. Request and replay semantics match `experiment.v1`: no arm name, cached for identical states, and `decision_replay` reproduces the run.
+4. The chosen legs are executed for real in the arm's sandbox, which validates every move. Each leg becomes a `travel` WorldEvent with `path: [[x, y, t], …]`, steps and rule IDs. Fares become `pay_fare` events, door entries `enter_business`, then `purchase`. Shop receipts set next period's hours through `set_shop_hours`. Every event has `caused_by` links.
+5. `reduceWorldMetrics` derives 19 metrics, by tick and by fare group, from committed events only. `metric_points` lists the contributing event IDs. Unsupported outcomes are in `not_estimable`.
+
+**Interventions:**
+
+- `change_cost` on `adult_fare_cad`, and `set_lever` on any sandbox lever: track, car lanes, parking, signal cycle, green share, fare, Line 2 headway.
+- Sensitivity overrides: `cost_weight`, `unprotected_cycling_discomfort_per_km`, `shop_staffing_response`.
+- Unknown operators or levers throw.
+
+**Clef second opinion (Vultr):** `node ../ops/vultr.js run -- node experiment/run-world-clef.js both` sends every unique decision state to Vultr `clef` (`/v1/systemone`), compares its choices with the fixture rule, and replays a Clef-decided paired run. Results are saved in [`vultr-runs/`](./vultr-runs/); see [VULTR.md](../VULTR.md). [`scenario-compiler.js`](./scenario-compiler.js) with [`vultr-compiler.js`](./vultr-compiler.js) turns a freeform question into validated levers. `probe-vultr-compiler.js` is its live go/no-go check.
+
+## Earlier slice: `experiment.v1` (schematic, kept as a migration baseline and UI fallback)
+
+Both prepared questions also run through the earlier schematic controller in [`runner.js`](./runner.js) with data in [`fixtures.js`](./fixtures.js). It has no map. `/experience/` uses it only if the world fixture cannot load. Steven's [persona runtime](../persona-swarm/RUNTIME.md) `run.js` drives this v1 controller with his 40 deciders.
 
 ```sh
 node --test experiment/test-runner.js

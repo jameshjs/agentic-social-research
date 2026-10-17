@@ -1,54 +1,40 @@
-# Team sync — 17 October 2026
+# Team sync — 17 October 2026, 13:30 ET
 
-This is the short handoff for Meet, Aadit, Steven, James, and their coding agents. Read [AGENTS.md](./AGENTS.md) and [prd.md](./prd.md) for the product contract. This snapshot includes Steven's `steven/persona-tuning-loop` merge and a standalone paired experiment slice; teammates may have additional work in progress elsewhere.
+Short handoff for Meet, Aadit, Steven, James and their coding agents. Product contract: [AGENTS.md](./AGENTS.md) and [prd.md](./prd.md). How to run everything: [README → Run and replicate](./README.md#run-and-replicate).
 
-## Founder decision: consolidate the city now
+## Founder decision (unchanged)
 
-**One public website, one detailed world, two policy switches.** The public route stays `/experience/`. Both the TTC +$0.50 adult-fare example (Fair Pass unchanged) and hypothetical Bloor cycle-track removal now use James's Bathurst–Spadina Bloor world as the common map and rule layer. `?demo=fare` and `?demo=bike` are selectors for the **same city and `RunResult` pipeline**, not two separate 3D demos. Aadit adapts the existing website; do not build a new site or promote `/world/preview.html` as the product. Preserve the current inspector, chart, and scenario work as migration components until one end-to-end trace replaces them. The two policies survive; the two separate map experiences are cancelled.
-
-**Data boundary:** Moving the fare demo from UTSC to Bloor does not move UTSC census marginals, local bus service, or Scarborough profiles with it. Citywide fare/Fair Pass rules transfer; local buildings, shops, movement counts and Line 2/510/511 schedules come from [`world/`](./world/README.md). Household and retail behavior remain explicitly synthetic. The Shaw–Avenue bike-lane literature is broader context, not a measured removal response for this specific Bathurst–Spadina section.
+**One public website, one detailed world, two policy switches.** `/experience/` runs the TTC +$0.50 adult fare (Fair Pass unchanged) and hypothetical Bloor cycle-track removal on James's Bathurst–Spadina world. `?demo=fare` and `?demo=bike` are selectors for the **same** city, people, engine and `RunResult`. `world/preview.html` stays dev-only. UTSC/Scarborough data and wider Shaw–Avenue studies are context, not Bathurst–Spadina observations.
 
 ## Pull now
 
 ```sh
-git fetch origin
-git status -sb
-git pull --ff-only origin main  # only on a clean, non-diverged main
+git fetch origin && git status -sb
+git pull --ff-only origin main   # only on a clean, non-diverged main
 ```
 
-**Current code, before engine consolidation:** `http://127.0.0.1:4173/experience/` is the public route. Both prepared selectors now display the same Bathurst–Spadina map fixture in the lab, with the bike proposal changing protected-track drawing. This is mapped **context**, not event-driven actor motion. `?demo=fare` still opens the old TTC seeded trace and embedded 3D inspector; `?demo=bike` still opens a separate paired synthetic decision ledger. Reruns send `counterfactual:result` from the inspector so outer charts update. Steven's persona research panel reads committed trial records. These fixture paths do **not yet** satisfy the one-world engine decision. Do not pitch them as a finished shared AI city or fork another public UI.
+## What is on `main` now
 
-## One product, one proof chain
-
-The four-minute demo should show one continuous path:
-
-`freeform hypothesis → generated personas → baseline/proposal decisions → committed WorldEvents → city motion + economic MetricPoints → cited evidence challenge → human choice → versioned rerun`.
-
-The same service and `RunResult` shape must drive the TTC fare and Bloor cases. A third unprepared question must start the generic speculative path and label unsupported metrics **not estimable**. Do not describe the current prepared animations as autonomous agent decisions or the 2025 Bloor counter as a removal forecast.
-
-## Current integration boundary
-
-| Surface on `main` | Present | Next connection |
+| Surface | State | Owner next |
 | --- | --- | --- |
-| Canonical public UI | `experience/` includes the TTC trace-backed inspector and Bloor event-backed decision ledger and charts. Both selectors now draw the same mapped Bathurst–Spadina background from `data/world/`, but no actors/events are mapped onto it. The intro and optional branch storyboards remain illustrative. | Aadit + James: connect **this existing website** to one authoritative mapped `RunResult`, animating actors from its events and preserving TTC rerun updates while retiring the two fixture engines. `world/preview.html` stays dev-only. |
-| Persona work | Steven's Twin autoresearch loop, 10 recorded check-set trials, Papiers-informed trials, saved reactions, and `/experience/` research panel are merged. Offline tests pass. Final holdout is pending. | Steven + James: produce persistent `PersonaSpec[]` and bounded JSON decisions accepted by the world engine for both prompts. The Twin survey benchmark is separate from the runtime path. |
-| World simulation and economic ledger | Aadit's `demo-ui/sim.js` drives the TTC inspector. [`experiment/`](./experiment/README.md) runs both examples through one paired controller with an event ledger. James's [`world/`](./world/README.md) geometry now supplies the public map background, but its **rules and actor events are not connected** to either public trace or `experiment.v1`. | James + Meet: use the new world as the shared spatial/rule layer, reconcile it with `experiment.v1`, then publish one canonical runner/result to Aadit. Both policy levers must operate on the same initial actors and map. Preserve replay, metrics, and causal tests. |
-| Research and Papiers | Cited fare/Bloor packs and offline `EvidencePacket` fixtures; CLI installed on Meet's machine | Meet: verify a real Papiers passage plus teammate-authored note. James + Aadit: preserve source IDs and show the note, agent challenge, human decision and changed run. |
-| Arbitrary prompts | Composer accepts input; unprepared UI marks results unavailable. Steven's `scripts/plan.py` can plan a prompt and collect group reactions, but its ignored Nemotron pool/groups are absent and this computer has no Anthropic SDK or `.env`; it does not produce world events. | Meet + James + Steven: compile into typed `ScenarioSpec`; connect the planner to the world engine only after generating hypothesis-specific personas and validating actions. Keep missing outcomes marked not estimable. |
-| Vultr candidate | [`experiment/vultr-decision.js`](./experiment/vultr-decision.js) maps legal city actions to Vultr's typed `clef` decision endpoint. [`persona-swarm/scripts/plan.py`](./persona-swarm/scripts/plan.py) has an opt-in Vultr-only survey prototype (`glm-5.3` planner, `glm-5.3-flash` reactions). Offline adapter tests pass; no Vultr account/key, live quality probe, hosted backend, or UI connection exists yet. Steven's signed-off Haiku round 3 passed four check-set marks; final scoring is pending. | Prize-strength slice: Meet probes a Vultr structured-chat compiler on fare, Bloor and an unseen prompt; James hosts the canonical paired experiment API on Vultr and runs a small explicit-assumption sweep. Both need live proof, validated contracts and displayed run IDs. Keep Steven's tuned model. Papiers reranking, Clef and GPU are optional after this path works. A VM serving only the current fixture is weak prize evidence. [Full order](./VULTR.md#best-integration-order-for-this-product). |
+| Canonical engine | [`experiment/world-runner.js`](./experiment/world-runner.js) builds the `experiment.v2` RunResult from paired runs on James's sandbox, including his calibrated background traffic. [`world-fixtures.js`](./experiment/world-fixtures.js) holds the one shared 19-person population and the two policy specs. Every travel leg is a Game Master move (0 rejected) and carries map coordinates. Fares, purchases and shop hours are events, and all metrics are reduced from events. 87 offline tests and checked-in snapshots. | James: review the runner against `world/`; any new lever is automatically a `set_lever` intervention. |
+| Public UI | `/experience/` replays the run on the mapped section: people, bikes in the track vs. the car lane, cars, Line 2 trains, homes and six shops. It adds a scrubber over both arms, a shared decision ledger (click a choice to watch it on the map), a versioned sensitivity rerun, five event-derived charts and a "sweep on Vultr" control. The earlier TTC inspector is labelled as a prototype. | Aadit: polish visuals and copy. Keep `counterfactual:result` on every run. |
+| Freeform prompts | [`scenario-compiler.js`](./experiment/scenario-compiler.js) maps a question to the world's 7 levers. It uses Vultr GLM-5.3-flash with a JSON schema when the backend is up, and offline rules otherwise. The validator decides what runs. Runnable prompts (e.g. "Line 2 half as often") run on the same map and people. The rest stay *speculative / not estimable*. | Meet: rehearse one unseen prompt. |
+| Persona agents | Steven's [runtime](./persona-swarm/RUNTIME.md) serves 100 Twin-tuned Haiku agents on his Claude plan. They rate the prepared policies or a drafted policy 1–5 in the showcase panel. Their rating dots on the map are labelled illustrative and are an opt-in overlay while a mapped run is shown. | Steven: run `:4179` + tunnel for the hosted demo ([ops/agents-tunnel.md](./ops/agents-tunnel.md)). |
+| Vultr | Live at <https://155-138-141-130.sslip.io/experience/> (Cloud Compute, Toronto, Caddy HTTPS). Engine API `/api/run`, `/api/sweep`, `/api/compile`, `/api/clef/*`. Clef second opinion on all 448 decisions: 340 calls, 0 errors, 91% agreement, paired checks pass. Evidence: [VULTR.md](./VULTR.md). | Meet: redeploy after each merge with `ops/deploy.sh --skip-key`. |
+| Papiers | CLI installed, not signed in. Offline EvidencePacket fixtures only. | Meet + a teammate: a real annotated passage → agent challenge → human choice → versioned rerun. |
 
-## Critical integration order
+## One proof chain for the 4-minute demo
 
-1. **Freeze one Bathurst–Spadina wire contract together.** The present TTC integration passes Aadit's versioned trace from `demo-ui/` to `experience/`; it is an interim adapter, not the final shared schema. Meet + James own `ScenarioSpec`, `WorldEvent`, `MetricPoint`, `RunResult`; Steven agrees persona/action JSON; Aadit agrees the new world's node/edge IDs, coordinates, bicycle/subway cues and a detour target. Publish one JSON fixture and one tiny end-to-end smoke test. Keep the existing experience; the separate world preview is not a second product.
-2. **Complete one TTC causal chain in the Bloor world.** A fare change alters an agent's paid Line 2 trip or mode; the event ledger records an arrival or deferral; the same ledger computes household fare outlay, TTC sample receipt, and shop visits. Replay baseline and proposal from the same seed. The UI must show the agent, the change in city motion, and the corresponding chart point. Use citywide fare rules and local transit geometry; do not import UTSC household marginals as Bloor observations.
-3. **Run cycle-track removal through that same mapped world.** Use the [Bloor brief](./bloor-bike-demo.md) and local `world/` fixture as distinct context layers. A cyclist can stay, detour, switch, or defer; a shop changes only after arrival/purchase events. Keep zero-driver-time-gain and zero-retail-response cases. Local construction cost, injuries and emissions remain not estimable until proper inputs exist.
-4. **Close the Papiers loop.** A teammate writes a real note in Papiers. The agent retrieves the passage and note, evaluates counterevidence, proposes an assumption change, asks a human to accept/edit/reject, then records a new run ID and changed event/metric values. A cached live-demo replay is acceptable if labelled cached; the fallback fixture is labelled agent-curated.
-5. **Practice the pitch and submit.** The written rules require an initial Devpost entry with team and categories by **Saturday 9:00 pm ET**. Devpost currently displays a **Sunday 8:00 am EDT** final cutoff, earlier than the written 10:00 am deadline; use 8:00 am until clarified. Confirm GitHub link, write-up, 4-minute pitch and 1-minute Q&A. [Rules](https://hack-the-valley-11.devpost.com/rules), [Devpost overview](https://hack-the-valley-11.devpost.com/).
+`freeform hypothesis → compiled levers (Vultr) → same 19 people, baseline vs policy → committed WorldEvents → map motion + ledger + MetricPoints → 100 persona agents' 1–5 reactions → assumption challenge → versioned rerun / Vultr sweep`
 
-## Scope decision
+Say clearly: the people and responses are synthetic and assumption-driven, the map, schedules and counts are observed, and nothing is a Toronto forecast. Clef is a recorded second opinion, not the default decision-maker.
 
-The strongest judge story is the **event-backed policy experiment with a real human research intervention**. The Twin autoresearch gym is now built and has a signed-off check-set instruction plus Papiers-informed attempts, but the final holdout remains pending and its instructions have not yet been connected to the city. The isolated paired controller can serve as the city-stage integration fixture; its 8 synthetic people are not Steven's tuned runtime agents. Present survey-task tuning as a measured supporting result and evaluate city decisions separately. The Papiers prize proof should stay attached to the policy experiment so judges can see its effect on the same city and economic output.
+## Deadlines
 
-Prize fit: the Bloor/TTC cases address a concrete Toronto issue with local source context for the [School of Cities challenge](https://hack-the-valley-11.devpost.com/); household travel costs, shop transactions and public receipts make the economic-inclusion angle only when they are reconciled from events. The [Papiers challenge](https://hack-the-valley-11.devpost.com/) asks for visible human-agent research collaboration, so a real note and versioned rerun matter more than a paper-search screenshot alone.
+- Initial Devpost entry with team and categories by **Saturday 9:00 pm ET**.
+- Final cutoff: use Devpost's **Sunday 8:00 am EDT** until organizers clarify.
+- Needs a GitHub link, write-up, 4-minute pitch and 1-minute Q&A.
+- Select **[MLH] Best Use of Vultr**. The text is in [VULTR.md](./VULTR.md#devpost-text-accurate-paste-as-is).
 
-**Handoff rule:** each owner pushes a small vertical slice and shares the commit hash, changed interface, fixture, and what the next owner can run. Pull/fetch safely per [CLAUDE.md](./CLAUDE.md); do not reset, force push or silently change a shared field.
+**Handoff rule:** push small slices, share the commit hash and any changed interface, and never reset or force-push over teammates' work.

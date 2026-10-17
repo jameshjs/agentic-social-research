@@ -32,7 +32,7 @@ Read [README.md](./README.md), [prd.md](./prd.md), [research.md](./research.md),
 - Support a known-operator path and a generic speculative JSON-action fallback. Do not execute model-authored code.
 - Make baseline and intervention replayable from the same seed and initial state.
 - Keep API keys server-side and retain an offline/cached demo.
-- For the Vultr prize path, read [VULTR.md](./VULTR.md). The candidate `clef` adapter in `experiment/` is server-side and tested against a mock response; do not claim a live Vultr run until an account/key, a clean probe, and a hosted backend exist. Keep Steven's Haiku-tuned survey benchmark separate from city decision validation.
+- For the Vultr prize path, read [VULTR.md](./VULTR.md). It is live and evidence-backed. The site and engine API run on Vultr Cloud Compute ([ops/DEPLOY.md](./ops/DEPLOY.md)). GLM-5.3-flash compiles hypotheses, and Clef gives a recorded second opinion on mapped-run decisions; saved runs are in `experiment/vultr-runs/`. Quote only numbers from those files or `/api/health`. Never call Clef the default decision-maker, and keep Steven's Haiku agents as the persona brain. Keys stay in git-ignored `.env` files or root-only files on the VM.
 - Preserve the founder's visual and generality requirements when cutting scope. Reduce scene size, depth, analytics, or agent call count first.
 
 ## Event gates

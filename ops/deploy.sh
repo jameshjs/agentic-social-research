@@ -263,8 +263,11 @@ code() { curl -s -o /dev/null -w '%{http_code}' --path-as-is --max-time 15 "$BAS
 curl -fsS --max-time 15 "$BASE/api/health"; echo
 printf '/experience/ %s   /.env %s   /%%2e%%2e/ %s   /experience/../.env %s   /.git/config %s\n' \
   "$(code /experience/)" "$(code /.env)" "$(code /%2e%2e/)" "$(code /experience/../.env)" "$(code /.git/config)"
+# The first run after a restart waits for the workers' one-time warm-up (~15 s on one vCPU).
+curl -sS -o /dev/null --max-time 45 -H 'Content-Type: application/json' -H 'Accept-Encoding: gzip' \
+  -w '/api/run fare (first, includes warm-up): HTTP %{http_code}, %{time_total}s, %{size_download} bytes (gzip)\n' -d '{"scenario":"fare","seed":42}' "$BASE/api/run"
 curl -sS -o /dev/null --max-time 15 -H 'Content-Type: application/json' -H 'Accept-Encoding: gzip' \
-  -w '/api/run fare: HTTP %{http_code}, %{time_total}s, %{size_download} bytes (gzip)\n' -d '{"scenario":"fare","seed":42}' "$BASE/api/run"
+  -w '/api/run bike (warm): HTTP %{http_code}, %{time_total}s, %{size_download} bytes (gzip)\n' -d '{"scenario":"bike","seed":42}' "$BASE/api/run"
 
 print_warnings
 echo "Deployed: $BASE/experience/"
