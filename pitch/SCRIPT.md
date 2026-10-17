@@ -42,9 +42,9 @@
 | 1:38 | At the question box, type **What if Bloor's protected bike lane were removed?** and click **Run the city**. | "One freeform question starts the experiment. The two demo cases are recognized from what we type; there are no scenario buttons." |
 | 1:45 | If the agents are online, the **100-agent reaction** appears first. Show the live distribution and one reason; then scroll to the lab. If the tunnel is down, go straight to the lab. | "These are survey-style reactions from synthetic personas, not a forecast. They help us ask what to inspect in the city." |
 | 2:05 | Let the 3D world load on **Baseline**. | "This is the mapped 619-metre Bathurst–Spadina section. The street, businesses, signals and transit context are sourced; the people and their responses are synthetic." |
-| 2:15 | Click **See bike impact**. Let the camera follow Leila through the baseline and policy phases. | "Same person, same seed. With the track removed she takes a side street; other riders switch mode or ride beside cars. Every visible decision comes from the paired run." |
+| 2:15 | Click **See bike impact**. Let the camera follow each of the four people whose choice changed. | "Same people, same seed. With the track removed, one rider takes a side street; others switch to TTC or shop elsewhere. Every visible decision comes from the paired run." |
 | 2:50 | Point to the four metric tiles below the 3D scene. | "Bloor bike trips, metres cycled beside cars, shop sales and car trips are reduced from those events. The simulated Bloor bike trips fall; shared-lane cycling rises. We do not turn that into an injury or city-wide forecast." |
-| 3:15 | If time permits, switch to **Researcher view** to show the ledger, source boundary and rerun. Otherwise keep the 3D scene on screen. | "A researcher can inspect each choice, challenge an assumption and rerun. The public view keeps the city first." |
+| 3:15 | Keep the 3D scene on screen. | "The public view keeps the city first." |
 
 **If something breaks:**
 - **3D doesn't load:** press the `2D` button. The same run plays on the 2D map.

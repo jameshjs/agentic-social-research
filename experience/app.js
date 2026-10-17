@@ -9,8 +9,6 @@ const worldRunner = window.CounterfactualWorldExperiment;
 const worldFixtures = window.CounterfactualWorldFixtures;
 const worldAdapter = window.CounterfactualWorldRunAdapter;
 const scenarioCompiler = window.CounterfactualScenarioCompiler;
-// Demo view (the default stage walkthrough) or Researcher view (?detail=1); see view-mode.js. Both read the same run.
-const demoView = () => Boolean(window.CounterfactualView?.isDemo());
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -662,8 +660,8 @@ function showPersonaCard(personaId) {
   card.replaceChildren(name, facts);
   if (rows.length) {
     const link = document.createElement('button'); link.type = 'button'; link.className = 'map-persona-link';
-    link.textContent = `${rows.length} changed choice${rows.length === 1 ? '' : 's'} ${demoView() ? 'below' : 'in the ledger'} ↓`;
-    link.addEventListener('click', () => $(demoView() ? '#peopleStrip' : '#runLedger').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: demoView() ? 'nearest' : 'start' }));
+    link.textContent = `${rows.length} changed choice${rows.length === 1 ? '' : 's'} below ↓`;
+    link.addEventListener('click', () => $('#peopleStrip').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'nearest' }));
     card.append(link);
   } else {
     const same = document.createElement('small'); same.textContent = 'Same choices in both worlds this run.'; card.append(same);
@@ -910,14 +908,7 @@ const steps = [
   ['Reviewing the evidence.', 'Showing the research and the effects it cannot establish.'],
   ['Comparing both worlds.', 'Replaying illustrative city states and connecting them to example metrics.'],
 ];
-// The mapped engine runs a real paired experiment, so its overlay describes that work.
-const mappedSteps = [
-  ['Framing the question.', 'Turning the policy into a sandbox lever, or marking it speculative.'],
-  ['Loading the people.', 'Placing the same synthetic residents and visitors on the mapped Bathurst–Spadina section.'],
-  ['Reviewing the evidence.', 'Separating observed Toronto inputs from synthetic assumptions.'],
-  ['Running both worlds.', 'Baseline and policy from one seed; every move passes the world’s rule checks.'],
-];
-// Demo view: the same four steps, shorter and plainer, on a faster clock.
+// The mapped engine's paired run: the same four steps, shorter and plainer.
 const demoSteps = [
   ['Reading the question.', 'Turning it into one change on the map.'],
   ['Placing the people.', 'Synthetic residents and visitors on the real Bloor St W map.'],
@@ -925,7 +916,7 @@ const demoSteps = [
   ['Adding it up.', 'Every number is summed from the recorded events.'],
 ];
 const DEMO_STEP_LABELS = ['Read', 'Place people', 'Run twice', 'Add up'];
-let researchStepLabels = null;
+let defaultStepLabels = null;
 // A short name for where a run executed, e.g. "Vultr · YTO" for the deployed engine.
 function hostLabel(served) {
   if (!served) return '';
@@ -1152,28 +1143,21 @@ async function runScenario(scenario, promptOverride = null) {
     if (token !== investigationToken) return;
   }
   if (scenario !== 'custom') startPolicyPoll(scenario);   // the composer drafts a policy for the agents via draftPolicy
-  const agentNote = !agents.online ? 'no live model call'
-    : scenario === 'custom' ? 'drafting a policy, then asking all 100 persona agents for a 1–5 rating' : 'asking all 100 persona agents for a 1–5 rating';
-  const demo = demoView();
-  const where = mapped.backend ? `on ${demo ? hostLabel({ ...mapped.backend, remote: true }) : mapped.backend.host}` : 'in this browser';
+  const where = mapped.backend ? `on ${hostLabel({ ...mapped.backend, remote: true })}` : 'in this browser';
   $('#investigationNote').textContent = !useMapped
     ? (!agents.online ? 'Prepared demo replay · no live model call'
       : scenario === 'custom' ? 'Drafting a policy, then asking all 100 persona agents for a 1–5 rating' : 'Asking all 100 persona agents for a 1–5 rating')
-    : demo
-      ? `${scenario === 'custom' ? `Compiling ${mapped.backend ? where : 'with offline rules'}` : `Running ${where}`}${agents.online ? ' · 100 persona agents are rating it' : ''}`
-      : scenario === 'custom'
-        ? `Compiling the hypothesis ${mapped.backend ? `on ${mapped.backend.host}` : 'with offline rules in this browser'} · ${agentNote}`
-        : `Mapped paired run ${where} · ${agentNote}`;
+    : `${scenario === 'custom' ? `Compiling ${mapped.backend ? where : 'with offline rules'}` : `Running ${where}`}${agents.online ? ' · 100 persona agents are rating it' : ''}`;
   const stepItems = $$('#investigationSteps li');
-  researchStepLabels ||= stepItems.map((li) => li.textContent);
-  stepItems.forEach((li, n) => { li.textContent = demo && useMapped ? DEMO_STEP_LABELS[n] : researchStepLabels[n]; });
+  defaultStepLabels ||= stepItems.map((li) => li.textContent);
+  stepItems.forEach((li, n) => { li.textContent = useMapped ? DEMO_STEP_LABELS[n] : defaultStepLabels[n]; });
   document.body.dataset.scenario = useMapped ? scenario : current.id;
   scene.setScenario(useMapped ? scenario : current.id);
   const overlay = $('#investigation');
   overlay.hidden = false;
   setPhase('investigating');
-  const copy = useMapped ? (demo ? demoSteps : mappedSteps) : steps;
-  const stepMs = reducedMotion ? 100 : demo ? 350 : 670;
+  const copy = useMapped ? demoSteps : steps;
+  const stepMs = reducedMotion ? 100 : 350;
   let work = null;
   for (let i = 0; i < copy.length; i++) {
     if (token !== investigationToken) return;
@@ -1403,8 +1387,8 @@ function renderLab(options = {}) {
   renderSector();
   renderOverview();
   scene.setSector(null);
-  // The demo view opens a fresh run on Baseline, so the presenter can switch to "With policy" on stage.
-  if (!rerun) setCityMode(demoView() ? 'baseline' : 'policy');
+  // A fresh run opens on Baseline, so the presenter can switch to "With policy" on stage.
+  if (!rerun) setCityMode('baseline');
   if (current.id === 'bike' && !rerun) setBikeRole('cyclist');
   const moving = scene.setMotion(true);
   $('#motionButton').textContent = moving ? 'Ⅱ' : '▶';

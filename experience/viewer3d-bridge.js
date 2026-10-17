@@ -21,7 +21,8 @@
     .simulation-viewport.is-3d .viewport-bottom{left:auto;bottom:auto;top:14px;right:14px;gap:8px}
     .view3d-toggle{border:1px solid #a8f4d13b;border-radius:40px;background:#0b212af0;color:var(--mint,#a8f4d1);padding:8px 14px;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer}
     .view3d-toggle[aria-pressed="true"]{background:var(--mint,#a8f4d1);color:#0c2a2a}
-    .impact-tour{position:absolute;z-index:7;top:66px;left:16px;max-width:min(330px,calc(100% - 32px));display:none;color:#ecfff6;font-family:'Space Grotesk',sans-serif}
+    /* 10px under the Baseline / With policy toggle: it sits at top 16px, ~54px tall (~48px on phones). */
+    .impact-tour{position:absolute;z-index:7;top:80px;left:16px;max-width:min(330px,calc(100% - 32px));display:none;color:#ecfff6;font-family:'Space Grotesk',sans-serif}
     .simulation-viewport.is-3d .impact-tour.is-ready{display:block}
     .impact-tour button{border:1px solid #a8f4d1;background:#a8f4d1;color:#102b27;border-radius:999px;padding:10px 16px;font:700 11px 'Space Grotesk',sans-serif;letter-spacing:.04em;box-shadow:0 8px 30px #0009;cursor:pointer}
     .impact-tour button:hover{background:#d6ffe9;transform:translateY(-2px)}
@@ -29,9 +30,7 @@
     .impact-tour-card[hidden]{display:none}
     .impact-tour-phase{display:block;font:700 9px 'Space Grotesk',sans-serif;letter-spacing:.15em;color:#a8f4d1;text-transform:uppercase}
     .impact-tour-card strong{display:block;margin:5px 0;font-size:17px;line-height:1.2}
-    .impact-tour-card p{margin:0;color:#c6dcda;font-size:11px;line-height:1.5}
-    .impact-tour-card small{display:block;margin-top:7px;color:#91afb0;font:10px/1.35 'Space Grotesk',sans-serif}
-    @media(max-width:760px){.impact-tour{top:61px;left:10px;max-width:min(280px,calc(100% - 20px))}.impact-tour-card{padding:9px 11px}.impact-tour-card strong{font-size:14px}}`;
+    @media(max-width:760px){.impact-tour{top:75px;max-width:min(280px,calc(100% - 32px))}.impact-tour-card{padding:9px 11px}.impact-tour-card strong{font-size:14px}}`;
   document.head.appendChild(style);
 
   const button = document.createElement('button');
@@ -44,55 +43,51 @@
   tour.innerHTML = '<button type="button" aria-label="Play the policy impact tour">▶ See policy impact</button><div class="impact-tour-card" aria-live="polite" hidden></div>';
   viewport.appendChild(tour);
   const tourButton = tour.querySelector('button'), tourCard = tour.querySelector('.impact-tour-card');
-  let tourTimer = null, hideTimer = null;
+  let tourTimer = null;
   const stopTour = () => {
     if (tourTimer) clearTimeout(tourTimer);
-    if (hideTimer) clearTimeout(hideTimer);
-    tourTimer = hideTimer = null;
+    tourTimer = null;
     tourCard.hidden = true;
   };
   const escape = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const sum = (r, armName, metric) => r.runs[armName].metrics.by_tick.filter((p) => p.tick >= r.scenario.policy_start).reduce((n, p) => n + (p[metric] || 0), 0);
   const bikeRun = (r) => Object.hasOwn(r.scenario.levers.intervention || {}, 'bloor_cycle_track');
   const choiceText = (s) => ({ transit: 'takes TTC', drive: 'drives', bike_bloor: 'cycles on Bloor', bike_side_street: 'cycles via side streets', walk: 'walks', shop_elsewhere: 'shops elsewhere', defer: 'defers the trip' }[s] || `chooses ${s}`);
-  function highlight(r) {
-    const bike = bikeRun(r);
-    const changed = r.changed_decisions.filter((d) => d.tick >= r.scenario.policy_start);
-    const bathurstTransit = (d) => r.personas.find((p) => p.id === d.actor)?.routine
-      ?.find((trip) => trip.id === d.trip_id)?.options
-      ?.some((option) => option.action === 'transit' && option.legs?.some((leg) => leg.to === 'stn_bathurst'));
-    return (bike
-      ? changed.find((d) => d.baseline.action === 'bike_bloor' && d.intervention.action === 'bike_side_street')
-      : changed.find((d) => d.baseline.action === 'transit' && d.intervention.action === 'bike_bloor' && bathurstTransit(d))
-        || changed.find((d) => d.baseline.action === 'transit' && d.intervention.action === 'bike_bloor'))
-      || changed.find((d) => bike ? d.baseline.action === 'bike_bloor' : d.baseline.action === 'transit')
-      || changed[0];
+  // Up to four people whose choice changed, each a different shift (Bloor → side streets, Bloor → drives, …),
+  // starting with the mode the policy touches: Bloor cyclists for the cycle track, TTC riders for the fare.
+  function picks(r) {
+    const lead = bikeRun(r) ? 'bike_bloor' : 'transit';
+    const changed = r.changed_decisions.filter((d) => d.tick >= r.scenario.policy_start)
+      .sort((a, b) => (b.baseline.action === lead) - (a.baseline.action === lead));
+    const shifts = new Set(), out = [];
+    for (const d of changed) {
+      const shift = `${d.baseline.action}>${d.intervention.action}`;
+      if (shifts.has(shift) || out.some((x) => x.actor === d.actor)) continue;
+      shifts.add(shift); out.push(d);
+      if (out.length === 4) break;
+    }
+    return out;
   }
-  function showPhase(r, d, phase) {
-    const bike = bikeRun(r), baseline = phase === 'baseline';
-    const person = r.personas.find((p) => p.id === d.actor);
-    const name = escape(person?.name || d.actor);
-    const action = baseline ? d.baseline.action : d.intervention.action;
-    const trips = Math.round(sum(r, phase === 'baseline' ? 'baseline' : 'intervention', bike ? 'bloor_bike_trips' : 'transit_trips'));
-    const alongside = Math.round(sum(r, phase === 'baseline' ? 'baseline' : 'intervention', 'bloor_shared_cycling_m'));
-    const label = baseline ? '01 / WITHOUT THE POLICY' : '02 / WITH THE POLICY';
-    const fact = bike ? `${trips} Bloor bike trips; ${alongside.toLocaleString()} m cycled beside cars in this synthetic sample.`
-      : `${trips} TTC trips in this synthetic sample. Bus service is scheduled context; these are not bus boardings.`;
-    tourCard.innerHTML = `<span class="impact-tour-phase">${label}</span><strong>${name} ${escape(choiceText(action))}.</strong><p>${fact}</p><small>Same person, seed and mapped world · ${r.scenario.ticks - r.scenario.policy_start + 1} simulated weekdays · not a Toronto forecast</small>`;
+  // One person per step: the 3D view follows them on the policy arm, with their old route drawn beside the new one.
+  function showPick(r, list, i) {
+    const d = list[i], name = r.personas.find((p) => p.id === d.actor)?.name || d.actor;
+    tourCard.innerHTML = `<span class="impact-tour-phase">${i + 1} / ${list.length} · ${escape(name)}</span><strong>${escape(choiceText(d.baseline.action))} → ${escape(choiceText(d.intervention.action))}</strong>`;
     tourCard.hidden = false;
-    send({ type: 'viewer3d:impact-phase', arm: phase === 'baseline' ? 'baseline' : 'policy', actor: d.actor, trip: d.trip_id, tick: d.tick, kind: bike ? 'bike' : 'fare' });
+    const policy = document.getElementById('policyView');
+    if (policy && !policy.classList.contains('selected')) policy.click();
+    send({ type: 'viewer3d:person', id: d.actor });
   }
   tourButton.addEventListener('click', () => {
     const r = isMapped(last) ? last : window.CounterfactualCurrentRun;
     if (!ready || !isMapped(r)) return;
     stopTour();
-    const d = highlight(r); if (!d) return;
-    showPhase(r, d, 'baseline');
+    const list = picks(r); if (!list.length) return;
     tourButton.textContent = '↻ Replay policy impact';
-    tourTimer = setTimeout(() => {
-      showPhase(r, d, 'policy'); tourTimer = null;
-      hideTimer = setTimeout(() => { tourCard.hidden = true; hideTimer = null; }, 8000);
-    }, 7200);
+    const step = (i) => {
+      if (i === list.length) { stopTour(); return; }
+      showPick(r, list, i);
+      tourTimer = setTimeout(() => step(i + 1), 6500);
+    };
+    step(0);
   });
 
   let frame = null, ready = false, last = null;

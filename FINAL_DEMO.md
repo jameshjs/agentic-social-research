@@ -16,13 +16,13 @@
 | 0:00–1:30 | Meet and Steven use slides 1–4. | Policy question, persona tuning against Twin respondents, research loop, human review. Use only the verified numbers and note IDs in the deck. |
 | 1:30–1:45 | Aadit scrolls Earth → Toronto → Bloor, types **What if Bloor's protected bike lane were removed?**, and submits. | One freeform input; no prepared-case buttons. |
 | 1:45–2:05 | If online, show the 100-agent rating animation and one reason, then move to the 3D lab. | These are survey-style synthetic reactions, not measured Toronto views or inputs to the paired world run. |
-| 2:05–2:50 | Show Baseline, then click **See bike impact** and let Leila's baseline/policy tour play. | Same synthetic person, seed and mapped street; protected track is the intervention. The camera follows committed decisions. |
-| 2:50–3:25 | Show the four event-reduced tiles below the 3D scene: Bloor bike trips, metres cycled beside cars, sample shop sales and car trips. Open Researcher view only if time allows. | The 3D actions and tiles read the same `experiment.v2` result. State the units and three simulated weekdays. |
+| 2:05–2:50 | Show Baseline, then click **See bike impact** and let the tour step through four people whose choice changed (Bloor → side streets, shops elsewhere, TTC). | Same synthetic people, seed and mapped street; protected track is the intervention. The camera follows committed decisions. |
+| 2:50–3:25 | Show the four event-reduced tiles below the 3D scene: Bloor bike trips, metres cycled beside cars, sample shop sales and car trips. | The 3D actions and tiles read the same `experiment.v2` result. State the units and three simulated weekdays. |
 | 3:25–4:00 | Meet closes. | A hypothesis becomes an inspectable experiment and a next research question, not an automatic policy forecast. |
 
 ## If asked for the second scenario
 
-Type **What if the TTC adult fare rises by 50 cents?** into the same box or open `?demo=fare`. The fare run keeps Fair Pass unchanged and reuses the same street, people, seed, engine and renderer. **See TTC impact** follows a rider whose choice changes. The tiles show sample fare receipts, TTC trips, car trips and shop sales.
+Type **What if the TTC adult fare rises by 50 cents?** into the same box or open `?demo=fare`. The fare run keeps Fair Pass unchanged and reuses the same street, people, seed, engine and renderer. **See TTC impact** steps through riders whose choice changes. The tiles show sample fare receipts, TTC trips, car trips and shop sales.
 
 ## Claim boundaries
 

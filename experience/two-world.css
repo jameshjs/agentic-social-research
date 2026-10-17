@@ -1,6 +1,5 @@
 /* Two Worlds: landing photos, a shorter prompt page, and a 3D-only lab (Aadit's 17 Oct pass).
-   Landing and prompt rules apply in both views; the lab rules apply to the default demo view only,
-   so Researcher view (?detail=1) still shows every section. Photos: see assets/CREDITS.md. */
+   Photos: see assets/CREDITS.md. */
 
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .brand-word{letter-spacing:-.6px;word-spacing:2px}
