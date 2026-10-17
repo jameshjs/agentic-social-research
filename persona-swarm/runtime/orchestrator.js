@@ -24,14 +24,16 @@ Choose one mode:
 "filter" selects agents for a poll; leave every field empty for all 100. Within a field any listed value matches; across fields all must match. Runs always use the 40 deciders.
 "note": one sentence telling the user what you will do.`;
 
-function planSchema(roster, modes = ['poll', 'run', 'reply']) {
+function planSchema(roster, modes = ['poll', 'run', 'reply'], draft = false) {
   const roles = [...new Set(roster.map((a) => a.role))].sort();
   const hoods = [...new Set(roster.map((a) => a.neighbourhood))].sort();
   const list = (values) => ({ type: 'array', items: { type: 'string', enum: values } });
   const tri = { type: 'string', enum: ['', 'yes', 'no'] };
   return {
-    type: 'object', additionalProperties: false, required: ['mode', 'question', 'options', 'policy', 'filter', 'reply', 'note'],
+    type: 'object', additionalProperties: false,
+    required: ['mode', 'question', 'options', 'policy', 'filter', 'reply', 'note', ...(draft ? ['proposal'] : [])],
     properties: {
+      ...(draft ? { proposal: { type: 'string' } } : {}),
       mode: { type: 'string', enum: modes }, question: { type: 'string' }, options: { type: 'array', items: { type: 'string' } },
       policy: { type: 'string', enum: ['', 'fare', 'bloor'] }, reply: { type: 'string' }, note: { type: 'string' },
       filter: { type: 'object', additionalProperties: false, required: ['roles', 'age_bands', 'income_bands', 'sex', 'neighbourhoods', 'fare_category', 'has_car', 'has_bike'],
@@ -58,11 +60,17 @@ function validPlan(plan, modes = ['poll', 'run', 'reply']) {
   return true;
 }
 
-/* modes limits the choice; ['poll'] turns any typed text (a hypothesis, a question) into a neutral poll. */
-async function plan(message, roster, call, { modes = ['poll', 'run', 'reply'] } = {}) {
-  const user = modes.length === 1 ? `${message}\n\n(Use mode "${modes[0]}": turn this into one neutral question for the agents.)` : message;
-  const { output } = await once(call, { system: [PLAN_SYSTEM], user, schema: planSchema(roster, modes) }, ROUTER);
-  if (!validPlan(output, modes)) throw new Error(`orchestrator returned an unusable plan: ${JSON.stringify(output).slice(0, 200)}`);
+const DRAFT = 'Use mode "poll". In "proposal", draft one concrete policy proposal from this idea: what changes, for whom, and from when, in one or two sentences. State the change only, never its expected effects, benefits or costs.';
+
+/* modes limits the choice; ['poll'] turns any typed text (a hypothesis, a question) into a neutral poll. draft asks
+ * for one concrete policy proposal instead, in plan.proposal. */
+async function plan(message, roster, call, { modes = ['poll', 'run', 'reply'], draft = false } = {}) {
+  const user = draft ? `${message}\n\n(${DRAFT})`
+    : modes.length === 1 ? `${message}\n\n(Use mode "${modes[0]}": turn this into one neutral question for the agents.)` : message;
+  const { output } = await once(call, { system: [PLAN_SYSTEM], user, schema: planSchema(roster, draft ? ['poll'] : modes, draft) }, ROUTER);
+  if (!validPlan(output, draft ? ['poll'] : modes) || (draft && !String(output.proposal || '').trim())) {
+    throw new Error(`orchestrator returned an unusable plan: ${JSON.stringify(output).slice(0, 200)}`);
+  }
   return output;
 }
 

@@ -303,7 +303,7 @@ test('an orchestrated poll: plan, answers with the agent\'s card, done, verified
     assert.deepEqual(Object.keys(a).sort(), ['agent', 'answer', 'elapsed_s', 'id', 'tally']);
     for (const k of ['id', 'name', 'role', 'fare_category', 'has_car', 'has_bike', 'age_band', 'income_band']) assert.ok(k in a.agent, k);
     assert.equal(a.agent.role, 'transit_rider');
-    assert.deepEqual(a.answer, { stance: 'oppose', affected: 'a little', reason: 'fake', label: 'survey-style reaction, not a forecast' });
+    assert.deepEqual(a.answer, { stance: 'oppose', affected: 'a little', reason: 'fake', label: 'survey-style reaction, not a forecast', consistency: 'ok' });
     assert.equal(done.aggregate.answered, 16);
     assert.deepEqual(seen.summary, { summary: 'Of 16 agents, 16 answered.', numbers_verified: true, unverified: [], distribution: done.aggregate });
   } finally { await close(server); }
@@ -366,6 +366,64 @@ test('a poll with no filter and no orchestrator asks all 100; chat modes keep th
   } finally { await close(server); }
 });
 
+test('a poll-only chat drafts one policy proposal that all 100 agents rate on the forced 1-5 options', async () => {
+  const proposal = 'From 1 May 2027, drivers pay $15 to enter downtown Toronto south of Bloor St on weekdays from 7 am to 7 pm.';
+  let planPrompt;
+  const questions = new Set();
+  const call = async ({ schema, user }) => {
+    const p = schema.properties;
+    if (p.mode) {
+      planPrompt = { user, schema };
+      return { output: { proposal, mode: 'poll', question: 'ignored', options: ['Yes', 'No'], policy: '', reply: '', note: 'Drafting a policy.',
+        filter: { roles: ['cyclist'], age_bands: [], income_bands: [], sex: [], neighbourhoods: [], fare_category: '', has_car: '', has_bike: '' } }, meta: {} };
+    }
+    if (p.summary) return { output: { summary: 'ok' }, meta: {} };
+    questions.add(user.split('\n')[0]);
+    return { output: { choice: 2, reason: 'fake' }, meta: {} };
+  };
+  const server = createServer({ backend: 'local', host: '127.0.0.1', concurrency: 64 }, { liveDir: tmp(), env: () => ({}), call });
+  const base = await listen(server);
+  try {
+    const client = require('./agents-client').create({ serverUrl: base });
+    let plan, start;
+    const answers = [];
+    const done = await client.chat('congestion charge', { modes: ['poll'], options: [1, 2, 3, 4, 5],
+      onPlan: (p) => { plan = p; }, onStart: (s) => { start = s; }, onAnswer: (a) => answers.push(a) });
+    assert.deepEqual(planPrompt.schema.properties.mode.enum, ['poll']);
+    assert.ok(planPrompt.schema.required.includes('proposal'));
+    assert.match(planPrompt.user, /never its expected effects/);
+    assert.equal(plan.policy, proposal, 'the drafted proposal is plan.policy');
+    assert.deepEqual(plan.options, [1, 2, 3, 4, 5], 'forced options override the orchestrator\'s');
+    assert.equal(plan.filter, null);
+    assert.equal(plan.note, 'I drafted one policy proposal; all 100 agents will rate it.');
+    assert.equal(start.ids.length, 100, 'all 100 are asked');
+    assert.deepEqual(start.options, [1, 2, 3, 4, 5]);
+    assert.deepEqual([...questions], [`Proposed policy: ${proposal} Where do you stand on it?`]);
+    assert.ok(answers.every((a) => a.answer.choice === 2));
+    assert.equal(done.aggregate.asked, 100);
+  } finally { await close(server); }
+});
+
+test('a reason that contradicts its rating is flagged "check"; the choice never changes', () => {
+  const cd = require('./claude-decision');
+  const five = [1, 2, 3, 4, 5];
+  const read = (choice, reason) => cd.readAsk({ choice, reason }, five);
+  // The real case: a driver praised the lane removal but chose 2.
+  const driver = read(2, 'Removing the lane is a welcome change that frees up room for my car and helps traffic.');
+  assert.deepEqual([driver.choice, driver.consistency], [2, 'check']);
+  assert.equal(read(4, 'Removing the lane is a welcome change that frees up room for my car.').consistency, 'ok');
+  assert.equal(read(2, "I don't support this; it would hurt the cyclists I ride with.").consistency, 'ok', 'negation flips the cue');
+  assert.equal(read(5, 'This is unfair and will hurt local shops.').consistency, 'check');
+  assert.equal(read(5, "It won't hurt me and it makes sense.").consistency, 'ok');
+  assert.equal(read(3, 'It helps some people and hurts others.').consistency, 'ok', 'neutral is never flagged');
+  assert.equal(read(1, 'I drive every day.').consistency, 'ok', 'no cues, no flag');
+  assert.equal(read(2, 'It would help drivers but hurt the shops I rely on.').consistency, 'ok', 'mixed cues are not a clear contradiction');
+  assert.equal(cd.readAsk({ stance: 'strongly oppose', affected: 'a lot', reason: 'Great idea, finally.' }, null).consistency, 'check');
+  assert.equal(cd.readAsk({ choice: 'Yes', reason: 'Great idea.' }, ['Yes', 'No']).consistency, undefined, 'free-text options carry no direction');
+  const agg = aggregatePoll({ a: driver, b: read(4, 'helps') }, five, 2);
+  assert.equal(agg.to_check, 1);
+});
+
 test('the client defaults to same-origin', () => {
   const client = require('./agents-client');
   assert.equal(client.create({}).config().url, '');
@@ -383,7 +441,7 @@ test('a 1-5 poll: numeric choices, a running tally on every answer, the distribu
   const cd = require('./claude-decision');
   const p = cd.askPrompt(cd.loadAgents().sheets.get('a001'), 'Congestion charge?', [1, 2, 3, 4, 5]);
   assert.deepEqual(p.schema.properties.choice, { type: 'integer', enum: [1, 2, 3, 4, 5] });
-  assert.match(p.user, /- 1 \(strongly oppose\)\n- 2 \(oppose\)\n- 3 \(neutral\)\n- 4 \(support\)\n- 5 \(strongly support\)/);
+  assert.match(p.user, /Rate this change:\n1 = strongly oppose this change\n2 = oppose\n3 = neutral \/ mixed\n4 = support\n5 = strongly support this change\n/);
   assert.deepEqual(cd.readAsk({ choice: 4, reason: 'r' }, [1, 2, 3, 4, 5]).choice, 4);
   assert.equal(cd.readAsk({ choice: '4', reason: 'r' }, [1, 2, 3, 4, 5]).choice, 4, 'a numeric string is read as its number');
   assert.equal(cd.readAsk({ choice: 6, reason: 'r' }, [1, 2, 3, 4, 5]), null);

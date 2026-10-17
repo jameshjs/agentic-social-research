@@ -8,6 +8,8 @@
  *   client.runPolicy('fare' | 'bike' | 'bloor', { concurrency, onStart, onDecision, onTick, onDone, ... })  → the experiment.v1 RunResult
  *   client.chat(message, { modes, onPlan, onReply, ...the handlers above })   client.health()   client.agents()   client.latestReplay(kind, policy)
  *     modes limits the orchestrator, e.g. ['poll', 'reply'] so a chat never starts a world run (the default allows poll, run, reply).
+ *     modes ['poll'] drafts one policy proposal from the text (plan.policy) and has all 100 agents rate it; options (e.g.
+ *     [1, 2, 3, 4, 5]) override the orchestrator's own. draft: false turns the drafting off.
  * A ready-made client, window.PersonaAgents, is same-origin unless PersonaAgents.configure({ url }) or
  * window.PERSONA_AGENTS = { url } names another server. It never reads or stores a key.
  * Poll answers are survey-style reactions, not forecasts. */
@@ -72,7 +74,7 @@
         if (event === 'replay') return data.record.result;
         return data.result || getJSON(`/saves/${encodeURIComponent(data.file)}?part=result`);
       },
-      async chat(message, { concurrency, modes, ...handlers } = {}) { return (await stream('/chat', { message, concurrency, modes }, handlers)).data; },
+      async chat(message, { concurrency, modes, options, draft, ...handlers } = {}) { return (await stream('/chat', { message, concurrency, modes, options, draft }, handlers)).data; },
       health: () => getJSON('/health'),
       agents: () => getJSON('/agents'),
       latestReplay: (kind, policy) => getJSON(`/replay/latest?${new URLSearchParams({ ...(kind ? { kind } : {}), ...(policy ? { policy } : {}) })}`),

@@ -57,9 +57,11 @@ function aggregatePoll(answers, options, n = Object.keys(answers).length) {
   const got = Object.values(answers).filter(Boolean);
   const count = (key, values) => Object.fromEntries(values.map((v) => { const k = got.filter((a) => a[key] === v).length; return [v, { count: k, share: pct(k, got.length) }]; }));
   const scale = options && typeof options[0] === 'number';
+  const flagged = got.filter((a) => a.consistency === 'check').length;
   return { asked: n, answered: got.length, no_answer: Object.keys(answers).length - got.length,
     ...(options ? { choices: count('choice', options) } : { stance: count('stance', cd.STANCES), affected: count('affected', cd.AFFECTED) }),
-    ...(scale ? { mean: got.length ? Math.round((got.reduce((s, a) => s + a.choice, 0) / got.length) * 100) / 100 : null } : {}) };
+    ...(scale ? { mean: got.length ? Math.round((got.reduce((s, a) => s + a.choice, 0) / got.length) * 100) / 100 : null } : {}),
+    ...(flagged ? { to_check: flagged } : {}) };
 }
 
 function createServer(config, deps = {}) {
@@ -163,12 +165,16 @@ function createServer(config, deps = {}) {
     try { return await work; } finally { clearInterval(timer); }
   }
 
-  async function chat(send, { message, concurrency, modes }) {
+  /* draft: the orchestrator drafts one policy proposal (plan.policy), which all agents rate; forced options override its own. */
+  async function chat(send, { message, concurrency, modes, options, draft }) {
     let plan;
-    try { plan = await heartbeat(send, 'planning', orch.plan(message, people, call, { modes })); } catch (e) {
+    try { plan = await heartbeat(send, 'planning', orch.plan(message, people, call, { modes, draft })); } catch (e) {
       if (/limit/i.test(e.message)) { state.limited = e.message; send('limit', { message: 'agent backend limit reached', replay: Boolean(latestSave()) }); return; }
       send('error', { message: `orchestrator: ${e.message}` }); return;
     }
+    if (draft) Object.assign(plan, { policy: plan.proposal.trim(), question: `Proposed policy: ${plan.proposal.trim()} Where do you stand on it?`, filter: null,
+      note: `I drafted one policy proposal; all ${people.length} agents will rate it.` });
+    if (plan.mode === 'poll' && cd.normalizeOptions(options)) plan.options = cd.normalizeOptions(options);
     send('plan', plan);
     if (plan.mode === 'reply') { send('reply', { text: plan.reply }); return; }
     let record, data;
@@ -328,7 +334,11 @@ function createServer(config, deps = {}) {
         // modes limits what the orchestrator may choose, e.g. ['poll', 'reply'] so a page never starts a world run.
         const modes = Array.isArray(params.modes) && params.modes.length ? params.modes.filter((m) => ['poll', 'run', 'reply'].includes(m)) : undefined;
         if (modes && !modes.length) send('error', { message: "modes must include 'poll', 'run' or 'reply'" });
-        else await chat(send, { message: String(params.message), concurrency, modes });
+        else {
+          // A poll-only chat drafts a policy proposal unless asked not to (draft: false).
+          const draft = params.draft ?? (modes?.length === 1 && modes[0] === 'poll');
+          await chat(send, { message: String(params.message), concurrency, modes, options: params.options, draft: Boolean(draft) });
+        }
       }
     } catch (e) { send('error', { message: e.message }); }
     res.end();
