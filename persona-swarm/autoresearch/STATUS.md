@@ -1,12 +1,12 @@
 # Persona tuning loop: status and handover
 
-**Snapshot:** 17 Oct 2026, 10:16 UTC.
+**Snapshot:** 17 Oct 2026, 10:40 UTC.
 
 | Item | State |
 |---|---|
-| Branch | `steven/persona-tuning-loop` at `419a872`, not pushed |
+| Branch | `steven/persona-tuning-loop` at `9b3ce03` plus this file's commit, not pushed |
 | Page | https://claude.ai/artifact/717U6NqZVYDnqCbnRFvRUb |
-| Spend | $12.70 of the $30 trigger (list price, billed to the claude.ai plan). The recorder sums only `rounds/NNN-*/meta.json`, so it misses the revoked round 7's $1.29: add $1.29 to its total |
+| Spend | **$14.27** of the $30 trigger (list price, billed to the claude.ai plan). The recorder prints $12.98: it sums only `rounds/NNN-*/meta.json`, so it misses the revoked interview run's $1.29. Add $1.29 to every total it prints, and fire trigger 6 yourself if the sum reaches $30 |
 | Rules | [PLAN.md](../PLAN.md) |
 | Procedure | [program.md](program.md) |
 | Words | [CONTEXT.md](../CONTEXT.md) |
@@ -15,9 +15,20 @@ Everything a new agent needs to carry on is on this page. Work from `persona-swa
 
 ## Pick up here
 
-Round 7 (interview format) was **revoked by Steven** on 17 Oct: it changed only the persona format, so its folder
-moved to `rounds/_revoked/007-interview-format/` (see `REVOKED.md` there) and it has no `results.tsv` row. Round 7 is
-being redone as an instruction edit written from the highlighted papers, with the `full` format.
+**Waiting for Steven: trigger 1 fired in round 7** (rounds 5, 6 and 7 kept nothing). The question, the three
+suggested edits for round 8 and a method note are in `rounds/007-not-an-assistant/decision.json`. Don't run round 8
+before he replies.
+
+- When he replies, write his words into that file's `reply` and `next_suggestions.chosen`, and commit.
+- Then run round 8 as `program.md` says: `coach_notes.py` right before the round, one edit, record with
+  `--papiers-ids` citing highlights, set `notes_used`, write `next_suggestions`, export, commit, then update
+  `datasets/rounds` (see "Page store").
+- If he picks the method note, re-measure with `run_round.py --number 003 --slug spending-habits-repeat2 --sets check
+  --steady` (no `coach_notes.py` before a re-measure).
+
+Round 7 history: the interview-format run was **revoked by Steven** (format-only; see
+`rounds/_revoked/007-interview-format/REVOKED.md`, no `results.tsv` row). Round 7 was redone as an instruction edit
+the researcher agent wrote from his highlights, and discarded.
 
 ## Rounds (check set)
 
@@ -34,13 +45,15 @@ right person 0.807, spread 0.869, gaps 0.821, steady 0.972, 4 marks.
 | 004 | Decide from the person's answers, not group stereotypes | **0.826** | 0.863 | 0.802 | 0.953 | 4 | discard (spread and steady fell) | `034c437` |
 | 005 | Compact persona format | 0.817 | 0.867 | **0.765** | 0.966 | 3 | discard (gaps fell) | `ab01035` |
 | 006 | Don't buy necessities just because most households do | 0.811 | 0.848 | 0.778 | 0.964 | 3 | discard (spread and gaps fell) | `64ce85f` |
-| ~~007~~ | Interview persona format | 0.818 | 0.852 | 0.802 | 0.974 | 4 | **revoked by Steven** (format-only; would have discarded on spread) | — |
+| ~~007~~ | Interview persona format | 0.818 | 0.852 | 0.802 | 0.974 | 4 | **revoked by Steven** (format-only; would have discarded on spread) | `d09ee9b` |
+| 007 | Not a helpful assistant (from Anthology and Out of One, Many highlights) | 0.813 | 0.858 | 0.790 | 0.966 | 3 | discard (spread fell; marks 4 → 3) | `9b3ce03` |
 
-Round 7 by family:
+Round 7 (redo) by family:
 
-- **Policy:** right person 0.827, spread 0.891, gaps 1.0.
-- **Pricing:** right person 0.815, spread 0.843, gaps 0.746.
-- **Run:** 278 s, $1.29, 0 failed calls.
+- **Policy:** right person 0.822, spread 0.899, gaps 1.0.
+- **Pricing:** right person 0.810, spread 0.848, gaps 0.730.
+- **Run:** 257 s, $1.58, 0 failed calls. Highlights cited: `hl_42736e321c9efbb55c00281d4eaf4edc`,
+  `hl_39746a61ef98d937816daf833be4f776`, `hl_ef176edeb52094c16f68e9ad57932e9a`.
 
 Triggers fired so far, each with Steven's question and reply in that round's `decision.json`:
 
@@ -49,7 +62,7 @@ Triggers fired so far, each with Steven's question and reply in that round's `de
 | 5 (benchmark passed) | rounds 0 and 3 |
 | 2 (a check moved more than 3× its noise) | round 2 |
 | 3 (one check up past its noise while another fell past its noise) | round 4 |
-| 1 (three rounds in a row kept nothing) | round 6; due again in round 7 |
+| 1 (three rounds in a row kept nothing) | round 6; round 7 (**waiting for Steven**) |
 
 ## Code status
 
@@ -72,15 +85,15 @@ scorer hash (`9e5332f9…`) and rewordings hash (`45136ba1…`). `python3 autore
 | `autoresearch/instructions.md` | The instructions in force: round 3's, signed off | Must equal `rounds/003-spending-habits/instructions.md` before a round |
 | `autoresearch/rewordings.json` | The 10 policy rewordings for steady | Approved by Steven, so frozen |
 
-**Working tree:** clean after the revocation commit, apart from `dashboard/tuning.html`, which another session is redesigning.
+**Working tree:** clean, apart from `dashboard/tuning.html`, which another session is redesigning. Don't stage it.
 
 **Page store:**
 
 | Document | Version | Points at |
 |---|---|---|
-| `datasets/rounds` | v6 | `/_blob/485a05efe592ae12fb9711f97074c901`, rounds 000–006 |
+| `datasets/rounds` | v8 | `/_blob/cd5b13e5a7fd5b5e15a01c3f5b0d3931`, rounds 000–007 (the old blob `485a05ef…` is deleted) |
 | `datasets/final` | v2 | `/_blob/7381fbf1f7e60dc6636710b3a1ab1138`, one "pending" row |
-| `files/index.html` | v2 | — |
+| `files/index.html` | v2 | — (another session is redesigning the page: don't republish it) |
 | `dash/meta` | v1 | — |
 
 ## The setup on one screen
@@ -103,6 +116,10 @@ scorer hash (`9e5332f9…`) and rewordings hash (`45136ba1…`). `python3 autore
   correlation of each person's purchase count with the real person's from 0.14 to 0.42.
 - **Shifting how often agents buy backfires.** Rounds 2 and 6 made agents answer uniformly per product, so spread
   fell.
+- **Instructions don't reach the staples.** Rounds 2, 6 and 7 each told agents, in different words, that people
+  often pass on everyday items; milk, eggs and baking soda stayed at 95–100% yes on the tuning set (people 50–85%).
+  Round 7's two-sided "not a helpful assistant" cue moved treats toward people's answers, but not the staples, and
+  pushed the two conservative policy items further into opposition.
 - **Format changes trade spread for right person.** Compact (round 5) and interview (round 7) both gained a little
   right person and lost spread or pricing gaps. The full Twin text is still the best format.
 - **Agents caricature party.** Their Democrat-minus-Republican policy gaps are 1.3–3.2 points, where people differ
@@ -121,24 +138,27 @@ Steven's library holds 7 papers and 15 highlights, and no notes. `coach_notes.py
 
 - **Out of One, Many** (12 highlights):
   - Pattern correspondence matters more than matching individuals, and draws vary.
-  - Personas are conditioned with an interviewer-and-me transcript (tried in round 7).
+  - Personas are conditioned with an interviewer-and-me transcript (tried in the revoked round 7).
   - Party is the most predictive element, but combining elements predicts best.
   - The template was never optimised.
 - **Anthology of Backstories** (3 highlights):
-  - Instruction-tuned models give only positive, helpful actions.
+  - Instruction-tuned models give only positive, helpful actions (tried in round 7).
   - Questions are asked in series.
   - Backstories must vary.
 - **Not highlighted yet:** Twin-2K-500, Funhouse Mirrors, Synthetic Replacements, Automated Social Science, and LLM
   Agents Grounded in Self-Reports.
 
-**Suggested edits left for round 8,** from `rounds/006-necessities/decision.json`:
+**Suggested edits for round 8,** from `rounds/007-not-an-assistant/decision.json` (Steven picks):
 
-- **"Not a helpful assistant"** (Anthology highlight `hl_42736e321c9efbb55c00281d4eaf4edc`). Risk: like rounds 2 and
-  6, it may cut spread.
-- **Policy only, "party is one input among several"** (Out of One, Many highlight
-  `hl_f9cf5b71d8b01335a0f1fee0962f34de`). Likely within noise when pooled.
+1. **Policy only, "party is one input among several"** (`hl_f9cf5b71d8b01335a0f1fee0962f34de`,
+   `hl_39746a61ef98d937816daf833be4f776`). Leaves shopping alone. Likely within noise when pooled.
+2. **Shopping: household and demographics decide which products fit** (`hl_a57f83114dc9b82734d028801f8cf37a`,
+   `hl_f9cf5b71d8b01335a0f1fee0962f34de`). Aims at pricing group gaps; the tuning groups behind it are small.
+3. **Don't fall back on the most typical answer** (`hl_ef176edeb52094c16f68e9ad57932e9a`,
+   `hl_42736e321c9efbb55c00281d4eaf4edc`). Aims at spread; may cost right person and steady.
 
-Because format changes have so far traded spread for right person, a round-8 idea should preserve answer variety.
+**Method note:** re-measure round 3 once more before round 8, since spread's noise (0.010) comes from one pair of
+runs and round 3's own runs differ by 0.009 (`hl_ef176edeb52094c16f68e9ad57932e9a`).
 
 ## Decisions log (17 Oct)
 
@@ -163,13 +183,16 @@ Because format changes have so far traded spread for right person, a round-8 ide
   round 3's. Its run moved to `rounds/_revoked/007-interview-format/` with no `results.tsv` row; round 7 is redone as an
   instruction edit the researcher agent writes from the highlighted papers. The interview format stays in `formats.py`.
   Its $1.29 still counts toward the $30 trigger, though the recorder no longer sees it.
+- **Round 7 redone** with the same 15 highlights (Papiers had nothing new): "not a helpful assistant", citing
+  `hl_42736e321c9efbb55c00281d4eaf4edc`, `hl_39746a61ef98d937816daf833be4f776` and
+  `hl_ef176edeb52094c16f68e9ad57932e9a`. Discarded (spread −0.011, marks 4 → 3). Trigger 1 fired again; the question
+  is waiting for Steven.
 
 ## To-do
 
-1. Record round 7, set its `notes_used`, ask Steven about trigger 1, and write round 8's suggestions (see "Pick up
-   here").
-2. Export, commit and re-publish round 7.
-3. Rounds 8–10: each from the last round's `next_suggestions`, with the triggers and sign-offs.
+1. Get Steven's reply to trigger 1 (round 7) and record it (see "Pick up here").
+2. Rounds 8–10: each from the last round's `next_suggestions`, with the triggers and sign-offs. Add the revoked
+   run's $1.29 to the recorder's spend total.
 4. After round 10 (the final set is scored once):
    1. Run the no-persona baseline on the final set with all families (never scored on its own).
    2. Run the best signed-off instructions on the final set with all families and steady.
