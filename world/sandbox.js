@@ -6,9 +6,10 @@
   'use strict';
 
   const Y = { car: 3, track: 7, sidewalk: 12, portal: 150 };   // schematic cross-section, metres north (+) / south (-)
-  const SPEED = { walk: 1.2, crossing: 1.0, bike: 4.5, car: 11.1 };
+  const BG = typeof module !== 'undefined' && module.exports ? require('./background.js') : root.BloorBackground;
+  const SPEED = { walk: 1.2, crossing: 1.0, bike: 4.5, car: BG.CRUISE_M_S };
   const CORNER = 8;
-  const LANE_CAPACITY_VPH = 900;                                 // assumption: urban arterial lane, before green share
+  const FITS = new WeakMap();                                    // world -> seed -> fitted side-street exchange
   const MODES = ['walk', 'bike', 'car', 'transit'];
 
   function random(seed, ...parts) {
@@ -139,11 +140,11 @@
     for (let i = 0; i + 1 < xs.length; i++) {
       const gEb = xs[i + 1].signal_px ? { px: xs[i + 1].signal_px, kind: 'vehicle', movement: 'bloor_green', at: 'end' } : null;
       const gWb = xs[i].signal_px ? { px: xs[i].signal_px, kind: 'vehicle', movement: 'bloor_green', at: 'end' } : null;
-      addEdge(`car_eb_${i}`, `car_eb_${i}`, `car_eb_${i + 1}`, bikeOnCarLanes ? ['car', 'bike'] : ['car'], { gate: gEb, lanes, direction: 'eb', parking: policy.on_street_parking });
-      addEdge(`car_wb_${i}`, `car_wb_${i + 1}`, `car_wb_${i}`, bikeOnCarLanes ? ['car', 'bike'] : ['car'], { gate: gWb, lanes, direction: 'wb', parking: policy.on_street_parking });
+      addEdge(`car_eb_${i}`, `car_eb_${i}`, `car_eb_${i + 1}`, bikeOnCarLanes ? ['car', 'bike'] : ['car'], { gate: gEb, lanes, direction: 'eb', to_intersection: i + 1, parking: policy.on_street_parking });
+      addEdge(`car_wb_${i}`, `car_wb_${i + 1}`, `car_wb_${i}`, bikeOnCarLanes ? ['car', 'bike'] : ['car'], { gate: gWb, lanes, direction: 'wb', to_intersection: i, parking: policy.on_street_parking });
       if (!bikeOnCarLanes) {
-        addEdge(`trk_eb_${i}`, `trk_eb_${i}`, `trk_eb_${i + 1}`, ['bike'], { gate: gEb, protected: track === 'protected', direction: 'eb' });
-        addEdge(`trk_wb_${i}`, `trk_wb_${i + 1}`, `trk_wb_${i}`, ['bike'], { gate: gWb, protected: track === 'protected', direction: 'wb' });
+        addEdge(`trk_eb_${i}`, `trk_eb_${i}`, `trk_eb_${i + 1}`, ['bike'], { gate: gEb, protected: track === 'protected', direction: 'eb', to_intersection: i + 1, track: true });
+        addEdge(`trk_wb_${i}`, `trk_wb_${i + 1}`, `trk_wb_${i}`, ['bike'], { gate: gWb, protected: track === 'protected', direction: 'wb', to_intersection: i, track: true });
       }
     }
     // Side-street portals: where people, bikes and cars enter or leave the section.
@@ -180,13 +181,26 @@
     return cur;
   }
 
-  function carEdgeSeconds(world, policy, plan, edge, t) {
-    if (!edge.lanes) return edge.length / SPEED.car;          // side-street links: no observed volume, free flow
-    const f = flowAt(world, t);
-    const vph = f ? 4 * (edge.direction === 'eb' ? f.eb_vehicles_in : f.wb_vehicles_in) : 0;
-    const cap = LANE_CAPACITY_VPH * edge.lanes * (plan.bloorGreen / plan.cycle) * (edge.parking ? 0.95 : 1);
-    const free = edge.length / SPEED.car;
-    return free * (1 + 0.15 * (vph / cap) ** 4);           // BPR volume-delay function
+  function carEdgeSeconds(world, policy, plan, edge) {
+    return edge.length / SPEED.car;                           // free cruise; delay comes from stop-line queues
+  }
+
+  /* Seconds an agent waits at a Bloor stop line: for green, then behind the background queue. */
+  function stopLineWait(plan, bg, policy, edge, mode, t) {
+    const g8 = edge.gate;
+    if (!g8) return 0;
+    if (!bg || edge.to_intersection === undefined) return gateWait(plan, g8, t);
+    const mixed = policy.bloor_cycle_track === 'none';
+    const onTrack = Boolean(edge.track);
+    const ahead = onTrack ? bg.queueAt(edge.direction, 'bike', edge.to_intersection, t)
+      : bg.queueAt(edge.direction, 'car', edge.to_intersection, t) + (mixed ? BG.BIKE_PCE * bg.queueAt(edge.direction, 'bike', edge.to_intersection, t) : 0);
+    const rate = onTrack ? 1 : edge.lanes / BG.SAT_HEADWAY_S;
+    const own = mode === 'bike' && !onTrack ? BG.BIKE_PCE : 1;
+    let cap = 0;
+    for (let k = 0; k < 900; k++) {
+      if (phaseAt(plan, g8.px, t + k).phase === g8.movement) { cap += rate; if (cap >= ahead + own) return k; }   // capacity carries over reds: the queue ahead is served across greens
+    }
+    return 900;
   }
 
   /* ---------- transit ---------- */
@@ -208,12 +222,9 @@
   /* ---------- routing ---------- */
   function edgeSeconds(world, policy, plan, g, edge, mode, t) {
     if (edge.transit) { const d = nextDeparture(world, policy, edge, t); return d ? d.at - t + edge.fixed_seconds : Infinity; }
-    let s;
-    if (mode === 'car') s = carEdgeSeconds(world, policy, plan, edge, t);
-    else if (mode === 'bike') s = edge.modes.includes('car') ? Math.max(edge.length / SPEED.bike, carEdgeSeconds(world, policy, plan, edge, t)) : edge.length / SPEED.bike;
-    else s = edge.length / (edge.speed || SPEED.walk);
+    const s = mode === 'car' ? carEdgeSeconds(world, policy, plan, edge) : mode === 'bike' ? edge.length / SPEED.bike : edge.length / (edge.speed || SPEED.walk);
     const g8 = edge.gate;
-    if (g8 && g8.at === 'end') return s + gateWait(plan, g8, t + s);
+    if (g8 && g8.at === 'end') return s + stopLineWait(plan, g.background, policy, edge, mode, t + s);
     return gateWait(plan, g8, t) + s;
   }
 
@@ -251,6 +262,7 @@
     const plan = signalPlan(world, policy);
     const g = buildGraph(world, policy);
     const seed = options.seed ?? 1;
+    if (options.background !== false) g.background = BG.simulateBackground(world, policy, plan, phaseAt, { seed, fit: observedFit(world, seed) });
     const events = [];
     const agents = new Map();
     const log = (e) => { events.push(e); return e; };
@@ -279,12 +291,10 @@
         if (!a.paid_this_trip) { fare = a.fare_cad ?? policy.adult_fare_cad; a.paid_this_trip = true; a.fares_paid += fare; a.cash_cad -= fare; }
       } else {
         const g8 = e.gate;
-        const base = a.mode === 'car' ? carEdgeSeconds(world, policy, plan, e, t0)
-          : a.mode === 'bike' ? (e.modes.includes('car') ? Math.max(e.length / SPEED.bike, carEdgeSeconds(world, policy, plan, e, t0)) : e.length / SPEED.bike)
-          : e.length / (e.speed || SPEED.walk);
+        const base = a.mode === 'car' ? carEdgeSeconds(world, policy, plan, e) : a.mode === 'bike' ? e.length / SPEED.bike : e.length / (e.speed || SPEED.walk);
         if (g8 && g8.at !== 'end') wait = gateWait(plan, g8, t0);                 // pedestrians start crossing only on walk
         travel = base;
-        if (g8 && g8.at === 'end') wait = gateWait(plan, g8, t0 + base);          // vehicles wait at the stop line
+        if (g8 && g8.at === 'end') wait = stopLineWait(plan, g.background, policy, e, a.mode, t0 + base);   // green, then the queue ahead
       }
       a.t = t0 + wait + travel; a.at = e.to;
       const ev = log({ t: round(t0), type: 'moved', actor: agentId, edge: edgeId, mode: a.mode, from: e.from, to: e.to, length_m: e.length,
@@ -316,31 +326,27 @@
     }
 
     return {
-      policy, plan, graph: g, events, agents, addAgent, move, enter, travel,
+      policy, plan, graph: g, background: g.background || null, events, agents, addAgent, move, enter, travel,
       signalAt: (px, t) => phaseAt(plan, px, t),
       flowAt: (t) => flowAt(world, t),
       rand: (...parts) => random(seed, ...parts),
     };
   }
 
-  /* Baseline sanity check: does flow entering one end reach the other end in the observed amounts? */
-  function calibrationReport(world) {
-    const rows = world.section_flows.intervals;
-    const hourly = {};
-    for (const r of rows) {
-      const h = r.start.slice(0, 2);
-      hourly[h] = hourly[h] || { eb_in: 0, eb_out: 0, wb_in: 0, wb_out: 0, bike_eb_in: 0, bike_eb_out: 0, bike_wb_in: 0, bike_wb_out: 0 };
-      const x = hourly[h];
-      x.eb_in += r.eb_vehicles_in; x.eb_out += r.eb_vehicles_arrive_spadina; x.wb_in += r.wb_vehicles_in; x.wb_out += r.wb_vehicles_arrive_bathurst;
-      x.bike_eb_in += r.eb_bikes_approach_bathurst; x.bike_eb_out += r.eb_bikes_arrive_spadina; x.bike_wb_in += r.wb_bikes_approach_spadina; x.bike_wb_out += r.wb_bikes_arrive_bathurst;
-    }
-    const total = (k) => Object.values(hourly).reduce((s, x) => s + x[k], 0);
-    const gap = (a, b) => round(100 * (total(b) - total(a)) / total(a));
-    return {
-      date: world.section_flows.count_date, hourly,
-      net_side_street_gain_pct: { eb_vehicles: gap('eb_in', 'eb_out'), wb_vehicles: gap('wb_in', 'wb_out'), eb_bikes: gap('bike_eb_in', 'bike_eb_out'), wb_bikes: gap('bike_wb_in', 'bike_wb_out') },
-      note: 'Difference between what enters one end and what reaches the other is the net exchange with the six minor cross streets. A routed background model should reproduce it before policy runs are compared.',
-    };
+  /* Side-street exchange is fitted once per world and seed under the observed layout and default
+   * (assumed) signals, then reused for every policy so background demand never adapts to a policy. */
+  function observedFit(world, seed) {
+    const bySeed = FITS.get(world) || FITS.set(world, new Map()).get(world);
+    if (!bySeed.has(seed)) bySeed.set(seed, BG.fitExchange(world, signalPlan(world, DEFAULT_POLICY), phaseAt, seed));
+    return bySeed.get(seed);
+  }
+
+  /* Baseline check: routed background arrivals at each far end against the observed counts. */
+  function calibrationReport(world, seed = 1) {
+    const plan = signalPlan(world, DEFAULT_POLICY);
+    const bg = BG.simulateBackground(world, DEFAULT_POLICY, plan, phaseAt, { seed, fit: observedFit(world, seed) });
+    return { date: bg.count_date, streams: bg.calibration, walmer_cross_check: bg.walmer_cross_check, assumptions: bg.assumptions,
+      side_street_exchange: Object.fromEntries(['eb', 'wb'].map((d) => [d, { entered_from_side_streets: { car: bg.sims[d].entered.car, bike: bg.sims[d].entered.bike }, left_to_side_streets: bg.sims[d].exited }])) };
   }
 
   const api = { createSandbox, calibrationReport, signalPlan, phaseAt, DEFAULT_POLICY, SPEED, hms };
