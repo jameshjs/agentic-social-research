@@ -1,4 +1,0 @@
-# /etc/sudoers.d/counterfactual-ci — the only root action available to ci-deploy.
-# The argument must be one 40-character lowercase hex git SHA (sudo 1.9.10+ regex syntax).
-Defaults:ci-deploy !use_pty, !lecture, env_reset, secure_path="/usr/sbin:/usr/bin:/sbin:/bin"
-ci-deploy ALL=(root) NOPASSWD: /usr/local/sbin/counterfactual-activate ^[0-9a-f]{40}$

@@ -12,23 +12,21 @@
 
 Public URL: <https://twotwosmyworld.select/experience/>. Health: `/api/health` (shows `git_sha`, `git_dirty`, and whether inference is configured). The original `sslip.io` link remains an alias.
 
-Porkbun DNS (verified 17 Oct 2026): root `A → 155.138.141.130` and `www CNAME → twotwosmyworld.select`, both TTL 600. The root, `www`, and legacy HTTPS URLs each returned 200 with a valid certificate; `http://155.138.141.130/experience/` returned 301 to the custom root. Porkbun still has its default wildcard parking CNAME, which does not override the explicit `www` record. [`deploy.sh`](./deploy.sh) keeps all three hostnames in Caddy on future manual redeploys. The CI script still probes the legacy HTTPS alias, so that alias must remain reachable.
+Porkbun DNS (verified 17 Oct 2026): root `A → 155.138.141.130` and `www CNAME → twotwosmyworld.select`, both TTL 600. The root, `www`, and legacy HTTPS URLs each returned 200 with a valid certificate; `http://155.138.141.130/experience/` returned 301 to the custom root. Porkbun still has its default wildcard parking CNAME, which does not override the explicit `www` record. [`deploy.sh`](./deploy.sh) keeps all three hostnames in Caddy on every redeploy, manual or CI.
 
 ## Automatic deployment from GitHub
 
-[`../.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) runs the offline engine, API and persona-runtime tests on pull requests and pushes. It also runs the CI-account guard tests. A passing push to `main` then runs [`deploy-ci.sh`](./deploy-ci.sh) as the restricted **`ci-deploy`** account, never as root:
-- It builds one tarball of the same allowlisted files as the manual deploy and streams it over SSH.
-- On the VM, the root-owned `counterfactual-activate` validates the release and swaps it in. It then checks `/experience/`, both paired API runs and the public HTTPS health at `twotwosmyworld.select`. If a check fails, it restores the previous release.
-- `/etc/counterfactual.env`, the systemd unit and Caddy are left alone.
-- A superseded workflow skips the deploy, and `workflow_dispatch` redeploys the current `main`.
+[`../.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) runs the offline engine, API and persona-runtime tests on pull requests and pushes. A passing push to `main` (or **Run workflow** on `main`) then runs the same `ops/deploy.sh --skip-key` a human runs, and checks that `/api/health.git_sha` equals the pushed commit. `--skip-key` leaves the VM's `/etc/counterfactual.env` alone, so no Vultr API key or inference key is needed in GitHub.
 
-**The account is designed and tested but not yet installed.** [`ci-deploy/README.md`](./ci-deploy/README.md) lists the exact VM changes, the remaining risk, and Meet's approval steps:
-- run `install-on-vm.sh` with a new CI-only public key
-- store its private half as the `production` environment secret **`VULTR_CI_DEPLOY_KEY`**
+The one secret is the repository secret **`VULTR_DEPLOY_SSH_KEY`**: the private half of a dedicated deploy key (comment `two-worlds-github-actions-deploy`, created 17 Oct on Meet's laptop as `~/.ssh/two_worlds_github_deploy`). Its public half is a `restrict` line in root's `authorized_keys` on the VM. It is not Meet's personal key. Without the secret, the deploy job reports "Deploy skipped" and does not touch the VM.
 
-Until then, the deploy job reports "Deploy skipped" with a warning and does not touch the VM. The workflow no longer reads `VULTR_DEPLOY_SSH_KEY`; do not put the root key in GitHub. The host's ED25519 key is pinned in [`known_hosts`](./known_hosts). If the VM is replaced or its host key changes, verify the new fingerprint independently before updating that file. No Vultr API token or inference key is needed in GitHub Actions.
+Anyone who can push a workflow to this repo can read that secret and get root on the VM. To revoke it, delete the secret and remove the key from the VM:
 
-After activation, check the Actions run and confirm that `/api/health.git_sha` equals the pushed commit.
+```bash
+ssh -i ~/.ssh/vultr_htv_ed25519 root@155.138.141.130 "sed -i '/two-worlds-github-actions-deploy/d' /root/.ssh/authorized_keys"
+```
+
+The host's ED25519 key is pinned in [`known_hosts`](./known_hosts). If the VM is replaced or its host key changes, verify the new fingerprint independently before updating that file. A manual deploy and a CI deploy should not run at the same time.
 
 ## Redeploy
 

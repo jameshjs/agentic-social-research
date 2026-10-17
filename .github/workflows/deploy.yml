@@ -33,12 +33,7 @@ jobs:
       - name: Persona runtime tests
         run: npm --prefix persona-swarm/runtime test
       - name: Check deploy scripts
-        run: >-
-          bash -n ops/deploy.sh ops/deploy-ci.sh ops/deploy-paths.sh
-          ops/ci-deploy/counterfactual-activate ops/ci-deploy/counterfactual-ci-receive
-          ops/ci-deploy/vm-setup.sh ops/ci-deploy/install-on-vm.sh ops/ci-deploy/e2e-docker.sh
-      - name: CI deploy account guards (release allowlist, forced command, sudo rule)
-        run: python3 -m unittest -v ops/ci-deploy/test_release_check.py
+        run: bash -n ops/deploy.sh ops/deploy-paths.sh
 
   deploy:
     name: Production deploy
@@ -53,27 +48,35 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
-      # The secret is the private half of the restricted ci-deploy key (ops/ci-deploy/README.md),
-      # stored as a `production` environment secret. It is never Meet's root key.
-      - name: Load the ci-deploy key
+      # VULTR_DEPLOY_SSH_KEY is the dedicated GitHub deploy key in root's authorized_keys on the VM
+      # (not Meet's personal key). Remove that one line on the VM to revoke it.
+      - name: Load the deploy key
         id: key
         env:
-          VULTR_CI_DEPLOY_KEY: ${{ secrets.VULTR_CI_DEPLOY_KEY }}
+          VULTR_DEPLOY_SSH_KEY: ${{ secrets.VULTR_DEPLOY_SSH_KEY }}
         run: |
-          if [ -z "$VULTR_CI_DEPLOY_KEY" ]; then
-            echo '::warning title=Deploy skipped::VULTR_CI_DEPLOY_KEY is not set for the production environment. Tests passed; the VM was not changed. See ops/ci-deploy/README.md.'
-            echo '### Deploy skipped: `VULTR_CI_DEPLOY_KEY` is not configured. The VM was not changed.' >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$VULTR_DEPLOY_SSH_KEY" ]; then
+            echo '::warning title=Deploy skipped::VULTR_DEPLOY_SSH_KEY repository secret is not set. Tests passed; the VM was not changed.'
+            echo '### Deploy skipped: `VULTR_DEPLOY_SSH_KEY` is not set. The VM was not changed.' >> "$GITHUB_STEP_SUMMARY"
             echo configured=false >> "$GITHUB_OUTPUT"
             exit 0
           fi
           umask 077
-          printf '%s\n' "$VULTR_CI_DEPLOY_KEY" > "$RUNNER_TEMP/ci_deploy_key"
+          printf '%s\n' "$VULTR_DEPLOY_SSH_KEY" > "$RUNNER_TEMP/deploy_key"
+          mkdir -p ~/.ssh && cp ops/known_hosts ~/.ssh/known_hosts
           echo configured=true >> "$GITHUB_OUTPUT"
-      - name: Deploy through the restricted account and smoke test both policy runs
+      - name: Deploy with ops/deploy.sh (keeps the VM's inference key)
         if: steps.key.outputs.configured == 'true'
         env:
-          DEPLOY_SSH_KEY: ${{ runner.temp }}/ci_deploy_key
-        run: bash ops/deploy-ci.sh
+          DEPLOY_SSH_KEY: ${{ runner.temp }}/deploy_key
+        run: bash ops/deploy.sh --skip-key
+      - name: Check /api/health reports this commit
+        if: steps.key.outputs.configured == 'true'
+        run: |
+          health="$(curl -fsS --max-time 15 https://twotwosmyworld.select/api/health)"
+          echo "$health"
+          [[ "$health" == *"\"git_sha\":\"$GITHUB_SHA\""* ]] || { echo "::error::/api/health does not report $GITHUB_SHA"; exit 1; }
+          echo "### Deployed \`$GITHUB_SHA\` to https://twotwosmyworld.select/experience/" >> "$GITHUB_STEP_SUMMARY"
       - name: Remove the key from the runner
         if: always() && steps.key.outputs.configured == 'true'
-        run: rm -f "$RUNNER_TEMP/ci_deploy_key"
+        run: rm -f "$RUNNER_TEMP/deploy_key"
