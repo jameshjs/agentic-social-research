@@ -18,7 +18,7 @@
   "marks_passed": 4
  },
  "kept": true,
- "on_trial": true,
+ "on_trial": false,
  "reason": "keep (on trial) after re-benchmark: keep: improved beyond noise: right_spread +0.015 (noise 0.014)",
  "deltas": {
   "right_person": 0.0158005617977528,
@@ -188,5 +188,7 @@
   "bar_and_noise": "rounds/rebench/bar.json",
   "source": "rounds/rebench/rejudged.json",
   "decided": "Team, 17 Oct: kept on trial after the re-benchmark (ADR 0004)"
- }
+ },
+ "signed_off_by": "Team",
+ "signed_off_at": "2026-10-17T13:42:43+00:00"
 }

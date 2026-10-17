@@ -1,0 +1,1185 @@
+{
+ "meta": [
+  {
+   "instructions_round": "009",
+   "format": "full_relative",
+   "signed_off_by": "Team",
+   "model": "claude-haiku-5-5",
+   "final_respondents": 100,
+   "scored_once": true,
+   "steady_status": "ok",
+   "scorer_sha256": "9e5332f932ca821f7829ffc03475a8dd11f238cc56ddf2610c2ed694a75aee4b",
+   "invalid": false,
+   "missing_share": 0.0
+  }
+ ],
+ "scorecard": [
+  {
+   "scope": "final",
+   "family": "all, with puzzles",
+   "n_items": 8192,
+   "right_person": 0.8178699284009546,
+   "right_spread": 0.6946371821774138,
+   "right_group_gaps": 0.5767195767195767,
+   "steady": 0.957,
+   "marks_passed": 2
+  },
+  {
+   "scope": "final",
+   "family": "policy + pricing",
+   "n_items": 5000,
+   "right_person": 0.8081865778200856,
+   "right_spread": 0.8950387403583523,
+   "right_group_gaps": 0.7052631578947368,
+   "steady": 0.957,
+   "marks_passed": 3
+  },
+  {
+   "scope": "final",
+   "family": "policy",
+   "n_items": 1000,
+   "right_person": 0.7918050941306756,
+   "right_spread": 0.9430709380577778,
+   "right_group_gaps": 0.875,
+   "steady": null,
+   "marks_passed": 3
+  },
+  {
+   "scope": "final",
+   "family": "pricing",
+   "n_items": 4000,
+   "right_person": 0.8126705062140043,
+   "right_spread": 0.8830306909334957,
+   "right_group_gaps": 0.6708860759493671,
+   "steady": null,
+   "marks_passed": 3
+  },
+  {
+   "scope": "final",
+   "family": "puzzle",
+   "n_items": 3192,
+   "right_person": 0.8341326938449241,
+   "right_spread": 0.5218772182283291,
+   "right_group_gaps": 0.44680851063829785,
+   "steady": null,
+   "marks_passed": 1
+  },
+  {
+   "scope": "check, round 009 (2 runs)",
+   "family": "policy + pricing",
+   "n_items": null,
+   "right_person": 0.8203417602996255,
+   "right_spread": 0.8801302348295205,
+   "right_group_gaps": 0.7592592592592593,
+   "steady": 0.9704999999999999,
+   "marks_passed": 3
+  },
+  {
+   "scope": "check, round 009 (2 runs)",
+   "family": "policy",
+   "n_items": null,
+   "right_person": 0.8303769401330376,
+   "right_spread": 0.9171950721908445,
+   "right_group_gaps": 0.9444444444444444,
+   "steady": null,
+   "marks_passed": null
+  },
+  {
+   "scope": "check, round 009 (2 runs)",
+   "family": "pricing",
+   "n_items": null,
+   "right_person": 0.8176557863501484,
+   "right_spread": 0.8708640254891895,
+   "right_group_gaps": 0.7063492063492063,
+   "steady": null,
+   "marks_passed": null
+  }
+ ],
+ "baselines": [
+  {
+   "scope": "final",
+   "family": "all, with puzzles",
+   "agents": 0.8178699284009546,
+   "most_common": 0.785799522673031,
+   "demographic": 0.7464200477326969,
+   "most_similar": 0.7570107398568019,
+   "no_persona": 0.7911694510739857
+  },
+  {
+   "scope": "final",
+   "family": "policy + pricing",
+   "agents": 0.8081865778200856,
+   "most_common": 0.7444074250356972,
+   "demographic": 0.6832460732984293,
+   "most_similar": 0.7027605901951451,
+   "no_persona": 0.7560685387910518
+  },
+  {
+   "scope": "final",
+   "family": "policy",
+   "agents": 0.7918050941306756,
+   "most_common": 0.8095238095238095,
+   "demographic": 0.7862679955703211,
+   "most_similar": 0.7530454042081949,
+   "no_persona": 0.8084163898117387
+  },
+  {
+   "scope": "final",
+   "family": "pricing",
+   "agents": 0.8126705062140043,
+   "most_common": 0.7265838132767505,
+   "demographic": 0.6550469839345257,
+   "most_similar": 0.6889966656562595,
+   "no_persona": 0.7417399211882388
+  },
+  {
+   "scope": "final",
+   "family": "puzzle",
+   "agents": 0.8341326938449241,
+   "most_common": 0.8553157474020784,
+   "demographic": 0.8525179856115108,
+   "most_similar": 0.8481215027977618,
+   "no_persona": 0.8501199040767387
+  }
+ ],
+ "experiment_summary": [
+  {
+   "effects_considered": 15,
+   "effects_reproduced": 0.7333333333333333,
+   "pairs": 28
+  }
+ ],
+ "experiment_effects": [
+  {
+   "experiment": "absolute_vs_relative",
+   "position": "0",
+   "conditions": [
+    "Absolute vs. relative - calculator",
+    "Absolute vs. relative - jacket"
+   ],
+   "n": [
+    46,
+    54
+   ],
+   "real_effect": -0.44524959742351045,
+   "agent_effect": -0.037037037037037035,
+   "reproduced": true
+  },
+  {
+   "experiment": "allais",
+   "position": "0",
+   "conditions": [
+    "Allais Form 1",
+    "Allais Form 2"
+   ],
+   "n": [
+    50,
+    50
+   ],
+   "real_effect": -0.22,
+   "agent_effect": -0.22,
+   "reproduced": true
+  },
+  {
+   "experiment": "anchoring_africa",
+   "position": "0",
+   "conditions": [
+    "Anchoring - African countries high",
+    "Anchoring - African countries low"
+   ],
+   "n": [
+    45,
+    55
+   ],
+   "real_effect": 0.4909090909090909,
+   "agent_effect": 0.8444444444444444,
+   "reproduced": true
+  },
+  {
+   "experiment": "anchoring_redwood",
+   "position": "0",
+   "conditions": [
+    "Anchoring - redwood high",
+    "Anchoring - redwood low"
+   ],
+   "n": [
+    46,
+    54
+   ],
+   "real_effect": 0.6988727858293076,
+   "agent_effect": 0.8260869565217391,
+   "reproduced": true
+  },
+  {
+   "experiment": "disease_framing",
+   "position": "0",
+   "conditions": [
+    "Disease - gain",
+    "Disease-loss"
+   ],
+   "n": [
+    48,
+    52
+   ],
+   "real_effect": -0.14711538461538462,
+   "agent_effect": 0.011538461538461539,
+   "reproduced": false
+  },
+  {
+   "experiment": "less_is_more",
+   "position": "0",
+   "conditions": [
+    "Less is More Gamble A",
+    "Less is More Gamble B"
+   ],
+   "n": [
+    30,
+    43
+   ],
+   "real_effect": -0.28488372093023256,
+   "agent_effect": -0.012209302325581395,
+   "reproduced": true
+  },
+  {
+   "experiment": "less_is_more",
+   "position": "0",
+   "conditions": [
+    "Less is More Gamble A",
+    "Less is More Gamble C"
+   ],
+   "n": [
+    30,
+    27
+   ],
+   "real_effect": -0.2777777777777778,
+   "agent_effect": 0.019444444444444445,
+   "reproduced": false
+  },
+  {
+   "experiment": "less_is_more",
+   "position": "0",
+   "conditions": [
+    "Less is More Gamble B",
+    "Less is More Gamble C"
+   ],
+   "n": [
+    43,
+    27
+   ],
+   "real_effect": 0.0071059431524547806,
+   "agent_effect": 0.03165374677002584,
+   "reproduced": true
+  },
+  {
+   "experiment": "linda",
+   "position": "0_r1",
+   "conditions": [
+    "Linda -no conjunction",
+    "Linda-conjunction"
+   ],
+   "n": [
+    47,
+    53
+   ],
+   "real_effect": 0.053151344841429145,
+   "agent_effect": -0.057968687274187074,
+   "reproduced": false
+  },
+  {
+   "experiment": "linda",
+   "position": "0_r2",
+   "conditions": [
+    "Linda -no conjunction",
+    "Linda-conjunction"
+   ],
+   "n": [
+    47,
+    53
+   ],
+   "real_effect": 0.0606985146527499,
+   "agent_effect": 0.054034524287434764,
+   "reproduced": true
+  },
+  {
+   "experiment": "linda",
+   "position": "0_r3",
+   "conditions": [
+    "Linda -no conjunction",
+    "Linda-conjunction"
+   ],
+   "n": [
+    47,
+    53
+   ],
+   "real_effect": -0.24231232436772382,
+   "agent_effect": -0.12468887996788439,
+   "reproduced": true
+  },
+  {
+   "experiment": "myside",
+   "position": "0",
+   "conditions": [
+    "Myside Ford",
+    "Myside German"
+   ],
+   "n": [
+    50,
+    50
+   ],
+   "real_effect": -0.112,
+   "agent_effect": -0.096,
+   "reproduced": true
+  },
+  {
+   "experiment": "outcome_bias",
+   "position": "0",
+   "conditions": [
+    "Outcome bias - failure",
+    "Outcome bias - success"
+   ],
+   "n": [
+    51,
+    49
+   ],
+   "real_effect": -0.14312391623315993,
+   "agent_effect": -0.14225690276110445,
+   "reproduced": true
+  },
+  {
+   "experiment": "probability_matching",
+   "position": "0_r1",
+   "conditions": [
+    "Probability matching vs. maximizing - Problem 1",
+    "Probability matching vs. maximizing - Problem 2"
+   ],
+   "n": [
+    48,
+    52
+   ],
+   "real_effect": 0.08814102564102565,
+   "agent_effect": 0.0,
+   "reproduced": false
+  },
+  {
+   "experiment": "probability_matching",
+   "position": "0_r2",
+   "conditions": [
+    "Probability matching vs. maximizing - Problem 1",
+    "Probability matching vs. maximizing - Problem 2"
+   ],
+   "n": [
+    48,
+    52
+   ],
+   "real_effect": -0.06570512820512821,
+   "agent_effect": 0.041666666666666664,
+   "reproduced": false
+  },
+  {
+   "experiment": "probability_matching",
+   "position": "0_r3",
+   "conditions": [
+    "Probability matching vs. maximizing - Problem 1",
+    "Probability matching vs. maximizing - Problem 2"
+   ],
+   "n": [
+    48,
+    52
+   ],
+   "real_effect": -0.09455128205128205,
+   "agent_effect": 0.16666666666666666,
+   "reproduced": false
+  },
+  {
+   "experiment": "probability_matching",
+   "position": "0_r4",
+   "conditions": [
+    "Probability matching vs. maximizing - Problem 1",
+    "Probability matching vs. maximizing - Problem 2"
+   ],
+   "n": [
+    48,
+    52
+   ],
+   "real_effect": 0.019230769230769232,
+   "agent_effect": 0.125,
+   "reproduced": true
+  },
+  {
+   "experiment": "probability_matching",
+   "position": "0_r5",
+   "conditions": [
+    "Probability matching vs. maximizing - Problem 1",
+    "Probability matching vs. maximizing - Problem 2"
+   ],
+   "n": [
+    48,
+    52
+   ],
+   "real_effect": -0.1987179487179487,
+   "agent_effect": 0.041666666666666664,
+   "reproduced": false
+  },
+  {
+   "experiment": "probability_matching",
+   "position": "0_r6",
+   "conditions": [
+    "Probability matching vs. maximizing - Problem 1",
+    "Probability matching vs. maximizing - Problem 2"
+   ],
+   "n": [
+    48,
+    52
+   ],
+   "real_effect": -0.16826923076923078,
+   "agent_effect": 0.125,
+   "reproduced": false
+  },
+  {
+   "experiment": "proportion_dominance_1",
+   "position": "0",
+   "conditions": [
+    "Proportion dominance 1A",
+    "Proportion dominance 1B"
+   ],
+   "n": [
+    30,
+    43
+   ],
+   "real_effect": -0.053875968992248065,
+   "agent_effect": 0.02810077519379845,
+   "reproduced": false
+  },
+  {
+   "experiment": "proportion_dominance_1",
+   "position": "0",
+   "conditions": [
+    "Proportion dominance 1A",
+    "Proportion dominance 1C"
+   ],
+   "n": [
+    30,
+    27
+   ],
+   "real_effect": -0.040740740740740744,
+   "agent_effect": 0.013888888888888888,
+   "reproduced": false
+  },
+  {
+   "experiment": "proportion_dominance_1",
+   "position": "0",
+   "conditions": [
+    "Proportion dominance 1B",
+    "Proportion dominance 1C"
+   ],
+   "n": [
+    43,
+    27
+   ],
+   "real_effect": 0.01313522825150732,
+   "agent_effect": -0.014211886304909561,
+   "reproduced": false
+  },
+  {
+   "experiment": "proportion_dominance_2",
+   "position": "0",
+   "conditions": [
+    "Proportion dominance 2A",
+    "Proportion dominance 2B"
+   ],
+   "n": [
+    30,
+    43
+   ],
+   "real_effect": -0.03441860465116279,
+   "agent_effect": 0.03798449612403101,
+   "reproduced": false
+  },
+  {
+   "experiment": "proportion_dominance_2",
+   "position": "0",
+   "conditions": [
+    "Proportion dominance 2A",
+    "Proportion dominance 2C"
+   ],
+   "n": [
+    30,
+    27
+   ],
+   "real_effect": -0.09333333333333334,
+   "agent_effect": -0.003703703703703704,
+   "reproduced": true
+  },
+  {
+   "experiment": "proportion_dominance_2",
+   "position": "0",
+   "conditions": [
+    "Proportion dominance 2B",
+    "Proportion dominance 2C"
+   ],
+   "n": [
+    43,
+    27
+   ],
+   "real_effect": -0.05891472868217054,
+   "agent_effect": -0.04168819982773471,
+   "reproduced": true
+  },
+  {
+   "experiment": "wta_wtp",
+   "position": "0",
+   "conditions": [
+    "WTA/WTP Thaler - WTP noncertainty",
+    "WTA/WTP Thaler problem - WTA certainty"
+   ],
+   "n": [
+    29,
+    40
+   ],
+   "real_effect": -0.5808429118773947,
+   "agent_effect": -0.45067049808429116,
+   "reproduced": true
+  },
+  {
+   "experiment": "wta_wtp",
+   "position": "0",
+   "conditions": [
+    "WTA/WTP Thaler - WTP noncertainty",
+    "WTA/WTP Thaler problem - WTP certainty"
+   ],
+   "n": [
+    29,
+    31
+   ],
+   "real_effect": -0.1277963168953158,
+   "agent_effect": -0.08552712890866394,
+   "reproduced": true
+  },
+  {
+   "experiment": "wta_wtp",
+   "position": "0",
+   "conditions": [
+    "WTA/WTP Thaler problem - WTA certainty",
+    "WTA/WTP Thaler problem - WTP certainty"
+   ],
+   "n": [
+    40,
+    31
+   ],
+   "real_effect": 0.45304659498207883,
+   "agent_effect": 0.36514336917562723,
+   "reproduced": true
+  }
+ ],
+ "given_answers": [
+  {
+   "given_answers": "10",
+   "runs": 1,
+   "right_person": 0.7572565543071161,
+   "right_spread": 0.8168936163092603,
+   "right_group_gaps": 0.7530864197530864,
+   "steady": 0.985,
+   "policy_right_person": 0.8004434589800443,
+   "policy_right_spread": 0.826760913016687,
+   "policy_right_group_gaps": 0.8888888888888888,
+   "pricing_right_person": 0.7456973293768546,
+   "pricing_right_spread": 0.8144267921324035,
+   "pricing_right_group_gaps": 0.7142857142857143
+  },
+  {
+   "given_answers": "30",
+   "runs": 1,
+   "right_person": 0.8169475655430711,
+   "right_spread": 0.8682809919081369,
+   "right_group_gaps": 0.8271604938271605,
+   "steady": 0.949,
+   "policy_right_person": 0.8325942350332595,
+   "policy_right_spread": 0.8921381316818195,
+   "policy_right_group_gaps": 0.9444444444444444,
+   "pricing_right_person": 0.8127596439169139,
+   "pricing_right_spread": 0.8623167069647162,
+   "pricing_right_group_gaps": 0.7936507936507936
+  },
+  {
+   "given_answers": "all",
+   "runs": 2,
+   "right_person": 0.8203417602996255,
+   "right_spread": 0.8801302348295205,
+   "right_group_gaps": 0.7592592592592593,
+   "steady": 0.9704999999999999,
+   "policy_right_person": 0.8303769401330376,
+   "policy_right_spread": 0.9171950721908445,
+   "policy_right_group_gaps": 0.9444444444444444,
+   "pricing_right_person": 0.8176557863501484,
+   "pricing_right_spread": 0.8708640254891895,
+   "pricing_right_group_gaps": 0.7063492063492063
+  }
+ ],
+ "follow_one_profile": [
+  {
+   "pid": "73",
+   "set": "tuning",
+   "age": "30-49",
+   "sex": "Male",
+   "income": "$75,000-$100,000",
+   "party": "Democrat",
+   "region": "South (TX, OK, AR, LA, KY, TN, MS, AL, WV, DC, MD, DE, VA, NC, SC, GA, FL)",
+   "relative_profile": "Relative profile (computed from this person's earlier answers, compared with 240 survey respondents):\n- More of a tightwad (finds it harder to spend money) than approximately 90% of respondents.\n- About as trusting as most respondents.\n- Less risk-averse than approximately 75% of respondents.",
+   "matches": 36,
+   "round_0_matches": 33,
+   "items": 50
+  }
+ ],
+ "follow_one": [
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_01",
+   "question": "Placing a tax on carbon emissions?",
+   "real": "Strongly support",
+   "agent": "Strongly support",
+   "match": true,
+   "round_0": "Strongly support",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_02",
+   "question": "Ensuring 40% of all new clean energy infrastructure development spending goes to low-income communities?",
+   "real": "Somewhat support",
+   "agent": "Somewhat support",
+   "match": true,
+   "round_0": "Somewhat support",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_03",
+   "question": "Federal investments to ensure a carbon-pollution free electricity sector by 2035?",
+   "real": "Somewhat support",
+   "agent": "Somewhat support",
+   "match": true,
+   "round_0": "Strongly support",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_04",
+   "question": "A ‘Medicare for All’ system in which all Americans would get healthcare from a government-run plan?",
+   "real": "Strongly support",
+   "agent": "Somewhat support",
+   "match": true,
+   "round_0": "Somewhat support",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_05",
+   "question": "A ‘public option’, which would allow Americans to buy into a government-run healthcare plan if they choose to do so?",
+   "real": "Strongly support",
+   "agent": "Somewhat support",
+   "match": true,
+   "round_0": "Strongly support",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_06",
+   "question": "Immigration reforms that would provide a path to U.S. citizenship for undocumented immigrants currently in the United States?",
+   "real": "Strongly support",
+   "agent": "Strongly support",
+   "match": true,
+   "round_0": "Strongly support",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_07",
+   "question": "A law that requires companies to provide paid family leave for parents?",
+   "real": "Somewhat support",
+   "agent": "Strongly support",
+   "match": true,
+   "round_0": "Strongly support",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_08",
+   "question": "A 2% tax on the assets of individuals with a net worth of more than $50 million?",
+   "real": "Somewhat support",
+   "agent": "Somewhat support",
+   "match": true,
+   "round_0": "Somewhat support",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_09",
+   "question": "Increasing deportations for those in the US illegally?",
+   "real": "Somewhat oppose",
+   "agent": "Strongly oppose",
+   "match": true,
+   "round_0": "Strongly oppose",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "policy",
+   "item": "policy_10",
+   "question": "Offering seniors healthcare vouchers to purchase private healthcare plans in place of traditional medicare coverage?",
+   "real": "Somewhat oppose",
+   "agent": "Somewhat oppose",
+   "match": true,
+   "round_0": "Somewhat oppose",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_purina-dog-chow",
+   "question": "Purina Dog Chow Complete, Dry Dog Food for Adult Dogs High Protein, Real Chicken, 44 lb Bag. The product is priced at: $29.17. Would you or would you not purcha",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_land-o-lakes",
+   "question": "Land O Lakes Salted Stick Butter, 16 oz, 4 Sticks. The product is priced at: $10.56. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_arm-hammer-pure",
+   "question": "ARM & HAMMER Pure Baking Soda, For Baking, Cleaning & Deodorizing, 1 lb Box. The product is priced at: $2.16. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_duracell-coppertop-aa",
+   "question": "Duracell Coppertop AA Battery, Long Lasting Double A Batteries, 16 Pack. The product is priced at: $0.00. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_little-debbie-oatmeal",
+   "question": "Little Debbie Oatmeal Creme Pies, 12 ct, 16.2 oz. The product is priced at: $0.00. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_maruchan-ramen-noodle",
+   "question": "Maruchan Ramen Noodle Chicken Flavor Soup, 3 Oz, 12 Count Shelf Stable Package. The product is priced at: $5.98. Would you or would you not purchase this produc",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_cinnamon-toast-crunch",
+   "question": "Cinnamon Toast Crunch Breakfast Cereal, Crispy Cinnamon Cereal, Family Size, 18.8 oz. The product is priced at: $7.89. Would you or would you not purchase this ",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_folgers-classic-roast",
+   "question": "Folgers Classic Roast Ground Coffee, Medium Roast, 40.3-Ounce Canister. The product is priced at: $26.48. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_pop-ice-assorted",
+   "question": "Pop-Ice Assorted Fruit Freezer Ice Pops, Gluten-Free Snack, 1.5 oz, 80 Count Fruit Pops. The product is priced at: $4.94. Would you or would you not purchase th",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_chobani-non-fat",
+   "question": "Chobani Non-Fat Greek Yogurt, Vanilla Blended 32 oz, Plastic. The product is priced at: $5.58. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_john-soules-foods",
+   "question": "John Soules Foods Chicken Breast Fajita Strips, Refrigerated, 16oz, 18g Protein per 3oz Serving Size. The product is priced at: $1.20. Would you or would you no",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_coca-cola-soda",
+   "question": "Coca-Cola Soda Pop, 12 fl oz, 12 Pack Cans. The product is priced at: $6.61. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_horizon-organic-shelf",
+   "question": "Horizon Organic Shelf-Stable Whole Milk Boxes, 8 oz., 12 Pack. The product is priced at: $19.57. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_great-value-milk",
+   "question": "Great Value Milk Whole Vitamin D Gallon. The product is priced at: $7.84. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_coca-cola-zero",
+   "question": "Coca-Cola Zero Sugar Soda Pop, 16.9 fl oz, 6 Pack Cans. The product is priced at: $6.22. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_stella-artois-lager",
+   "question": "Stella Artois Lager, 12 Pack, 11.2 fl oz Glass Bottles, 5% ABV, Domestic Beer. The product is priced at: $25.17. Would you or would you not purchase this produc",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_hershey-s-milk",
+   "question": "Hershey's Milk Chocolate Candy, Bars 1.55 oz, 6 Count. The product is priced at: $2.59. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_ozarka-brand-100",
+   "question": "OZARKA Brand 100% Natural Spring Water, 16.9-ounce plastic bottles (Pack of 35). The product is priced at: $11.98. Would you or would you not purchase this prod",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_haagen-dazs-coffee",
+   "question": "Haagen Dazs Coffee Ice Cream, Gluten Free, Kosher, 14.0 oz. The product is priced at: $5.85. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_little-debbie-zebra",
+   "question": "Little Debbie Zebra Cakes, 13 oz. The product is priced at: $1.61. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_great-value-all",
+   "question": "Great Value All Natural Chicken Wing Sections, 4 lb (Frozen). The product is priced at: $7.79. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_smart-ones-three",
+   "question": "Smart Ones Three Cheese Ziti Marinara Frozen Meal, 9 Oz Box. The product is priced at: $3.62. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_equate-value-size",
+   "question": "Equate Value Size Honey Lemon Cough Drops with Menthol, 160 Count. The product is priced at: $0.00. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_oscar-mayer-chopped",
+   "question": "Oscar Mayer Chopped Ham & Water product Deli Lunch Meat, 16 Oz Package. The product is priced at: $8.66. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_fresh-raspberries-12",
+   "question": "Fresh Raspberries, 12 oz Container. The product is priced at: $8.53. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_haribo-goldbears-original",
+   "question": "HARIBO Goldbears Original Gummy Bears, 28.8oz Stand Up Bag. The product is priced at: $3.89. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_goya-cooked-ham",
+   "question": "Goya Cooked Ham 16 oz. The product is priced at: $59.98. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_capri-sun-variety",
+   "question": "Capri Sun Variety Pack with Fruit Punch, Strawberry Kiwi & Pacific Cooler Juice Box Pouches, 30 ct Box, 6 fl oz Pouches. The product is priced at: $16.97. Would",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_oscar-mayer-classic",
+   "question": "Oscar Mayer Classic Uncured Beef Franks Hot Dogs, 10 ct Pack. The product is priced at: $0.79. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_purina-fancy-feast",
+   "question": "Purina Fancy Feast Chicken Feast Classic Grain Free Wet Cat Food Pate - 3 oz. Can. The product is priced at: $1.76. Would you or would you not purchase this pro",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_lay-s-classic",
+   "question": "Lay's Classic Potato Snack Chips, Party Size, 13 oz Bag. The product is priced at: $6.53. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_angel-soft-toilet",
+   "question": "Angel Soft Toilet Paper, 9 Mega Rolls, Soft and Strong Toilet Tissue. The product is priced at: $0.00. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_bounty-select-a",
+   "question": "Bounty Select-a-Size Paper Towels, 12 Double Rolls, White. The product is priced at: $8.87. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": false,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_kool-aid-jammers",
+   "question": "Kool Aid Jammers Variety Pack with Tropical Punch, Grape & Cherry Kids Drink 0% Juice Box Pouches, 30 Ct Box, 6 fl oz Pouches. The product is priced at: $1.45. ",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_bud-light-beer",
+   "question": "Bud Light Beer, 24 Pack, 12 fl oz Aluminum Cans, 4.2% ABV, Domestic Lager. The product is priced at: $16.78. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_tylenol-extra-strength",
+   "question": "Tylenol Extra Strength Caplets with 500 mg Acetaminophen, 100 Ct. The product is priced at: $15.36. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": false,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": false
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_doritos-nacho-cheese",
+   "question": "Doritos Nacho Cheese Tortilla Snack Chips, Party Size, 14.5 oz Bag. The product is priced at: $7.13. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_eggland-s-best",
+   "question": "Eggland's Best Classic Extra Large White Eggs, 12 count. The product is priced at: $2.54. Would you or would you not purchase this product?",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_purex-liquid-laundry",
+   "question": "Purex Liquid Laundry Detergent Plus OXI, Stain Defense Technology, 128 Fluid Ounces, 85 Wash Loads. The product is priced at: $5.98. Would you or would you not ",
+   "real": "Yes, I would purchase the product",
+   "agent": "Yes, I would purchase the product",
+   "match": true,
+   "round_0": "Yes, I would purchase the product",
+   "round_0_match": true
+  },
+  {
+   "pid": "73",
+   "family": "pricing",
+   "item": "price_oscar-mayer-fully",
+   "question": "Oscar Mayer Fully Cooked Original Bacon, 2.52 oz Box. The product is priced at: $8.54. Would you or would you not purchase this product?",
+   "real": "No, I would not purchase the product",
+   "agent": "No, I would not purchase the product",
+   "match": true,
+   "round_0": "No, I would not purchase the product",
+   "round_0_match": true
+  }
+ ]
+}

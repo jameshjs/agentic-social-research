@@ -1,0 +1,22 @@
+{
+ "round": "011",
+ "slug": "final-no-persona",
+ "started_at": "2026-10-17T13:42:51+00:00",
+ "ended_at": "2026-10-17T13:46:12+00:00",
+ "seconds": 200.6,
+ "sets": [
+  "final"
+ ],
+ "format": "full_relative",
+ "given_size": null,
+ "no_persona": true,
+ "all_families": true,
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "dry_run": false,
+ "respondents": 100,
+ "calls": 100,
+ "failed_calls": 0,
+ "missing_items": 0,
+ "cost_usd": 0.4664
+}

@@ -116,7 +116,7 @@ def score_round(out_dir, baseline_file):
 async def run(args):
     sets = args.sets.split(",")
     if args.dry_run and "final" in sets:
-        sys.exit("dry runs never touch the final set: it is scored once, after round 10")
+        sys.exit("dry runs never touch the final set: it is scored once, when the team stops the loop")
     people = respondents(sets)
     instructions = NO_PERSONA if args.no_persona else Path(args.instructions).read_text()
     problem = None if args.no_persona else scan(instructions, [r["pid"] for r in people])
@@ -158,6 +158,9 @@ async def run(args):
             "respondents": len(rows), "calls": sum(x[2] for x in results), "failed_calls": sum(x[3] for x in results),
             "missing_items": sum(r["missing"] for r in rows), "cost_usd": round(sum(x[1] for x in results), 4)}
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=1))
+    if args.no_score:                                       # check the run first, then score once with --rescore
+        print(json.dumps(meta, indent=1))
+        return out_dir
     try:
         import evaluate  # noqa: F401
     except ImportError:
@@ -183,5 +186,6 @@ if __name__ == "__main__":
     ap.add_argument("--concurrency", type=int, default=CONCURRENCY)
     ap.add_argument("--dry-run", action="store_true", help="random valid answers, no model calls")
     ap.add_argument("--rescore", type=Path, help="re-score an existing round folder; no model calls")
+    ap.add_argument("--no-score", action="store_true", help="save answers only (the final set: check failures, then --rescore)")
     a = ap.parse_args()
     score_round(a.rescore, a.no_persona_answers) if a.rescore else asyncio.run(run(a))

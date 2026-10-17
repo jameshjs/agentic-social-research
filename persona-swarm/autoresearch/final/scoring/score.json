@@ -1,0 +1,538 @@
+{
+ "final": {
+  "set_name": "final",
+  "families": [
+   "policy",
+   "pricing",
+   "puzzle"
+  ],
+  "n_respondents": 100,
+  "n_items": 8192,
+  "right_person": 0.8178699284009546,
+  "agent_match_rate": 0.6693115234375,
+  "human_consistency": 0.818359375,
+  "missing_share": 0.0,
+  "right_spread": 0.6946371821774138,
+  "spread_items": 108,
+  "right_group_gaps": 0.5767195767195767,
+  "group_gaps_considered": 189,
+  "baselines": {
+   "most_common": 0.785799522673031,
+   "demographic": 0.7464200477326969,
+   "most_similar": 0.7570107398568019,
+   "no_persona": 0.7911694510739857
+  },
+  "marks": {
+   "right_person": true,
+   "right_spread": false,
+   "right_group_gaps": false,
+   "beats_baselines": true
+  },
+  "marks_passed": 2,
+  "steady": 0.957,
+  "steady_status": "ok",
+  "invalid": false,
+  "by_family": {
+   "policy": {
+    "n_items": 1000,
+    "right_person": 0.7918050941306756,
+    "agent_match_rate": 0.715,
+    "human_consistency": 0.903,
+    "missing_share": 0.0,
+    "right_spread": 0.9430709380577778,
+    "spread_items": 10,
+    "right_group_gaps": 0.875,
+    "group_gaps_considered": 16,
+    "baselines": {
+     "most_common": 0.8095238095238095,
+     "demographic": 0.7862679955703211,
+     "most_similar": 0.7530454042081949,
+     "no_persona": 0.8084163898117387
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": true,
+     "beats_baselines": false
+    },
+    "marks_passed": 3
+   },
+   "pricing": {
+    "n_items": 4000,
+    "right_person": 0.8126705062140043,
+    "agent_match_rate": 0.67025,
+    "human_consistency": 0.82475,
+    "missing_share": 0.0,
+    "right_spread": 0.8830306909334957,
+    "spread_items": 40,
+    "right_group_gaps": 0.6708860759493671,
+    "group_gaps_considered": 79,
+    "baselines": {
+     "most_common": 0.7265838132767505,
+     "demographic": 0.6550469839345257,
+     "most_similar": 0.6889966656562595,
+     "no_persona": 0.7417399211882388
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": true,
+     "right_group_gaps": false,
+     "beats_baselines": true
+    },
+    "marks_passed": 3
+   },
+   "puzzle": {
+    "n_items": 3192,
+    "right_person": 0.8341326938449241,
+    "agent_match_rate": 0.6538220551378446,
+    "human_consistency": 0.7838345864661654,
+    "missing_share": 0.0,
+    "right_spread": 0.5218772182283291,
+    "spread_items": 58,
+    "right_group_gaps": 0.44680851063829785,
+    "group_gaps_considered": 94,
+    "baselines": {
+     "most_common": 0.8553157474020784,
+     "demographic": 0.8525179856115108,
+     "most_similar": 0.8481215027977618,
+     "no_persona": 0.8501199040767387
+    },
+    "marks": {
+     "right_person": true,
+     "right_spread": false,
+     "right_group_gaps": false,
+     "beats_baselines": false
+    },
+    "marks_passed": 1
+   }
+  },
+  "experiment_effects": {
+   "pairs": [
+    {
+     "experiment": "absolute_vs_relative",
+     "position": "0",
+     "conditions": [
+      "Absolute vs. relative - calculator",
+      "Absolute vs. relative - jacket"
+     ],
+     "n": [
+      46,
+      54
+     ],
+     "real_effect": -0.44524959742351045,
+     "agent_effect": -0.037037037037037035,
+     "reproduced": true
+    },
+    {
+     "experiment": "allais",
+     "position": "0",
+     "conditions": [
+      "Allais Form 1",
+      "Allais Form 2"
+     ],
+     "n": [
+      50,
+      50
+     ],
+     "real_effect": -0.22,
+     "agent_effect": -0.22,
+     "reproduced": true
+    },
+    {
+     "experiment": "anchoring_africa",
+     "position": "0",
+     "conditions": [
+      "Anchoring - African countries high",
+      "Anchoring - African countries low"
+     ],
+     "n": [
+      45,
+      55
+     ],
+     "real_effect": 0.4909090909090909,
+     "agent_effect": 0.8444444444444444,
+     "reproduced": true
+    },
+    {
+     "experiment": "anchoring_redwood",
+     "position": "0",
+     "conditions": [
+      "Anchoring - redwood high",
+      "Anchoring - redwood low"
+     ],
+     "n": [
+      46,
+      54
+     ],
+     "real_effect": 0.6988727858293076,
+     "agent_effect": 0.8260869565217391,
+     "reproduced": true
+    },
+    {
+     "experiment": "disease_framing",
+     "position": "0",
+     "conditions": [
+      "Disease - gain",
+      "Disease-loss"
+     ],
+     "n": [
+      48,
+      52
+     ],
+     "real_effect": -0.14711538461538462,
+     "agent_effect": 0.011538461538461539,
+     "reproduced": false
+    },
+    {
+     "experiment": "less_is_more",
+     "position": "0",
+     "conditions": [
+      "Less is More Gamble A",
+      "Less is More Gamble B"
+     ],
+     "n": [
+      30,
+      43
+     ],
+     "real_effect": -0.28488372093023256,
+     "agent_effect": -0.012209302325581395,
+     "reproduced": true
+    },
+    {
+     "experiment": "less_is_more",
+     "position": "0",
+     "conditions": [
+      "Less is More Gamble A",
+      "Less is More Gamble C"
+     ],
+     "n": [
+      30,
+      27
+     ],
+     "real_effect": -0.2777777777777778,
+     "agent_effect": 0.019444444444444445,
+     "reproduced": false
+    },
+    {
+     "experiment": "less_is_more",
+     "position": "0",
+     "conditions": [
+      "Less is More Gamble B",
+      "Less is More Gamble C"
+     ],
+     "n": [
+      43,
+      27
+     ],
+     "real_effect": 0.0071059431524547806,
+     "agent_effect": 0.03165374677002584,
+     "reproduced": true
+    },
+    {
+     "experiment": "linda",
+     "position": "0_r1",
+     "conditions": [
+      "Linda -no conjunction",
+      "Linda-conjunction"
+     ],
+     "n": [
+      47,
+      53
+     ],
+     "real_effect": 0.053151344841429145,
+     "agent_effect": -0.057968687274187074,
+     "reproduced": false
+    },
+    {
+     "experiment": "linda",
+     "position": "0_r2",
+     "conditions": [
+      "Linda -no conjunction",
+      "Linda-conjunction"
+     ],
+     "n": [
+      47,
+      53
+     ],
+     "real_effect": 0.0606985146527499,
+     "agent_effect": 0.054034524287434764,
+     "reproduced": true
+    },
+    {
+     "experiment": "linda",
+     "position": "0_r3",
+     "conditions": [
+      "Linda -no conjunction",
+      "Linda-conjunction"
+     ],
+     "n": [
+      47,
+      53
+     ],
+     "real_effect": -0.24231232436772382,
+     "agent_effect": -0.12468887996788439,
+     "reproduced": true
+    },
+    {
+     "experiment": "myside",
+     "position": "0",
+     "conditions": [
+      "Myside Ford",
+      "Myside German"
+     ],
+     "n": [
+      50,
+      50
+     ],
+     "real_effect": -0.112,
+     "agent_effect": -0.096,
+     "reproduced": true
+    },
+    {
+     "experiment": "outcome_bias",
+     "position": "0",
+     "conditions": [
+      "Outcome bias - failure",
+      "Outcome bias - success"
+     ],
+     "n": [
+      51,
+      49
+     ],
+     "real_effect": -0.14312391623315993,
+     "agent_effect": -0.14225690276110445,
+     "reproduced": true
+    },
+    {
+     "experiment": "probability_matching",
+     "position": "0_r1",
+     "conditions": [
+      "Probability matching vs. maximizing - Problem 1",
+      "Probability matching vs. maximizing - Problem 2"
+     ],
+     "n": [
+      48,
+      52
+     ],
+     "real_effect": 0.08814102564102565,
+     "agent_effect": 0.0,
+     "reproduced": false
+    },
+    {
+     "experiment": "probability_matching",
+     "position": "0_r2",
+     "conditions": [
+      "Probability matching vs. maximizing - Problem 1",
+      "Probability matching vs. maximizing - Problem 2"
+     ],
+     "n": [
+      48,
+      52
+     ],
+     "real_effect": -0.06570512820512821,
+     "agent_effect": 0.041666666666666664,
+     "reproduced": false
+    },
+    {
+     "experiment": "probability_matching",
+     "position": "0_r3",
+     "conditions": [
+      "Probability matching vs. maximizing - Problem 1",
+      "Probability matching vs. maximizing - Problem 2"
+     ],
+     "n": [
+      48,
+      52
+     ],
+     "real_effect": -0.09455128205128205,
+     "agent_effect": 0.16666666666666666,
+     "reproduced": false
+    },
+    {
+     "experiment": "probability_matching",
+     "position": "0_r4",
+     "conditions": [
+      "Probability matching vs. maximizing - Problem 1",
+      "Probability matching vs. maximizing - Problem 2"
+     ],
+     "n": [
+      48,
+      52
+     ],
+     "real_effect": 0.019230769230769232,
+     "agent_effect": 0.125,
+     "reproduced": true
+    },
+    {
+     "experiment": "probability_matching",
+     "position": "0_r5",
+     "conditions": [
+      "Probability matching vs. maximizing - Problem 1",
+      "Probability matching vs. maximizing - Problem 2"
+     ],
+     "n": [
+      48,
+      52
+     ],
+     "real_effect": -0.1987179487179487,
+     "agent_effect": 0.041666666666666664,
+     "reproduced": false
+    },
+    {
+     "experiment": "probability_matching",
+     "position": "0_r6",
+     "conditions": [
+      "Probability matching vs. maximizing - Problem 1",
+      "Probability matching vs. maximizing - Problem 2"
+     ],
+     "n": [
+      48,
+      52
+     ],
+     "real_effect": -0.16826923076923078,
+     "agent_effect": 0.125,
+     "reproduced": false
+    },
+    {
+     "experiment": "proportion_dominance_1",
+     "position": "0",
+     "conditions": [
+      "Proportion dominance 1A",
+      "Proportion dominance 1B"
+     ],
+     "n": [
+      30,
+      43
+     ],
+     "real_effect": -0.053875968992248065,
+     "agent_effect": 0.02810077519379845,
+     "reproduced": false
+    },
+    {
+     "experiment": "proportion_dominance_1",
+     "position": "0",
+     "conditions": [
+      "Proportion dominance 1A",
+      "Proportion dominance 1C"
+     ],
+     "n": [
+      30,
+      27
+     ],
+     "real_effect": -0.040740740740740744,
+     "agent_effect": 0.013888888888888888,
+     "reproduced": false
+    },
+    {
+     "experiment": "proportion_dominance_1",
+     "position": "0",
+     "conditions": [
+      "Proportion dominance 1B",
+      "Proportion dominance 1C"
+     ],
+     "n": [
+      43,
+      27
+     ],
+     "real_effect": 0.01313522825150732,
+     "agent_effect": -0.014211886304909561,
+     "reproduced": false
+    },
+    {
+     "experiment": "proportion_dominance_2",
+     "position": "0",
+     "conditions": [
+      "Proportion dominance 2A",
+      "Proportion dominance 2B"
+     ],
+     "n": [
+      30,
+      43
+     ],
+     "real_effect": -0.03441860465116279,
+     "agent_effect": 0.03798449612403101,
+     "reproduced": false
+    },
+    {
+     "experiment": "proportion_dominance_2",
+     "position": "0",
+     "conditions": [
+      "Proportion dominance 2A",
+      "Proportion dominance 2C"
+     ],
+     "n": [
+      30,
+      27
+     ],
+     "real_effect": -0.09333333333333334,
+     "agent_effect": -0.003703703703703704,
+     "reproduced": true
+    },
+    {
+     "experiment": "proportion_dominance_2",
+     "position": "0",
+     "conditions": [
+      "Proportion dominance 2B",
+      "Proportion dominance 2C"
+     ],
+     "n": [
+      43,
+      27
+     ],
+     "real_effect": -0.05891472868217054,
+     "agent_effect": -0.04168819982773471,
+     "reproduced": true
+    },
+    {
+     "experiment": "wta_wtp",
+     "position": "0",
+     "conditions": [
+      "WTA/WTP Thaler - WTP noncertainty",
+      "WTA/WTP Thaler problem - WTA certainty"
+     ],
+     "n": [
+      29,
+      40
+     ],
+     "real_effect": -0.5808429118773947,
+     "agent_effect": -0.45067049808429116,
+     "reproduced": true
+    },
+    {
+     "experiment": "wta_wtp",
+     "position": "0",
+     "conditions": [
+      "WTA/WTP Thaler - WTP noncertainty",
+      "WTA/WTP Thaler problem - WTP certainty"
+     ],
+     "n": [
+      29,
+      31
+     ],
+     "real_effect": -0.1277963168953158,
+     "agent_effect": -0.08552712890866394,
+     "reproduced": true
+    },
+    {
+     "experiment": "wta_wtp",
+     "position": "0",
+     "conditions": [
+      "WTA/WTP Thaler problem - WTA certainty",
+      "WTA/WTP Thaler problem - WTP certainty"
+     ],
+     "n": [
+      40,
+      31
+     ],
+     "real_effect": 0.45304659498207883,
+     "agent_effect": 0.36514336917562723,
+     "reproduced": true
+    }
+   ],
+   "effects_considered": 15,
+   "effects_reproduced": 0.7333333333333333
+  },
+  "scorer_sha256": "9e5332f932ca821f7829ffc03475a8dd11f238cc56ddf2610c2ed694a75aee4b",
+  "rewordings_sha256": "45136ba1ef58e2287a6c1e193368568c44c6444b6c2d005b413999dbe904ec65"
+ }
+}
