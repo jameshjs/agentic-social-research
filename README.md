@@ -16,6 +16,7 @@ A general, human-guided social simulation and policy decision product. Enter **a
 8. [Fare-demo paper and evidence pack](./papers.md) with a [machine-readable source index](./data/ttc_fare_evidence.json) and [offline EvidencePacket fixture](./data/ttc_fare_evidence_packet.json) — 15 relevant studies/reports, what each supports, conflicting evidence, and explicit transfer limits. [Papiers CLI setup](./papiers-setup.md) shows how to curate them in the team's library and demonstrate a real human note.
 9. [Final demo runbook](./FINAL_DEMO.md) — the current four-minute walkthrough, honest claim boundaries, remaining completion gates, and the submission checklist.
 10. [Paired city experiment](./experiment/README.md) — executable fare and Bloor baseline/intervention controller, synthetic persona fixture, event ledger, metrics, deterministic replay, and owner integration contract.
+11. [Vultr agent-brain decision](./VULTR.md) — candidate model roles, a server-side bounded-decision adapter, account/credit setup, honest live quality gate, and deployment handoff. No live Vultr run has been made yet.
 
 ## Confirmed direction
 

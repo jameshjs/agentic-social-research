@@ -24,6 +24,7 @@ Read [README.md](./README.md), [prd.md](./prd.md), [research.md](./research.md),
 - Support a known-operator path and a generic speculative JSON-action fallback. Do not execute model-authored code.
 - Make baseline and intervention replayable from the same seed and initial state.
 - Keep API keys server-side and retain an offline/cached demo.
+- For the Vultr prize path, read [VULTR.md](./VULTR.md). The candidate `clef` adapter in `experiment/` is server-side and tested against a mock response; do not claim a live Vultr run until an account/key, a clean probe, and a hosted backend exist. Keep Steven's Haiku-tuned survey benchmark separate from city decision validation.
 - Preserve the founder's visual and generality requirements when cutting scope. Reduce scene size, depth, analytics, or agent call count first.
 
 ## Event gates

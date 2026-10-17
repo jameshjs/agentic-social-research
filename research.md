@@ -30,6 +30,10 @@ The School of Cities' own [Toronto Civic Data Starter Guide](https://docs.google
 
 [Devpost](https://hack-the-valley-11.devpost.com/) lists this category but provides no detailed sponsor brief in the accessible overview. A fare, wage, childcare-cost, or housing-cost scenario can demonstrate household budgets and economic inclusion. Make this a coherent feature of the product, not a label applied at submission time. Avoid claiming extra criteria that have not been published.
 
+### [MLH] Best Use of Vultr — conditional additional entry
+
+[Devpost](https://hack-the-valley-11.devpost.com/) invites projects built with Vultr one-click deployment, cloud compute, or Cloud GPUs and lists free cloud credits; it does **not** specify that a GPU is required. The [MLH credit page](https://discover.vultr.com/mlh) says hackathon participants may claim credits, but this team had **no account as of 17 Oct**, and credit applicability to Serverless Inference was not verified. [Vultr's current catalog](https://api.vultrinference.com/docs/models) lists `clef`/`clef-flash` typed decision models through [`/v1/systemone`](https://api.vultrinference.com/docs/reference/create-systemone). This matches our bounded `decide()` slot; the research has **not** established their quality on city actions. The integration/deployment and honest proof gate are in [VULTR.md](./VULTR.md).
+
 ### Track entry check for this specific product
 
 | Category | Enter? | Evidence the demo must show | Main gap to close |
@@ -38,6 +42,7 @@ The School of Cities' own [Toronto Civic Data Starter Guide](https://docs.google
 | **Hack the Valley × School of Cities** | **Yes, secondary** | A Toronto civic policy question, at least one actually used Toronto urban dataset with source/year, and an actionable explanation for a resident or policy user | A generic city illustration or a mere source link is insufficient |
 | **Sustainable FinTech & Economic Inclusion** | **Yes, if the finance view ships** | Household transport affordability and business cash-flow/partial-margin differences with group slices in the fare and Bloor scenarios | Category title has no detailed published criteria; financial metrics need real interaction with the model |
 | **Best AI for Social Impact** | **Optional** | Explain how underserved groups are affected and how assumptions/uncertainty are exposed | Requires substantive impact, not a label |
+| **[MLH] Best Use of Vultr** | **Yes, if live Vultr compute ships** | Show Vultr handling typed persona actions and the hosted orchestrator returning one event-backed result | Account/credit terms, live quality probe, and deployment are still missing; a local fixture does not qualify as proof |
 | **Top 3** | **Automatic** | A working, distinctive, visually clear product and strong four-minute demo | All teams are considered |
 
 [Devpost's requirements and prize descriptions](https://hack-the-valley-11.devpost.com/) allow a team to select any number of prize categories; the [rules](https://hack-the-valley-11.devpost.com/rules) allow one final project per team and up to four members. The four teammates must each satisfy the hackathon's student, age, and in-person participation rules. The team should enter the first two tracks in the **Saturday 9 pm initial submission**, and include FinTech if the financial behavior is implemented by then. This is a fit assessment from the published descriptions, not a guarantee of eligibility or an award; organizers decide any ambiguity.
