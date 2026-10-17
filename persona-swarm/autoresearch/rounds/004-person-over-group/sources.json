@@ -1,0 +1,42 @@
+{
+ "at": "2026-10-17T09:19:53+00:00",
+ "queries": [
+  {
+   "command": "papiers list --kind note --limit 50",
+   "request_id": "req_1c95d84b84fd4971afd53df2f1af8173",
+   "error": null,
+   "count": 0,
+   "items": []
+  },
+  {
+   "command": "papiers list --kind highlight --since 1d --limit 50",
+   "request_id": "req_9a7e648bc0e74476940a8255ffd60029",
+   "error": null,
+   "count": 0,
+   "items": []
+  },
+  {
+   "command": "papiers list --kind document --filter annotated=true --limit 50",
+   "request_id": "req_a7961a3f3ea84bcf826d6aa97861d194",
+   "error": null,
+   "count": 0,
+   "items": []
+  },
+  {
+   "command": "papiers search stereotypes language model personas --limit 10",
+   "request_id": "req_e0432e204a394fa084f0e92c65a9f725",
+   "error": null,
+   "count": 0,
+   "items": []
+  },
+  {
+   "command": "papiers search within-group variation --limit 10",
+   "request_id": "req_6b98e12ecd774e349df7fb4516a2af11",
+   "error": null,
+   "count": 0,
+   "items": []
+  }
+ ],
+ "notes_used": [],
+ "status": "Papiers library has no notes, highlights or annotated papers yet"
+}

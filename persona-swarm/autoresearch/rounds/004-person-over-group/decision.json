@@ -1,0 +1,79 @@
+{
+ "round": "004",
+ "decided_at": "2026-10-17T09:25:33+00:00",
+ "check_targeted": "right_person",
+ "hypothesis": "Agents still decide policy by party (Democrat-Republican gaps far wider than people's) and higher earners over-buy, so telling them to decide from the individual rather than the group should raise right person in both families.",
+ "change": "Added one bullet on top of round 3: decide every opinion and purchase from the person's own answers, not from what people of their party, age, sex or income are assumed to think or buy; people differ a lot within every group, and policy views are often more moderate and mixed than a party label suggests.",
+ "compared_with": "003-spending-habits",
+ "kept": false,
+ "on_trial": false,
+ "reason": "discard: fell beyond noise: right_spread -0.011 (noise 0.010), steady -0.017 (noise 0.010); improved beyond noise: right_person +0.023 (noise 0.015)",
+ "deltas": {
+  "right_person": 0.02294007490636707,
+  "right_spread": -0.010692219059543873,
+  "right_group_gaps": -0.04938271604938271,
+  "steady": -0.017000000000000015
+ },
+ "noise": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ },
+ "check": {
+  "right_person": 0.826310861423221,
+  "right_spread": 0.8631265204588313,
+  "right_group_gaps": 0.8024691358024691,
+  "steady": 0.953,
+  "marks_passed": 4,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8281596452328159,
+    "right_spread": 0.8973513646406838,
+    "right_group_gaps": 1.0
+   },
+   "pricing": {
+    "right_person": 0.8258160237388724,
+    "right_spread": 0.854570309413368,
+    "right_group_gaps": 0.746031746031746
+   }
+  }
+ },
+ "tuning": {
+  "right_person": 0.8175270108043218,
+  "right_spread": 0.8626422813518292,
+  "right_group_gaps": 0.6583333333333333,
+  "steady": null,
+  "marks_passed": 2,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.7918918918918919,
+    "right_spread": 0.9126838436488145,
+    "right_group_gaps": 1.0
+   },
+   "pricing": {
+    "right_person": 0.8248456790123457,
+    "right_spread": 0.8501318907775829,
+    "right_group_gaps": 0.5980392156862745
+   }
+  }
+ },
+ "triggers_fired": [
+  "3: right_person rose past its noise while right_spread, steady fell past its noise"
+ ],
+ "question": "Trigger 3: right person +0.023 but spread -0.011 and steady -0.017 fell just past their noise, so the rule discards round 4. Round 5: the compact persona format, or person-over-group for policy only?",
+ "reply": {
+  "by": "Steven",
+  "at": "2026-10-17T09:27:16+00:00",
+  "text": "Compact format"
+ },
+ "spend_total_usd": 8.42,
+ "format": "full",
+ "family_note": "Right person rose in both families (policy 0.815 -> 0.828, pricing 0.800 -> 0.826), but pricing group gaps fell 0.825 -> 0.746: told to ignore income and age, agents dropped real group differences in buying.",
+ "tuning_findings": [
+  "Policy: Democrat-Republican gaps are still 1.3-2.9 points against people's 0.2-1.3.",
+  "Pricing: agents react to price as people do (typical 0.42 vs 0.39, high 0.28 vs 0.29) but over-buy at bargain and free prices (0.76 vs 0.68, 0.90 vs 0.78)."
+ ]
+}
