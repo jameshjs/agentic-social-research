@@ -27,7 +27,7 @@ The [written rules](https://hack-the-valley-11.devpost.com/rules) allow one proj
 
 | Track | Published requirement / brief | Our fit if built as specified | Must show in demo/submission |
 | --- | --- | --- | --- |
-| **Papiers Autoresearch — primary** | Human and AI agents work together; agents build on what people have read, questioned, and learned, ask for expertise, and keep humans informed | **Strong, conditional**: the research-memory and revision loop must actually work | Two human-authored notes or judgments, an agent use of one note, a challenge/question, a human correction, and a rerun with audit trail |
+| **Papiers Autoresearch — primary** | Human and AI agents work together; agents build on what people have read, questioned, and learned, ask for expertise, and keep humans informed | **Strong, conditional**: the research-memory and revision loop must actually work | A researcher adds a published paper and their own note about it; an agent extracts a relevant claim and limitation, asks whether it transfers to this scenario, a human accepts/edits/rejects the proposed assumption, and a versioned rerun shows the effect. Retain a second human judgment or challenge in the audit trail. |
 | **School of Cities — secondary** | Useful civic prototype for a concrete Toronto urban problem, founded on Toronto urban data; no election prediction/candidate support | **Strong, conditional**: general simulation alone does not satisfy the data/user requirement | Fare affordability question framed for a Toronto civic user; source-linked Toronto neighbourhood/GTFS/fare inputs; accessible result and limitation |
 | **Sustainable FinTech & Economic Inclusion — additional** | Public page lists the category title without a detailed rubric | **Plausible if the linked economic dashboard works**: show household financial access and firm effects, beyond generic policy charts | Household fare burden and wage/budget effects, subgroup comparison, financial tradeoffs; describe sustainability only if evidenced |
 | **Best AI for Social Impact — optional** | Public page lists the category title without a detailed rubric | **Plausible** if civic use and human-guided AI are demonstrated | Select if the initial submission offers it; do not divert engineering effort from primary tracks |
@@ -72,7 +72,7 @@ These are genuinely different products. The recommended choice combines the stro
 3. The system autonomously generates a **distinct, relevant** synthetic society for each hypothesis and shows why each stakeholder type was included.
 4. Agents make choices, interact, update state, and create an event trace over time.
 5. The system compares baseline and intervention with the same starting population and random seed.
-6. A human can supply research notes, answer a clarifying question, edit assumptions, and rerun.
+6. A human can supply a published paper and their own reading note, answer a clarifying question, accept/edit/reject an agent-proposed assumption, and rerun.
 7. Every result identifies observed data, model assumptions, simulated observations, and unsupported speculation separately.
 8. The visual world is the primary experience: buses, cars, people, homes, shops, and workplaces visibly change as agents act. A linked decision dashboard uses the exact same event/result data.
 9. The output gives a policy analyst the baseline comparison, fiscal/household/business effects, distributional impacts, uncertainty, alternatives, and next evidence needed to decide whether a proposal merits deeper analysis.
@@ -86,7 +86,7 @@ These are genuinely different products. The recommended choice combines the stro
 | G3 | Baseline and changed run share seed and initial state; replay produces identical structured outputs for a fixed model response snapshot | P0 |
 | G4 | At least 4 deep decision-making personas plus 50–200 lightweight population entities or weighted cohorts participate in a 3–5 tick run; target 8 deep personas if budget permits | P0 for 4; adjust above that to API budget |
 | G5 | At least one agent-to-agent or agent-to-institution interaction changes another actor’s subsequent action/state | P0 |
-| G6 | A human note or correction visibly changes a compiled assumption or result, with audit history | P0 |
+| G6 | A human-selected research paper plus a human note leads an agent to propose a sourced assumption; the human accepts/edits/rejects it, and a versioned rerun visibly changes an assumption or result with audit history | P0 |
 | G7 | Each headline result has an event path and evidence/assumption label | P0 |
 | G8 | Live demo reaches a result in about 90 seconds per scenario; cached replay works if model/network is unavailable | P0 |
 | G9 | Toronto scenario uses at least one actual Toronto dataset and links to it | P0 for School of Cities |
@@ -122,7 +122,7 @@ These are genuinely different products. The recommended choice combines the stro
 1. User enters: “What if Toronto increased the adult TTC fare by $0.50 next year?”
 2. System proposes a study card: intervention, baseline, geography, time horizon, units, primary outcomes, potentially affected groups, evidence tier, and missing inputs.
 3. The first run begins with visible default assumptions. The user may pause/edit the card; a single high-value clarification appears without blocking the exploratory run (e.g. “Does Fair Pass also increase?”). A revised answer creates a new run version.
-4. User can attach a source link and a note (“Keep low-income discount unchanged because we want to test distributional effects of adult fares”).
+4. User can attach a published paper or source link and their own note (“This fare-response study is from another city; test its range, but keep Toronto's low-income discount unchanged”). The paper is evidence for a possible model input, not an automatic instruction to the simulator.
 
 ### 6.2 Construct the synthetic world
 
@@ -138,8 +138,8 @@ These are genuinely different products. The recommended choice combines the stro
 
 ### 6.4 Research loop
 
-11. Researcher flags a result or adds contradictory evidence. Skeptic agent explains what assumption it challenges.
-12. User changes/approves a model input, reruns, and sees a version comparison. The brief records the original and revised conclusion.
+11. Research agent reads a human-selected paper and note, extracts a candidate finding with its population, geography, method, date, range, and limitations, then links it to a specific assumption. Skeptic agent challenges transfer to the current setting or a contradictory result and asks the researcher one concrete question.
+12. Researcher accepts, edits, or rejects the proposed change. The accepted input is versioned; the same world reruns and compares agent decisions, city events, and economic charts. The brief records the paper, human judgment, original assumption, revised assumption, and changed conclusion.
 
 ## 7. Functional requirements
 
@@ -167,8 +167,9 @@ The compiler produces a **ScenarioSpec**, not executable code. Its output is val
 | E3 | Research agent extracts candidate facts and causal claims | Output distinguishes source text, interpretation, and unsupported extrapolation |
 | E4 | Skeptic agent challenges weak leaps and missing groups | At least one useful challenge occurs in demo; no empty generic warning |
 | E5 | Results identify unresolved assumptions | Brief includes “needs validation” and direct links |
+| E6 | Paper-to-model feedback loop | A human-selected paper and reading note produce a claim card with citation, applicable population/geography, parameter or mechanism, uncertainty, and transfer warning; the system proposes a bounded assumption change, asks for human approval, and records the decision plus before/after run IDs |
 
-This loop is the primary [Papiers Autoresearch challenge](https://hack-the-valley-11.devpost.com/) evidence: agents build on what people previously read, question, and know; they ask for expertise and keep researchers informed. A citation list alone is insufficient.
+This loop is the primary [Papiers Autoresearch challenge](https://hack-the-valley-11.devpost.com/) evidence: agents build on what people previously read, question, and know; they ask for expertise and keep researchers informed. **The human collaboration is the researcher's selection, interpretation, and approval of a paper-backed model change.** Merely uploading papers or automatically ingesting them is not human–agent collaboration. Do not claim the system trains its model from a paper during the demo; it uses extracted findings as reviewable evidence or sensitivity inputs. A citation list alone is insufficient.
 
 ### 7.3 Personas and population
 
@@ -339,7 +340,7 @@ The orchestrator is a **world controller**, not a group chat. [Concordia](https:
 **Default scale:** 12–24 visible agents, 4–8 deep decision makers, 3–5 ticks, and rule-based cohorts/ambient pedestrians. The city can look populous without pretending each animated person is an independent LLM call. If the world contains an unmatched hypothesis, reuse the city as a **symbolic urban stage** with dynamically generated roles, places, metrics, and labels; mark the rendering as an illustration of the hypothetical world. This city-first presentation is a hackathon constraint, not a semantic limit on prompt input.
 
 ```text
-Freeform hypothesis + human notes + source registry
+Freeform hypothesis + human notes + selected papers + source registry
        ↓
 Hypothesis compiler → typed ScenarioSpec → validation / clarification / evidence tier
        ↓
@@ -378,6 +379,8 @@ One Result JSON → LIVE CITY, then charts, explanation cards, export
 
 `PersonaSpec`: ID, role, represented weight (if justified), relevant traits, resources, constraints, goals, location, relationships, available actions, initial memory, source IDs, assumption IDs. The generator also emits a **coverage rationale** explaining why each role exists for this hypothesis.
 
+`ResearchClaim`: source ID/URL/DOI, paper title/authors/year, quoted or paraphrased finding with page or section, study population/geography/method, candidate mechanism or parameter range, uncertainty/limitations, and transfer warning. `ResearchDecision`: claim ID, human author/time/note, agent question, proposed assumption change, human action (`accept`, `edit`, `reject`), final value/rationale, and before/after run IDs. The original paper remains linked; an AI summary alone is never the source of record.
+
 `WorldEvent`: run ID, tick, actor ID, action, targets, preconditions, state delta, rule ID, reason, source/assumption IDs, and `visual_cue` (`walk`, `drive`, `ride_bus`, `enter_home`, `enter_shop`, `work`, `exchange`, `message`, `other`). The visual cue is derived from the action; it cannot contradict the state delta.
 `MetricDefinition`: stable ID, label, unit, stakeholder/denominator, formula or aggregation rule, time grain, applicable scenarios, required inputs, provenance, allowed evidence tiers, and display status (`computed`, `assumption_driven`, `not_estimable`).
 
@@ -408,7 +411,7 @@ Target one run at **≤90 seconds**, with a visible progress stage after each st
 - Same seed and saved model outputs reproduce exact event and metric JSON.
 - Zero intervention produces zero policy deltas.
 - Constraint engine rejects impossible actions (negative cash, movement through unavailable links, spending above budget unless credit is explicitly modelled).
-- A human override changes the next run and appears in the audit trail.
+- A paper-backed, human-approved assumption change alters the next run and appears in the audit trail with the cited claim, transfer warning, and before/after values.
 - Every displayed number comes from `RunResult`; no visual-only or model-authored aggregate metric.
 - Household payments and recipient revenue reconcile where they are two sides of the same transaction; public and business ledgers do not double-count the transfer as a social benefit.
 - A chart's baseline, intervention, units, group denominator, time horizon, and scenario sensitivity are visible; unsupported metrics render as `not_estimable` with a reason.
@@ -481,7 +484,7 @@ Attend or send one teammate to the [School of Cities workshop Friday 10–11 pm]
 1. **Problem (25s):** Policy ideas have interacting human consequences; researchers need fast, inspectable first-pass experiments.
 2. **Freeform input (40s):** Type fare hypothesis; show compiler and auto-generated stakeholder roster.
 3. **Living world + economy (60s):** Run baseline/intervention; inspect a household choice causing downstream business/agency effects, then open its linked household cost, shop, and public-budget charts.
-4. **Human research (45s):** Show a teammate note, skeptic challenge, corrected assumption, and changed result.
+4. **Human research (45s):** Show a teammate-selected fare-response paper and their note; let the research agent propose a response range, the skeptic ask whether it transfers to Toronto, and the human choose a sensitivity value. Rerun and show the changed rider, shop, and revenue paths beside the original.
 5. **Generality (45s):** Enter second, unrelated hypothesis; show different agents, rules, metrics from same pipeline.
 6. **Evidence and close (25s):** Show uncertainty band, tier/source badges, and decision brief; explain the next measurement needed before policy action.
 
@@ -519,7 +522,7 @@ Attend or send one teammate to the [School of Cities workshop Friday 10–11 pm]
 
 1. **Meet + James:** Which model/API, hard spend cap per run, backend stack, and deployment target are available? Agree the first fare/wage metric formulas and projection time grain; cache the two demos regardless of provider.
 2. **Aadit + James:** Will Three.js meet the storyboard in §13 after a 30-minute spike? If the spike fails, use an isometric renderer with the same event contract and quality bar.
-3. **Meet + Steven:** Which real team research note, disagreement, and resulting question will be used in the Papiers demo? Record its author, timestamp, source, and effect on the rerun.
+3. **Meet + Steven:** Which existing fare-response paper will the team member actually read and annotate for the Papiers demo? Record its author, year, geography, study population, relevant finding/range, limitation, the human note and decision, the agent's transfer question, and the resulting assumption change. The [research dossier](./research.md) and [Toronto demo notes](./demo-data.md) already shortlist fare-response literature; do not invent a Toronto-calibrated elasticity.
 4. **All four:** Agree on the schema fixtures in §11 before building separate modules. The product assumptions above stand unless a concrete implementation failure triggers the fallback in §16.
 
 ### Hard challenge to the concept
