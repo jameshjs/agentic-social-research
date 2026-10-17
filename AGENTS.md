@@ -29,3 +29,7 @@ Read [README.md](./README.md), [prd.md](./prd.md), [research.md](./research.md),
 - Devpost requires a GitHub code link, write-up, 4-minute pitch, and 1-minute Q&A.
 
 When implementation choices differ from the PRD, update the decision log in `prd.md` and explain why. Keep source provenance in `research.md` or a dedicated data README when datasets are downloaded.
+
+## Team sync
+
+Four people are implementing concurrently. Fetch at least every 30 minutes during long work, and sync before touching shared schemas or pushing. On a clean `main`, use `git pull --ff-only origin main`; on a dirty or diverged checkout, integrate deliberately without reset, force push, or automatic stash. Claude Code's committed hook performs the safe fetch/fast-forward check before each prompt; see [CLAUDE.md](./CLAUDE.md). Share a pushed commit hash and any changed contract with the other owners.

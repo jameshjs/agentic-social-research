@@ -7,7 +7,7 @@ A general, human-guided social simulation and policy decision product. Enter **a
 1. [Product requirements](./prd.md) — final product scope, user flow, P0 acceptance criteria, architecture, data contracts, visual requirements, named team workstreams, demo, and implementation gaps.
 2. [Research and source dossier](./research.md) — sponsor briefs, event rules/deadline conflicts, hacker package, Toronto dataset catalogue, and modelling evidence. Teammates and coding agents should read this before researching from scratch.
 3. [Locked Toronto MVP demo and ranked data](./demo-data.md) — UTSC-area fare scenario, verified observed facts, multi-agent causal chain, dataset gaps, and first-hour owner handoffs. [Machine-readable source fixture](./data/toronto_demo_baseline.json).
-4. [Coding-agent instructions](./AGENTS.md) — concise shared implementation contract so agents do not revert to a single fare scenario.
+4. [Coding-agent instructions](./AGENTS.md) and [Claude Code instructions](./CLAUDE.md) — shared implementation contract, owner boundaries, and safe Git sync. The committed [Claude hook](./.claude/hooks/sync-main.py) fetches before each prompt and fast forwards only a clean `main`.
 
 ## Confirmed direction
 
@@ -30,4 +30,8 @@ A general, human-guided social simulation and policy decision product. Enter **a
 
 ## Repository state
 
-This repository currently contains planning/research documents only. The model/API, exact visual stack, and deployment target are first-hour implementation choices in [PRD §17](./prd.md#17-locked-decisions-and-implementation-gaps). Do not build a fare-specific app: TTC fares are one demo scenario for a general hypothesis engine.
+This repository currently contains planning/research documents and a Claude Code sync hook; the product implementation has not started. The model/API, exact visual stack, and deployment target are first-hour implementation choices in [PRD §17](./prd.md#17-locked-decisions-and-implementation-gaps). Do not build a fare-specific app: TTC fares are one demo scenario for a general hypothesis engine.
+
+## Four-person Git handoff
+
+Each owner starts from current `main`, fetches at least every 30 minutes during a long work session, and syncs before editing shared schemas or pushing. Claude Code does this on every new prompt when a fast forward is safe. If local changes prevent a pull, finish and commit the current slice, then integrate the fetched commits deliberately. Share each pushed commit hash and any schema change with the team; never reset or force push to bypass someone else's work. Full ownership and cadence are in [PRD §14](./prd.md#14-team-ownership-and-critical-path).
