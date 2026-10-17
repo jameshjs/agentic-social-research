@@ -256,7 +256,7 @@ const TRACK = {};
   TRACK.paint = [trackPaint, trackDash];
   pickable(trackPaint, () => ({ title: 'Bloor St W cycle track', kind: 'Cycle track', status: 'observed',
     rows: [['Infrastructure', `Cycle Track ${chip('observed')}`], ['Installed', ct.map((s) => s.installed).filter((v, i, a) => a.indexOf(v) === i).join(', ')],
-      ['Segments', ct.map((s) => `${s.from} → ${s.to}`).join('<br>')], ['Sandbox policy now', `${state.policy.bloor_cycle_track} ${chip('simulated')}`]],
+      ['Segments', ct.map((s) => `${s.from} → ${s.to}`).join('<br>')], ['Sandbox policy now', `${curArm() ? curArm().policy.bloor_cycle_track : 'protected'} (${state.arm} arm) ${chip('simulated')}`]],
     note: 'Paint drawn where the City Cycling Network has a Bloor St W cycle-track segment. Lateral position is schematic.' }));
   // Flexiposts on the protected track.
   const posts = [];
@@ -716,20 +716,60 @@ const GEO = {
 };
 GEO.transit = GEO.walk;
 const agentMat = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.05 });
-const state = { t: 8 * 3600, start: 8 * 3600, end: 8.5 * 3600, playing: true, speed: 10, sb: null, base: null, agents: [], meshes: {}, policy: { ...SB.DEFAULT_POLICY }, follow: null, night: false, nightK: 0 };
+const state = { t: 8 * 3600, start: 8 * 3600, end: 8.5 * 3600, playing: true, speed: 10, arms: {}, arm: 'policy', scenario: 'bike', week: 2,
+  agents: [], follow: null, night: false, nightK: 0, policyK: 1, selected: null };
 const SEED = 7;
 
-function runScenario(policy, start, minutes, density) {
-  const sb = SB.createSandbox(W, { seed: SEED, policy });
-  const nodes = [...sb.graph.nodes.values()], portals = nodes.filter((n) => n.kind === 'portal'), last = XS.length - 1;
-  const doors = [...sb.graph.doors.values()].map((id) => sb.graph.nodes.get(id));
+/* ---------- personas from the persona runtime (persona-swarm), read-only ---------- */
+async function loadPersonas() {
+  if (window.__BLOOR_PERSONAS__) return window.__BLOOR_PERSONAS__;
+  try { const r = await fetch(new URL('./personas.json', import.meta.url)); return r.ok ? r.json() : null; } catch (e) { return null; }
+}
+const PD = await loadPersonas();
+const SCEN = {
+  bike: { run: 'bloor', title: 'Bloor cycle track loses its protection', short: 'Bike lane', lever: { bloor_cycle_track: 'painted' } },
+  fare: { run: 'fare', title: 'Adult TTC fare +$0.50, Fair Pass unchanged', short: 'TTC fare' },
+  sandbox: { run: null, title: 'Sandbox only (no personas)', short: 'Sandbox' },
+};
+const runOf = (sc = state.scenario) => (PD && SCEN[sc].run ? PD.runs[SCEN[sc].run] : null);
+const personaById = (id) => (PD ? PD.personas[id] : null);
+const ROLE = { driver: 'Driver', cyclist: 'Cyclist', pedestrian: 'Pedestrian', transit_rider: 'TTC rider', shop_owner: 'Shop owner', shop_worker: 'Shop worker' };
+const CHOICE = { walk: 'walk', drive: 'drive', bus: 'TTC', bike: 'cycle', bike_bloor: 'cycle on Bloor', bike_detour: 'cycle via side streets', defer: 'stay home' };
+const choiceMode = (c) => ({ walk: 'walk', drive: 'car', bus: 'transit', bike: 'bike', bike_bloor: 'bike', bike_detour: 'bike' }[c] || null);
+// Side-street cycling routes from the City cycling network, used to draw `bike_detour` trips.
+const DETOUR = {
+  north: { name: 'Barton Ave / Lowther Ave', pts: [[-220, 343], [312.8, 344.4], [312.8, 244.5], [830, 266]] },
+  south: { name: 'Harbord St cycle track', pts: [[-220, -410.5], [960, -390.8]] },
+};
+for (const d of Object.values(DETOUR)) d.cum = polyLen(d.pts);
+
+/* Home placement is illustrative: a residential building in the persona's own neighbourhood, by hash. */
+const HOMES = {};
+function homeOf(p) {
+  if (HOMES[p.id]) return HOMES[p.id];
+  const pool = W.buildings.items.filter((b) => b.neighbourhood === p.neighbourhood && b.residents_est > 0 && b.centroid[0] > -120 && b.centroid[0] < 740 && Math.abs(b.centroid[1]) > 25 && Math.abs(b.centroid[1]) < 300);
+  const b = pool.length ? pool[Math.floor(hash(`home:${p.id}`) * pool.length)] : null;
+  return (HOMES[p.id] = b);
+}
+function shopDoor(p) {
+  if (!p.shop) return null;
+  const biz = W.businesses.items.find((b) => b.id === p.shop.osm_id);
+  return biz && biz.building_id ? `door_${biz.building_id}` : null;
+}
+
+function makeRng(sb) {
   // sb.rand is seeded but its FNV hash gives close values for similar keys; a murmur3 finalizer spreads them.
-  const R = (...p) => {
+  return (...p) => {
     let h = Math.floor(sb.rand(...p) * 4294967296) >>> 0;
     h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
     return (h >>> 0) / 4294967296;
   };
-  const pick = (arr, ...p) => arr[Math.floor(R(...p) * arr.length) % arr.length];
+}
+/* Background traffic from the observed 15-minute counts; identical in both arms (same seed, same plan). */
+function spawnBackground(sb, start, minutes, density) {
+  const nodes = [...sb.graph.nodes.values()], portals = nodes.filter((n) => n.kind === 'portal'), last = XS.length - 1;
+  const doors = [...sb.graph.doors.values()].map((id) => sb.graph.nodes.get(id));
+  const R = makeRng(sb), pick = (arr, ...p) => arr[Math.floor(R(...p) * arr.length) % arr.length];
   const at = (i) => portals.filter((p) => p.intersection === i);
   let k = 0;
   const spawn = (mode, from, to, t, shop) => {
@@ -765,7 +805,62 @@ function runScenario(policy, start, minutes, density) {
       spawn('transit', o, d, tt);
     });
   }
-  return sb;
+}
+
+/* Persona trips for one week of one arm. The mode is the persona agent's own choice from the persona
+ * runtime run; the route, timing and waits come from world/sandbox.js. Returns custom detour trips. */
+function spawnPersonas(sb, run, arm, week, start, fares) {
+  const portals = [...sb.graph.nodes.values()].filter((n) => n.kind === 'portal'), last = XS.length - 1;
+  const doors = [...sb.graph.doors.values()].map((id) => sb.graph.nodes.get(id)).filter((n) => n.x > 0 && n.x < L);
+  const choices = run.choices[arm === 'policy' ? 'intervention' : 'baseline'];
+  const plan = [], detours = [];
+  for (const key of Object.keys(choices)) {
+    const [tick, pid, trip] = key.split(':');
+    if (+tick !== week) continue;
+    const p = personaById(pid); if (!p) continue;
+    const c = choices[key], home = homeOf(p); if (!home) continue;
+    const side = home.centroid[1] > 0 ? 'north' : 'south';
+    const legs = portals.filter((n) => n.side === side);
+    const origin = legs.reduce((a, b) => (Math.abs(b.x - home.centroid[0]) < Math.abs(a.x - home.centroid[0]) ? b : a));
+    const r = (p.routine || []).find((x) => x.id === trip) || {};
+    let dest = null, destLabel = '';
+    if (r.destination === 'local_shop' && trip === 'work' && shopDoor(p) && sb.graph.nodes.has(shopDoor(p))) { dest = sb.graph.nodes.get(shopDoor(p)); destLabel = 'their workplace on Bloor'; }
+    else if (r.destination === 'local_shop') { dest = doors[Math.floor(hash(`shop:${pid}`) * doors.length)]; destLabel = 'a shop on Bloor'; }
+    else { const far = origin.intersection <= 3 ? last : 0; dest = portals.find((n) => n.intersection === far && n.side === (hash(`w:${pid}`) < 0.5 ? 'north' : 'south')) || portals[0]; destLabel = 'work, beyond the section'; }
+    const t0 = start + 60 + Math.floor(hash(`${pid}:${trip}:t`) * (trip === 'work' ? 540 : 900)) + (trip === 'work' ? 0 : 300);
+    const entry = { id: `${pid}:${trip}`, pid, trip, choice: c.chosen, reason: c.reason, options: c.options, dest: destLabel, origin: origin.id, t0 };
+    plan.push(entry);
+    const mode = choiceMode(c.chosen);
+    if (!mode || dest.id === origin.id) continue;                                   // defer: stays home
+    if (c.chosen === 'bike_detour') { detours.push({ ...entry, from: origin, to: dest, side }); continue; }
+    // Cars and bikes cannot use sidewalks to a door: they stop at the nearest side street on that side.
+    if ((mode === 'car' || mode === 'bike') && dest.kind === 'door') {
+      const near = portals.filter((n) => n.side === (dest.y > 0 ? 'north' : 'south') && n.id !== origin.id);
+      dest = near.reduce((u, v) => (Math.abs(v.x - dest.x) < Math.abs(u.x - dest.x) ? v : u)); entry.dest += ' (parks on the nearest side street)';
+    }
+    const fare = mode === 'transit' ? fares[`${arm === 'policy' ? 'intervention' : 'baseline'}:${p.fare_category}`] : undefined;
+    sb.addAgent({ id: entry.id, mode, at: origin.id, t: t0, fare_cad: fare });
+    entry.result = sb.travel(entry.id, dest.id);
+    if (dest.kind === 'door' && entry.result.type === 'trip_completed') sb.enter(entry.id, dest.business_ids[0]);
+  }
+  return { plan, detours };
+}
+/* A detour drawn on the side-street cycling network: off Bloor, so it is not a sandbox edge. */
+function detourAgent(d) {
+  const line = DETOUR[d.side], s0 = project(line.pts, line.cum, [d.from.x, d.from.y]), s1 = project(line.pts, line.cum, [d.to.x, d.to.y > 0 ? 300 : -400]);
+  const pts = [[d.from.x, d.from.y]];
+  const a = along(line.pts, line.cum, s0); pts.push([a.x, a.y]);
+  const step = s1 > s0 ? 25 : -25;
+  for (let s = s0 + step; step > 0 ? s < s1 : s > s1; s += step) { const q = along(line.pts, line.cum, s); pts.push([q.x, q.y]); }
+  const b = along(line.pts, line.cum, s1); pts.push([b.x, b.y], [d.to.x, mapY(d.to.y)]);
+  const segs = []; let t = d.t0;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const pa = [...pts[i], 0.05], pb = [...pts[i + 1], 0.05], len = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]); if (len < 0.5) continue;
+    const travel = len / SB.SPEED.bike;
+    segs.push({ t, end: t + travel, wait: 0, travel, edge: `detour via ${line.name}`, pa, pb, len, endGate: false, back: 0, hidden: false, ux: (pb[0] - pa[0]) / len, uy: (pb[1] - pa[1]) / len });
+    t += travel;
+  }
+  return { id: d.id, mode: 'bike', segs, t0: segs[0].t, t1: segs[segs.length - 1].end, jitter: 0, cursor: 0, idx: 0, detour: line.name };
 }
 function tripStats(sb) {
   const by = {};
@@ -804,23 +899,66 @@ function buildTimeline(sb) {
   return agents;
 }
 
-function makeAgentMeshes(agents) {
-  for (const m of Object.values(state.meshes)) { groups.agents.remove(m); m.dispose(); }
-  state.meshes = {};
+/* ---------- one arm: sandbox + timeline + meshes ---------- */
+const PCOL = { walk: '#ffd23f', transit: '#c3a6ff', bike: '#3dff8a', car: '#5ab0ff' };
+const ringGeo = new THREE.RingGeometry(1.1, 1.6, 32).rotateX(-Math.PI / 2);
+const ringMat = { changed: new THREE.MeshBasicMaterial({ color: '#ff3df0', transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide }),
+  same: new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }),
+  picked: new THREE.MeshBasicMaterial({ color: '#ffe14d', transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide }) };
+const trailMat = { now: new THREE.MeshBasicMaterial({ color: '#ff3df0', transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4 }),
+  other: new THREE.MeshBasicMaterial({ color: '#4fe3ff', transparent: true, opacity: 0.45, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3 }) };
+
+function buildArm(armName, scen, start, density) {
+  const run = runOf(scen), fares = run ? run.fares : {};
+  let policy = { ...SB.DEFAULT_POLICY };
+  if (armName === 'policy') {
+    if (scen === 'bike') policy = { ...policy, ...SCEN.bike.lever };
+    if (scen === 'fare') policy.adult_fare_cad = fares['intervention:adult'] ?? policy.adult_fare_cad + 0.5;
+    if (scen === 'sandbox') policy.bloor_cycle_track = $('track').value;
+  }
+  const sb = SB.createSandbox(W, { seed: SEED, policy });
+  spawnBackground(sb, start, 30, density);
+  const pp = run ? spawnPersonas(sb, run, armName, state.week, start, fares) : { plan: [], detours: [] };
+  const agents = buildTimeline(sb);
+  for (const d of pp.detours) agents.push(detourAgent(d));
+  const byId = new Map(agents.map((a) => [a.id, a]));
+  for (const e of pp.plan) { e.agent = byId.get(e.id) || null; if (e.agent) { e.agent.persona = e; } }
+  const group = new THREE.Group(); group.visible = false; groups.agents.add(group);
+  const arm = { name: armName, sb, policy, agents, plan: pp.plan, group, meshes: {}, people: [], stats: tripStats(sb) };
+  // Background agents: instanced, one mesh per mode.
   for (const mode of Object.keys(AGENT_STYLE)) {
-    const list = agents.filter((a) => a.mode === mode);
+    const list = agents.filter((a) => a.mode === mode && !a.persona);
     const m = new THREE.InstancedMesh(GEO[mode], agentMat, Math.max(1, list.length));
     m.frustumCulled = false; m.castShadow = mode === 'car';
     m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     list.forEach((a, k) => { a.idx = k; m.setColorAt(k, col(AGENT_STYLE[mode].palette[Math.floor(hash(a.id + 'c') * AGENT_STYLE[mode].palette.length)])); });
     m.userData.list = list;
-    groups.agents.add(m); state.meshes[mode] = m;
-    pickable(m, (hit) => describeAgent(list[hit.instanceId]));
+    group.add(m); arm.meshes[mode] = m;
+    pickable(m, (hit) => describeAgent(list[hit.instanceId], arm));
   }
-  pickables.splice(0, pickables.length, ...pickables.filter((p) => !p.isInstancedMesh || !p.userData.list || Object.values(state.meshes).includes(p)));
+  // Persona agents: one bright object each, with a ring and a name tag.
+  for (const a of agents.filter((x) => x.persona)) {
+    const g = new THREE.Group(), body = new THREE.Mesh(GEO[a.mode], new THREE.MeshStandardMaterial({ color: PCOL[a.mode], roughness: 0.35, emissive: PCOL[a.mode], emissiveIntensity: 0.35 }));
+    const ring = new THREE.Mesh(ringGeo, ringMat.same); ring.position.y = 0.12;
+    const tag = document.createElement('div'); tag.className = 'ptag';
+    const lab = new CSS2DObject(tag); lab.position.set(0, 3.2, 0);
+    g.add(body, ring, lab); g.visible = false; group.add(g);
+    a.obj = { g, body, ring, tag, lab };
+    pickable(g, () => describePersona(a.persona.pid));
+    arm.people.push(a);
+  }
+  return arm;
+}
+function disposeArm(arm) {
+  if (!arm) return;
+  arm.group.traverse((o) => { if (o.isCSS2DObject) o.element.remove(); });
+  groups.agents.remove(arm.group);
+  const keep = new Set(); arm.group.traverse((o) => keep.add(o));
+  pickables.splice(0, pickables.length, ...pickables.filter((p) => !keep.has(p)));
+  for (const m of Object.values(arm.meshes)) m.dispose();
 }
 
-const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3(), tmpP = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0), ZERO = new THREE.Vector3(0, 0, 0);
+const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3(), tmpP = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
 function agentPose(a, t) {
   if (t < a.t0 || t >= a.t1) return null;
   const segs = a.segs;
@@ -842,42 +980,142 @@ function agentPose(a, t) {
   const f = s.len ? Math.min(1, d / s.len) : 1;
   return { x: s.pa[0] + (s.pb[0] - s.pa[0]) * f - s.uy * a.jitter, y: s.pa[1] + (s.pb[1] - s.pa[1]) * f + s.ux * a.jitter, h: s.pa[2] + (s.pb[2] - s.pa[2]) * f, yaw: Math.atan2(s.uy, s.ux), waiting, seg: s };
 }
-const counts = { walk: 0, transit: 0, bike: 0, car: 0, waiting: 0 };
+const counts = { walk: 0, transit: 0, bike: 0, car: 0, waiting: 0, people: 0 };
+const curArm = () => state.arms[state.arm];
 function updateAgents(t) {
   for (const k of Object.keys(counts)) counts[k] = 0;
+  const arm = curArm(); if (!arm) return;
   // Life size up close; people and bikes are enlarged when zoomed out so they stay readable from the overview.
   const far = Math.max(1, camera.position.distanceTo(controls.target) / 160), CAP = { walk: 2.6, transit: 2.6, bike: 2, car: 1.3 };
   const queues = new Map();
-  for (const [mode, m] of Object.entries(state.meshes)) {
-    const list = m.userData.list;
-    for (const a of list) {
-      const p = agentPose(a, t); a.pose = p;
-      if (!p || p.h < -0.5) { m.setMatrixAt(a.idx, tmpM.makeScale(0, 0, 0)); continue; }
-      counts[mode]++;
-      if (p.waiting) { counts.waiting++; if (mode === 'car' || mode === 'bike') { const key = `${p.seg.edge}|${mode}`; (queues.get(key) || queues.set(key, []).get(key)).push(a); } }
-    }
+  for (const a of arm.agents) {
+    const p = agentPose(a, t); a.pose = p;
+    if (!p || p.h < -0.5) continue;
+    counts[a.mode]++; if (a.persona) counts.people++;
+    if (p.waiting) { counts.waiting++; if (a.mode === 'car' || a.mode === 'bike') { const key = `${p.seg.edge}|${a.mode}`; (queues.get(key) || queues.set(key, []).get(key)).push(a); } }
   }
   // Vehicles waiting at the same stop line queue back along their lane instead of stacking.
   for (const [key, list] of queues) {
     const gap = key.endsWith('car') ? 6.5 : 2.2;
     list.sort((a, b) => a.pose.seg.t - b.pose.seg.t).forEach((a, r) => { a.pose.x -= a.pose.seg.ux * gap * r; a.pose.y -= a.pose.seg.uy * gap * r; });
   }
-  for (const [mode, m] of Object.entries(state.meshes)) {
+  for (const [mode, m] of Object.entries(arm.meshes)) {
     const zoomScale = Math.min(CAP[mode], far);
     for (const a of m.userData.list) {
-      const p = a.pose; if (!p || p.h < -0.5) continue;
+      const p = a.pose;
+      if (!p || p.h < -0.5) { m.setMatrixAt(a.idx, tmpM.makeScale(0, 0, 0)); continue; }
       tmpQ.setFromAxisAngle(UP, p.yaw);
       m.setMatrixAt(a.idx, tmpM.compose(tmpP.set(p.x, Math.max(p.h, 0.05), -p.y), tmpQ, tmpS.setScalar(zoomScale)));
     }
     m.instanceMatrix.needsUpdate = true;
     m.boundingSphere = null;
   }
+  const pulse = 1 + 0.25 * Math.sin(performance.now() / 180);
+  for (const a of arm.people) {
+    const p = a.pose, o = a.obj, e = a.persona;
+    o.g.visible = !!(p && p.h > -0.5) && groups.agents.visible;
+    if (!o.g.visible) { o.lab.visible = false; continue; }
+    const pickedNow = state.selected === e.pid, changed = isChanged(e.pid, e.trip);
+    o.g.position.set(p.x, Math.max(p.h, 0.05), -p.y);
+    o.body.rotation.y = p.yaw;
+    const sc = Math.min(CAP[a.mode] * 1.25, far * 1.3);
+    o.body.scale.setScalar(sc);
+    o.ring.material = pickedNow ? ringMat.picked : changed ? ringMat.changed : ringMat.same;
+    o.ring.scale.setScalar(sc * (changed || pickedNow ? pulse : 1));
+    const show = changed || pickedNow || state.labelsAll;
+    o.lab.visible = show && groups.labels.visible;
+    if (show) {
+      const [bc, pc] = state.arm === 'policy' ? [otherChoice(e), e.choice] : [e.choice, otherChoice(e)];   // always baseline → policy
+      const html = `<b>${esc(personaById(e.pid).name)}</b> ${changed ? `<span>${esc(CHOICE[bc] || bc)} → ${esc(CHOICE[pc] || pc)}</span>` : `<span>${esc(CHOICE[e.choice] || e.choice)}</span>`}`;
+      if (o.tag._html !== html) { o.tag.innerHTML = html; o.tag._html = html; }
+      o.tag.classList.toggle('chg', changed); o.tag.classList.toggle('pick', pickedNow);
+      o.lab.position.y = 2.6 * sc;
+    }
+  }
 }
-function describeAgent(a) {
-  if (!a) return null;
-  return { title: `Agent ${a.id}`, kind: `${AGENT_STYLE[a.mode].label} · simulated`, status: 'simulated', live: true, agent: a,
+/* Did this persona's choice for this trip differ between arms, in the selected week? */
+function isChanged(pid, trip, week = state.week) {
+  const run = runOf(); if (!run) return false;
+  const k = `${week}:${pid}:${trip}`, b = run.choices.baseline[k], i = run.choices.intervention[k];
+  return !!(b && i && b.chosen !== i.chosen);
+}
+function otherChoice(e) {
+  const run = runOf(), k = `${state.week}:${e.pid}:${e.trip}`;
+  const o = run.choices[state.arm === 'policy' ? 'baseline' : 'intervention'][k];
+  return o ? o.chosen : e.choice;
+}
+
+/* Trails: for changed or selected personas, this arm's route (magenta) and the other arm's (cyan). */
+let trailGroup = null;
+function buildTrails() {
+  if (trailGroup) { groups.agents.remove(trailGroup); trailGroup.traverse((o) => o.geometry && o.geometry.dispose()); }
+  trailGroup = new THREE.Group(); groups.agents.add(trailGroup);
+  if (!runOf() || !state.arms.policy) return;
+  const route = (a) => { const pts = []; for (const s of a.segs) { if (s.hidden || s.pa[2] < -0.5 || s.pb[2] < -0.5) continue; if (!pts.length) pts.push([s.pa[0], s.pa[1]]); pts.push([s.pb[0], s.pb[1]]); } return pts; };
+  const now = [], other = [];
+  const otherArm = state.arms[state.arm === 'policy' ? 'baseline' : 'policy'];
+  for (const a of curArm().people) {
+    const e = a.persona; if (!(isChanged(e.pid, e.trip) || state.selected === e.pid)) continue;
+    ribbon(route(a), 1.1, 0.35, now);
+    const b = otherArm.agents.find((x) => x.id === a.id); if (b) ribbon(route(b), 0.8, 0.3, other);
+  }
+  // Changed personas whose trip vanished in this arm (e.g. stayed home) still show the other arm's route.
+  for (const b of otherArm.people) if (!curArm().agents.find((x) => x.id === b.id) && (isChanged(b.persona.pid, b.persona.trip) || state.selected === b.persona.pid)) ribbon(route(b), 0.8, 0.3, other);
+  if (now.length) trailGroup.add(flatMesh(now, trailMat.now, false));
+  if (other.length) trailGroup.add(flatMesh(other, trailMat.other, false));
+  trailGroup.visible = $('trails').checked;
+}
+
+/* ---------- persona and agent cards ---------- */
+function describePersona(pid) {
+  const p = personaById(pid); if (!p) return null;
+  const run = runOf(), poll = PD.poll && PD.poll.answers[pid];
+  const biz = p.shop ? W.businesses.items.find((b) => b.id === p.shop.osm_id) : null;
+  return { title: p.name, kind: `${ROLE[p.role] || p.role} · ${esc(p.neighbourhood)} · persona ${p.id}`, status: 'simulated', live: true, persona: pid,
     rows: () => {
-      const p = agentPose(a, state.t), trips = state.sb.events.filter((e) => e.actor === a.id && (e.type === 'trip_completed' || e.type === 'entered_business'));
+      const r = [
+        ['Who', `${esc(p.sex || '')}, ${esc(p.age_band || 'age n/a')} · ${esc(p.income_band || '')} household<br><span class="note">about $${p.weekly_income_cad}/week, $${p.disposable_cash_weekly_cad}/week after rent and essentials</span>`],
+        ['Gets around', `${esc(ROLE[p.role] || p.role)} · ${p.has_car ? 'has a car' : 'no car'} · ${p.has_bike ? 'has a bike' : 'no bike'} · walks up to ${p.max_walk_km} km<br><span class="note">${p.fare_category === 'fair_pass' ? 'Fair Pass (low-income) TTC fare' : 'full adult TTC fare'}</span>`],
+      ];
+      if (biz) r.push(['Works at', `${esc(biz.name || biz.kind)} <span class="note">(${esc(biz.kind)}, real Bloor business, OSM)</span>`]);
+      if (p.traits.length) r.push(['Character', p.traits.map(esc).join('<br>') + ' <span class="note">(from their own survey answers)</span>']);
+      if (run) {
+        const wk = state.week, trips = (p.routine || []).map((x) => x.id);
+        for (const trip of trips) {
+          const k = `${wk}:${pid}:${trip}`, b = run.choices.baseline[k], i = run.choices.intervention[k];
+          if (!b && !i) continue;
+          const chg = b && i && b.chosen !== i.chosen;
+          r.push([`Week ${wk} · ${trip}`, chg
+            ? `<b class="chgtxt">${esc(CHOICE[b.chosen] || b.chosen)} → ${esc(CHOICE[i.chosen] || i.chosen)}</b><br><span class="note">Baseline: “${esc(b.reason)}”</span><br>Policy: “${esc(i.reason)}”`
+            : `${esc(CHOICE[(i || b).chosen] || (i || b).chosen)} in both arms<br><span class="note">“${esc((i || b).reason)}”</span>`]);
+        }
+        const all = run.changed.filter((c) => c.actor === pid);
+        if (all.length) r.push(['All weeks', all.map((c) => `wk ${c.tick} ${esc(c.trip)}: ${esc(CHOICE[c.from] || c.from)} → ${esc(CHOICE[c.to] || c.to)}`).join('<br>')]);
+      }
+      if (poll && state.scenario === 'fare') r.push(['Poll on the fare', `<b>${esc(poll.stance)}</b>, affected ${esc(poll.affected)}<br><span class="note">“${esc(poll.reason)}” — ${esc(PD.poll.label)}</span>`]);
+      r.push(['Home on map', `building in ${esc(p.neighbourhood)} ${chip('assumption')}`]);
+      return r;
+    },
+    note: `Twin-anchored synthetic persona: a US survey respondent's own answers placed in a synthetic Toronto role (${esc(PD.attribution || '')}). Reasons are the persona agent's own words (${esc(run ? run.model : 'Haiku')}). Trip mode comes from the persona runtime; route, timing and waits come from world/sandbox.js; the home building is placed by neighbourhood for display.`,
+    action: { label: state.follow && state.follow.persona && state.follow.persona.pid === pid ? 'Stop following' : 'Follow', run: () => followPersona(pid) } };
+}
+function followPersona(pid, fly = false) {
+  const mine = curArm() ? curArm().people.filter((x) => x.persona.pid === pid) : [];
+  const a = mine.find((x) => isChanged(pid, x.persona.trip)) || mine[0];
+  if (state.follow && state.follow.persona && state.follow.persona.pid === pid && !fly) state.follow = null;
+  else if (a) {
+    state.follow = a;
+    if (state.t < a.t0 || state.t >= a.t1) { state.t = a.t0 + 2; for (const x of curArm().agents) x.cursor = 0; }
+    const p = agentPose(a, state.t) || { x: a.segs[0].pa[0], y: a.segs[0].pa[1] };
+    tween = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to: { pos: P(p.x - 22, p.y - 30, 75), tgt: P(p.x, p.y, 1) }, t0: performance.now(), dur: 1400 };
+  }
+  refreshInspector();
+}
+function describeAgent(a, arm) {
+  if (!a) return null;
+  return { title: `Agent ${a.id}`, kind: `${AGENT_STYLE[a.mode].label} · background traffic`, status: 'simulated', live: true, agent: a,
+    rows: () => {
+      const p = agentPose(a, state.t), trips = arm.sb.events.filter((e) => e.actor === a.id && (e.type === 'trip_completed' || e.type === 'entered_business'));
       const r = [['Mode', `${a.mode} ${chip('simulated')}`], ['Now', p ? `${esc(p.seg.edge)}${p.waiting ? ' — <b>waiting</b>' : ''}` : (state.t < a.t0 ? `starts ${hms(a.t0)}` : 'off stage (underground or done)')]];
       for (const e of trips) {
         if (e.type === 'entered_business') { const b = bizById.get(e.business); r.push([`${hm(e.t)} visit`, esc(b ? b.name || b.kind : e.business)]); continue; }
@@ -885,51 +1123,148 @@ function describeAgent(a) {
       }
       return r;
     },
-    note: 'Default shortest-legal-path rule from world/sandbox.js, not a persona. Positions follow the sandbox graph with its schematic cross-section mapped into the drawn street.',
+    note: 'Background traffic from the observed counts, following world/sandbox.js\'s shortest-legal-path rule. It has no persona and is identical in both arms. The bright figures with rings are the persona agents.',
     action: { label: state.follow === a ? 'Stop following' : 'Follow', run: () => { state.follow = state.follow === a ? null : a; refreshInspector(); } } };
 }
 
-function rerun() {
-  const start = +$('start').value, density = +$('density').value;
-  state.policy = { ...SB.DEFAULT_POLICY, bloor_cycle_track: $('track').value };
-  const t = performance.now();
-  state.sb = runScenario(state.policy, start, 30, density);
-  state.base = state.policy.bloor_cycle_track === 'protected' ? state.sb : runScenario({ ...SB.DEFAULT_POLICY }, start, 30, density);
-  // Show the policy on the street: no paint when the track is removed, no posts when it is only painted.
-  for (const m of TRACK.paint) m.visible = state.policy.bloor_cycle_track !== 'none';
-  TRACK.posts.visible = state.policy.bloor_cycle_track === 'protected';
-  state.agents = buildTimeline(state.sb);
-  makeAgentMeshes(state.agents);
-  state.start = start; state.end = Math.max(start + 1800, ...state.agents.map((a) => a.t1));
-  state.t = start; state.follow = null;
-  const sc = $('scrub'); sc.min = start; sc.max = Math.ceil(state.end); sc.value = start;
-  state.statsRun = tripStats(state.sb); state.statsBase = tripStats(state.base);
-  state.rejected = state.sb.events.filter((e) => e.type === 'action_rejected' || e.type === 'trip_infeasible').length;
-  state.buildMs = Math.round(performance.now() - t);
-  state.finished = state.sb.events.filter((e) => e.type === 'trip_completed').map((e) => e.t + e.duration_s).sort((a, b) => a - b);
-  console.info(`[viewer3d] seed ${SEED}: ${state.agents.length} agents, ${state.sb.events.length} events in ${state.buildMs} ms`);
+/* ---------- scenario cues on the street ---------- */
+const CUES = { tags: [], board: null };
+{
+  const mk = (cls, x, y, h) => { const d = document.createElement('div'); d.className = cls; const o = new CSS2DObject(d); o.position.copy(P(x, y, h)); scene.add(o); return o; };
+  for (const st of W.transit.stations) st.entrances.forEach((e, k) => CUES.tags.push(mk(k ? 'fare small' : 'fare', e.x, e.y, k ? 6 : 10)));
+  for (const s of STOPS) if (s.deps.some((d) => d.route === '510' || d.route === '511')) CUES.tags.push(mk('fare small', s.xy[0], s.xy[1], 6));
+  CUES.board = mk('board', 300, 0, 34);
+  CUES.detour = Object.values(DETOUR).map((d) => mk('dtag', d.pts[1][0] - 60, d.pts[1][1], 6));
+  DETOUR.north.lbl = CUES.detour[0]; DETOUR.south.lbl = CUES.detour[1];
 }
+const money = (v) => `$${Number(v).toFixed(2)}`;
+const pct = (a, b) => (a ? `${b >= a ? '+' : ''}${(((b - a) / a) * 100).toFixed(0)}%` : '');
+function headlineItems(run, sc) {
+  const B = run.totals.baseline, I = run.totals.intervention, c = run.checks.changed_decisions;
+  const item = (label, a, b, fmt = (v) => v) => ({ label, a: fmt(a), b: fmt(b), d: pct(a, b), up: b > a, same: a === b });
+  const items = sc === 'bike'
+    ? [item('Bloor bike trips', B.bloor_route_trips, I.bloor_route_trips), item('All bike trips', B.bike_trips, I.bike_trips), item('Walk trips', B.walk_trips, I.walk_trips), item('Car trips', B.car_trips, I.car_trips), item('Shop sales', B.shop_sales_cad, I.shop_sales_cad, (v) => `$${Math.round(v).toLocaleString()}`)]
+    : [item('TTC fare revenue', B.fare_revenue_cad, I.fare_revenue_cad, money), item('Car trips', B.car_trips, I.car_trips), item('Walk trips', B.walk_trips, I.walk_trips), item('TTC trips', B.bus_trips, I.bus_trips), item('Household transport', B.household_transport_spend_cad, I.household_transport_spend_cad, money)];
+  return { items, changed: `${c.count} of ${c.of_pairs}` };
+}
+function updateCues() {
+  const sc = state.scenario, run = runOf(), pol = state.arm === 'policy';
+  const fares = run ? run.fares : {};
+  for (const o of CUES.tags) {
+    o.visible = sc === 'fare' && groups.transit.visible;
+    if (!o.visible) continue;
+    const a0 = fares['baseline:adult'], a1 = fares['intervention:adult'], fp = fares['baseline:fair_pass'];
+    o.element.innerHTML = pol ? `Adult <s>${money(a0)}</s> <b>${money(a1)}</b>${o.element.classList.contains('small') ? '' : `<br>Fair Pass ${money(fp)} =`}` : `Adult ${money(a0)}${o.element.classList.contains('small') ? '' : `<br>Fair Pass ${money(fp)}`}`;
+    o.element.classList.toggle('up', pol);
+  }
+  for (const d of CUES.detour) d.visible = sc === 'bike' && groups.cycling.visible;
+  DETOUR.north.lbl.element.textContent = `detour route: ${DETOUR.north.name}`; DETOUR.south.lbl.element.textContent = `detour route: ${DETOUR.south.name}`;
+  CUES.board.visible = !!run && groups.labels.visible;
+  if (run) {
+    const h = headlineItems(run, sc), top = h.items[0];
+    CUES.board.element.innerHTML = pol
+      ? `<div class="k">${esc(SCEN[sc].short)} · policy</div><b>${esc(top.label)}: ${top.a} → ${top.b} <i class="${top.up ? 'up' : 'down'}">${top.d}</i></b><div>${h.changed} trip decisions changed</div>`
+      : `<div class="k">${esc(SCEN[sc].short)} · baseline</div><b>${sc === 'bike' ? 'Protected cycle track (2016)' : `Adult fare ${money(fares['baseline:adult'])}`}</b><div>switch to Policy to see the change</div>`;
+    CUES.board.element.classList.toggle('pol', pol);
+  }
+  // Bike policy: posts gone, paint turns amber and pulses. Fare policy: entrances glow red.
+  const unprot = sc === 'bike' ? pol : sc === 'sandbox' ? $('track').value !== 'protected' : false;
+  TRACK.posts.visible = !(sc === 'sandbox' ? $('track').value !== 'protected' : unprot);
+  for (const m of TRACK.paint) m.visible = !(sc === 'sandbox' && $('track').value === 'none');
+  MAT.track.color.set(unprot ? '#f0a030' : '#2f9e6f');
+  state.trackPulse = unprot;
+  MAT.pav.color.set(sc === 'fare' && pol ? '#ff8a7a' : '#8fd3b4'); MAT.pav.emissive.set(sc === 'fare' && pol ? '#ff3b30' : '#3fbf88');
+  document.body.dataset.arm = run ? state.arm : 'none';
+}
+
+/* ---------- headline and people panels ---------- */
+function renderHeadline() {
+  const run = runOf(), sc = state.scenario;
+  $('scen').value = sc; $('trackWrap').style.display = sc === 'sandbox' ? '' : 'none';
+  for (const b of document.querySelectorAll('[data-arm]')) b.classList.toggle('on', b.dataset.arm === state.arm);
+  $('armWrap').style.display = run || sc === 'sandbox' ? '' : 'none';
+  if (!run) {
+    $('hlBody').innerHTML = sc === 'sandbox' ? '<div class="note">Sandbox only: background traffic from the observed counts. Policy arm uses the cycle-track setting below.</div>'
+      : '<div class="note">No persona run found. Build personas.json with <code>node world/viewer3d/build-personas.mjs</code>.</div>';
+    $('people').style.display = 'none'; return;
+  }
+  const h = headlineItems(run, sc);
+  const weeks = Array.from({ length: run.ticks }, (_, i) => i + 1);
+  $('week').innerHTML = weeks.map((w) => `<option value="${w}" ${w === state.week ? 'selected' : ''}>Week ${w}${w < run.policy_start ? ' (before policy)' : ''}</option>`).join('');
+  $('hlBody').innerHTML = `<div class="q">${esc(run.question)}</div>
+    <div class="tiles">${h.items.map((x) => `<div class="tile"><span>${esc(x.label)}</span><b>${x.a} <em>→</em> ${x.b}</b><i class="${x.same ? '' : x.up ? 'up' : 'down'}">${x.same ? 'no change' : x.d}</i></div>`).join('')}</div>
+    <div class="note">${h.changed} trip decisions changed between arms, 40 persona agents × 4 weeks · ${esc(run.label)} · ${esc(run.model || '')}, ${run.calls} calls, ${run.sample ? 'committed sample' : 'saved'} run of ${esc((run.saved_at || '').slice(0, 16).replace('T', ' '))} UTC ${chip('simulated')}</div>`;
+  renderPeople();
+}
+function renderPeople() {
+  const run = runOf(); if (!run) return;
+  const by = new Map();
+  for (const c of run.changed) (by.get(c.actor) || by.set(c.actor, []).get(c.actor)).push(c);
+  const list = [...by.entries()].sort((a, b) => b[1].length - a[1].length);
+  $('people').style.display = '';
+  $('peopleBody').innerHTML = `<h2>People affected (${list.length})</h2>` + list.map(([pid, cs]) => {
+    const p = personaById(pid);
+    const t = [...new Set(cs.map((c) => `${CHOICE[c.from] || c.from} → ${CHOICE[c.to] || c.to}`))];
+    return `<button class="person${state.selected === pid ? ' on' : ''}" data-pid="${pid}"><b>${esc(p ? p.name : pid)}</b> <span>${esc(p ? ROLE[p.role] || p.role : '')}, ${esc(p ? p.age_band || '' : '')}</span><br><em>${t.map(esc).join(' · ')}</em> <span>wk ${[...new Set(cs.map((c) => c.tick))].join(', ')}</span></button>`;
+  }).join('') + '<div class="note">Click a person to fly to them. Magenta ring and route: changed this week. Cyan route: the same trip in the other arm.</div>';
+  for (const b of document.querySelectorAll('#peopleBody .person')) b.onclick = () => selectPerson(b.dataset.pid);
+}
+function selectPerson(pid) {
+  const run = runOf(), cs = run ? run.changed.filter((c) => c.actor === pid) : [];
+  state.selected = pid;
+  if (cs.length && !cs.some((c) => c.tick === state.week)) { state.week = cs[0].tick; rebuildArms(); }
+  if (state.arm !== 'policy' && cs.length) { state.arm = 'policy'; afterArmSwitch(); }
+  inspected = describePersona(pid); buildTrails(); renderPeople();
+  followPersona(pid, true);
+}
+
+/* ---------- running both arms ---------- */
+function rebuildArms() {
+  const start = +$('start').value, density = +$('density').value, t0 = performance.now();
+  disposeArm(state.arms.baseline); disposeArm(state.arms.policy);
+  state.arms = { baseline: buildArm('baseline', state.scenario, start, density), policy: buildArm('policy', state.scenario, start, density) };
+  state.start = start; state.end = Math.max(start + 1800, ...Object.values(state.arms).flatMap((a) => a.agents.map((x) => x.t1)));
+  if (state.t < start || state.t > state.end) state.t = start;
+  const sc = $('scrub'); sc.min = start; sc.max = Math.ceil(state.end);
+  for (const arm of Object.values(state.arms)) {
+    arm.rejected = arm.sb.events.filter((e) => e.type === 'action_rejected' || e.type === 'trip_infeasible').length;
+    arm.finished = arm.sb.events.filter((e) => e.type === 'trip_completed').map((e) => e.t + e.duration_s).sort((a, b) => a - b);
+  }
+  state.follow = null;
+  afterArmSwitch();
+  console.info(`[viewer3d] ${state.scenario} week ${state.week}, seed ${SEED}: ${state.arms.policy.agents.length} agents (${state.arms.policy.people.length} persona trips) per arm in ${Math.round(performance.now() - t0)} ms`);
+}
+function afterArmSwitch() {
+  for (const [k, a] of Object.entries(state.arms)) a.group.visible = k === state.arm;
+  state.agents = curArm().agents;
+  for (const a of state.agents) a.cursor = 0;
+  if (state.follow && state.follow.persona) { const pid = state.follow.persona.pid; state.follow = curArm().people.find((x) => x.persona.pid === pid) || null; }
+  buildTrails(); updateCues(); renderHeadline();
+  if (inspected && inspected.agent) inspected = null;
+  refreshInspector();
+}
+function setArm(a) { if (state.arm === a) return; state.arm = a; afterArmSwitch(); }
 
 /* ---------- dashboard ---------- */
 function renderStats() {
-  let done = 0; { let lo = 0, hi = state.finished.length; while (lo < hi) { const m = (lo + hi) >> 1; if (state.finished[m] <= state.t) lo = m + 1; else hi = m; } done = lo; }
-  const modes = ['walk', 'transit', 'bike', 'car'];
-  const cmp = state.sb !== state.base;
+  const arm = curArm(); if (!arm) return;
+  let done = 0; { let lo = 0, hi = arm.finished.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arm.finished[m] <= state.t) lo = m + 1; else hi = m; } done = lo; }
+  const modes = ['walk', 'transit', 'bike', 'car'], B = state.arms.baseline.stats, Pp = state.arms.policy.stats;
   const cell = (s, m) => (s[m] ? (s[m].dur / s[m].n / 60).toFixed(1) : '–');
   const rows = modes.map((m) => {
-    const a = state.statsRun[m], b = state.statsBase[m];
-    const delta = cmp && a && b ? ((a.dur / a.n - b.dur / b.n) / 60) : null;
-    return `<tr><th style="text-align:left">${AGENT_STYLE[m].label}</th>${cmp ? `<td>${cell(state.statsBase, m)}</td>` : ''}<td>${cell(state.statsRun, m)}</td>${cmp ? `<td>${delta == null ? '–' : (delta >= 0 ? '+' : '') + delta.toFixed(2)}</td>` : ''}<td>${a ? Math.round(a.wait / a.n) : '–'}</td>${m === 'bike' ? `<td>${a ? Math.round(a.shared / a.n) : 0} m shared</td>` : '<td></td>'}</tr>`;
+    const a = Pp[m], b = B[m], delta = a && b ? ((a.dur / a.n - b.dur / b.n) / 60) : null;
+    return `<tr><th style="text-align:left">${AGENT_STYLE[m].label}</th><td>${cell(B, m)}</td><td>${cell(Pp, m)}</td><td>${delta == null ? '–' : (delta >= 0 ? '+' : '') + delta.toFixed(2)}</td>${m === 'bike' ? `<td>${a ? Math.round(a.shared / a.n) : 0} m shared</td>` : '<td></td>'}</tr>`;
   }).join('');
-  $('stats').innerHTML = `<span>On stage: <b>${counts.walk}</b> walking · <b>${counts.transit}</b> to transit · <b>${counts.bike}</b> cycling · <b>${counts.car}</b> driving · <b>${counts.waiting}</b> waiting at signals</span>
-    <span>Trips finished: <b>${done}</b> / ${state.finished.length} · rejected actions: <b>${state.rejected}</b> · seed ${SEED} ${chip('simulated')}</span>
-    <table><tr><th style="text-align:left">mean trip</th>${cmp ? '<th>baseline min</th>' : ''}<th>${cmp ? 'policy' : 'baseline'} min</th>${cmp ? '<th>Δ min</th>' : ''}<th>wait s</th><th></th></tr>${rows}</table>`;
+  $('stats').innerHTML = `<span>Showing <b>${state.arm}</b> · on stage: <b>${counts.people}</b> persona trips · <b>${counts.walk}</b> walking · <b>${counts.transit}</b> to transit · <b>${counts.bike}</b> cycling · <b>${counts.car}</b> driving · <b>${counts.waiting}</b> waiting</span>
+    <span>Trips finished: <b>${done}</b> / ${arm.finished.length} · rejected actions: <b>${arm.rejected}</b> · seed ${SEED}, same in both arms ${chip('simulated')}</span>
+    <table><tr><th style="text-align:left">sandbox mean trip</th><th>baseline min</th><th>policy min</th><th>Δ min</th><th></th></tr>${rows}</table>`;
 }
 
 /* ---------- inspector + tooltip ---------- */
 let inspected = null;
 function refreshInspector() {
   if (!inspected) { $('insp').classList.remove('open'); return; }
+  if (inspected.persona) inspected = describePersona(inspected.persona) || inspected;
   const d = inspected, rows = typeof d.rows === 'function' ? d.rows() : d.rows;
   $('inspBody').innerHTML = `<h3>${esc(d.title)}</h3><div class="note">${d.kind} ${chip(d.status)}</div>
     <table>${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>
@@ -938,7 +1273,7 @@ function refreshInspector() {
   if (d.action) $('inspAction').onclick = d.action.run;
   $('insp').classList.add('open');
 }
-$('inspClose').onclick = () => { inspected = null; state.follow = null; refreshInspector(); };
+$('inspClose').onclick = () => { inspected = null; state.follow = null; state.selected = null; buildTrails(); renderPeople(); refreshInspector(); };
 
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
 let pointer = null, hoverDirty = false, downAt = null;
@@ -949,6 +1284,8 @@ function pickAt(cx, cy) {
   ray.setFromCamera(mouse, camera);
   const objs = pickables.filter(effectiveVisible);
   const hits = ray.intersectObjects(objs, true);
+  // Persona agents win over anything behind them within a few metres, since they are small.
+  hits.sort((a, b) => (a.distance - (isPersonaHit(a) ? 6 : 0)) - (b.distance - (isPersonaHit(b) ? 6 : 0)));
   for (const h of hits) {
     let o = h.object; while (o && !o.userData.describe) o = o.parent;
     if (!o) continue;
@@ -957,13 +1294,15 @@ function pickAt(cx, cy) {
   }
   return null;
 }
+function isPersonaHit(h) { for (let o = h.object; o; o = o.parent) if (o.userData.describe) return o.isGroup && o.parent && o.parent.parent === groups.agents; return false; }
 renderer.domElement.addEventListener('pointermove', (e) => { pointer = [e.clientX, e.clientY]; hoverDirty = true; });
 renderer.domElement.addEventListener('pointerleave', () => { pointer = null; $('tip').style.display = 'none'; highlightBuilding(null); });
 renderer.domElement.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
   const d = pickAt(e.clientX, e.clientY);
-  inspected = d; if (!d) state.follow = null; refreshInspector();
+  if (d && d.persona) { state.selected = d.persona; buildTrails(); renderPeople(); } else if (!d) { state.follow = null; if (state.selected) { state.selected = null; buildTrails(); renderPeople(); } }
+  inspected = d; refreshInspector();
 });
 function updateHover() {
   if (!hoverDirty || !pointer) return;
@@ -972,7 +1311,7 @@ function updateHover() {
   highlightBuilding(d && d.kind === 'Building' ? d.obj : null);
   if (!d) { tip.style.display = 'none'; renderer.domElement.style.cursor = ''; return; }
   const rows = typeof d.rows === 'function' ? d.rows() : d.rows;
-  tip.innerHTML = `<b>${esc(d.title)}</b><span>${d.kind}${rows[0] ? ` · ${String(rows[0][1]).replace(/<[^>]+>/g, ' ').slice(0, 60)}` : ''}</span>`;
+  tip.innerHTML = `<b>${esc(d.title)}</b><span>${d.kind}${rows[0] ? ` · ${String(rows[0][1]).replace(/<[^>]+>/g, ' ').slice(0, 70)}` : ''}</span>`;
   tip.style.display = 'block';
   tip.style.left = `${Math.min(window.innerWidth - 270, pointer[0] + 14)}px`; tip.style.top = `${pointer[1] + 14}px`;
   renderer.domElement.style.cursor = 'pointer';
@@ -988,13 +1327,15 @@ for (const cb of document.querySelectorAll('[data-layer]')) {
       roofMesh.geometry.attributes.color.array.set(cb.checked ? BUILD.roofRes : BUILD.roofUse); roofMesh.geometry.attributes.color.needsUpdate = true;
       legend();
     }
-    hoverDirty = true;
+    updateCues(); hoverDirty = true;
   };
 }
+$('trails').onchange = () => { if (trailGroup) trailGroup.visible = $('trails').checked; };
+$('allNames').onchange = () => { state.labelsAll = $('allNames').checked; };
 function legend() {
   const res = groups.residents.visible;
   const items = res ? [[heatColor(0.15).getStyle(), 'few residents'], [heatColor(1).getStyle(), 'many residents (est.)']] : Object.entries(USE_COL).map(([k, v]) => [v, k.replace('_', '-')]);
-  items.push(...Object.entries(CAT_COL).map(([k, v]) => [v, CAT_NAME[k]]), ['#2f9e6f', 'cycle track'], ['#8fd3b4', 'subway entrance'], ['#e0362b', 'surface stop / streetcar']);
+  items.push(...Object.entries(CAT_COL).map(([k, v]) => [v, CAT_NAME[k]]), ['#2f9e6f', 'cycle track'], ['#8fd3b4', 'subway entrance'], ['#e0362b', 'surface stop / streetcar'], ['#ff3df0', 'persona: choice changed'], ['#ffffff', 'persona: same choice']);
   $('key').innerHTML = items.map(([c, l]) => `<span><i class="sw" style="background:${c}"></i>${l}</span>`).join('');
 }
 legend();
@@ -1032,19 +1373,50 @@ function applyLighting(k) {
   MAT.carGlass.emissiveIntensity = mix(0, 0.9);
   MAT.ground.color.copy(lerpC(D.ground, N.ground, k));
   // Street-lamp spill at night: a faint warm glow on pavement (decorative, not data).
-  for (const [m, v] of [[MAT.asphalt, 0.05], [MAT.sidewalk, 0.13], [MAT.track, 0.1], [MAT.white, 0.12], [MAT.path, 0.08]]) { m.emissive.set('#ffd29a'); m.emissiveIntensity = v * k; }
+  for (const [m, v] of [[MAT.asphalt, 0.05], [MAT.sidewalk, 0.13], [MAT.white, 0.12], [MAT.path, 0.08]]) { m.emissive.set('#ffd29a'); m.emissiveIntensity = v * k; }
+  state.trackGlow = 0.1 * k;
   document.body.style.background = skyUniforms.horizon.value.getStyle();
 }
 
-/* ---------- timeline controls ---------- */
+/* ---------- controls ---------- */
 $('play').onclick = () => { state.playing = !state.playing; $('play').textContent = state.playing ? '❚❚' : '▶'; };
 $('speed').onchange = () => { state.speed = +$('speed').value; };
 $('scrub').oninput = () => { state.t = +$('scrub').value; for (const a of state.agents) a.cursor = 0; };
-for (const id of ['start', 'track', 'density']) $(id).onchange = () => {
-  $('stats').textContent = 'Running the seeded sandbox (baseline and policy, same seed)…';
-  setTimeout(() => { rerun(); if (inspected && inspected.agent) { inspected = null; refreshInspector(); } }, 30);
-};
-window.addEventListener('keydown', (e) => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); $('play').click(); } });
+const busy = (fn) => { $('stats').textContent = 'Running the seeded sandbox (baseline and policy, same seed)…'; setTimeout(fn, 30); };
+for (const id of ['start', 'track', 'density']) $(id).onchange = () => busy(rebuildArms);
+$('scen').onchange = () => { state.scenario = $('scen').value; state.selected = null; inspected = null; const r = runOf(); if (r) state.week = Math.max(r.policy_start, state.week); busy(rebuildArms); };
+$('week').onchange = () => { state.week = +$('week').value; busy(rebuildArms); };
+for (const b of document.querySelectorAll('[data-arm]')) b.onclick = () => setArm(b.dataset.arm);
+window.addEventListener('keydown', (e) => {
+  if (e.target !== document.body) return;
+  if (e.code === 'Space') { e.preventDefault(); $('play').click(); }
+  if (e.key === 'b' || e.key === 'B') setArm(state.arm === 'policy' ? 'baseline' : 'policy');
+});
+
+/* Live replay: when the page is served by the persona server (persona-swarm/runtime/server.js), load
+ * its newest saved run instead of the bundled one. Read-only GETs; no model calls. */
+(async () => {
+  if (!/^https?:$/.test(location.protocol)) return;
+  try {
+    const h = await fetch('/health'); if (!h.ok) return;
+    const info = await h.json(); if (!info || !('backend' in info)) return;
+    $('live').style.display = '';
+    $('live').onclick = async () => {
+      $('live').textContent = 'Loading…';
+      try {
+        const { compactRun } = await import('./personas-adapter.js');
+        for (const [k, pol] of [['fare', 'fare'], ['bloor', 'bloor']]) {
+          const r = await fetch(`/replay/latest?kind=run&policy=${pol}`); if (!r.ok) continue;
+          const rec = (await r.json()).record; if (!rec || !rec.result) continue;
+          const c = compactRun(rec);
+          for (const p of c.personas) if (!PD.personas[p.id]) PD.personas[p.id] = p;
+          delete c.personas; PD.runs[k] = c;
+        }
+        $('live').textContent = 'Latest live run loaded'; busy(rebuildArms);
+      } catch (e) { $('live').textContent = 'Live load failed'; console.warn(e); }
+    };
+  } catch (e) { /* not served by the persona server */ }
+})();
 
 /* ---------- main loop ---------- */
 window.addEventListener('resize', () => {
@@ -1057,13 +1429,15 @@ function frame(now) {
   if (state.playing) { state.t += dt * state.speed; if (state.t > state.end) { state.t = state.start; for (const a of state.agents) a.cursor = 0; } }
   const target = state.night ? 1 : 0;
   if (state.nightK !== target) { state.nightK += Math.sign(target - state.nightK) * Math.min(Math.abs(target - state.nightK), dt / 1.4); applyLighting(state.nightK); }
+  MAT.track.emissive.set(state.trackPulse ? '#ff7a00' : '#ffd29a');
+  MAT.track.emissiveIntensity = state.trackPulse ? 0.35 + 0.3 * Math.sin(now / 260) : state.trackGlow || 0;
   updateAgents(state.t); updateVehicles(state.t); updateSignals(state.t);
   if (tween) {
     const k = Math.min(1, (now - tween.t0) / tween.dur), e = ease(k);
     camera.position.lerpVectors(tween.from.pos, tween.to.pos, e); controls.target.lerpVectors(tween.from.tgt, tween.to.tgt, e);
     if (k >= 1) tween = null;
   }
-  if (state.follow && state.follow.pose && state.follow.pose.h > -0.5) {
+  if (!tween && state.follow && state.follow.pose && state.follow.pose.h > -0.5) {
     const p = state.follow.pose, goal = P(p.x, p.y, 1), d = goal.sub(controls.target).multiplyScalar(0.12);
     controls.target.add(d); camera.position.add(d);
   }
@@ -1081,10 +1455,15 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-// Optional URL hash, e.g. #preset=flyover&t=08:12&night=1&pause=1 (handy for links and screenshots).
+// Optional URL hash, e.g. #scenario=fare&arm=baseline&week=3&person=a025&preset=flyover&t=08:12&night=1&pause=1.
 const HASH = new URLSearchParams(location.hash.slice(1));
 if (HASH.get('track')) $('track').value = HASH.get('track');
-rerun();
+if (SCEN[HASH.get('scenario')]) state.scenario = HASH.get('scenario');
+if (!PD && state.scenario !== 'sandbox') state.scenario = 'sandbox';
+if (['baseline', 'policy'].includes(HASH.get('arm'))) state.arm = HASH.get('arm');
+if (HASH.get('week')) state.week = +HASH.get('week');
+$('scen').value = state.scenario;
+rebuildArms();
 const startPreset = PRESETS[HASH.get('preset')] ? HASH.get('preset') : 'overview';
 goPreset(startPreset, true);
 document.querySelector(`[data-preset="${startPreset}"]`).classList.add('on');
@@ -1092,8 +1471,9 @@ if (HASH.get('t')) { const [h, m = 0, s = 0] = HASH.get('t').split(':').map(Numb
 if (HASH.get('night') === '1') { state.night = true; state.nightK = 1; $('night').classList.add('on'); $('night').textContent = '☀ Day'; }
 if (HASH.get('cam')) { const c = HASH.get('cam').split(',').map(Number); camera.position.copy(P(c[0], c[1], c[2])); controls.target.copy(P(c[3], c[4], c[5])); controls.update(); }
 if (HASH.get('pause') === '1') { state.playing = false; $('play').textContent = '▶'; }
+if (HASH.get('person') && personaById(HASH.get('person'))) { if (HASH.get('cam')) { state.selected = HASH.get('person'); inspected = describePersona(state.selected); buildTrails(); renderPeople(); refreshInspector(); } else selectPerson(HASH.get('person')); }
 applyLighting(state.nightK);
 loading.remove();
-window.__viewer3d = { state, scene, camera, controls, goPreset, pickAt, world: W, ready: true,
+window.__viewer3d = { state, scene, camera, controls, goPreset, pickAt, selectPerson, setArm, world: W, personas: PD, ready: true,
   tick: (t = state.t) => { state.t = t; updateAgents(t); updateVehicles(t); updateSignals(t); renderer.render(scene, camera); } };   // for debugging and tests
 requestAnimationFrame(frame);
