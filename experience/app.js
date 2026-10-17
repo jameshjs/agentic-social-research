@@ -1,5 +1,6 @@
 const { preparedScenarios, exploratoryScenario } = window.CounterfactualScenarios;
 const CityScene = window.CityScene;
+const traceAdapter = window.CounterfactualTraceAdapter;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -11,6 +12,25 @@ let investigationToken = 0;
 let activeSector = 'mobility';
 let activeBikeRole = 'cyclist';
 let activeBikePath = 'stay';
+let fareTrace = null;
+
+function useFareTrace(trace) {
+  if (!traceAdapter.isFareTrace(trace)) return;
+  fareTrace = trace;
+  window.CounterfactualCurrentRun = trace;
+  window.dispatchEvent(new CustomEvent('counterfactual:result', { detail: trace }));
+  $('#ttcWorkbenchStatus').textContent = `RUN v${trace.version} · ${trace.diverged_events} CHANGED CHOICES`;
+  $('#ttcWorkbenchMeta').textContent = `SEED ${trace.seed} · ASSUMPTION-DRIVEN · NOT A FORECAST`;
+  if (current.id === 'fare' && phase !== 'intro' && phase !== 'composer') {
+    current = traceAdapter.toFareScenario(trace, preparedScenarios.fare);
+    renderLab();
+  }
+}
+
+function ensureFareInspector() {
+  const inspector = $('#ttcInspector');
+  if (!inspector.getAttribute('src')) inspector.src = '../demo-ui/?embedded=1';
+}
 
 // Storyboard branches demonstrate causal questions until the shared WorldEvent log is connected.
 const bikeStories = {
@@ -75,6 +95,7 @@ function resetToIntro() {
   $('#investigation').hidden = true;
   $('#lab').hidden = true;
   $('#bikeLab').hidden = true;
+  $('#ttcWorkbench').hidden = true;
   $('#impact').hidden = true;
   scene.setSector(null);
   scene.setScenario('fare');
@@ -92,7 +113,12 @@ function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 async function runScenario(scenario, promptOverride = null) {
   const token = ++investigationToken;
-  current = scenario === 'custom' ? exploratoryScenario(promptOverride || '') : preparedScenarios[scenario];
+  if (scenario === 'fare') {
+    if (!fareTrace) fareTrace = window.CFSim.buildTrace({ seed: 42, version: 1 });
+    current = traceAdapter.toFareScenario(fareTrace, preparedScenarios.fare);
+    useFareTrace(fareTrace);
+    ensureFareInspector();
+  } else current = scenario === 'custom' ? exploratoryScenario(promptOverride || '') : preparedScenarios[scenario];
   document.body.dataset.scenario = current.id;
   scene.setScenario(current.id);
   const overlay = $('#investigation');
@@ -119,9 +145,11 @@ async function runScenario(scenario, promptOverride = null) {
 function renderLab() {
   $('#bikeLab').hidden = current.id !== 'bike';
   $('#bikeLabButton').hidden = current.id !== 'bike';
+  $('#ttcWorkbench').hidden = current.id !== 'fare';
+  $('#ttcInspectorButton').hidden = current.id !== 'fare';
   $('#scenarioBreadcrumb').textContent = current.breadcrumb;
-  $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : 'PREPARED DEMO REPLAY';
-  $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT' : 'ILLUSTRATIVE SAMPLE';
+  $('#runStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW' : current.id === 'fare' ? 'SEEDED EVENT REPLAY' : 'PREPARED DEMO REPLAY';
+  $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT' : current.id === 'fare' ? `SYNTHETIC v${current.trace.version}` : 'ILLUSTRATIVE SAMPLE';
   $('#studyTitle').textContent = current.title;
   $('#studySummary').textContent = current.summary;
   $('#viewportArea').textContent = current.viewport;
@@ -134,18 +162,18 @@ function renderLab() {
   $('#insightNarrative').textContent = current.narrative;
   $('#sourceRibbon').textContent = current.sourceRibbon;
   $('#impactScenarioTag').textContent = current.mapTag;
-  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : 'SCENARIO OUTPUTS / PREPARED REPLAY';
+  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : current.id === 'fare' ? `SCENARIO OUTPUTS / SHARED TRACE v${current.trace.version}` : 'SCENARIO OUTPUTS / PREPARED REPLAY';
   const custom = current.id === 'custom';
   $('#chainLabel').textContent = custom ? 'WHAT A CONNECTED ENGINE WOULD DO' : 'WATCH THE CHAIN';
   $('#impactButtonHint').textContent = custom ? 'Inspect missing evidence' : 'See the connected effects';
-  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : 'Simulated decisions are illustrative, not a validated policy forecast. Click an impact to inspect its assumptions.';
+  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : current.id === 'fare' ? 'This is a seeded rule-engine result, not a Toronto forecast. Open the living run to inspect people, events, evidence and reruns.' : 'Simulated decisions are illustrative, not a validated policy forecast. Click an impact to inspect its assumptions.';
   $('#impactHeadingLine').textContent = custom ? 'One question.' : 'One decision.';
   $('#impactHeadingEm').textContent = custom ? 'Open outcomes.' : 'Many futures.';
-  $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : 'Choose a connected sector to inspect its illustrative comparison and evidence boundary.';
-  $('#boardCaption').textContent = custom ? 'NO RUN RESULT ATTACHED' : 'ILLUSTRATIVE RUN · NOT A FORECAST';
+  $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : current.id === 'fare' ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : 'Choose a connected sector to inspect its illustrative comparison and evidence boundary.';
+  $('#boardCaption').textContent = custom ? 'NO RUN RESULT ATTACHED' : current.id === 'fare' ? `SEEDED TRACE v${current.trace.version} · NOT A FORECAST` : 'ILLUSTRATIVE RUN · NOT A FORECAST';
   $('#boardAction').textContent = custom ? '✳ INSPECT AN OPEN QUESTION' : '✳ TRACE A CONNECTION';
   $('#overviewTitle').textContent = custom ? 'What remains to measure.' : 'Every signal in view.';
-  $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : 'Five connected sectors, one illustrative comparison. Choose any chart to inspect its mechanism and evidence boundary.';
+  $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : current.id === 'fare' ? 'Five linked views of one seeded run. Change an assumption in the TTC inspector and every chart updates.' : 'Five connected sectors, one illustrative comparison. Choose any chart to inspect its mechanism and evidence boundary.';
   $('#viewToggle').hidden = custom;
   $('#viewportLegend').hidden = custom;
   $('#cityStateNote').hidden = !custom;
@@ -199,7 +227,9 @@ function renderChart(data) {
   chart.replaceChildren();
   const summary = !base.length || !policy.length
     ? 'No modelled series or numeric effect is attached to this question.'
-    : `Illustrative values, periods 1–4. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed change uses period 4: ${data.delta}.`;
+    : current.id === 'fare'
+      ? `Seeded model values, weeks 1–${base.length}. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed change compares the average after the policy starts: ${data.delta}. Not a Toronto forecast.`
+      : `Illustrative values, periods 1–4. Baseline: ${base.join(', ')}. Proposal: ${policy.join(', ')}. Unit: ${data.unit}. Displayed change uses period 4: ${data.delta}.`;
   chart.setAttribute('aria-label', `${data.chartTitle}. ${summary}`);
   $('#chartSummary').textContent = summary;
   const ns = 'http://www.w3.org/2000/svg';
@@ -415,6 +445,7 @@ $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', 
 }));
 $('#impactMapButton').addEventListener('click', () => { $('#impact').hidden = false; setPhase('impact'); scene.setSector(activeSector); $('#impact').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' }); });
 $('#bikeLabButton').addEventListener('click', () => $('#bikeLab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
+$('#ttcInspectorButton').addEventListener('click', () => $('#ttcWorkbench').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
 $('#bikeImpactButton').addEventListener('click', () => {
   const sector = activeBikeRole === 'merchant' ? 'commerce' : activeBikeRole === 'delivery' ? 'public' : 'mobility';
   chooseSector(sector);
@@ -443,6 +474,11 @@ $('#focusMarkerA').addEventListener('click', () => { activeSector = 'mobility'; 
 $('#focusMarkerB').addEventListener('click', () => { activeSector = 'commerce'; renderSector(); $('#impactMapButton').click(); });
 window.addEventListener('scroll', updateReveal, { passive: true });
 window.addEventListener('resize', updateReveal, { passive: true });
+window.addEventListener('message', event => {
+  const inspector = $('#ttcInspector');
+  if (event.origin !== window.location.origin || event.source !== inspector.contentWindow || event.data?.type !== 'counterfactual:result') return;
+  useFareTrace(event.data.trace);
+});
 updateReveal();
 const linkedDemo = new URLSearchParams(window.location.search).get('demo');
 if (linkedDemo && preparedScenarios[linkedDemo]) runScenario(linkedDemo);

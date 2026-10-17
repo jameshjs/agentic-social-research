@@ -1,6 +1,6 @@
-# Cinematic city experience — interactive UI prototype
+# Counterfactual Lab experience — canonical front end
 
-This is Meet's **front-end concept** for the entry → scenario reveal → impact exploration flow. It complements Aadit's detailed analyst console in the [reference artifact](https://claude.ai/artifact/Xw7QbBb3gP723j36MacTs7); it is not a replacement for the shared world engine or a claim that the live AI swarm is already connected.
+This is the **one public entry point** for the hackathon demo. The cinematic entry, TTC replay, Bloor explorer, and impact map live at `/experience/`. Aadit's detailed TTC 3D inspector remains implemented in [`demo-ui/`](../demo-ui/README.md) and is embedded here as the research workbench. Do not build another standalone public front end.
 
 ## Run it
 
@@ -10,31 +10,31 @@ From the repository root:
 python3 -m http.server 4173 --bind 127.0.0.1
 ```
 
-Open `http://127.0.0.1:4173/experience/`. Add `?demo=bike` to launch directly into the prepared Bloor replay. No package install or build is required. The in-app browser may block direct `file://` navigation, so the local HTTP server is the supported preview route. JavaScript and graphics are self-contained; the optional Google font request has system-font fallbacks.
+Open `http://127.0.0.1:4173/experience/`. Add `?demo=fare` or `?demo=bike` to open a prepared case. No package install or build is required. Serve from the **repository root** because the TTC page loads `../demo-ui/sim.js` and embeds `../demo-ui/?embedded=1`. The detailed TTC scene uses Three.js from a CDN; the outer experience has a canvas fallback and the cited trace generator works locally.
 
 ## What works now
 
 1. **Cloud descent:** a continuously animated isometric city sits behind a scroll-driven cloud reveal; an entry control scrolls to the centered hypothesis composer.
-2. **Two prepared Toronto cases:** TTC adult fare +$0.50 in the UTSC-area illustrative district, and hypothetical protected Bloor West bike-lane removal. Both use the same screen, state machine, city renderer, charts, and sector map. Baseline/policy toggles change vehicles and, for Bloor, show or remove the coloured bike lane. The Bloor scene uses a schematic low-rise corridor and a subway marker; its surface bus stays on a cross street.
+2. **Two prepared cases in one journey:** A TTC adult-fare +$0.50 seeded replay and hypothetical protected Bloor West bike-lane removal. The TTC trace currently depicts a **schematic west-end district**, not the locked UTSC-area baseline; do not call it census-calibrated. Bloor remains an illustrative storyboard.
 3. **Replay transition:** the composer recedes behind a four-step prepared replay, then the camera zooms into the district. The overlay explicitly says **no live model call**.
-4. **Living city illustration:** canvas frames draw buildings, shops, homes, roads, buses, cars, bicycles, people, trees, and moving example trails. Play/pause and timeline scrubbing change animated actor positions; baseline/proposal switches alter prepared street views. Markers open a corresponding sector.
-5. **Impact map:** five connected sectors open a large chart and evidence note. A second grid shows all five baseline/policy charts at once; each card opens the relevant sector.
+4. **TTC trace-backed inspector:** the embedded Three.js district replays its generated personas, baseline/policy events, evidence, assumptions and versioned reruns. It is a deterministic rule-engine stand-in, not the Steven/James AI swarm. The outer city flyover and scrubber remain schematic.
+5. **Shared TTC numbers:** [`trace-adapter.js`](./trace-adapter.js) maps Aadit's `CFSim.buildTrace()` result to the outer headline, five sector charts and impact map. The embedded inspector posts each new trace to the parent with `counterfactual:result`; rerunning updates the outer analysis. `window.CounterfactualCurrentRun` and the same-named `CustomEvent` expose the latest TTC trace to future components.
 6. **Responsive and accessible:** keyboard reachable controls, dialog semantics, visible focus, mobile layout, a reduced-motion path, frame-rate throttling on smaller screens, and capped device pixel ratio.
 7. **Bloor street explorer:** a dedicated schematic before/after street scene, synchronized with the main city toggle; clickable cyclist, driver/delivery and merchant response branches; separate observed-data and research source cards; and explicit gaps for local removal cost, injuries, emissions and shop margin. Every branch is an **illustrative storyboard**, not a `WorldEvent` or measured response.
 
 ## Truth in the demo
 
-The figures in [scenarios.js](./scenarios.js) are **illustrative UI data**, not empirical Toronto estimates or generated `RunResult`s. Displayed percentage changes compare the fourth model period in each synthetic baseline/proposal chart. The arbitrary-input path accepts a question but marks all outcomes **not estimable**; only the exact prepared prompts or preset controls open the two replays. Custom questions show a neutral illustration with no policy state comparison or invented metrics. The original studies and data limits are in [demo-data.md](../demo-data.md), [papers.md](../papers.md), and [bloor-bike-demo.md](../bloor-bike-demo.md).
+The TTC headline and charts now derive from **one seeded synthetic trace** generated by [`demo-ui/sim.js`](../demo-ui/sim.js). Its sample people, west-end grid, fare responses and shop rules are not measured Toronto effects. The TTC outer city flyover is still a schematic animation; only the embedded inspector plays trace events. The Bloor branch text and figures in [scenarios.js](./scenarios.js) remain **illustrative UI data**, not an engine result or removal forecast. The arbitrary-input path preserves the prompt and marks outcomes **not estimable**; the generic world engine is still missing. The original studies and data limits are in [demo-data.md](../demo-data.md), [papers.md](../papers.md), and [bloor-bike-demo.md](../bloor-bike-demo.md).
 
-Before presenting this as a working policy simulator, James/Steven/Meet must supply one shared `RunResult` and event trace. Replace `scenarios.js` replay values with a run adapter that drives **all** visible metrics, chart series, actor paths, and labels from the same result. Keep the public-data facts and assumptions in separate fields. The timeline currently scrubs example actor motion; it must later scrub actual world events and synchronized metric points. Papiers human notes and approvals must also be genuine, per [papiers-setup.md](../papiers-setup.md).
+Before presenting this as a general policy simulator, James/Steven/Meet must supply one shared `RunResult` for **both** prepared cases and unprepared prompts. Replace the current TTC rule-engine fixture and Bloor storyboard through the same adapter; drive the outer city and scrubber from actual events. Keep observed data and assumptions separate. Papiers human notes and approvals must be genuine, per [papiers-setup.md](../papiers-setup.md).
 
 ## Integration handoff
 
-- **Aadit:** reuse this shell, city illustration or camera/overlay ideas around the existing detailed city inspector. The Bloor street explorer is a schematic proposal view; replace its illustrative branch chips with actual event-backed actor decisions when the world engine is connected. The clickable sector map and chart components can move into React later without redesigning the interaction.
+- **Aadit:** evolve the detailed TTC inspector in `demo-ui/` but keep `/experience/` as the public route. Its trace message must continue to update the outer charts. Replace Bloor branch chips with actual event-backed decisions when the shared engine is ready.
 - **James:** provide `RunResult` with scenario ID, coordinates, actors, `WorldEvent`s, baseline/policy `MetricPoint`s, sector/edge trace IDs and source/assumption IDs. Extend visual cues for bicycle and subway actions, or supply a typed mode/route payload that the renderer can map safely.
 - **Steven:** connect scenario-specific personas and choices to the actor markers and event trail; do not animate a trip or shop sale that did not occur in the authoritative world.
-- **Meet:** wire the compiler/evidence packet and real Toronto source badges. The current arbitrary prompt path intentionally does not claim a backend response.
+- **Meet:** own the `trace-adapter.js` boundary, compiler/evidence packet, and Toronto source badges. The arbitrary prompt path intentionally does not claim a backend response.
 
 ## Local QA already done
 
-`node --check` passed for all three scripts. The in-app browser was used to inspect desktop and narrow mobile views, run both prepared scenarios, compare the Bloor baseline/policy street, scrub animation, open the connected map and chart cards, and test custom prompts for TTC fare decrease and bike-lane addition. Both stay speculative with no invented result. Browser console showed no errors in the initial visual pass. All paths still need the production engine; the prepared UI paths are replays.
+`node experience/test-trace-adapter.js` checks that the baseline stays fixed and the outer metrics update after a changed assumption. `node --check` passed for the experience scripts. Browser QA opened both prepared paths and changed a TTC assumption in the embedded inspector: the outer headline and sector charts moved from v1 to v2. Bloor stayed in its illustrative path; a responsive layout check confirmed its TTC controls are hidden. The production general engine, Toronto calibration, real Papiers retrieval, and event-driven outer flyover remain open work.

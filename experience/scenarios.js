@@ -1,30 +1,26 @@
 (function () {
-// UI-only replay data. These synthetic values are NOT empirical Toronto estimates.
-// The production app should replace this module with one RunResult/event ledger.
+// Bloor remains an illustrative storyboard. The TTC template below supplies copy and
+// source links; its displayed metrics are replaced from the versioned demo trace.
 const fare = {
   id: 'fare',
   prompt: 'What if the TTC adult pay-as-you-go fare increased by 50¢?',
   aliases: ['What if the adult TTC pay-as-you-go fare increased by $0.50?'],
   title: 'What if the TTC adult fare rose by 50¢?',
-  summary: 'Follow riders, a neighbourhood shop, and sample fare payments as choices ripple through a small synthetic district near UTSC.',
-  breadcrumb: 'MORNINGSIDE · HIGHLAND CREEK',
-  viewport: 'UTSC DISTRICT',
-  mapTag: 'TTC FARE / UTSC DISTRICT',
-  location: 'Morningside–Highland Creek, Toronto',
+  summary: 'Follow people, a neighbourhood shop, and sample fare payments in a schematic Toronto district.',
+  breadcrumb: 'TORONTO · SCHEMATIC WEST-END',
+  viewport: 'SYNTHETIC DISTRICT',
+  mapTag: 'TTC FARE / SCHEMATIC DISTRICT',
+  location: 'Toronto-inspired schematic west-end district',
   chain: ['Adult pay-as-you-go fare rises 50¢', 'Riders keep, change or defer a trip', 'Destinations see a different visit mix', 'Household costs and sample TTC receipts update'],
-  worldCaption: 'People choose. The city changes.',
+  worldCaption: 'Schematic flyover · trace-backed city below.',
   focus: ['01 / RIDER DECISION', '02 / LOCAL BUSINESS'],
-  headline: { label: 'SAMPLE PAID RIDES', value: '−9%', direction: 'vs baseline at period 4' },
-  mini: [
-    { label: 'Household travel spend', value: '+12%', tone: 'negative' },
-    { label: 'Sample shop visits', value: '−3%', tone: 'negative' },
-    { label: 'Sample fare receipts', value: '+6%', tone: 'positive' },
-  ],
-  narrative: 'A higher fare changes some riders’ trip or payment decisions. The displayed deltas come from a prepared synthetic example, with no Toronto-calibrated fare response.',
-  sourceRibbon: 'TTC fare rules + Toronto area context; behavioural assumptions shown separately',
+  headline: { label: 'AWAITING SEEDED RUN', value: '—', direction: 'trace required' },
+  mini: [],
+  narrative: 'The TTC figures are supplied by the seeded trace adapter.',
+  sourceRibbon: 'Trace required',
   evidence: {
     title: 'Fare response is a question, not a coefficient.',
-    text: 'The TTC fare rule and local census/traffic context are observed inputs. Comparable studies motivate heterogeneous fare and trip responses, but they do not supply a 2026 Toronto elasticity or a shop-sales forecast. Retail and employment effects are deliberately uncertain.',
+    text: 'The TTC fare is an observed input. The 3D district, people, income/travel combinations and responses are synthetic; this current run is not calibrated to the locked UTSC-area Toronto baseline. Comparable studies motivate heterogeneous responses but do not supply a Toronto elasticity or shop-sales forecast.',
     links: [
       ['Locked Toronto observed inputs', '../demo-data.md'],
       ['Fare research and conflicting retail evidence', '../papers.md'],
@@ -32,11 +28,11 @@ const fare = {
     ],
   },
   sectors: {
-    mobility: { icon: '↗', number: '01 / MOBILITY', title: 'A different route through the city.', description: 'Riders can keep a trip, choose another mode, travel elsewhere, or not travel. A fare change does not imply that every lost bus trip becomes a walk.', delta: '−9% RIDES', chartTitle: 'SAMPLE PAID RIDES / 4 PERIODS', unit: 'synthetic paid rides per model period', baseline: [42, 44, 45, 45], policy: [40, 39, 40, 41], evidence: 'Fare elasticities in other systems vary. Response size here is an illustrative assumption.' },
-    access: { icon: '◇', number: '02 / ACCESS', title: 'Some destinations become harder to reach.', description: 'When a trip is deferred or a route changes, access to shops and services may change. The scenario records destination events, rather than presuming every journey disappears.', delta: '−6% TRIPS', chartTitle: 'DESTINATION TRIPS / 4 PERIODS', unit: 'synthetic destination trips per model period', baseline: [32, 33, 34, 35], policy: [31, 31, 32, 33], evidence: 'Boston low-income fare research shows trip purpose matters; it does not establish a Toronto increase effect.' },
-    commerce: { icon: '⌑', number: '03 / LOCAL COMMERCE', title: 'Visits ripple into a shop’s day.', description: 'A synthetic shop sees a different mix of arrivals. Purchases and staffing only change if recorded choices and the stated shop rules support them.', delta: '−3% VISITS', chartTitle: 'SAMPLE SHOP VISITS / 4 PERIODS', unit: 'synthetic shop visits per model period', baseline: [31, 33, 32, 35], policy: [30, 32, 31, 34], evidence: 'Retail studies conflict and address different fare interventions. Zero retail effect remains a valid sensitivity case.' },
-    households: { icon: '◈', number: '04 / HOUSEHOLDS', title: 'The cost lands unevenly.', description: 'Pay-as-you-go riders, Fair Pass riders, and people at the monthly cap face different effective prices. Household spend must follow each simulated paid trip.', delta: '+12% SPEND', chartTitle: 'SAMPLE TRANSPORT SPEND / 4 PERIODS', unit: 'illustrative CAD per sampled household per model period', baseline: [24, 25, 25, 26], policy: [27, 28, 28, 29], evidence: 'TTC fare and cap rules are observed. Income/travel traits are synthetic and separate census margins cannot be merged into people.' },
-    public: { icon: '≋', number: '05 / PUBLIC REALM', title: 'More per ride, fewer rides.', description: 'Sample fare receipts reflect both actual paid fares and simulated ridership. This is not the TTC’s total revenue or a City budget estimate.', delta: '+6% RECEIPTS', chartTitle: 'SAMPLE FARE RECEIPTS / 4 PERIODS', unit: 'illustrative CAD receipts per sampled model period', baseline: [32, 33, 34, 35], policy: [34, 35, 36, 37], evidence: 'Fare-product choice and caps matter. Citywide revenue and operating costs are not estimated here.' },
+    mobility: { icon: '↗', number: '01 / MOBILITY', title: 'A different route through the city.', description: 'Riders can keep a trip, choose another mode, travel elsewhere, or not travel.' },
+    access: { icon: '◇', number: '02 / ACCESS', title: 'Some trips do not happen.', description: 'A lost bus ride may become another trip mode or a deferred journey.' },
+    commerce: { icon: '⌑', number: '03 / LOCAL COMMERCE', title: 'Visits ripple into a shop’s day.', description: 'Completed errands and transactions determine local shop activity.' },
+    households: { icon: '◈', number: '04 / HOUSEHOLDS', title: 'The cost lands unevenly.', description: 'Fare burden is calculated from synthetic persona income and recorded paid trips.' },
+    public: { icon: '≋', number: '05 / PUBLIC REALM', title: 'More per ride, fewer rides.', description: 'Sample fare receipts reflect paid fares and simulated ridership.' },
   },
 };
 

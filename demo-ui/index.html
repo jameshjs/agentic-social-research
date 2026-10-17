@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>if (new URLSearchParams(location.search).get('embedded') === '1') document.documentElement.dataset.embedded = 'true';</script>
 <style>[hidden]{display:none !important}body{margin:0}</style>
 <title>Counterfactual Lab</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -283,6 +284,11 @@ button { cursor: pointer; }
   .dash { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .stage[data-state="running"] .stage-dot { animation: none; } .banner { transition: none; } }
+html[data-embedded="true"] .top, html[data-embedded="true"] .dash { display: none; }
+html[data-embedded="true"] .grid { height: auto; }
+@media (min-width: 1000px) { html[data-embedded="true"] .grid { grid-template-columns: 250px minmax(0, 1fr) 310px; height: max(640px, calc(100dvh - 36px)); } }
+@media (min-width: 761px) and (max-width: 999px) { html[data-embedded="true"] .stage-col, html[data-embedded="true"] .left { height: 640px; max-height: 640px; } }
+@media (max-width: 760px) { html[data-embedded="true"] .city { height: 560px; } html[data-embedded="true"] .left { height: 650px; max-height: 650px; } html[data-embedded="true"] .right { height: 700px; max-height: 700px; } }
 </style>
 
 </head>
@@ -1343,6 +1349,7 @@ function renderAll() { renderStages(); renderAssumptions(); renderEvidence(); re
 function publishResult() {
   window.CF = { trace: trace(), versions: state.versions.map(v => v.trace) };
   window.dispatchEvent(new CustomEvent('counterfactual:result', { detail: trace() }));
+  if (window.parent !== window) window.parent.postMessage({ type: 'counterfactual:result', trace: trace() }, window.location.origin);
   $('#dash-status').textContent = 'run v' + trace().version + ' sent';
 }
 
