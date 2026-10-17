@@ -12,10 +12,10 @@ permissions:
 jobs:
   verify:
     name: Offline tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - name: Engine, world, experience, and API tests
@@ -39,7 +39,7 @@ jobs:
     name: Production deploy
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: verify
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: production
       url: https://155-138-141-130.sslip.io/experience/
@@ -47,7 +47,7 @@ jobs:
       group: counterfactual-production
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install pinned SSH host key and deploy credential
         env:
           VULTR_DEPLOY_SSH_KEY: ${{ secrets.VULTR_DEPLOY_SSH_KEY }}
