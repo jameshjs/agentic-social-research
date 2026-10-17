@@ -1,6 +1,6 @@
 // Landing globe: scrolling the intro flies from the whole Earth down to Bloor St W, Bathurst to Spadina.
 // It reads the same scroll progress as app.js updateReveal() (0 = top, ~.32 = the composer slide) and never
-// touches run state. Without WebGL, with reduced motion, with ?globe=off, or if the tiles do not load,
+// touches run state. Without WebGL, with reduced motion, with ?globe=off, or if the map style does not load,
 // it removes itself and the drawn landing stays as it was.
 (function () {
   'use strict';
@@ -19,7 +19,7 @@
   const stage = document.getElementById('globeStage');
   const params = new URLSearchParams(window.location.search);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!stage || params.get('globe') === 'off' || reduced || !webgl()) { if (stage) stage.remove(); document.documentElement.classList.remove('globe-pending'); return; }
+  if (!stage || params.get('globe') === 'off' || reduced || !webgl()) { if (stage) stage.remove(); return; }
 
   let map = null, target = 0, current = 0, frame = 0, last = 0, ready = false, captionTimer = 0;
   const caption = stage.querySelector('.globe-caption');
@@ -33,8 +33,6 @@
     console.warn('[globe] drawn landing kept:', reason || 'unavailable');
     if (map) { try { map.remove(); } catch (error) { /* already gone */ } }
     stage.remove();
-    document.body.classList.remove('globe-on');
-    document.documentElement.classList.remove('globe-pending');
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);
   }
@@ -115,12 +113,6 @@
 
   function onResize() { if (map) { map.resize(); onScroll(); } }
 
-  // Only shown on the landing; the replay keeps its own city views.
-  function syncPhase() {
-    const phase = document.body.dataset.phase;
-    stage.classList.toggle('is-off', phase !== 'intro' && phase !== 'composer');
-  }
-
   // The dark base style is near-black; lift land, water, borders and labels so the Earth reads at globe scale,
   // then let them settle darker as the camera reaches street level.
   function brighten() {
@@ -180,7 +172,7 @@
   function start() {
     const maplibregl = window.maplibregl;
     if (!maplibregl) return giveUp('MapLibre did not load');
-    const timer = setTimeout(() => giveUp('map did not load within 12 s'), 12000);
+    const timer = setTimeout(() => giveUp('map style did not load within 12 s'), 12000);
     try {
       map = new maplibregl.Map({
         container: stage.querySelector('.globe-map'),
@@ -194,6 +186,7 @@
       });
     } catch (error) { clearTimeout(timer); return giveUp(error.message); }
     map.on('style.load', () => {
+      clearTimeout(timer);   // the network works; slow tiles just bring the globe in later, never the drawn city
       try { map.setProjection({ type: 'globe' }); } catch (error) { /* flat map still zooms */ }
       try { brighten(); } catch (error) { /* keeps the dark base colours */ }
       try { addLayers(); } catch (error) { /* the zoom works without the highlight */ }
@@ -205,13 +198,9 @@
       current = target = scrollProgress();
       render(performance.now());
       stage.classList.add('is-ready');
-      document.body.classList.add('globe-on');   // the globe replaces the drifting clouds
-      document.documentElement.classList.remove('globe-pending');
     });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
-    new MutationObserver(syncPhase).observe(document.body, { attributes: true, attributeFilter: ['data-phase'] });
-    syncPhase();
   }
 
   const script = document.createElement('script');

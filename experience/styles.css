@@ -751,24 +751,13 @@ body.replay-collapsed:not([data-scenario=custom]) #impact,body.replay-collapsed 
 @media(max-width:760px){.run-ledger{padding:0 15px 24px}.map-persona-card{top:auto;bottom:70px;right:12px}}
 @media(prefers-reduced-motion:reduce){.experiment-event,.event-replay-play,.timeline-periods button{transition:none}}
 
-/* ---------- Demo view (default) and Researcher view (?detail=1 or the header switch); see view-mode.js ----------
-   The demo view is the four-beat stage walkthrough: city → prompt → 3D → report, then the 100 agents.
-   It only hides and restyles; every section, rail and tool stays in the DOM for Researcher view. */
-body:not(.demo-view) .demo-only{display:none!important}
+/* ---------- Demo view (body.demo-view, set in index.html; the only view) ----------
+   The four-beat stage walkthrough: city → prompt → 3D → report, then the 100 agents. */
 .people-strip[hidden],.lab-badge[hidden],.report-story[hidden]{display:none!important}
 
-/* Header switch */
 .header-actions{display:flex;align-items:center;gap:10px}
-.research-toggle{display:inline-flex;align-items:center;gap:9px;border:1px solid #b8e9d83d;border-radius:50px;background:#0a2029a6;color:#cfe0de;padding:9px 14px 9px 10px;font-size:10px;font-weight:700;letter-spacing:.4px;transition:border-color .2s,color .2s}
-.research-toggle:hover{border-color:#b8e9d880;color:var(--cream)}
-.research-toggle-track{position:relative;flex:none;width:26px;height:14px;border-radius:10px;background:#2a4650;transition:background .2s}
-.research-toggle-track span{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#cfe0de;transition:transform .2s}
-.research-toggle[aria-pressed="true"]{border-color:#a8f4d18a;color:var(--mint)}
-.research-toggle[aria-pressed="true"] .research-toggle-track{background:var(--mint)}
-.research-toggle[aria-pressed="true"] .research-toggle-track span{transform:translateX(12px);background:#0a242a}
-@media(max-width:760px){.research-toggle{padding:9px}.research-toggle-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
 
-/* What the demo view hides (all still present in Researcher view) */
+/* What the demo view hides */
 body.demo-view .lab-topline,body.demo-view .story-rail,body.demo-view .insight-rail,body.demo-view .focus-marker,
 body.demo-view .viewport-upper,body.demo-view .world-caption,body.demo-view #mapMotionNote,body.demo-view #mapAttribution,
 body.demo-view #runLedger,body.demo-view #replayToggle,body.demo-view #ttcWorkbench,body.demo-view #bikeLab,body.demo-view #personaLab,

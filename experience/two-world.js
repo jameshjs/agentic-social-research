@@ -1,18 +1,16 @@
 /* Two Worlds demo view.
  * 1. The 100-agent panel sits right after the prompt, above the 3D view, because the demo view hides
- *    everything under the 3D view (two-world.css). Researcher view keeps view-mode.js's order.
+ *    everything under the 3D view (two-world.css).
  * 2. One row of metric tiles right under the 3D view: baseline → with policy over the periods after the
  *    policy starts, summed from the run's own metrics.by_tick (experiment.v2). No number is typed in here. */
 (function () {
   'use strict';
   function place() {
     const poll = document.getElementById('agentPoll'), intro = document.getElementById('intro');
-    const demo = !window.CounterfactualView || window.CounterfactualView.isDemo();
-    if (demo && poll && intro && intro.nextElementSibling !== poll) intro.after(poll);
+    if (poll && intro && intro.nextElementSibling !== poll) intro.after(poll);
   }
   place();
-  document.addEventListener('DOMContentLoaded', place);   // after view-mode.js's own DOMContentLoaded placement
-  window.addEventListener('counterfactual:view', place);
+  document.addEventListener('DOMContentLoaded', place);
 
   const box = document.createElement('section');
   box.className = 'tw-metrics'; box.hidden = true; box.setAttribute('aria-label', 'What changes with the policy');

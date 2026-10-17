@@ -132,7 +132,7 @@ groups.residents.visible = false;
 
 /* sky + fog */
 const SKY = {
-  day: { top: '#3f7fc4', horizon: '#cfe2f1', bottom: '#d9e3ea', sun: 2.6, sunColor: '#fff3e0', hemi: 0.85, hemiSky: '#cfe6ff', hemiGround: '#8a8f7a', exposure: 1.0, windows: 0, glow: 0.15, ground: '#aab59d' },
+  day: { top: '#5388aa', horizon: '#deecec', bottom: '#eceddf', sun: 2.1, sunColor: '#fff2da', hemi: 1.35, hemiSky: '#e5f4ff', hemiGround: '#a9b9a6', exposure: 1.08, windows: 0, glow: 0.15, ground: '#91a99c' },
   night: { top: '#03060f', horizon: '#1b2740', bottom: '#0b1018', sun: 0.35, sunColor: '#9fb4ff', hemi: 0.22, hemiSky: '#3a4f7a', hemiGround: '#1a1a22', exposure: 1.15, windows: 1.25, glow: 1.6, ground: '#5d6657' },
 };
 const skyUniforms = { top: { value: col(SKY.day.top) }, horizon: { value: col(SKY.day.horizon) }, bottom: { value: col(SKY.day.bottom) } };
@@ -169,9 +169,9 @@ const chip = () => '';   // per-field status tags removed for the demo; the head
 /* ---------- ground, roads, sidewalks ---------- */
 const MAT = {
   ground: stdMat(SKY.day.ground, { roughness: 1 }),
-  asphalt: stdMat('#4a4f57', { roughness: 0.95 }),
-  lane: stdMat('#5b6068', { roughness: 0.95 }),
-  sidewalk: stdMat('#c9c4b8', { roughness: 0.95 }),
+  asphalt: stdMat('#58636b', { roughness: 0.95 }),
+  lane: stdMat('#657179', { roughness: 0.95 }),
+  sidewalk: stdMat('#d2cdbd', { roughness: 0.95 }),
   path: stdMat('#d6cdb6', { roughness: 1 }),
   white: stdMat('#f2f2ee', { roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
   yellow: stdMat('#f2c230', { roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
@@ -215,6 +215,55 @@ XS.forEach((n, i) => {
 const legHalf = (i) => Math.max(5, ...legPaths.filter((l) => l.i === i).map((l) => l.width / 2));
 const inBox = (x) => XS.some((n, i) => Math.abs(x - n.x) < legHalf(i) + 1.5);
 
+/* Small, schematic sidewalk details give the road a human scale. They are not
+ * mapped Toronto trees or observations and never enter the simulation. */
+{
+  const spots = [];
+  for (let x = -148; x < X1 - 15; x += 27) if (!inBox(x)) for (const side of [-1, 1]) spots.push([x + (hash(`tree:${x}:${side}`) - 0.5) * 7, side * 11.8]);
+  for (const road of legPaths) {
+    const side = road.side === 'north' ? 1 : -1, center = road.pts[0][0];
+    for (let d = 42; d < 350; d += 38) for (const edge of [-1, 1]) {
+      if (hash(`${road.street}:${road.side}:${d}:${edge}`) < 0.23) continue;
+      spots.push([center + edge * (road.width / 2 + 2.5), side * d]);
+    }
+  }
+  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.14, 0.2, 3.2, 7), stdMat('#715845'), spots.length);
+  const crown = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.9, 1), stdMat('#488568', { roughness: 1 }), spots.length);
+  const pit = new THREE.InstancedMesh(new THREE.BoxGeometry(2.3, 0.08, 2.3), stdMat('#a8a594'), spots.length);
+  const matrix = new THREE.Matrix4(), quat = new THREE.Quaternion(), scale = new THREE.Vector3(1, 1, 1);
+  spots.forEach(([x, y], i) => {
+    trunk.setMatrixAt(i, matrix.compose(P(x, y, 1.75), quat, scale));
+    crown.setMatrixAt(i, matrix.compose(P(x, y, 4.2), quat, scale.setScalar(0.8 + hash(`crown:${i}`) * 0.45)));
+    pit.setMatrixAt(i, matrix.compose(P(x, y, 0.22), quat, scale.setScalar(1)));
+  });
+  trunk.castShadow = crown.castShadow = true;
+  groups.ground.add(pit, trunk, crown);
+}
+// Parked cars are fixed set dressing on the side streets, distinct from the
+// moving decision agents and excluded from all mobility totals.
+{
+  const parked = [];
+  for (const road of legPaths.filter((r) => r.width >= 12)) {
+    const side = road.side === 'north' ? 1 : -1, center = road.pts[0][0];
+    for (let d = 58; d < 340; d += 69) {
+      if (hash(`parked:${road.street}:${road.side}:${d}`) < 0.36) continue;
+      const edge = hash(`curb:${road.street}:${d}`) < 0.5 ? -1 : 1;
+      parked.push([center + edge * (road.width / 2 - 1.35), side * d, edge]);
+    }
+  }
+  const body = new THREE.InstancedMesh(new THREE.BoxGeometry(3.85, 0.72, 1.72), stdMat('#ffffff', { roughness: 0.58 }), parked.length);
+  const cabin = new THREE.InstancedMesh(new THREE.BoxGeometry(2.25, 0.52, 1.48), stdMat('#344b54', { roughness: 0.3 }), parked.length);
+  const matrix = new THREE.Matrix4(), quat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2), scale = new THREE.Vector3(1, 1, 1);
+  const colors = ['#e1ddd1', '#c06e56', '#617984', '#d8ba77', '#758c7e'];
+  parked.forEach(([x, y], i) => {
+    body.setMatrixAt(i, matrix.compose(P(x, y, 0.64), quat, scale));
+    cabin.setMatrixAt(i, matrix.compose(P(x, y, 1.22), quat, scale));
+    body.setColorAt(i, col(colors[i % colors.length]));
+  });
+  body.castShadow = cabin.castShadow = true;
+  groups.ground.add(body, cabin);
+}
+
 /* lane markings and the cycle track */
 const TRACK = {};
 {
@@ -254,6 +303,19 @@ const TRACK = {};
   const trackPaint = flatMesh(green, MAT.track), trackDash = flatMesh(greenDash, MAT.track);
   groups.cycling.add(trackPaint, trackDash);
   TRACK.paint = [trackPaint, trackDash];
+  // A painted sharrow belongs to the *intervention* visual treatment. It is a
+  // schematic street cue, while each moving bicycle still comes from the run.
+  const sharrows = [];
+  for (let sx = 65; sx < L - 20; sx += 48) {
+    if (inBox(sx)) continue;
+    for (const sy of [-4.25, 4.25]) {
+      ribbon([[sx - 3.4, sy - 0.8], [sx, sy], [sx - 3.4, sy + 0.8]], 0.28, 0.105, sharrows);
+      ribbon([[sx - 6.2, sy - 0.8], [sx - 2.8, sy], [sx - 6.2, sy + 0.8]], 0.28, 0.105, sharrows);
+    }
+  }
+  TRACK.shared = flatMesh(sharrows, stdMat('#f4c358', { roughness: 0.72, polygonOffset: true, polygonOffsetFactor: -3 }));
+  TRACK.shared.visible = false;
+  groups.cycling.add(TRACK.shared);
   pickable(trackPaint, () => ({ title: 'Bloor St W cycle track', kind: 'Cycle track', status: 'observed',
     rows: [['Infrastructure', `Cycle Track ${chip('observed')}`], ['Installed', ct.map((s) => s.installed).filter((v, i, a) => a.indexOf(v) === i).join(', ')],
       ['Segments', ct.map((s) => `${s.from} → ${s.to}`).join('<br>')], ['Sandbox policy now', `${curArm() ? curArm().policy.bloor_cycle_track : 'protected'} (${state.arm} arm) ${chip('simulated')}`]],
@@ -290,10 +352,16 @@ function canvasTex(draw, size = 512) {
 const BAY = 4, FLOOR = W.population.floor_height_m || 3.2, BAYS = 8;
 const facadeTex = canvasTex((g, s) => {
   const cw = s / BAYS, ch = s / BAYS;
-  g.fillStyle = '#ffffff'; g.fillRect(0, 0, s, s);
+  g.fillStyle = '#f6f0e4'; g.fillRect(0, 0, s, s);
   for (let i = 0; i < BAYS; i++) for (let j = 0; j < BAYS; j++) {
-    g.fillStyle = '#b4bfc9'; g.fillRect(i * cw + cw * 0.22, j * ch + ch * 0.25, cw * 0.56, ch * 0.45);
-    g.fillStyle = '#e8e6e0'; g.fillRect(i * cw + cw * 0.15, j * ch + ch * 0.72, cw * 0.7, ch * 0.05);
+    const x = i * cw, y = j * ch, dark = (i + 2 * j) % 5 === 0;
+    g.fillStyle = 'rgba(94,65,45,.12)'; g.fillRect(x, y + ch * .9, cw, ch * .08);
+    g.fillStyle = '#e5daca'; g.fillRect(x + cw * .12, y + ch * .14, cw * .76, ch * .69);
+    g.fillStyle = '#435b63'; g.fillRect(x + cw * .19, y + ch * .19, cw * .62, ch * .57);
+    g.fillStyle = dark ? '#66818a' : '#91aab0'; g.fillRect(x + cw * .24, y + ch * .24, cw * .51, ch * .47);
+    g.fillStyle = 'rgba(230,251,244,.52)'; g.fillRect(x + cw * .28, y + ch * .26, cw * .08, ch * .41);
+    g.fillStyle = '#e5daca'; g.fillRect(x + cw * .46, y + ch * .2, cw * .055, ch * .53);
+    g.fillStyle = '#b7a894'; g.fillRect(x + cw * .12, y + ch * .73, cw * .76, ch * .055);
   }
 });
 const litTex = canvasTex((g, s) => {
@@ -307,7 +375,7 @@ const litTex = canvasTex((g, s) => {
 for (const t of [facadeTex, litTex]) t.repeat.set(1 / (BAY * BAYS), 1 / (FLOOR * BAYS));
 litTex.colorSpace = THREE.SRGBColorSpace;
 
-const USE_COL = { residential: '#eadfca', mixed: '#e6c998', non_residential: '#cdcbe0', unknown: '#ddd9d1' };
+const USE_COL = { residential: '#d9c8af', mixed: '#dbad7b', non_residential: '#b6c5cb', unknown: '#c9c1b5' };
 const resMax = Math.max(...W.buildings.items.map((b) => (b.residents_est || 0) / Math.max(1, b.floor_area_m2_est || 1)));
 function heatColor(v) { const c = new THREE.Color(); c.setHSL(0.14 - 0.14 * v, 0.85, 0.75 - 0.35 * v); return c; }
 function residentsColor(b) {
@@ -559,8 +627,11 @@ const SCHED = [];
   // Buses on their sourced routes: 7 Bathurst (Bathurst Station and north) and 127 Davenport (Spadina Rd to Spadina Station).
   const b7 = stopXY('14617'), b127 = stopXY('14777'), spRd = 614.6;
   const buses = [
-    { route: '7', dir: '1', label: '7 Bathurst bus northbound', pts: [[b7[0], b7[1]], [bathX + 4.8, b7[1] + 12], [bathX + 4.8, YMAX]] },
-    { route: '7', dir: '0', label: '7 Bathurst bus southbound', pts: [[bathX - 4.8, YMAX], [bathX - 4.8, b7[1] + 12], [b7[0], b7[1]]] },
+    // Draw the bus on the Bathurst roadway. The GTFS stop's point is inside
+    // the station block, so using it as a vehicle waypoint drove the 3D bus
+    // through a building. Its time and stop remain sourced; curb position is schematic.
+    { route: '7', dir: '1', label: '7 Bathurst bus northbound', pts: [[bathX + 4.8, YMIN], [bathX + 4.8, YMAX]] },
+    { route: '7', dir: '0', label: '7 Bathurst bus southbound', pts: [[bathX - 4.8, YMAX], [bathX - 4.8, YMIN]] },
     { route: '127', dir: '1', label: '127 Davenport bus northbound', pts: [[b127[0], b127[1]], [spRd + 4.8, b127[1] + 12], [spRd + 4.8, YMAX]] },
     { route: '127', dir: '0', label: '127 Davenport bus southbound', pts: [[spRd - 4.8, YMAX], [spRd - 4.8, b127[1] + 12], [b127[0], b127[1]]] },
   ];
@@ -625,6 +696,31 @@ const VEH = [];
       const win = new THREE.Mesh(new THREE.BoxGeometry(s.length - 0.6, 1.1, s.width + 0.04), glass); win.position.y = 2.25;
       const roof = new THREE.Mesh(new THREE.BoxGeometry(s.length - 2, 0.4, s.width - 0.4), stdMat('#e9e9e4')); roof.position.y = 3.0;
       for (const m of [body, win, roof]) { m.castShadow = true; g.add(m); }
+      if (s.kind === 'bus') {
+        const stripeMat = stdMat('#f5f0e9'), tireMat = stdMat('#1d252b', { roughness: 0.95 });
+        for (const side of [-1, 1]) {
+          const stripe = new THREE.Mesh(new THREE.BoxGeometry(s.length - 0.5, 0.27, 0.045), stripeMat);
+          stripe.position.set(0, 1.13, side * (s.width / 2 + 0.055)); g.add(stripe);
+          for (let wx = -s.length / 2 + 1.45; wx < s.length / 2 - 0.65; wx += 1.75) {
+            const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.88, 0.07), stripeMat);
+            mullion.position.set(wx, 2.25, side * (s.width / 2 + 0.09)); g.add(mullion);
+          }
+          for (const ax of [-s.length / 2 + 2.1, s.length / 2 - 2.0]) {
+            const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.53, 0.53, 0.19, 12), tireMat);
+            wheel.rotation.x = Math.PI / 2; wheel.position.set(ax, 0.55, side * (s.width / 2 + 0.04)); g.add(wheel);
+          }
+        }
+        const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.84, s.width - 0.32), stdMat('#335766', { roughness: 0.18, metalness: 0.15 }));
+        windshield.position.set(s.length / 2 + 0.085, 2.2, 0); g.add(windshield);
+        const bumper = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.22, s.width - 0.2), stripeMat);
+        bumper.position.set(s.length / 2 + 0.085, 0.59, 0); g.add(bumper);
+        const destination = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.47, s.width * 0.72), stdMat('#172b31', { emissive: '#dc9c35', emissiveIntensity: 0.55 }));
+        destination.position.set(s.length / 2 + 0.13, 2.92, 0); g.add(destination);
+        for (const side of [-1, 1]) {
+          const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, 0.37), stdMat('#fff2c0', { emissive: '#ffe7a1', emissiveIntensity: 1.1 }));
+          lamp.position.set(s.length / 2 + 0.08, 0.98, side * (s.width * 0.32)); g.add(lamp);
+        }
+      }
     }
     g.visible = false; groups.transit.add(g);
     const v = { sched: s, mesh: g, dep: null };
@@ -654,7 +750,7 @@ function updateVehicles(t) {
       if (k >= pool.length) break;
       const v = pool[k++], p = along(s.pts, s.cum, pos - s.length / 2);
       v.dep = d; v.mesh.visible = true;
-      if (v.tourLabel) v.tourLabel.visible = state.impactKind === 'fare' && state.arm === 'baseline';
+      if (v.tourLabel) v.tourLabel.visible = false;
       v.mesh.position.copy(P(p.x, p.y, p.h + (s.kind === 'subway' ? 0 : 0.05)));
       v.mesh.rotation.y = p.yaw;
       if (at.dwell >= 0 && p.h > -0.5) boardAt(s, s.stops[at.dwell], p, d, at.dwell, at.u);
@@ -662,6 +758,12 @@ function updateVehicles(t) {
     used.set(s, k);
   }
   flushRiders();
+  if (TOUR_STOP.group.visible) for (let i = 0; i < TOUR_STOP.figures.length; i++) {
+    const figure = TOUR_STOP.figures[i];
+    const step = Math.max(0, Math.min(1, (t - TOUR_STOP.busAt - i * 1.9) / 7));
+    figure.position.x = figure.userData.queueX - step * 3.1;
+    figure.position.z = -(figure.userData.queueY + (TOUR_STOP.y - figure.userData.queueY) * step * 0.6);
+  }
 }
 /* Riders getting on and off at a stop while the vehicle waits there. Decorative: GTFS gives the schedule,
  * not passenger counts, so 1–4 figures per stop are drawn from a fixed hash. */
@@ -784,9 +886,35 @@ const AGENT_STYLE = {
   bike: { label: 'cycling', palette: ['#30d158', '#7ee081'] },
   car: { label: 'driving', palette: ['#e8e8e8', '#2a2f36', '#9aa3ad', '#b33a3a', '#2e5aa8', '#c9a227', '#f4f4f4', '#556070'] },
 };
+function modelRod(a, b, radius = 0.045) {
+  const from = new THREE.Vector3(...a), to = new THREE.Vector3(...b), dir = to.clone().sub(from);
+  const g = new THREE.CylinderGeometry(radius, radius, dir.length(), 7);
+  g.applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize())));
+  g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+  return g;
+}
+const walkerGeo = mergeGeometries([
+  new THREE.CylinderGeometry(0.23, 0.27, 0.76, 9).translate(0, 1.14, 0),
+  new THREE.SphereGeometry(0.19, 10, 8).translate(0, 1.72, 0),
+  modelRod([-0.12, 0.78, 0], [-0.18, 0.12, 0], 0.09), modelRod([0.12, 0.78, 0], [0.18, 0.12, 0], 0.09),
+  modelRod([-0.23, 1.38, 0], [-0.39, 0.9, 0.1], 0.07), modelRod([0.23, 1.38, 0], [0.39, 0.9, -0.1], 0.07),
+]);
+const bicycleGeo = mergeGeometries([
+  new THREE.TorusGeometry(0.43, 0.062, 6, 16).translate(-0.68, 0.5, 0),
+  new THREE.TorusGeometry(0.43, 0.062, 6, 16).translate(0.68, 0.5, 0),
+  modelRod([-0.68, 0.5, 0], [0.08, 0.63, 0], 0.055),
+  modelRod([-0.68, 0.5, 0], [-0.22, 1.08, 0], 0.055),
+  modelRod([-0.22, 1.08, 0], [0.08, 0.63, 0], 0.055),
+  modelRod([0.08, 0.63, 0], [0.68, 0.5, 0], 0.055),
+  modelRod([0.68, 0.5, 0], [0.44, 1.2, 0], 0.06),
+  modelRod([-0.42, 1.12, 0], [-0.05, 1.12, 0], 0.05),
+  modelRod([0.42, 1.2, -0.32], [0.42, 1.2, 0.32], 0.05),
+  modelRod([-0.12, 1.12, 0], [-0.18, 1.69, 0], 0.15),
+  new THREE.SphereGeometry(0.18, 10, 8).translate(-0.18, 1.89, 0),
+]);
 const GEO = {
-  walk: mergeGeometries([new THREE.CylinderGeometry(0.22, 0.26, 1.35, 8).translate(0, 0.68, 0), new THREE.SphereGeometry(0.17, 10, 8).translate(0, 1.55, 0)]),
-  bike: mergeGeometries([new THREE.BoxGeometry(1.75, 0.6, 0.12).translate(0, 0.45, 0), new THREE.CylinderGeometry(0.2, 0.2, 0.85, 8).translate(0, 1.15, 0), new THREE.SphereGeometry(0.17, 10, 8).translate(0.05, 1.7, 0)]),
+  walk: walkerGeo,
+  bike: bicycleGeo,
   car: mergeGeometries([new THREE.BoxGeometry(4.4, 0.85, 1.85).translate(0, 0.6, 0), new THREE.BoxGeometry(2.3, 0.6, 1.65).translate(-0.25, 1.3, 0)]),
 };
 GEO.transit = GEO.walk;
@@ -972,7 +1100,9 @@ function mappedPersona(p) {
 /* From the skyline down to Bloor & Spadina: start high over the city and settle on the section. */
 function zoomIn() {
   camera.position.copy(P(420, -900, 2300)); controls.target.copy(P(470, 0, 0)); controls.update();
-  tween = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to: { pos: P(330, -150, 110), tgt: P(520, 10, 0) }, t0: performance.now() + 250, dur: 3200 };
+  // The final view looks *along* Bloor from within the street. An overhead camera
+  // made nearby rooftops cover the people and cycle track the demo is about.
+  tween = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to: { pos: P(175, -3, 36), tgt: P(410, 0, 1.5) }, t0: performance.now() + 250, dur: 3200 };
 }
 function setMappedRun(result) {
   if (!result || result.schema_version !== 'experiment.v2') return false;
@@ -1044,8 +1174,8 @@ const ringGeo = new THREE.RingGeometry(1.1, 1.6, 32).rotateX(-Math.PI / 2);
 const ringMat = { changed: new THREE.MeshBasicMaterial({ color: '#ff3df0', transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide }),
   same: new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }),
   picked: new THREE.MeshBasicMaterial({ color: '#ffe14d', transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide }) };
-const trailMat = { now: new THREE.MeshBasicMaterial({ color: '#ff3df0', transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4 }),
-  other: new THREE.MeshBasicMaterial({ color: '#4fe3ff', transparent: true, opacity: 0.45, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3 }) };
+const trailMat = { now: new THREE.MeshBasicMaterial({ color: '#ff73d5', transparent: true, opacity: 0.64, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4 }),
+  other: new THREE.MeshBasicMaterial({ color: '#77dfed', transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3 }) };
 
 function buildArm(armName, scen, start, density) {
   const run = runOf(scen), fares = run ? run.fares : {};
@@ -1134,6 +1264,75 @@ const counts = { walk: 0, transit: 0, bike: 0, car: 0, waiting: 0, people: 0 };
 RIDERS.mesh = new THREE.InstancedMesh(GEO.walk, new THREE.MeshStandardMaterial({ color: '#e9eef2', roughness: 0.6 }), RIDERS.max);
 RIDERS.mesh.frustumCulled = false; groups.transit.add(RIDERS.mesh); flushRiders();
 for (let i = 0; i < RIDERS.max; i++) RIDERS.mesh.setColorAt(i, col(AGENT_STYLE.walk.palette[i % AGENT_STYLE.walk.palette.length]));
+// A close-up stop vignette for the guided fare comparison. The queue is
+// deliberately labelled illustrative: GTFS has service times, not boardings.
+const TOUR_STOP = { group: new THREE.Group(), figures: [] };
+{
+  const stop = STOPS.find((s) => s.id === '14617');
+  const y = stop.xy[1], x = 11.2;
+  TOUR_STOP.y = y;
+  const platform = flatMesh(ribbon([[x, y - 19], [x, y + 19]], 6.0, 0.19, []), MAT.sidewalk);
+  TOUR_STOP.group.add(platform);
+  const dark = stdMat('#183840', { roughness: 0.52 }), accent = stdMat('#ee5547'), glassSide = stdMat('#b7d8cf', { transparent: true, opacity: 0.55, depthWrite: false });
+  const shelter = new THREE.Group(); shelter.position.copy(P(x + 1.3, y + 10));
+  for (const dy of [-2.3, 2.3]) {
+    const pole = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.5, 0.16), dark);
+    pole.position.set(0, 1.25, dy); shelter.add(pole);
+  }
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(3, 0.22, 6.2), accent); roof.position.y = 2.62; shelter.add(roof);
+  const pane = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.75, 5), glassSide); pane.position.set(1.4, 1.42, 0); shelter.add(pane);
+  const bench = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.18, 2.3), dark); bench.position.set(0.65, 0.64, 0); shelter.add(bench);
+  TOUR_STOP.group.add(shelter);
+  const sign = new THREE.Group(); sign.position.copy(P(x - 1.6, y - 10));
+  const signPole = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 3.7, 8), dark); signPole.position.y = 1.85;
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.52, 0.12, 20), accent); disc.rotation.x = Math.PI / 2; disc.position.y = 3.6;
+  sign.add(signPole, disc); TOUR_STOP.group.add(sign);
+  for (let i = 0; i < 9; i++) {
+    const figure = new THREE.Mesh(GEO.walk, new THREE.MeshStandardMaterial({ color: AGENT_STYLE.walk.palette[(i + 2) % AGENT_STYLE.walk.palette.length], roughness: 0.75 }));
+    figure.position.copy(P(x - 0.15 + (i % 2) * 0.85, y + 4.5 - i * 2.35, 0.2));
+    figure.rotation.y = -0.25 + (i % 3) * 0.22;
+    figure.castShadow = true;
+    figure.userData.queueY = y + 4.5 - i * 2.35;
+    figure.userData.queueX = x - 0.15 + (i % 2) * 0.85;
+    TOUR_STOP.group.add(figure); TOUR_STOP.figures.push(figure);
+  }
+  const tag = document.createElement('div'); tag.className = 'tour-stop-label'; tag.innerHTML = '<b>ROUTE 7 · BATHURST</b><span>scheduled bus · illustrative queue</span>';
+  const label = new CSS2DObject(tag); label.position.copy(P(x, y + 10, 5.3)); TOUR_STOP.group.add(label);
+  groups.transit.add(TOUR_STOP.group);
+  TOUR_STOP.group.visible = false;
+}
+// A small moving ground highlight makes the protected track versus shared-road
+// treatment readable from a follow camera. It follows the agent's logged edge;
+// the larger mapped road and all numeric outcomes still come from the run.
+const TOUR_PATH = { group: new THREE.Group() };
+{
+  const pavement = (color, width, opacity) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(21, width), new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4 }));
+    m.rotation.x = -Math.PI / 2; m.position.y = 0.16; TOUR_PATH.group.add(m); return m;
+  };
+  TOUR_PATH.protected = pavement('#2ee3a0', 2.65, 0.32);
+  TOUR_PATH.shared = pavement('#ef9b34', 3.65, 0.34);
+  TOUR_PATH.posts = new THREE.Group();
+  const postMat = stdMat('#f5f5e7', { emissive: '#ffffff', emissiveIntensity: 0.12 });
+  for (let x = -9; x <= 9; x += 3) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.95, 7), postMat);
+    post.position.set(x, 0.49, 1.45); TOUR_PATH.posts.add(post);
+  }
+  TOUR_PATH.group.add(TOUR_PATH.posts);
+  TOUR_PATH.group.visible = false;
+  groups.cycling.add(TOUR_PATH.group);
+}
+function updateTourPath() {
+  const p = state.follow?.pose, bike = state.impactTour?.focus === 'follow' && state.follow?.mode === 'bike' && p && p.h > -0.5;
+  TOUR_PATH.group.visible = !!bike;
+  if (!bike) return;
+  const shared = state.scenario === 'bike' && state.arm === 'policy';
+  TOUR_PATH.protected.visible = !shared;
+  TOUR_PATH.shared.visible = shared;
+  TOUR_PATH.posts.visible = !shared;
+  TOUR_PATH.group.position.copy(P(p.x, p.y, 0));
+  TOUR_PATH.group.rotation.y = p.yaw;
+}
 const curArm = () => state.arms[state.arm];
 function updateAgents(t) {
   for (const k of Object.keys(counts)) counts[k] = 0;
@@ -1175,14 +1374,15 @@ function updateAgents(t) {
     o.body.scale.setScalar(sc);
     o.ring.material = pickedNow ? ringMat.picked : changed ? ringMat.changed : ringMat.same;
     const flash = state.flashUntil && performance.now() < state.flashUntil && changed ? 2.2 : 1;
-    o.ring.scale.setScalar(sc * flash * (changed || pickedNow ? pulse : 1));
+    o.ring.scale.setScalar(sc * (state.impactTour ? 0.64 : flash * (changed || pickedNow ? pulse : 1)));
     const paying = e.fare != null && p.seg && /^stairs_/.test(p.seg.edge) && p.seg.pb[2] < p.seg.pa[2];
-    const show = changed || pickedNow || state.labelsAll || paying;
+    const show = state.impactTour ? pickedNow : changed || pickedNow || state.labelsAll || paying;
     o.lab.visible = show && groups.labels.visible;
     if (show) {
       const [bc, pc] = state.arm === 'policy' ? [otherChoice(e), e.choice] : [e.choice, otherChoice(e)];   // always baseline → policy
       const fareUp = paying && e.fare > ((runOf() || {}).fares || {})['baseline:adult'];
-      const html = paying ? `<b>${esc(personaById(e.pid).name)}</b> <span class="pay${fareUp ? ' up' : ''}">pays $${e.fare.toFixed(2)}</span>`
+      const html = state.impactTour ? `<b>${esc(personaById(e.pid).name)}</b> <span>${esc(CHOICE[e.choice] || e.choice)}</span>`
+        : paying ? `<b>${esc(personaById(e.pid).name)}</b> <span class="pay${fareUp ? ' up' : ''}">pays $${e.fare.toFixed(2)}</span>`
         : `<b>${esc(personaById(e.pid).name)}</b> ${changed ? `<span>${esc(CHOICE[bc] || bc)} → ${esc(CHOICE[pc] || pc)}</span>` : `<span>${esc(CHOICE[e.choice] || e.choice)}</span>`}`;
       if (o.tag._html !== html) { o.tag.innerHTML = html; o.tag._html = html; }
       o.tag.classList.toggle('chg', changed); o.tag.classList.toggle('pick', pickedNow);
@@ -1213,11 +1413,12 @@ function buildTrails() {
   const otherArm = state.arms[state.arm === 'policy' ? 'baseline' : 'policy'];
   for (const a of curArm().people) {
     const e = a.persona; if (!(isChanged(e.pid, e.trip) || state.selected === e.pid)) continue;
-    ribbon(route(a), 1.1, 0.35, now);
-    const b = otherArm.agents.find((x) => x.id === a.id); if (b) ribbon(route(b), 0.8, 0.3, other);
+    if (state.impactTour && e.pid !== state.selected) continue;
+    ribbon(route(a), state.impactTour ? 0.2 : 0.32, 0.35, now);
+    const b = otherArm.agents.find((x) => x.id === a.id); if (b) ribbon(route(b), state.impactTour ? 0.12 : 0.22, 0.3, other);
   }
   // Changed personas whose trip vanished in this arm (e.g. stayed home) still show the other arm's route.
-  for (const b of otherArm.people) if (!curArm().agents.find((x) => x.id === b.id) && (isChanged(b.persona.pid, b.persona.trip) || state.selected === b.persona.pid)) ribbon(route(b), 0.8, 0.3, other);
+  for (const b of otherArm.people) if (!curArm().agents.find((x) => x.id === b.id) && (isChanged(b.persona.pid, b.persona.trip) || state.selected === b.persona.pid) && (!state.impactTour || b.persona.pid === state.selected)) ribbon(route(b), state.impactTour ? 0.12 : 0.22, 0.3, other);
   if (now.length) trailGroup.add(flatMesh(now, trailMat.now, false));
   if (other.length) trailGroup.add(flatMesh(other, trailMat.other, false));
   trailGroup.visible = $('trails').checked;
@@ -1228,23 +1429,26 @@ const optionText = (o) => (typeof o === 'string' ? (CHOICE[o] || o) : `${CHOICE[
 function describePersona(pid) {
   const p = personaById(pid); if (!p) return null;
   const run = runOf();
+  const role = ROLE[p.role] || p.role.replace(/_/g, ' ');
   const who = p.mapped
-    ? `${esc(ROLE[p.role] || p.role.replace(/_/g, ' '))} · ${esc(p.neighbourhood)}`
+    ? `${esc(role)}${p.neighbourhood && !role.includes(p.neighbourhood) ? ` · ${esc(p.neighbourhood)}` : ''}`
     : `${esc(p.age_band || '')} ${esc(p.sex || '')} · ${esc(ROLE[p.role] || p.role)} · ${esc(p.neighbourhood)}`;
   return { title: p.name, kind: who, live: true, persona: pid,
     rows: () => {
       const r = [];
-      const cash = p.mapped ? `$${p.budget}/day budget` : `$${p.disposable_cash_weekly_cad}/week spare cash`;
-      r.push(['About', `${cash} · ${p.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare'} · ${p.has_car ? 'car' : 'no car'} · ${p.has_bike ? 'bike' : 'no bike'}`]);
-      if (p.traits.length) r.push(['Traits', p.traits.slice(0, 2).map(esc).join('<br>')]);
+      if (!EMBED) {   // inside /experience/ the card keeps only who they are and what changed
+        const cash = p.mapped ? `$${p.budget}/day budget` : `$${p.disposable_cash_weekly_cad}/week spare cash`;
+        r.push(['About', `${cash} · ${p.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare'} · ${p.has_car ? 'car' : 'no car'} · ${p.has_bike ? 'bike' : 'no bike'}`]);
+        if (p.traits.length) r.push(['Traits', p.traits.slice(0, 2).map(esc).join('<br>')]);
+      }
       const fixed = r.length;
       if (run) {
         const wk = state.week;
         for (const trip of (p.routine || []).map((x) => x.id)) {
           const k = `${wk}:${pid}:${trip}`, b = run.choices.baseline[k], i = run.choices.intervention[k];
           if (!b || !i || b.chosen === i.chosen) continue;
-          const why = p.mapped ? `options: ${(i.options || []).map(optionText).join(' · ')}` : `“${esc(i.reason)}”`;
-          r.push([esc(trip), `<b class="chgtxt">${esc(CHOICE[b.chosen] || b.chosen)} → ${esc(CHOICE[i.chosen] || i.chosen)}</b><br><span class="note">${why}</span>`]);
+          const why = EMBED ? '' : `<br><span class="note">${p.mapped ? `options: ${(i.options || []).map(optionText).join(' · ')}` : `“${esc(i.reason)}”`}</span>`;
+          r.push([esc(trip), `<b class="chgtxt">${esc(CHOICE[b.chosen] || b.chosen)} → ${esc(CHOICE[i.chosen] || i.chosen)}</b>${why}`]);
         }
         if (r.length === fixed) r.push(['This period', 'same choices with and without the policy']);
       }
@@ -1314,7 +1518,8 @@ function updateCues() {
   // Bike policy: posts gone, paint turns amber and pulses. Fare policy: entrances glow red.
   const unprot = sc === 'bike' ? pol : sc === 'sandbox' ? $('track').value !== 'protected' : false;
   TRACK.posts.visible = !(sc === 'sandbox' ? $('track').value !== 'protected' : unprot);
-  for (const m of TRACK.paint) m.visible = !(sc === 'sandbox' && $('track').value === 'none');
+  for (const m of TRACK.paint) m.visible = !unprot && !(sc === 'sandbox' && $('track').value === 'none');
+  TRACK.shared.visible = unprot;
   MAT.track.color.set(unprot ? '#f0a030' : '#2f9e6f');
   state.trackPulse = unprot;
   MAT.pav.color.set(sc === 'fare' && pol ? '#ff8a7a' : '#8fd3b4'); MAT.pav.emissive.set(sc === 'fare' && pol ? '#ff3b30' : '#3fbf88');
@@ -1365,6 +1570,7 @@ function selectPerson(pid) {
 /* ---------- running both arms ---------- */
 function rebuildArms() {
   const start = +$('start').value, density = +$('density').value, t0 = performance.now();
+  state.impactTour = null; TOUR_STOP.group.visible = false;
   disposeArm(state.arms.baseline); disposeArm(state.arms.policy);
   state.arms = { baseline: buildArm('baseline', state.scenario, start, density), policy: buildArm('policy', state.scenario, start, density) };
   if (state.mapped) {
@@ -1385,7 +1591,10 @@ function rebuildArms() {
   console.info(`[viewer3d] ${state.scenario} week ${state.week}, seed ${SEED}: ${state.arms.policy.agents.length} agents (${state.arms.policy.people.length} persona trips) per arm in ${Math.round(performance.now() - t0)} ms`);
 }
 function afterArmSwitch() {
-  for (const [k, a] of Object.entries(state.arms)) a.group.visible = k === state.arm;
+  for (const [k, a] of Object.entries(state.arms)) {
+    a.group.visible = k === state.arm;
+    if (k !== state.arm) for (const person of a.people) person.obj.lab.visible = false;
+  }
   state.agents = curArm().agents;
   for (const a of state.agents) a.cursor = 0;
   if (state.follow && state.follow.persona) { const pid = state.follow.persona.pid; state.follow = curArm().people.find((x) => x.persona.pid === pid) || null; }
@@ -1395,13 +1604,37 @@ function afterArmSwitch() {
 }
 function setArm(a) {
   if (state.arm === a) return;
+  state.impactTour = null; TOUR_STOP.group.visible = false;
   state.arm = a; state.flashUntil = performance.now() + 2600; afterArmSwitch();
   if (EMBED && window.parent !== window) window.parent.postMessage({ type: 'viewer3d:arm', arm: a }, location.origin);
 }
 
+function tourFollowShot(p) {
+  const dx = p.seg?.ux ?? 1, dy = p.seg?.uy ?? 0;
+  // Stay above the road behind the actor, not behind a Bloor storefront.
+  const inward = Math.abs(p.y) < 16 ? Math.sign(p.y) * 5.0 : 0;
+  return {
+    pos: P(p.x - dx * 14 + (Math.abs(dy) > 0.5 ? 1.5 : 0), p.y - dy * 14 - inward, 5.7),
+    tgt: P(p.x + dx * 4.8, p.y + dy * 4.8, 1.45),
+  };
+}
+function tourQueueSize(run, arm) {
+  const tripTotal = (which) => run.mapped.runs[which].metrics.by_tick
+    .filter((point) => point.tick >= run.mapped.scenario.policy_start)
+    .reduce((n, point) => n + (point.transit_trips || 0), 0);
+  const before = tripTotal('baseline');
+  return arm === 'baseline' || !before ? 9 : Math.max(2, Math.min(9, Math.round(9 * tripTotal('intervention') / before)));
+}
+function tourSegment(person, kind, arm) {
+  if (!person) return null;
+  const visible = person.segs.filter((s) => !s.hidden && s.len > 6 && s.travel > 3);
+  if (kind === 'bike') return visible.find((s) => arm === 'baseline' ? /trk_/.test(s.edge) : /car_|detour/.test(s.edge)) || visible[0];
+  return visible.find((s) => /trk_|car_|walk_/.test(s.edge)) || visible[0];
+}
+
 /* A guided, event-backed comparison. The bus and stop are scheduled GTFS context; the
  * highlighted person's mode and the policy-specific street treatment come from the run. */
-function showImpactPhase({ arm, actor, trip, tick, kind }) {
+function showImpactPhase({ arm, actor, trip, tick, kind, focus }) {
   const run = runOf();
   if (!EMBED || !run || !run.mapped || !['baseline', 'policy'].includes(arm)) return;
   const choice = run.changed.find((c) => c.actor === actor && c.trip === trip && c.tick === tick);
@@ -1409,31 +1642,32 @@ function showImpactPhase({ arm, actor, trip, tick, kind }) {
   if (state.week !== tick) { state.week = tick; rebuildArms(); }
   setArm(arm);
   const person = curArm().people.find((a) => a.persona.pid === actor && a.persona.trip === trip);
-  // Show a GTFS-scheduled arrival in the transit baseline. It is context for
-  // the TTC demand change, not a claim that this persona boards Route 7.
+  const atStop = kind === 'fare' && focus === 'stop';
+  const seg = tourSegment(person, kind, arm);
   const route7 = SCHED.find((s) => s.kind === 'bus' && s.route === '7' && s.dir === '1');
-  const busAt = kind === 'fare' && arm === 'baseline' && route7?.deps.find((d) => d >= (person?.t0 || state.start) + 60 && d < state.end - 60);
-  state.t = Math.max(state.start, Math.min(state.end, busAt ? busAt - 18 : (person ? person.t0 : state.start) - 8));
+  // The scheduled bus time is the same in both arms. A stop queue is a visual
+  // illustration of the sample transit-trip ratio, never a stop-level estimate.
+  const busAt = atStop && route7?.deps.find((d) => d >= (person?.t0 || state.start) + 30 && d < state.end - 25);
+  const from = atStop && busAt ? busAt - 3 : seg ? seg.t + seg.wait + Math.min(1.2, seg.travel * 0.1) : person?.t0 || state.start;
+  const until = atStop && busAt ? busAt + DWELL + 3 : person ? Math.min(person.t1 - 0.2, from + 120) : from + 60;
+  state.t = Math.max(state.start, Math.min(state.end, from));
   for (const a of state.agents) a.cursor = 0;
   state.playing = true; $('play').textContent = '❚❚';
-  state.speed = busAt ? 10 : 30; $('speed').value = String(state.speed);
+  state.speed = 4; $('speed').value = '4';
   state.impactKind = kind;
-  // Hold the baseline on Bathurst Station; then follow the changed TTC rider's
-  // actual policy route. Bike shots stay on one street axis for a fair comparison.
   state.selected = actor;
-  state.follow = kind === 'fare' && arm === 'policy' ? person || null : null;
+  state.follow = atStop ? null : person || null;
+  state.impactTour = { kind, arm, focus: atStop ? 'stop' : 'follow', person, loopFrom: state.t, loopTo: Math.max(state.t + 4, until) };
+  buildTrails();
   state.flashUntil = performance.now() + 9000;
-  // The fare baseline frames Bathurst Station and its sourced route-7 bus. The
-  // policy shot follows the changed trip onto Bloor. The bike pair keeps the
-  // same street axis so loss of protection and routing are easy to compare.
-  const stop = STOPS.find((s) => s.id === '14617').xy;
-  const fareBefore = { pos: P(stop[0] + 10, stop[1] - 88, 49), tgt: P(stop[0] - 15, stop[1] + 16, 1) };
-  const fareAfter = { pos: P(100, -72, 48), tgt: P(155, 0, 1) };
-  const bikeBefore = { pos: P(240, -70, 51), tgt: P(300, 0, 1) };
-  const bikeAfter = { pos: P(265, -52, 35), tgt: P(305, 0, 1) };
-  const target = kind === 'bike' ? (arm === 'baseline' ? bikeBefore : bikeAfter) : (arm === 'baseline' ? fareBefore : fareAfter);
-  tween = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to: target, t0: performance.now(), dur: 2200 };
   updateAgents(state.t); updateVehicles(state.t);
+  TOUR_STOP.group.visible = atStop;
+  TOUR_STOP.busAt = busAt || Infinity;
+  TOUR_STOP.figures.forEach((figure, i) => { figure.visible = atStop && i < tourQueueSize(run, arm); });
+  const target = atStop
+    ? { pos: P(-4.3, TOUR_STOP.y + 25, 7.4), tgt: P(7.3, TOUR_STOP.y - 1, 1.5) }
+    : person?.pose ? tourFollowShot(person.pose) : { pos: P(170, -2, 14), tgt: P(230, 0, 1.5) };
+  tween = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to: target, t0: performance.now(), dur: 1500 };
 }
 
 /* ---------- dashboard ---------- */
@@ -1536,7 +1770,7 @@ let tween = null;
 function goPreset(name, instant = false) {
   const p = PRESETS[name]; if (!p) return;
   const to = { pos: P(...p.pos), tgt: P(...p.tgt) };
-  state.follow = null;
+  state.follow = null; state.impactTour = null; TOUR_STOP.group.visible = false;
   if (instant) { camera.position.copy(to.pos); controls.target.copy(to.tgt); controls.update(); return; }
   tween = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to, t0: performance.now(), dur: 1800 };
   for (const b of document.querySelectorAll('[data-preset]')) b.classList.toggle('on', b.dataset.preset === name);
@@ -1614,22 +1848,32 @@ function frame(now) {
   const dt = Math.min(0.1, (now - lastFrame) / 1000); lastFrame = now;
   if (state.playing) {
     state.t += dt * state.speed;
+    if (state.impactTour && state.t > state.impactTour.loopTo) {
+      state.t = state.impactTour.loopFrom;
+      for (const a of state.agents) a.cursor = 0;
+    }
     if (state.t > state.end) { state.t = state.start; for (const a of state.agents) a.cursor = 0; }
-    if (state.windows && !state.windows.some((w) => state.t >= w[0] && state.t <= w[1])) { const nx = state.windows.find((w) => w[0] > state.t); state.t = nx ? nx[0] : state.start; }
+    if (!state.impactTour && state.windows && !state.windows.some((w) => state.t >= w[0] && state.t <= w[1])) { const nx = state.windows.find((w) => w[0] > state.t); state.t = nx ? nx[0] : state.start; }
   }
   const target = state.night ? 1 : 0;
   if (state.nightK !== target) { state.nightK += Math.sign(target - state.nightK) * Math.min(Math.abs(target - state.nightK), dt / 1.4); applyLighting(state.nightK); }
   MAT.track.emissive.set(state.trackPulse ? '#ff7a00' : '#ffd29a');
   MAT.track.emissiveIntensity = state.trackPulse ? 0.35 + 0.3 * Math.sin(now / 260) : state.trackGlow || 0;
-  updateAgents(state.t); updateVehicles(state.t); updateSignals(state.t);
+  updateAgents(state.t); updateVehicles(state.t); updateSignals(state.t); updateTourPath();
   if (tween) {
     const k = Math.max(0, Math.min(1, (now - tween.t0) / tween.dur)), e = ease(k);
     camera.position.lerpVectors(tween.from.pos, tween.to.pos, e); controls.target.lerpVectors(tween.from.tgt, tween.to.tgt, e);
     if (k >= 1) tween = null;
   }
   if (!tween && state.follow && state.follow.pose && state.follow.pose.h > -0.5) {
-    const p = state.follow.pose, goal = P(p.x, p.y, 1), d = goal.sub(controls.target).multiplyScalar(0.12);
-    controls.target.add(d); camera.position.add(d);
+    if (state.impactTour?.focus === 'follow') {
+      const shot = tourFollowShot(state.follow.pose);
+      controls.target.lerp(shot.tgt, 0.13);
+      camera.position.lerp(shot.pos, 0.105);
+    } else {
+      const p = state.follow.pose, goal = P(p.x, p.y, 1), d = goal.sub(controls.target).multiplyScalar(0.12);
+      controls.target.add(d); camera.position.add(d);
+    }
   }
   controls.update();
   sky.position.copy(camera.position);
