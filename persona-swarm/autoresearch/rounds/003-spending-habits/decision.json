@@ -6,7 +6,7 @@
  "change": "Added one bullet: how readily the person buys should come from their own answers about spending habits (hard to limit spending, or hard to spend money at all) and their circumstances, more than from the product or what most people would do.",
  "compared_with": "000-start",
  "kept": true,
- "on_trial": true,
+ "on_trial": false,
  "reason": "keep: improved beyond noise: right_group_gaps +0.062 (noise 0.049), steady +0.011 (noise 0.010)",
  "deltas": {
   "right_person": -0.002808988764045006,
@@ -73,5 +73,7 @@
  "format": "full",
  "tuning_findings": [
   "Pricing: per-person buying now correlates 0.42 with people (0.14 in round 2, 0.17 in round 0), with a spread of 6.8 against people's 7.6; buying is 53% against 48%."
- ]
+ ],
+ "signed_off_by": "Steven",
+ "signed_off_at": "2026-10-17T09:19:28+00:00"
 }
