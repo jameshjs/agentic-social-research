@@ -10,7 +10,7 @@
  *   GET  /api/clef/:scenario                             → experiment/vultr-runs/clef-world-<scenario>.json
  *   POST /api/run      {scenario, seed?, overrides?} | {spec}  → {result, served_by}
  *   POST /api/sweep    {scenario, assumption_id, values} → {rows, elapsed_ms, host}
- * Paired runs execute in a pool of two worker threads (hard 10 s timeout).
+ * Paired runs execute in a pool of two warmed worker threads (hard 30 s timeout).
  * VULTR_INFERENCE_API_KEY is read from the environment, sent only to
  * api.vultrinference.com by experiment/vultr-compiler.js, and never logged. */
 'use strict';
@@ -46,7 +46,14 @@ function summarize(result) {
 if (!isMainThread) {
   const { runWorldExperiment } = require('../experiment/world-runner');
   const world = require('../data/world/bloor_spadina_bathurst.json');
+  // Warm-up: the first sandbox per world fits the calibrated background traffic (several seconds on
+  // one vCPU). Do it once at worker start, with both prepared policies, so no visitor waits for it.
+  const fixtures = require('../experiment/world-fixtures');
+  const warm = (async () => {
+    try { for (const spec of [fixtures.fare, fixtures.bike]) await runWorldExperiment(spec, { world, seed: 42 }); } catch { /* a real request reports any error */ }
+  })();
   parentPort.on('message', async (task) => {
+    await warm;
     const started = performance.now();
     try {
       const result = await runWorldExperiment(task.spec, { world, seed: task.seed, overrides: task.overrides });
@@ -283,7 +290,7 @@ function createServer(options = {}) {
     sweepPerMinute: options.sweepPerMinute ?? 6,
     liveCompilesPerDay: options.liveCompilesPerDay ?? 200,
     liveCompileInFlight: options.liveCompileInFlight ?? 4,
-    runTimeoutMs: options.runTimeoutMs ?? 10000,
+    runTimeoutMs: options.runTimeoutMs ?? 30000,   // covers the one-time warm-up on a cold 1-vCPU worker
     runConcurrency: options.runConcurrency ?? 2,
   };
   const startedAt = new Date().toISOString();

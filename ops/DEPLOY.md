@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | `api/server.js` (site + API, zero deps) | Vultr Cloud Compute `vc2-1c-2gb`, Toronto (`yto`), Ubuntu 24.04, `155.138.141.130`, instance `ed20bd3a-c885-4874-96ef-302e4b6fe946` | systemd `counterfactual.service`, user `app`, `127.0.0.1:8080`, code read-only in `/srv/counterfactual` (owned by root) |
 | HTTPS | Caddy (official apt repo) on the same VM | `https://155-138-141-130.sslip.io` → `127.0.0.1:8080`; Let's Encrypt cert via Caddy; `http://` and the bare IP redirect to HTTPS |
-| Paired runs and sweeps | 2 worker threads inside the service | 10 s hard timeout per run, LRU cache |
+| Paired runs and sweeps | 2 worker threads inside the service | warmed with both prepared runs at start; 30 s hard timeout per run, LRU cache |
 | Hypothesis compiler | Vultr Serverless Inference `glm-5.3-flash` (`/v1/chat/completions`), called by the VM | Needs `VULTR_INFERENCE_API_KEY` in `/etc/counterfactual.env` (root:app 0640). Without it, `/api/compile` uses the offline rules and says so (`compiler.live:false`) |
 | Clef second opinion | Vultr Serverless Inference `clef` (`/v1/systemone`), run offline from a laptop | `experiment/run-world-clef.js`; results are static files served at `/api/clef/fare` and `/api/clef/bike` |
 
