@@ -57,9 +57,11 @@ function aggregatePoll(answers, options, n = Object.keys(answers).length) {
   const got = Object.values(answers).filter(Boolean);
   const count = (key, values) => Object.fromEntries(values.map((v) => { const k = got.filter((a) => a[key] === v).length; return [v, { count: k, share: pct(k, got.length) }]; }));
   const scale = options && typeof options[0] === 'number';
+  const flagged = got.filter((a) => a.consistency === 'check').length;
   return { asked: n, answered: got.length, no_answer: Object.keys(answers).length - got.length,
     ...(options ? { choices: count('choice', options) } : { stance: count('stance', cd.STANCES), affected: count('affected', cd.AFFECTED) }),
-    ...(scale ? { mean: got.length ? Math.round((got.reduce((s, a) => s + a.choice, 0) / got.length) * 100) / 100 : null } : {}) };
+    ...(scale ? { mean: got.length ? Math.round((got.reduce((s, a) => s + a.choice, 0) / got.length) * 100) / 100 : null } : {}),
+    ...(flagged ? { to_check: flagged } : {}) };
 }
 
 function createServer(config, deps = {}) {
@@ -163,12 +165,16 @@ function createServer(config, deps = {}) {
     try { return await work; } finally { clearInterval(timer); }
   }
 
-  async function chat(send, { message, concurrency, modes }) {
+  /* draft: the orchestrator drafts one policy proposal (plan.policy), which all agents rate; forced options override its own. */
+  async function chat(send, { message, concurrency, modes, options, draft }) {
     let plan;
-    try { plan = await heartbeat(send, 'planning', orch.plan(message, people, call, { modes })); } catch (e) {
+    try { plan = await heartbeat(send, 'planning', orch.plan(message, people, call, { modes, draft })); } catch (e) {
       if (/limit/i.test(e.message)) { state.limited = e.message; send('limit', { message: 'agent backend limit reached', replay: Boolean(latestSave()) }); return; }
       send('error', { message: `orchestrator: ${e.message}` }); return;
     }
+    if (draft) Object.assign(plan, { policy: plan.proposal.trim(), question: `Proposed policy: ${plan.proposal.trim()} Where do you stand on it?`, filter: null,
+      note: `I drafted one policy proposal; all ${people.length} agents will rate it.` });
+    if (plan.mode === 'poll' && cd.normalizeOptions(options)) plan.options = cd.normalizeOptions(options);
     send('plan', plan);
     if (plan.mode === 'reply') { send('reply', { text: plan.reply }); return; }
     let record, data;
@@ -215,8 +221,16 @@ function createServer(config, deps = {}) {
     try {
       const r = await fetchImpl(`${config.remoteUrl}${url.pathname}${url.search}`, { method: req.method, body: req.method === 'POST' ? body : undefined,
         headers: { authorization: `Bearer ${env().CONSOLE_ACCESS_KEY || ''}`, 'content-type': 'application/json' } });
-      res.writeHead(r.status, { 'content-type': r.headers.get('content-type') || 'application/json', 'cache-control': 'no-cache' });
-      if (r.body) Readable.fromWeb(r.body).pipe(res); else res.end();
+      // A 401 from the agent server is about this server's key, not the browser's: say which file to fix.
+      if (r.status === 401) { json(res, 502, { error: `${config.remoteUrl} refused this server's access key: check CONSOLE_ACCESS_KEY in persona-swarm/.env`, replay: Boolean(latestSave()) }); return; }
+      const type = r.headers.get('content-type') || 'application/json';
+      res.writeHead(r.status, { 'content-type': type, 'cache-control': 'no-cache' });
+      if (!r.body) { res.end(); return; }
+      // If the agent server stops mid-stream, end with an error event the page can show, instead of crashing this server.
+      Readable.fromWeb(r.body).on('error', () => {
+        if (!type.includes('event-stream')) { res.destroy(); return; }
+        res.end(`event: error\ndata: ${JSON.stringify({ message: 'the agent server stopped responding; reload the page for the saved replays', replay: Boolean(latestSave()) })}\n\n`);
+      }).pipe(res);
     } catch (e) {
       const local = url.pathname === '/replay/latest' ? latestSave(url.searchParams.get('kind'), url.searchParams.get('policy')) : null;
       if (local) json(res, 200, local); else json(res, 502, { error: `remote agent server unreachable: ${e.message}`, replay: Boolean(latestSave()) });
@@ -274,7 +288,8 @@ function createServer(config, deps = {}) {
     if (req.method === 'GET' && url.pathname === '/usage') { json(res, 200, { requests_by_key: state.usage }); return; }
     if (remoteRoute) { await forward(req, res, url, body); return; }
     if (req.method === 'GET' && url.pathname === '/health') {
-      json(res, 200, { ok: true, backend: config.backend, agent_model: cd.AGENT, orchestrator_model: cd.ORCHESTRATOR, agents: roster.length,
+      // ok means live agents can answer now: false in replay mode or after the plan limit, so the site shows its offline state.
+      json(res, 200, { ok: Boolean(call) && !state.limited, backend: config.backend, agent_model: cd.AGENT, orchestrator_model: cd.ORCHESTRATOR, agents: roster.length,
         deciders: roster.filter((a) => a.decider).length, concurrency: config.concurrency, limited: Boolean(state.limited), requires_key: requireKey });
       return;
     }
@@ -328,7 +343,11 @@ function createServer(config, deps = {}) {
         // modes limits what the orchestrator may choose, e.g. ['poll', 'reply'] so a page never starts a world run.
         const modes = Array.isArray(params.modes) && params.modes.length ? params.modes.filter((m) => ['poll', 'run', 'reply'].includes(m)) : undefined;
         if (modes && !modes.length) send('error', { message: "modes must include 'poll', 'run' or 'reply'" });
-        else await chat(send, { message: String(params.message), concurrency, modes });
+        else {
+          // A poll-only chat drafts a policy proposal unless asked not to (draft: false).
+          const draft = params.draft ?? (modes?.length === 1 && modes[0] === 'poll');
+          await chat(send, { message: String(params.message), concurrency, modes, options: params.options, draft: Boolean(draft) });
+        }
       }
     } catch (e) { send('error', { message: e.message }); }
     res.end();

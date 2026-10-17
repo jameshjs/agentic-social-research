@@ -93,7 +93,7 @@ user message is one of:
 |---|---|
 | `GET /` → `/experience/`; static allowlist | The site, same-origin: `/experience/`, `/experiment/`, `/world/`, `/demo-ui/`, `/data/`, `/persona-swarm/data/record/` and `/reactions/`, `/persona-swarm/runtime/agents-client.js`, `/bloor-bike-demo.md`. No dotfiles, no `..`, nothing else. `*.local.*` files are served on loopback only. |
 | `GET /console`, `GET /agents-client.js` | The developer page and the client (no key) |
-| `GET /health`, `GET /agents` | Backend, models, roster summaries (no sheets) |
+| `GET /health`, `GET /agents` | Backend, models, roster summaries (no sheets). `ok` is true only while live agents can answer (false in replay mode or after the limit) |
 | `POST /ask` `{question, options?, filter?, ids?, concurrency?, orchestrate?, summarise?}` | With `orchestrate`, Opus turns typed text into one neutral poll. Events: `plan`, `start`, `answer` (`{id, agent: {id, name, role, mode, neighbourhood, fare_category, has_car, has_bike, age_band, sex, income_band, decider, shop}, answer}`), `limit`, `done`, then `summary` |
 | `POST /run/fare`, `/run/bloor` (alias `/run/bike`) | Events: `start`, `decision` (per call, with its arm), `tick` (per settled week, both arms' metrics), `done` (event-derived totals, checks, and the full experiment.v1 `result`) |
 | `POST /chat` `{message}` | Opus picks a poll (it writes the question and options, and picks agents by role or attribute), a run, or a reply. It then streams as above, plus `plan` and `summary`. |
@@ -107,7 +107,7 @@ user message is one of:
 | `local` (default) | This machine's `claude` login; `ANTHROPIC_API_KEY` and `CLAUDE_CODE_OAUTH_TOKEN` are removed from the child's env | `claude auth status` must show an OAuth login. API-key auth is refused, so the API is never billed silently. |
 | `token` | `CLAUDE_CODE_OAUTH_TOKEN`. The child env holds only `PATH`, the token and an isolated `CLAUDE_CONFIG_DIR`. | As above, run in that env. The token is never printed or logged. |
 | `api` | `ANTHROPIC_API_KEY` through `@anthropic-ai/sdk` (opt-in `npm install`), with the sheet cached per agent and a pre-warm | The key is set and the SDK is installed |
-| `remote` | Forwards `/ask`, `/run`, `/chat`, `/health`, `/replay` and `/saves` to `AGENT_SERVER_URL` with `CONSOLE_ACCESS_KEY` as a bearer token | The remote's `/health` accepts the key |
+| `remote` | Forwards `/ask`, `/run`, `/chat`, `/health`, `/replay` and `/saves` to `AGENT_SERVER_URL` with `CONSOLE_ACCESS_KEY` as a bearer token. If the remote stops mid-stream, the stream ends with an `error` event; a refused key returns 502 naming `.env` | The remote's `/health` accepts the key |
 | `replay` | Saved runs only, no model access | A save or sample exists |
 
 **Access.**

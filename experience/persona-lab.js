@@ -78,7 +78,7 @@
     const files = [young, older];
     const count = files.reduce((sum, file) => sum + Number(file.summary?.responded || 0), 0);
     const grounded = files.reduce((sum, file) => sum + Number(file.summary?.quote_grounded || 0), 0);
-    byId('personaReactionSummary').textContent = `${count} saved synthetic reactions across two US age groups; ${grounded} quoted a phrase from their assigned persona or context. Quote matching is a grounding check, not behavioral validation.`;
+    byId('personaReactionSummary').textContent = `${count} saved reactions from the earlier US persona prototype (separate from the 100 agents), across two age groups; ${grounded} quoted a phrase from their assigned persona or context. Quote matching is a grounding check, not behavioral validation.`;
     const responses = [...young.responses, ...older.responses];
     const selected = [
       responses.find((r) => r.context?.label === 'transit_dependent' && r.stance === 'oppose'),

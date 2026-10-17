@@ -94,8 +94,27 @@ test('same seed and policy replay the same events', () => {
   assert.equal(run(), run());
 });
 
-test('calibration report compares section entries with far-end arrivals', () => {
+test('routed background reproduces the observed far-end counts (GEH < 5 every hour, totals within 2%)', () => {
   const r = calibrationReport(world);
   assert.equal(r.date, world.section_flows.count_date);
-  for (const v of Object.values(r.net_side_street_gain_pct)) assert.ok(Math.abs(v) < 25, `side-street exchange ${v}% looks implausible`);
+  for (const [k, v] of Object.entries(r.streams)) {
+    assert.equal(v.share_hours_geh_below_5, 1, `${k} hourly GEH`);
+    assert.ok(Math.abs(v.total_error_pct) < 2, `${k} total error ${v.total_error_pct}%`);
+  }
+});
+
+test('background demand is fixed across policies; only delays change', () => {
+  const base = createSandbox(world).background;
+  const removed = createSandbox(world, { policy: { bloor_cycle_track: 'none' } }).background;
+  for (const d of ['eb', 'wb']) {
+    assert.deepEqual(removed.sims[d].entered, base.sims[d].entered);
+    assert.ok(removed.mean_stop_line_delay_s[d].bike > base.mean_stop_line_delay_s[d].bike, 'bikes in car lanes queue behind cars');
+  }
+});
+
+test('agents queue behind background traffic at stop lines', () => {
+  const sb = createSandbox(world);
+  const noBg = createSandbox(world, { background: false });
+  for (const x of [sb, noBg]) x.addAgent({ id: 'd', at: 'portal_south_0', mode: 'car', t: AM });
+  assert.ok(sb.travel('d', 'portal_north_7').wait_s >= noBg.travel('d', 'portal_north_7').wait_s);
 });

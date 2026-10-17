@@ -144,7 +144,18 @@ test('compile validates length, content type and body size', async () => {
     assert.equal((await request(s, 'POST', '/api/compile', { body: '{not json' })).status, 400);
     assert.equal((await request(s, 'GET', '/api/compile')).status, 405);
     assert.equal((await request(s, 'POST', '/api/compile', { body: { prompt: 'hi' }, headers: { Origin: 'https://evil.example' } })).status, 403);
+    assert.equal((await request(s, 'POST', '/api/compile', { body: { prompt: 'hi' }, headers: { Origin: 'http://localhost.evil.example' } })).status, 403);
   } finally { await new Promise((resolve) => s.close(resolve)); }
+});
+test('localhost pages (agent server :4174, python :4173) may call the engine with CORS; nothing else may', async () => {
+  const pre = await request(server, 'OPTIONS', '/api/run', { headers: { Origin: 'http://127.0.0.1:4174', 'Access-Control-Request-Method': 'POST' } });
+  assert.equal(pre.status, 204);
+  assert.equal(pre.headers['access-control-allow-origin'], 'http://127.0.0.1:4174');
+  assert.match(pre.headers['access-control-allow-headers'], /content-type/);
+  const health = await request(server, 'GET', '/api/health', { headers: { Origin: 'http://localhost:4173' } });
+  assert.equal(health.status, 200);
+  assert.equal(health.headers['access-control-allow-origin'], 'http://localhost:4173');
+  assert.equal((await request(server, 'OPTIONS', '/api/run', { headers: { Origin: 'https://evil.example' } })).status, 403);
 });
 
 test('run returns a paired experiment.v2 result with no rejected actions, then serves it from cache', async () => {

@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#07131c" />
     <meta name="description" content="Counterfactual Lab — explore how a city might respond to a policy change through a living simulation and connected impact map." />
     <title>Counterfactual Lab — Ask a city what if</title>
-    <link rel="stylesheet" href="./styles.css?v=mapped-run-1" />
+    <link rel="stylesheet" href="./styles.css?v=mapped-run-2" />
   </head>
   <body data-phase="intro" data-scenario="fare">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -72,6 +72,14 @@
         </div>
       </section>
 
+      <section id="agentPoll" class="persona-lab agent-poll" hidden aria-label="100 persona agents rate a policy">
+        <div class="persona-reaction-head"><div><span id="agentPollKind">POLICY</span><h3 id="agentPollQuestion"></h3><span id="agentPollStatus" class="agent-poll-status"></span></div><p><b>Survey-style reaction from 100 persona agents, not a forecast.</b> <span id="agentPollSummary"></span></p></div>
+        <div id="agentPollSplit" class="agent-poll-split" role="img" aria-label="Ratings"></div>
+        <p id="agentPollStats" class="agent-poll-stats"></p>
+        <div id="agentPollFilter" class="agent-poll-filter" role="group" aria-label="Filter agents by role"></div>
+        <div id="agentPollCards" class="agent-poll-cards" aria-live="polite"></div>
+      </section>
+
       <section id="lab" class="lab-shell" hidden aria-label="Scenario replay">
         <div class="lab-topline">
           <div class="breadcrumb"><span class="breadcrumb-star">✳</span> THE CITY LAB <span>/</span> <strong id="scenarioBreadcrumb">MORNINGSIDE · HIGHLAND CREEK</strong></div>
@@ -126,7 +134,7 @@
 
         <div class="timeline-bar">
           <div class="timeline-heading"><span id="timelineKicker">ILLUSTRATIVE CITY REPLAY</span><strong id="timelineLabel" aria-live="off">MOTION FRAME 03 / 04</strong></div>
-          <div class="timeline-controls"><button id="replayToggle" class="replay-toggle" type="button" aria-label="Play event replay" aria-pressed="false" hidden>▶</button><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub schematic city animation; recorded decisions appear in the experiment ledger below" /><span>END</span></div>
+          <div class="timeline-controls"><button id="eventReplayPlay" class="event-replay-play" type="button" aria-label="Play event replay" aria-pressed="false" hidden>▶</button><span>START</span><input id="timeScrubber" type="range" min="0" max="100" value="70" aria-label="Scrub schematic city animation; recorded decisions appear in the experiment ledger below" /><span>END</span></div>
           <div id="timelineFrames" class="timeline-time"><span>00</span><span>01</span><span>02</span><span>03</span><span>04</span></div>
           <div id="timelinePeriods" class="timeline-periods" role="group" aria-label="Jump to a modelled period" hidden></div>
         </div>
@@ -160,18 +168,12 @@
         </div>
       </section>
 
-      <section id="agentPoll" class="persona-lab agent-poll" hidden aria-label="Live persona agent poll">
-        <div class="persona-reaction-head"><div><span id="agentPollStatus">LIVE AGENT POLL</span><h3 id="agentPollQuestion"></h3></div><p><b id="agentPollLabel">Survey-style reaction, not a forecast.</b> <span id="agentPollSummary"></span></p></div>
-        <div id="agentPollSplit" class="agent-poll-split" role="img" aria-label="Answer split"></div>
-        <p id="agentPollStats" class="agent-poll-stats"></p>
-        <button id="agentPollAction" class="text-link agent-poll-action" type="button" hidden></button>
-        <div id="agentPollCards" class="persona-reaction-cards agent-poll-cards" aria-live="polite"></div>
-      </section>
+      <button id="replayToggle" class="replay-toggle" type="button" aria-expanded="true" hidden><span>PREPARED SIMULATION REPLAY · SYNTHETIC, SEPARATE FROM THE 100 AGENTS</span><strong>Ledger, charts and inspector</strong><em id="replayToggleState">Hide ↑</em></button>
 
       <section id="ttcWorkbench" class="ttc-workbench" hidden aria-label="TTC agent replay and research workbench">
         <div class="ttc-workbench-head">
           <div><span id="ttcWorkbenchKicker" class="ttc-workbench-kicker">01 / INSIDE THE SIMULATION</span><h2>Follow a choice.<br /><em>Challenge the assumption.</em></h2></div>
-          <p id="ttcWorkbenchDeck">This is the trace-backed TTC replay. Select a person to see their decisions, inspect supporting evidence, then edit an assumption and rerun. The map above shows Bathurst–Spadina context; this inspector still uses its earlier synthetic district. Its own replay and charts share one event trace.</p>
+          <p id="ttcWorkbenchDeck">This is the prepared TTC simulation replay (synthetic, separate from the 100 agents). Select a person to see their decisions, inspect supporting evidence, then edit an assumption and rerun. The map above shows Bathurst–Spadina context; this inspector still uses its earlier synthetic district. Its own replay and charts share one event trace.</p>
         </div>
         <div class="ttc-workbench-frame">
           <div class="ttc-workbench-bar"><span><i class="live-pulse"></i> <b id="ttcWorkbenchStatus">PREPARING SEEDED TRACE</b></span><span id="ttcWorkbenchMeta">SYNTHETIC SAMPLE · NOT A FORECAST</span></div>
@@ -186,7 +188,7 @@
             <div class="bike-lab-kicker"><span>02 / A STREET IN QUESTION</span><span>TORONTO · BATHURST TO SPADINA</span></div>
             <h2 class="bike-lab-title">One street.<br /><em>Four possible paths.</em></h2>
           </div>
-            <p id="bikeLabDeck" class="bike-lab-deck">A protected cycle track connects a person to more than a route. Compare a seeded synthetic run, then explore other possible responses. The street visuals are schematic; the event ledger and charts use recorded choices.</p>
+            <p id="bikeLabDeck" class="bike-lab-deck">A protected cycle track connects a person to more than a route. Compare the prepared simulation replay (synthetic, separate from the 100 agents), then explore other possible responses. The street visuals are schematic; the event ledger and charts use recorded choices.</p>
         </div>
 
         <div class="bike-workbench" aria-label="Bloor scenario workbench">
@@ -332,7 +334,8 @@
     <script defer src="../experiment/fixtures.js"></script>
     <script defer src="./experiment-adapter.js?v=live-agents-2"></script>
     <!-- Canonical mapped engine: James's sandbox, the shared population, the paired runner, its dashboard adapter, and the hypothesis compiler. -->
-    <script defer src="../world/sandbox.js?v=mapped-run-1"></script>
+    <script defer src="../world/background.js?v=mapped-run-2"></script>
+    <script defer src="../world/sandbox.js?v=mapped-run-2"></script>
     <script defer src="../experiment/world-fixtures.js?v=mapped-run-1"></script>
     <script defer src="../experiment/world-runner.js?v=mapped-run-1"></script>
     <script defer src="./world-run-adapter.js?v=mapped-run-1"></script>
@@ -340,7 +343,7 @@
     <script defer src="./city.js?v=bloor-workbench"></script>
     <script defer src="./bloor-map.js?v=mapped-run-1"></script>
     <script defer src="../persona-swarm/runtime/agents-client.js"></script>
-    <script defer src="./app.js?v=mapped-run-1"></script>
-    <script defer src="./persona-lab.js?v=1"></script>
+    <script defer src="./app.js?v=mapped-run-2"></script>
+    <script defer src="./persona-lab.js?v=2"></script>
   </body>
 </html>

@@ -16,10 +16,17 @@ python3 -m http.server 4173 --bind 127.0.0.1
 
 Open `http://127.0.0.1:4173/experience/`. Add `?demo=fare` or `?demo=bike` to open a prepared case. No package install or build is required. Serve from the **repository root** because the TTC page loads `../demo-ui/sim.js` and embeds `../demo-ui/?embedded=1`. The detailed TTC scene uses Three.js from a CDN; the outer experience has a canvas fallback and the cited trace generator works locally.
 
-**Live persona agents.** The agent server serves this site at `http://127.0.0.1:4174/experience/` (`npm --prefix persona-swarm/runtime start`). The page loads [`agents-client.js`](../persona-swarm/runtime/agents-client.js) and calls the server on the same origin. The browser never holds an access key. When the server is online:
-- `?demo=fare` and `?demo=bike` ask all 100 persona agents to rate the prepared policy on a 1–5 scale (`askAgents` with fixed options, about 100 calls; no live world run). The panel under the city shows a live 1–5 bar, the mean, N answered, a by-group split (Fair Pass vs adult fare; Bloor by travel mode), agent cards and the orchestrator's summary, labelled "survey-style reaction from 100 persona agents, not a forecast".
-- Each rating drives one dot on the mapped Bloor section through `MOTION_MAP` in `app.js`. The dots are labelled "Illustrative motion mapped from agents' 1–5 ratings, not simulated trip decisions", and clicking one shows that agent's rating and reason. The ledger and charts stay on the prepared replay, labelled "prepared replay (synthetic)".
-- The composer sends the typed text to the Opus orchestrator (`chat`). A poll streams into the same panel; a reply shows as text. If the orchestrator picks a world run, the panel says runs are not enabled in this site and offers the policy's 1–5 poll instead.
+**100 persona agents.** The agent server serves this site at `http://127.0.0.1:4174/experience/` (`npm --prefix persona-swarm/runtime start`). The page loads [`agents-client.js`](../persona-swarm/runtime/agents-client.js) and calls the server on the same origin. The browser never holds an access key. When the server is online, one showcase section (right after the composer) shows all 100 agents rating a policy from 1 (strongly oppose) to 5 (strongly support):
+- **Which policy:**
+  - the TTC fare and Bloor chips and `?demo=fare|bike` use a fixed prepared policy (`askAgents`, options `[1, 2, 3, 4, 5]`, about 100 calls);
+  - the composer drafts one concrete policy from the typed idea with the Opus orchestrator (`chat` with `modes: ['poll']`), shows it as the drafted policy, then all 100 agents rate it. It is not a general chat.
+- **What the section shows:**
+  - a live 1–5 bar with counts, the mean and "N of 100 answered", and by-role and by-fare (Fair Pass vs adult) means;
+  - 100 compact agent cards (name, role, rating colour; the reason on hover or click) with a role filter. A "?" marks answers the runtime flags (`consistency: 'check'`) because the reason may not match the rating;
+  - the orchestrator's summary, marked "(numbers checked)" when its numbers are verified;
+  - the label "survey-style reaction from 100 persona agents, not a forecast".
+- **The map:** for the prepared policies, each rating drives one dot on the mapped Bloor section through `MOTION_MAP` in `app.js`. The dots are labelled "Illustrative motion mapped from agents' 1–5 ratings, not simulated trip decisions", and clicking one shows that agent's rating and reason.
+- **The prepared replay:** the ledger, charts and TTC inspector keep the prepared simulation replay. Its fixture people (8 for Bloor, the demo-ui district for fare) are labelled "prepared simulation replay (synthetic, separate from the 100 agents)". When the agents are online, they start collapsed behind a toggle under the lab. The site runs no 40-decider world run.
 
 `MOTION_MAP` (tune it in `app.js`). The baseline view shows each agent's usual mode; the policy view uses the agent's rating, 1 to 5:
 

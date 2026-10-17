@@ -75,11 +75,12 @@
     <p class="sub">Sample agents follow the default shortest-legal-path rule, not a persona. "Shared m" is metres cycled in car lanes: exposure, not injuries.</p>
     <h3 style="font-size:14px;margin:12px 0 4px">At this time</h3>
     <table id="now"></table>
-    <h3 style="font-size:14px;margin:12px 0 4px">Calibration (observed)</h3>
+    <h3 style="font-size:14px;margin:12px 0 4px">Baseline calibration vs counts</h3>
     <table id="cal"></table>
     <p class="sub">Signal timing is <b>assumed</b> (90 s cycle). Counts: 25 Jun 2025. Buildings: City 3D Massing 2025. Businesses: © OpenStreetMap contributors (ODbL).</p>
   </aside>
 </main>
+<script src="./background.js"></script>
 <script src="./sandbox.js"></script>
 <script>
 (async function () {
@@ -198,7 +199,8 @@
     const rows = f ? [['interval', f.start], ['cars in, eastbound', f.eb_vehicles_in], ['cars in, westbound', f.wb_vehicles_in],
       ['bikes at Bathurst (eb)', f.eb_bikes_approach_bathurst], ['bikes at Spadina (wb)', f.wb_bikes_approach_spadina],
       ['people crossing Bloor at Bathurst', f.peds_crossing_bloor_bathurst]] : [['interval', 'outside count hours']];
-    $('now').innerHTML = rows.map(([k, v]) => `<tr><td>${k}</td><td><b>${v}</b> <span class="sub">/15 min</span></td></tr>`).join('');
+    $('now').innerHTML = rows.map(([k, v]) => `<tr><td>${k}</td><td><b>${v}</b> <span class="sub">/15 min</span></td></tr>`).join('') +
+      `<tr><td>cars queued at signals</td><td class="sub">${queueText(t)}</td></tr>`;
   }
   $('run').onclick = () => {
     rebuild();
@@ -213,9 +215,16 @@
       : `<tr><td>${r.actor}</td><td colspan="4">${r.type}</td></tr>`).join('');
     draw();
   };
-  const cal = calibrationReport(W).net_side_street_gain_pct;
-  $('cal').innerHTML = [['cars eastbound, Bathurst → Spadina', cal.eb_vehicles], ['cars westbound, Spadina → Bathurst', cal.wb_vehicles], ['bikes eastbound', cal.eb_bikes], ['bikes westbound', cal.wb_bikes]]
-    .map(([k, v]) => `<tr><td>${k}</td><td><b>${v > 0 ? '+' : ''}${v}%</b></td></tr>`).join('') + '<tr><td colspan="2" class="sub">Net gain between entering and reaching the far end: the side-street exchange a routed model must reproduce.</td></tr>';
+  const cal = calibrationReport(W).streams;
+  const label = { eb_car: 'cars → Spadina', wb_car: 'cars → Bathurst', eb_bike: 'bikes → Spadina', wb_bike: 'bikes → Bathurst' };
+  $('cal').innerHTML = '<tr><th>stream</th><th>observed</th><th>simulated</th><th>max hourly GEH</th></tr>' +
+    Object.entries(cal).map(([k, v]) => `<tr><td>${label[k]}</td><td>${v.observed_total}</td><td>${v.simulated_total}</td><td><b>${v.max_hourly_geh}</b></td></tr>`).join('') +
+    '<tr><td colspan="4" class="sub">Routed background traffic, 06:00–20:00. GEH below 5 is the usual pass mark. Side-street exchange is fitted, so this checks that routing, signals and queues can carry the observed volumes.</td></tr>';
+  function queueText(t) {
+    const bg = sb.background; if (!bg) return '';
+    const n = W.bloor.intersections.length;
+    return W.bloor.intersections.map((x, i) => x.signal_px && i > 0 && i < n ? `${x.streets[0]}: ${bg.queueAt('eb', 'car', i, t)} eb / ${bg.queueAt('wb', 'car', i, t)} wb` : null).filter(Boolean).join(' · ');
+  }
   cv.addEventListener('click', (ev) => {
     const r = cv.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top;
     let best = null, bd = 1e9;

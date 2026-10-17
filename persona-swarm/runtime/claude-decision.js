@@ -132,16 +132,18 @@ function normalizeOptions(options) {
   return options.every((o) => Number.isInteger(o)) ? options : options.map(String);
 }
 const isScale = (opts) => opts && typeof opts[0] === 'number';
-const FIVE = [1, 2, 3, 4, 5];
+const isFive = (opts) => JSON.stringify(opts) === '[1,2,3,4,5]';
+// The 1-5 scale, labelled so its direction can't be misread: it rates the change itself, not the thing it changes.
+const FIVE_LABELS = { 1: 'strongly oppose this change', 2: 'oppose', 3: 'neutral / mixed', 4: 'support', 5: 'strongly support this change' };
 
 function askPrompt(sheet, question, options) {
   if (!sheet) throw new Error('No persona sheet');
   const opts = normalizeOptions(options);
-  // A 1-5 scale reads 1 = strongly oppose ... 5 = strongly support, the same wording as the default stance.
-  const label = (o) => (isScale(opts) && JSON.stringify(opts) === JSON.stringify(FIVE) ? `${o} (${STANCES[o - 1]})` : String(o));
-  const user = opts
-    ? `${question}\n\nOptions:\n${opts.map((o) => `- ${label(o)}`).join('\n')}\n\n${isScale(opts) ? 'Choose exactly one number' : 'Choose exactly one option, as written,'} and give a one-sentence reason.`
-    : `${question}\n\nSay where you stand (${STANCES.join(', ')}), how much it would affect you (${AFFECTED.join(', ')}), and give a one-sentence reason.`;
+  const user = !opts
+    ? `${question}\n\nSay where you stand (${STANCES.join(', ')}), how much it would affect you (${AFFECTED.join(', ')}), and give a one-sentence reason.`
+    : isFive(opts)
+      ? `${question}\n\nRate this change:\n${opts.map((o) => `${o} = ${FIVE_LABELS[o]}`).join('\n')}\n\nChoose exactly one number and give a one-sentence reason.`
+      : `${question}\n\nOptions:\n${opts.map((o) => `- ${o}`).join('\n')}\n\n${isScale(opts) ? 'Choose exactly one number' : 'Choose exactly one option, as written,'} and give a one-sentence reason.`;
   const schema = opts
     ? { type: 'object', additionalProperties: false, required: ['choice', 'reason'],
       properties: { choice: isScale(opts) ? { type: 'integer', enum: opts } : { type: 'string', enum: opts }, reason: { type: 'string' } } }
@@ -150,14 +152,35 @@ function askPrompt(sheet, question, options) {
   return { system: [INSTRUCTIONS, ADDENDUM, sheet], user, schema, options: opts };
 }
 
+/* A cheap check that a reason agrees with its rating: keyword cues only, no model call. A cue just after a negation
+ * ("don't support", "won't help") counts for the other side. "check" means the cues all point against the chosen side;
+ * the agent's choice is never changed. */
+const FOR = /\b(support\w*|in favou?r|good (idea|thing|change|move)|great|welcome\w*|glad|happy|benefit\w*|helps?|helpful|makes sense|love|approve|agree|worth it|better|improve\w*|safer|finally|pleased)\b/g;
+const AGAINST = /\b(oppos\w*|against|bad (idea|thing|change|move)|hurts?|harm\w*|unfair|worse|can'?t afford|waste\w*|burden\w*|costly|too expensive|hate|dislike|disagree|not worth|unnecessary|pointless|dangerous|unsafe)\b/g;
+function cues(reason) {
+  const text = ` ${String(reason || '').toLowerCase().replace(/’/g, "'")}`;
+  const negated = (i) => /(\bnot|\bnever|\bno|n't)\s+(\w+\s+){0,2}$/.test(text.slice(Math.max(0, i - 40), i));
+  let pro = 0, con = 0;
+  for (const m of text.matchAll(FOR)) if (negated(m.index)) con++; else pro++;
+  for (const m of text.matchAll(AGAINST)) if (negated(m.index)) pro++; else con++;
+  return { pro, con };
+}
+function consistency(lean, reason) {
+  const { pro, con } = cues(reason);
+  return (lean < 0 && pro > 0 && con === 0) || (lean > 0 && con > 0 && pro === 0) ? 'check' : 'ok';
+}
+
 function readAsk(output, options) {
   if (!output) return null;
   if (options) {
     const choice = isScale(options) && typeof output.choice === 'string' && /^\d+$/.test(output.choice) ? Number(output.choice) : output.choice;
-    return options.includes(choice) ? { choice, reason: tidy(output.reason), label: POLL_LABEL } : null;
+    if (!options.includes(choice)) return null;
+    const answer = { choice, reason: tidy(output.reason), label: POLL_LABEL };
+    return isFive(options) ? { ...answer, consistency: consistency(Math.sign(choice - 3), answer.reason) } : answer;
   }
-  return STANCES.includes(output.stance) && AFFECTED.includes(output.affected)
-    ? { stance: output.stance, affected: output.affected, reason: tidy(output.reason), label: POLL_LABEL } : null;
+  if (!STANCES.includes(output.stance) || !AFFECTED.includes(output.affected)) return null;
+  const reason = tidy(output.reason);
+  return { stance: output.stance, affected: output.affected, reason, label: POLL_LABEL, consistency: consistency(Math.sign(STANCES.indexOf(output.stance) - 2), reason) };
 }
 
 /* ---------- memory: what this person chose for this trip last week, in this arm ---------- */
@@ -355,5 +378,5 @@ function createClaudeDecisionProvider({ sheets, baseline, places, personIds, bac
 }
 
 module.exports = { AGENT, ORCHESTRATOR, ROUTER, PROVIDER, ROUND, INSTRUCTIONS, ADDENDUM, PRICE, LABEL, STANCES, AFFECTED, POLL_LABEL, CLI_FLAGS, AGENTS_FILE, sha256,
-  loadAgents, placesFrom, situation, schemaFor, buildPrompt, readAnswer, normalizeOptions, askPrompt, readAsk, createRunMemory, readDotEnv, cliEnv, cliArgs,
+  loadAgents, placesFrom, situation, schemaFor, buildPrompt, readAnswer, normalizeOptions, askPrompt, readAsk, consistency, FIVE_LABELS, createRunMemory, readDotEnv, cliEnv, cliArgs,
   cliBackend, apiBackend, makeBackend, createClaudeDecisionProvider };

@@ -7,7 +7,7 @@ A rule-enforcing street environment for **one 619 m section of Bloor St W, from 
 **Current founder target:** Integrate this candidate map/rule layer into the existing [`/experience/`](../experience/README.md) website so the TTC fare and cycle-track policies both run in this same 619 m world. The preview below is for development, not a new public site. Its local observations may ground scene geometry and background counts; persona demographics, spending, fare response and shop outcomes still need explicit source or assumption labels. Preserve existing inspector and chart features while moving them onto one event/result pipeline.
 
 ```sh
-node --test world/test-sandbox.js          # 11 rule and data checks, offline
+node --test world/test-sandbox.js          # 13 rule, data and calibration checks, offline (about 5 s)
 python3 -m http.server 4173                # from the repository root
 open http://127.0.0.1:4173/world/preview.html
 ```
@@ -28,6 +28,38 @@ open http://127.0.0.1:4173/world/preview.html
 | Building use, from OSM tags joined to footprints | OpenStreetMap | derived (559 are untagged) |
 | 243 businesses (140 facing Bloor), vacant storefronts, bike parking, Bike Share, parking lots | OpenStreetMap | observed presence only |
 | Residents per building and a 25 m heat-map grid (about 3,400 people) | 2021 neighbourhood population spread over floor area | **derived estimate** |
+
+## Background traffic (`background.js`)
+
+Background cars and bikes are routed, not drawn. They enter at each end at the observed 15-minute rates, move link by link at a cruise speed, queue at the stop lines of the Bloor signals, and leave on green at a saturation flow.
+
+**Side streets:**
+- Walmer/Robert has its own count, but on 15 Oct 2025. Its observed hourly turning shares are used as ratios.
+- The other minor cross streets carry the remaining net exchange, split equally.
+- That exchange is fitted once, under the observed layout, so that arrivals at the far end match the counts. Policy runs then reuse the same demand. Background traffic never changes route or mode; behavioural responses belong to the agents.
+
+**Calibration, 25 Jun 2025, 06:00–20:00:**
+
+| Stream | Observed | Simulated | Max hourly GEH |
+| --- | --- | --- | --- |
+| Cars eastbound, arriving at Spadina | 6,555 | 6,594 | 0.45 |
+| Cars westbound, arriving at Bathurst | 5,429 | 5,449 | 0.23 |
+| Bikes eastbound | 3,070 | 3,084 | 0.30 |
+| Bikes westbound | 2,695 | 2,699 | 0.26 |
+
+GEH below 5 is the usual pass mark. Because the side-street exchange is fitted, this shows that the routing, the signals and the queues can carry the observed volumes on time. It is not an out-of-sample forecast.
+
+The fitted exchange is as follows. Eastbound, about 930 cars come in from side streets and 660 leave to them. Westbound, about 740 come in and 1,160 leave.
+
+Walmer/Robert's own October volumes are about 20% below the June section ends. The model reports that gap (`walmer_cross_check`) but does not fit to it.
+
+**Assumptions:**
+- Cruise speed 30 km/h.
+- 2.0 s saturation headway, which is 1,800 vehicles per hour of green per lane.
+- On the cycle track, bikes discharge at 1 per second.
+- When the track is removed, a bike in a car lane uses half a car's slot (0.5 passenger-car equivalent). Cyclists then queue behind cars, and cars lose some capacity.
+
+Agents join the background queue at each stop line.
 
 ## Rules the Game Master enforces (`sandbox.js`)
 
@@ -52,8 +84,8 @@ Every accepted move commits a `moved` event with its wait, travel time, fare and
 
 ## Known gaps
 
-- **Background traffic is entry flow only.** Car travel time uses a volume-delay function on the observed entering flow. Between the two ends, eastbound cars gain 3.3% and westbound cars lose 7.8% through the six minor cross streets. A routed background model should reproduce that exchange (`calibrationReport`) before any policy runs are compared.
-- **Cyclists in car lanes get no penalty yet.** They move at bike speed. Removing the track changes exposure and the persona's comfort, not travel time. No injury, conflict or speed effect is modelled.
+- **The traffic model is mesoscopic.** Queues sit at stop lines only. There are no lane changes, turning conflicts, parking manoeuvres, or delivery stops.
+- **Cyclists in car lanes have no speed or safety penalty.** They are delayed only by shared queues. No injury or conflict effect is modelled; `shared_with_cars_m` is exposure only.
 - **Shops have presence data only.** There are no sales, opening hours or staffing figures; any shop response needs an explicit synthetic rule.
 - **Residents are an estimate.** The figures cover residential population only. Untagged buildings are counted as residential, and the University neighbourhood includes the campus.
 - **The cross-section is schematic.** Car lanes sit at ±3 m, cycle tracks at ±7 m and sidewalks at ±12 m.

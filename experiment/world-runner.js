@@ -57,8 +57,31 @@
 
   const SENSITIVITY_IDS = ['cost_weight', 'unprotected_cycling_discomfort_per_km', 'shop_staffing_response'];
 
+  /* ---------- sandboxes ---------- */
+  // James's sandbox simulates calibrated background traffic (world/background.js) for every
+  // createSandbox call, about 140 ms each. That background depends only on the world, the policy
+  // levers and the seed, and agents only read it (queueAt), so one simulation per lever set is shared
+  // by every arm-tick and probe sandbox with the same levers. Results are identical to building it
+  // fresh each time (see the replay and snapshot tests).
+  const BACKGROUNDS = new WeakMap();   // world -> Map(seed|levers -> background)
+  function worldSandbox(world, levers, seed) {
+    let byKey = BACKGROUNDS.get(world);
+    if (!byKey) BACKGROUNDS.set(world, (byKey = new Map()));
+    const key = `${seed}|${JSON.stringify(levers)}`;
+    if (!byKey.has(key)) {
+      const sb = Sandbox.createSandbox(world, { policy: levers, seed });
+      byKey.set(key, sb.graph.background || null);
+      return sb;
+    }
+    const sb = Sandbox.createSandbox(world, { policy: levers, seed, background: false });
+    sb.graph.background = byKey.get(key);
+    sb.background = byKey.get(key);
+    return sb;
+  }
+
   /* ---------- spec and world checks ---------- */
-  function baselineSandbox(world) { return Sandbox.createSandbox(world, { seed: 1 }); }
+  // Graph-only sandboxes (node/edge lookups and lever validation) skip background traffic.
+  function baselineSandbox(world) { return Sandbox.createSandbox(world, { seed: 1, background: false }); }
 
   function resolveRef(graph, ref, mode) {
     if (typeof ref !== 'string') return null;
@@ -97,7 +120,7 @@
       throw new Error(`Unsupported intervention ${change.operator || 'missing operator'}${change.lever ? ` on ${change.lever}` : ''}`);
     }
     // The sandbox refuses invalid lever values (e.g. an unknown track type).
-    Sandbox.createSandbox(world, { policy: leversFor(spec, 'intervention', spec.ticks) });
+    Sandbox.createSandbox(world, { policy: leversFor(spec, 'intervention', spec.ticks), background: false });
     const people = spec.population?.personas;
     if (!Array.isArray(people) || !people.length) throw new Error('A scenario needs a synthetic population');
     const graph = baselineSandbox(world).graph;
@@ -277,7 +300,7 @@
     for (let tick = 1; tick <= spec.ticks; tick++) {
       const levers = leversFor(spec, arm, tick);
       const leverKey = JSON.stringify(levers);
-      const sb = Sandbox.createSandbox(world, { policy: levers, seed });
+      const sb = worldSandbox(world, levers, seed);
       let scratch = null;   // one probing sandbox per arm-tick; probes never touch the committed world
       const env = { ...spec.environment, adult_fare_cad: sb.policy.adult_fare_cad };
       const receipts = Object.fromEntries(spec.shops.map((s) => [s.business_id, 0]));
@@ -306,7 +329,7 @@
           const probeKey = `${leverKey}|${p.id}|${trip.id}|${o.action}|${t}`;
           let probe = probeCache.get(probeKey);
           if (!probe) {
-            scratch ||= Sandbox.createSandbox(world, { policy: levers, seed });
+            scratch ||= worldSandbox(world, levers, seed);
             const run = executeOption(scratch, p, trip, tick, o, t, env, `probe:${o.action}:`);
             probe = run.ok ? { ok: true, mapped_minutes: run.mapped_minutes, fare_cad: run.fare_cad, shared_with_cars_m: run.shared_with_cars_m, arrive_t: run.arrive_t } : { ok: false, reason: run.reason };
             probeCache.set(probeKey, probe);

@@ -210,10 +210,10 @@
             delta: `${pairOf(['household_transport_spend_cad'], currency)} · ${P}`, chartTitle: `SAMPLE HOUSEHOLD TRANSPORT PAYMENTS / ${ticks} PERIODS`,
             unit: 'CAD from synthetic fare and travel-cost events', evidence: `Parking and driving costs are illustrative. ${CAVEAT}` }),
           public: sector('public', ['driver_mapped_minutes'], {
-            title: 'Zero driver-time gain case.',
-            description: `Mean in-map minutes per sample car leg. This layout adds no car lane when the track goes${sameDriverTime ? ', and in this run driver minutes inside the section are identical in both arms' : '; in this run the driver series differ because different car trips were chosen'}. A period with no car leg reads 0.`,
-            delta: `${pairOf(['driver_mapped_minutes'], (v) => num(v, ' MIN'))} · ZERO DRIVER-TIME GAIN CASE`, chartTitle: `SAMPLE DRIVER MINUTES IN SECTION / ${ticks} PERIODS`,
-            unit: 'mean in-map minutes per synthetic car leg (0 when no car leg)', evidence: `The zero driver-time gain case is a modelling choice, not a forecast; driver time beyond the section is not estimable. ${CAVEAT}` }),
+            title: 'No driver-time gain.',
+            description: `Mean in-map minutes per sample car leg. This layout adds no car lane when the track goes${sameDriverTime ? ', and in this run driver minutes inside the section are identical in both arms' : '. In the calibrated background-traffic model, cyclists who now share the car lane join the stop-line queues (0.5 car equivalents each), so sample drivers wait the same or slightly longer'}. A period with no car leg reads 0.`,
+            delta: `${pairOf(['driver_mapped_minutes'], (v) => num(v, ' MIN'))} · NO DRIVER-TIME GAIN`, chartTitle: `SAMPLE DRIVER MINUTES IN SECTION / ${ticks} PERIODS`,
+            unit: 'mean in-map minutes per synthetic car leg (0 when no car leg)', evidence: `Queues come from the 25 Jun 2025 counts with assumed signal timings and an assumed 0.5 car-equivalent per cyclist; driver time beyond the section is not estimable. Not a forecast. ${CAVEAT}` }),
         },
       };
     }

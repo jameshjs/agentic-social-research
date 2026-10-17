@@ -100,10 +100,11 @@ test('bike copy keeps exposure, injuries and driver time honest', () => {
   assert.equal(scenario.headline.value, `${p4('intervention')} / ${p4('baseline')}`);
   assert.match(scenario.sectors.access.unit, /exposure distance, not injuries/);
   assert.match(scenario.sectors.access.description, /not injuries/);
-  assert.match(scenario.sectors.public.delta, /ZERO DRIVER-TIME GAIN CASE/);
-  assert.match(scenario.sectors.public.title, /[Zz]ero driver-time gain case/);
-  assert.match(scenario.sectors.public.description, /identical in both arms/);
-  assert.deepEqual(scenario.sectors.public.policy, scenario.sectors.public.baseline);
+  assert.match(scenario.sectors.public.delta, /NO DRIVER-TIME GAIN/);
+  assert.match(scenario.sectors.public.title, /No driver-time gain/);
+  // James's calibrated queues: cyclists in the car lane add 0.5 PCE, so drivers are never faster after removal.
+  assert.match(scenario.sectors.public.description, /0\.5 car equivalents|identical in both arms/);
+  scenario.sectors.public.policy.forEach((v, i) => assert.ok(v >= scenario.sectors.public.baseline[i], `P${i + 1}`));
   assert.match(scenario.evidence.text, /Not estimable from this run: .*injuries/);
 });
 

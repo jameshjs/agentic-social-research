@@ -52,16 +52,18 @@ second pitch walkthrough is [docs/demo.md](./docs/demo.md).
 
 ## Teammate quickstart
 
-Node 18+ only; no install.
+Node 18+ only; no install, no Python, no Twin data. Run every command from the repo root.
 
-1. `git pull`, then `cp persona-swarm/.env.example persona-swarm/.env`.
+1. `git clone https://github.com/jameshjs/agentic-social-research.git` (or `git pull`), `cd` into it, then
+   `cp persona-swarm/.env.example persona-swarm/.env`.
 2. In `.env`, set `AGENT_BACKEND=remote`, and set `AGENT_SERVER_URL` and `CONSOLE_ACCESS_KEY` to the values Steven
    gives you. Agents run on his machine and plan.
 3. Run `npm --prefix persona-swarm/runtime start`, then open http://127.0.0.1:4174/experience/. The server serves the
    site and the agents from one origin, so no CORS is needed. The browser never holds a key; your server keeps it in
    `.env` and forwards to Steven's.
 4. Type a hypothesis or open a demo. `/console` is the developer view of the same agents.
-5. With no access: set `AGENT_BACKEND=replay` to browse the committed sample runs.
+5. With no access: set `AGENT_BACKEND=replay`. The site then shows "agents offline" with its prepared replays, and
+   `/console` replays the committed 100-agent sample runs.
 6. In any page the server serves: include `/persona-swarm/runtime/agents-client.js`, then call
    `AgentsClient.create().askAgents(question, { onAnswer })` or `.runPolicy('fare')`.
 

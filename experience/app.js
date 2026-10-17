@@ -41,20 +41,35 @@ const worldReady = fetch('../data/world/bloor_spadina_bathurst.json')
 const mappedAvailable = () => Boolean(mapped.world && worldRunner && worldFixtures && worldAdapter && window.BloorSandbox);
 const mappedMode = () => mappedAvailable() && !mapped.failed;
 
-// Optional same-origin backend (api/server.js, deployed on Vultr). Absent under python http.server or the agent
-// server; then every run, compile and rerun happens in this browser.
-async function api(path, body = null, timeoutMs = 15000) {
+// Engine backend (api/server.js, deployed on Vultr Cloud Compute). Lookup order:
+//   1. same origin (the page is served by the Vultr VM, or `node api/server.js` locally);
+//   2. on a localhost page (Steven's agent server on :4174, python http.server on :4173), the public Vultr
+//      engine, which allows CORS only from localhost/127.0.0.1 origins. `?engine=<url>` overrides it and
+//      `?engine=off` forces the in-browser engine.
+// If neither answers, every run, compile and rerun happens in this browser with the same modules.
+const VULTR_ENGINE_URL = 'https://155-138-141-130.sslip.io';
+async function api(path, body = null, timeoutMs = 15000, base = mapped.base || '') {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal } : { signal: controller.signal });
+    const response = await fetch(`${base}${path}`, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal } : { signal: controller.signal });
     if (!response.ok) throw new Error(`${path} HTTP ${response.status}`);
     return await response.json();
   } finally { clearTimeout(timer); }
 }
-const backendReady = api('/api/health', null, 1500)
-  .then((health) => { mapped.backend = health?.ok && health.host ? health : null; return mapped.backend; })
-  .catch(() => null);
+const backendReady = (async () => {
+  const param = new URLSearchParams(window.location.search).get('engine');
+  if (param === 'off') return (mapped.backend = null);
+  const local = ['127.0.0.1', 'localhost', '[::1]'].includes(window.location.hostname);
+  const candidates = param ? [param.replace(/\/$/, '')] : local ? ['', VULTR_ENGINE_URL] : [''];
+  for (const base of candidates) {
+    try {
+      const health = await api('/api/health', null, base ? 4000 : 1500, base);
+      if (health?.ok && health.host) { mapped.base = base; mapped.backend = { ...health, remote: Boolean(base) }; return mapped.backend; }
+    } catch { /* try the next candidate */ }
+  }
+  return (mapped.backend = null);
+})();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current = preparedScenarios.fare;
 let phase = 'intro';
@@ -68,7 +83,7 @@ let bikeExperiment = null;
 
 // Live persona agents. The agent server (persona-swarm/runtime/server.js) also serves this site, so calls are same-origin
 // and the browser holds no key. Served any other way, health() fails and the prepared replays run.
-const agents = { client: window.AgentsClient?.create() || null, online: false, count: 0, roster: new Map(), polls: {}, chatPoll: null, shown: null, chatToken: 0, focusPoll: false };
+const agents = { client: window.AgentsClient?.create() || null, online: false, count: 0, roster: new Map(), polls: {}, chatPoll: null, shown: null, chatToken: 0, roleFilter: '' };
 const agentsReady = (async () => {
   try {
     const health = agents.client && await agents.client.health();
@@ -81,8 +96,18 @@ const agentsReady = (async () => {
   note.textContent = agents.online ? `LIVE · ${agents.count} PERSONA AGENTS` : 'AGENTS OFFLINE · PREPARED REPLAYS';
   note.dataset.state = agents.online ? 'live' : 'offline';
   note.hidden = false;
+  // Steven's showcase collapses the earlier prepared replay while the 100 agents are live. The mapped paired run
+  // (map, ledger and charts from one event log) is the canonical simulation, so it stays open.
+  setReplayOpen(!agents.online || Boolean(await worldReady && mappedMode()));
   return agents.online;
 })();
+
+// The prepared simulation replay (ledger, charts, TTC inspector) is synthetic and separate from the 100 agents.
+function setReplayOpen(open) {
+  document.body.classList.toggle('replay-collapsed', !open);
+  $('#replayToggle').setAttribute('aria-expanded', String(open));
+  $('#replayToggleState').textContent = open ? 'Hide ↑' : 'Show ↓';
+}
 
 function useFareTrace(trace) {
   if (!traceAdapter.isFareTrace(trace)) return;
@@ -163,8 +188,8 @@ function eventText(event) {
 function renderBikeExperiment(result) {
   if (!result) return;
   const by = experimentAdapter.deciders(result);
-  $('#bikeLedgerSeed').textContent = `PREPARED REPLAY (SYNTHETIC) / SEED ${result.seed}`;
-  $('#bikeLedgerScope').textContent = `Choose a changed decision to follow its committed events. All figures below are for ${result.population.count} ${by.who} over ${result.scenario.ticks} model periods.`;
+  $('#bikeLedgerSeed').textContent = `PREPARED SIMULATION REPLAY (SYNTHETIC, SEPARATE FROM THE 100 AGENTS) / SEED ${result.seed}`;
+  $('#bikeLedgerScope').textContent = `Choose a changed decision to follow its committed events. All figures below are for the replay's ${result.population.count} ${by.who} over ${result.scenario.ticks} model periods, not the 100 agents.`;
   const changes = result.changed_decisions.filter((change) => change.tick >= result.scenario.policy_start);
   if (!changes.some((change) => change.key === activeBikeDecisionKey)) activeBikeDecisionKey = changes.find((change) => change.trip_id === 'shop')?.key || changes[0]?.key;
   const buttons = $('#bikeExperimentChoices');
@@ -670,9 +695,9 @@ async function renderClef(key) {
 function syncReplayButton(running) {
   if (mapped.replayRunning === running) return;
   mapped.replayRunning = running;
-  $('#replayToggle').textContent = running ? 'Ⅱ' : '▶';
-  $('#replayToggle').setAttribute('aria-label', running ? 'Pause event replay' : 'Play event replay');
-  $('#replayToggle').setAttribute('aria-pressed', String(running));
+  $('#eventReplayPlay').textContent = running ? 'Ⅱ' : '▶';
+  $('#eventReplayPlay').setAttribute('aria-label', running ? 'Pause event replay' : 'Play event replay');
+  $('#eventReplayPlay').setAttribute('aria-pressed', String(running));
 }
 function renderReplayPeriods() {
   const run = bloorMainMap.run;
@@ -747,7 +772,6 @@ function resetToIntro() {
   agents.chatToken++;
   agents.chatPoll = null;
   showPoll(null);
-  agents.focusPoll = false;
   scene.setSector(null);
   scene.setScenario('fare');
   setPhase('intro');
@@ -769,13 +793,15 @@ const mappedSteps = [
 
 function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-// ---------- Persona agents: 1–5 policy polls, the composer, and illustrative map motion ----------
-const SCALE = ['1 strongly oppose', '2 oppose', '3 neutral', '4 support', '5 strongly support'];
+// ---------- Persona agents: one showcase of 100 agents rating a policy 1–5, and illustrative map motion ----------
+const SCALE = [1, 2, 3, 4, 5];
 const STANCES = ['strongly oppose', 'oppose', 'neutral', 'support', 'strongly support'];
-const ratingOf = (answer) => (SCALE.indexOf(answer.choice) + 1) || (STANCES.indexOf(answer.stance) + 1) || null;
+const RATING_COLORS = ['#ff7a5c', '#ffb29d', '#6f8c8f', '#a8f4d1', '#5fe0a8'];
+const ratingOf = (answer) => (Number.isInteger(answer.choice) ? answer.choice : (STANCES.indexOf(answer.stance) + 1)) || null;
+const LABEL = 'Survey-style reaction from 100 persona agents, not a forecast.';
 const POLICY_POLLS = {
-  fare: { question: 'The adult TTC fare rises by $0.50 per ride (to $3.80); Fair Pass stays at $2.10. How do you feel about this change?', group: (agent) => agent.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare' },
-  bike: { question: 'The protected bike lanes on Bloor St W between Bathurst St and Spadina Ave are removed and the space returned to cars. How do you feel about this change?', group: (agent) => agent.mode },
+  fare: { kind: 'PREPARED POLICY · TTC FARE', question: 'The adult TTC fare rises by $0.50 per ride (to $3.80); Fair Pass stays at $2.10. How do you feel about this change?' },
+  bike: { kind: 'PREPARED POLICY · BLOOR BIKE LANES', question: 'The protected bike lanes on Bloor St W between Bathurst St and Spadina Ave are removed and the space returned to cars. How do you feel about this change?' },
 };
 
 // Illustrative map motion, tunable here (and documented in README.md): a fixed, role-aware map from each agent's
@@ -796,47 +822,66 @@ function motionFor(policy, agent, rating) {
   return { base, policy: cue };
 }
 
-const stanceColor = (key) => /oppose/.test(key) ? '#ff987e' : /support/.test(key) ? '#a8f4d1' : '#5b7a7e';
-const newPoll = (question, label, group, view) => ({ question, label, group, view, rows: [], status: '', summary: '', action: null });
+const newPoll = (kind, question, view) => ({ kind, question, view, rows: [], status: '', summary: '', asked: 100 });
+const words = (text) => String(text || 'agent').replaceAll('_', ' ');
 
+// A compact card: name, role and rating colour; the reason opens on click and shows on hover.
 function pollCard({ id, answer, agent }) {
-  const card = document.createElement('article'); card.className = 'persona-reaction-card';
-  const top = document.createElement('div'); top.className = 'persona-reaction-top';
-  const role = document.createElement('span'); role.textContent = `${(agent.role || 'agent').replaceAll('_', ' ').toUpperCase()}${answer.affected ? ` · AFFECTED ${answer.affected.toUpperCase()}` : ''}`;
-  const choice = answer.choice || answer.stance;
-  const pill = document.createElement('span'); pill.className = `persona-stance${/support/.test(choice) ? ' persona-stance--support' : ''}`; pill.textContent = choice.toUpperCase();
-  const name = document.createElement('h4'); name.textContent = agent.name || id;
-  const reason = document.createElement('p'); reason.className = 'persona-reaction-quote'; reason.textContent = answer.reason || '';
-  top.append(role, pill); card.append(top, name, reason);
+  const rating = ratingOf(answer);
+  const card = document.createElement('details'); card.className = 'agent-card'; card.dataset.role = agent.role || 'agent';
+  card.style.setProperty('--rating', RATING_COLORS[rating - 1] || '#6f8c8f');
+  const check = answer.consistency === 'check';
+  if (check) card.classList.add('agent-card--check');
+  card.title = `${check ? 'Flagged: the reason may not match the rating. ' : ''}${answer.reason || ''}`;
+  const summary = document.createElement('summary');
+  const name = document.createElement('strong'); name.textContent = agent.name || id;
+  const role = document.createElement('span'); role.textContent = words(agent.role);
+  const score = document.createElement('b'); score.textContent = rating || '–'; score.setAttribute('aria-label', rating ? `rated ${rating}, ${STANCES[rating - 1]}` : 'no rating');
+  summary.append(name, role, score);
+  const reason = document.createElement('p'); reason.textContent = answer.reason || '';
+  card.append(summary, reason);
+  card.hidden = Boolean(agents.roleFilter && agents.roleFilter !== card.dataset.role);
   return card;
 }
 
-// The split bar, the mean and N, and the by-group means, from the rows received so far.
+// The 1–5 bar, the mean and N, the by-role and by-fare means, and the role filter, from the rows so far.
 function renderPollStats(poll) {
-  const counts = {};
-  for (const { answer } of poll.rows) { const key = answer.choice || answer.stance; counts[key] = (counts[key] || 0) + 1; }
-  const keys = Object.keys(counts).sort((a, b) => (ratingOf({ choice: a, stance: a }) || 99) - (ratingOf({ choice: b, stance: b }) || 99));
-  $('#agentPollSplit').hidden = !keys.length;
-  $('#agentPollSplit').setAttribute('aria-label', `Answer split: ${keys.map((key) => `${key} ${counts[key]}`).join(', ')}`);
-  $('#agentPollSplit').replaceChildren(...keys.map((key) => {
+  const counts = SCALE.map((n) => poll.rows.filter((row) => ratingOf(row.answer) === n).length);
+  $('#agentPollSplit').hidden = !poll.rows.length;
+  $('#agentPollSplit').setAttribute('aria-label', `Ratings: ${SCALE.map((n, i) => `${n} ${STANCES[i]} ${counts[i]}`).join(', ')}`);
+  $('#agentPollSplit').replaceChildren(...SCALE.filter((n, i) => counts[i]).map((n) => {
     const part = document.createElement('span');
-    part.style.flex = String(counts[key]);
-    part.style.background = stanceColor(key);
-    part.textContent = `${key.toUpperCase()} · ${counts[key]}`;
+    part.style.flex = String(counts[n - 1]);
+    part.style.background = RATING_COLORS[n - 1];
+    part.textContent = `${n} ${STANCES[n - 1].toUpperCase()} · ${counts[n - 1]}`;
     return part;
   }));
-  const mean = (rows) => { const r = rows.map((row) => ratingOf(row.answer)).filter(Boolean); return r.length ? (r.reduce((a, b) => a + b, 0) / r.length).toFixed(1) : null; };
-  const groups = {};
-  for (const row of poll.rows) (groups[poll.group(row.agent)] ||= []).push(row);
-  const all = mean(poll.rows);
+  const flagged = poll.rows.filter((row) => row.answer.consistency === 'check').length;
+  const mean = (rows) => { const r = rows.map((row) => ratingOf(row.answer)).filter(Boolean); return r.length ? (r.reduce((a, b) => a + b, 0) / r.length).toFixed(1) : '–'; };
+  const by = (key) => {
+    const groups = {};
+    for (const row of poll.rows) (groups[key(row.agent)] ||= []).push(row);
+    return Object.entries(groups).sort((a, b) => b[1].length - a[1].length).map(([name, rows]) => `${words(name)} ${mean(rows)} (${rows.length})`).join(' · ');
+  };
   $('#agentPollStats').textContent = !poll.rows.length ? '' : [
-    `${poll.rows.length} OF ${poll.asked || 100} ANSWERED${all ? ` · MEAN ${all} / 5` : ''}`,
-    ...(all ? [`BY GROUP · ${Object.entries(groups).sort((a, b) => b[1].length - a[1].length).map(([name, rows]) => `${String(name).replaceAll('_', ' ')} ${mean(rows)} (${rows.length})`).join(' · ')}`] : []),
-  ].join('  —  ');
+    `${poll.rows.length} OF ${poll.asked} ANSWERED · MEAN ${mean(poll.rows)} / 5${flagged ? ` · ${flagged} FLAGGED (?) WHERE THE REASON MAY NOT MATCH THE RATING` : ''}`,
+    `BY ROLE · ${by((agent) => agent.role)}`,
+    `BY FARE · ${by((agent) => agent.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare')}`,
+  ].join('\n');
+  const roles = {};
+  for (const { agent } of poll.rows) roles[agent.role] = (roles[agent.role] || 0) + 1;
+  $('#agentPollFilter').replaceChildren(...[['', poll.rows.length], ...Object.entries(roles).sort((a, b) => b[1] - a[1])].map(([role, n]) => {
+    const button = document.createElement('button'); button.type = 'button';
+    button.textContent = `${role ? words(role) : 'all'} ${n}`;
+    button.setAttribute('aria-pressed', String((agents.roleFilter || '') === role));
+    button.addEventListener('click', () => { agents.roleFilter = role; showPoll(poll); });
+    return button;
+  }));
 }
 
-// The shared #agentPoll panel shows one poll: the current policy view's, or the composer's.
+// The showcase panel shows one poll: the current prepared policy's, or the composer's drafted policy.
 function showPoll(poll) {
+  if (agents.shown !== poll) agents.roleFilter = '';
   agents.shown = poll;
   $('#agentPoll').hidden = !poll;
   if (!poll) return;
@@ -848,12 +893,10 @@ function showPoll(poll) {
 function updatePoll(poll, patch) {
   Object.assign(poll, patch);
   if (agents.shown !== poll) return;
-  $('#agentPollLabel').textContent = poll.label;
+  $('#agentPollKind').textContent = poll.kind;
   $('#agentPollQuestion').textContent = poll.question;
   $('#agentPollStatus').textContent = poll.status;
   $('#agentPollSummary').textContent = poll.summary;
-  $('#agentPollAction').hidden = !poll.action;
-  if (poll.action) $('#agentPollAction').textContent = poll.action.label;
 }
 
 function addPollRow(poll, id, answer, agent) {
@@ -864,12 +907,33 @@ function addPollRow(poll, id, answer, agent) {
   if (agents.shown === poll) { $('#agentPollCards').append(pollCard(row)); renderPollStats(poll); }
 }
 
-// ?demo=fare / ?demo=bike: all 100 agents rate the prepared policy 1–5. The ratings drive the map's illustrative motion.
+// Streams one 1–5 poll of all 100 agents into a poll object (askAgents for prepared policies, chat for drafts).
+function pollHandlers(poll, fresh = () => true) {
+  const update = (patch) => { if (fresh()) updatePoll(poll, patch); };
+  const fail = (error) => { poll.failed = true; update({ status: `AGENT POLL FAILED · ${error.message}`.toUpperCase() }); };
+  return {
+    onStart: (start) => { poll.asked = start.ids.length; },
+    onAnswer: (event) => { if (!fresh()) return; addPollRow(poll, event.id, event.answer, event.agent); update({ status: `LIVE · ${poll.rows.length} OF ${poll.asked} AGENTS ANSWERED` }); },
+    onStatus: (status) => update(status.stage === 'planning' ? { status: `DRAFTING THE POLICY · ${status.message.toUpperCase()}` } : { summary: 'Summarising…' }),
+    onDone: (done) => update({ status: `${done.aggregate?.answered ?? poll.rows.length} OF ${done.aggregate?.asked ?? poll.asked} AGENTS ANSWERED` }),
+    onSummary: (summary) => update({ summary: `${summary.summary} (${summary.numbers_verified ? 'numbers checked' : 'numbers not verified'})` }),
+    // At the plan limit the server replays the newest saved poll; use it only if it asked this exact question.
+    onReplay: (saved) => {
+      if (saved.record.question !== poll.question) { fail({ message: 'agent backend at its limit; no saved poll for this policy' }); return; }
+      Object.entries(saved.record.answers || {}).forEach(([id, answer]) => addPollRow(poll, id, answer));
+      update({ status: saved.label.toUpperCase() });
+    },
+    onError: fail,
+    fail,
+  };
+}
+
+// Prepared fare and Bloor views: all 100 agents rate the policy 1–5; the ratings drive the map's illustrative motion.
 function startPolicyPoll(view) {
   const prior = agents.polls[view];
   if ((prior && !prior.failed) || !agents.online) return;
   const spec = POLICY_POLLS[view];
-  const poll = agents.polls[view] = newPoll(spec.question, 'Survey-style reaction from 100 persona agents, not a forecast.', spec.group, view);
+  const poll = agents.polls[view] = newPoll(spec.kind, spec.question, view);
   poll.actors = [];
   poll.onRow = (row) => {
     const rating = ratingOf(row.answer);
@@ -878,29 +942,35 @@ function startPolicyPoll(view) {
     if (current.id === view) showActors();
   };
   if (current.id === view) showPoll(poll);
-  const fail = (error) => { poll.failed = true; updatePoll(poll, { status: `AGENT POLL FAILED · ${error.message}`.toUpperCase() }); };
-  updatePoll(poll, { status: 'LIVE AGENT POLL · ASKING 100 AGENTS' });
-  agents.client.askAgents(spec.question, {
-    options: SCALE, orchestrate: false, filter: {},   // all 100 agents; the server needs a filter object without the orchestrator
-    onStart: (start) => { poll.asked = start.ids.length; },
-    onAnswer: (event) => { addPollRow(poll, event.id, event.answer, event.agent); updatePoll(poll, { status: `LIVE AGENT POLL · ${poll.rows.length} OF ${poll.asked || 100} ANSWERED` }); },
-    onStatus: (status) => { if (status.stage === 'summarising') updatePoll(poll, { summary: 'Summarising…' }); },
-    onSummary: (summary) => updatePoll(poll, { summary: `${summary.summary} (${summary.numbers_verified ? 'numbers checked' : 'numbers not verified'})` }),
-    // At the plan limit the server replays the newest saved poll; use it only if it asked this exact question.
-    onReplay: (saved) => {
-      if (saved.record.question !== spec.question) { fail({ message: 'agent backend at its limit; no saved poll for this policy' }); return; }
-      Object.entries(saved.record.answers || {}).forEach(([id, answer]) => addPollRow(poll, id, answer));
-      updatePoll(poll, { status: saved.label.toUpperCase() });
-    },
-    onError: fail,
-  }).catch((error) => { if (!poll.failed && !poll.rows.length) fail(error); });
+  updatePoll(poll, { status: 'ASKING ALL 100 AGENTS' });
+  const handlers = pollHandlers(poll);
+  agents.client.askAgents(spec.question, { options: SCALE, orchestrate: false, ...handlers })
+    .catch((error) => { if (!poll.failed && !poll.rows.length) handlers.fail(error); });
+}
+
+// The composer drafts one concrete policy from the typed idea (Opus), then all 100 agents rate it 1–5.
+async function draftPolicy(idea) {
+  if (!(await agentsReady)) return;
+  const token = ++agents.chatToken;
+  const fresh = () => token === agents.chatToken;
+  const poll = agents.chatPoll = newPoll(`DRAFTED POLICY · FROM “${idea}”`, 'Drafting one concrete policy from your idea…', 'custom');
+  showPoll(poll);
+  updatePoll(poll, { status: 'DRAFTING THE POLICY…' });
+  const handlers = pollHandlers(poll, fresh);
+  try {
+    await agents.client.chat(idea, {
+      modes: ['poll'], options: SCALE, ...handlers,
+      onPlan: (plan) => { if (fresh()) updatePoll(poll, { question: plan.policy || plan.question, status: 'ASKING ALL 100 AGENTS' }); },
+      onReply: (reply) => { if (fresh()) updatePoll(poll, { summary: reply.text }); },
+    });
+  } catch (error) { if (fresh() && !poll.failed && !poll.rows.length) handlers.fail(error); }
 }
 
 function showActors() {
-  const actors = agents.polls[current.id]?.actors || [];
+  const poll = agents.polls[current.id];
+  const actors = poll?.actors || [];
   bloorMainMap.setActors(actors);
   bloorBikeMap.setActors(agents.polls.bike?.actors || []);
-  const poll = agents.polls[current.id];
   $('#mapMotionNote').hidden = !actors.length || bloorMainMap.canvas.hidden;
   if (!actors.length) $('#mapActorCard').hidden = true;
   else $('#mapMotionCount').textContent = `${actors.length} of ${poll.asked || 100} agents rated · mean ${(actors.reduce((sum, a) => sum + a.rating, 0) / actors.length).toFixed(1)} / 5.`;
@@ -923,61 +993,12 @@ function syncRatingsNote() {
 
 function showPickedActor(actor) {
   $('#mapActorCard').hidden = !actor;
-  if (actor) $('#mapActorCard').textContent = `${actor.name} · ${actor.role.replaceAll('_', ' ')} · rated ${actor.rating}/5 · shown as ${bloorMainMap.mode === 'baseline' ? actor.base : actor.policy}: “${actor.reason}”`;
+  if (actor) $('#mapActorCard').textContent = `${actor.name} · ${words(actor.role)} · rated ${actor.rating}/5 · shown as ${bloorMainMap.mode === 'baseline' ? actor.base : actor.policy}: “${actor.reason}”`;
 }
 bloorMainMap.onPick = showPickedActor;
 
-// Composer text goes to the Opus orchestrator (chat). It may poll, reply, or pick a world run, which this site does not run.
-async function askOrchestrator(message, view) {
-  if (!(await agentsReady)) return;
-  const token = ++agents.chatToken;
-  const fresh = () => token === agents.chatToken;
-  const poll = agents.chatPoll = newPoll(message, 'Survey-style reaction, not a forecast.', (agent) => agent.mode || 'agent', view);
-  let ended = false, refused = false;
-  const update = (patch) => { if (fresh()) updatePoll(poll, patch); };
-  showPoll(poll);
-  update({ status: 'ORCHESTRATOR · PLANNING…' });
-  try {
-    await agents.client.chat(message, {
-      onStatus: (status) => { if (refused) return; if (status.stage === 'planning') update({ status: `ORCHESTRATOR · ${status.message.toUpperCase()}` }); else update({ summary: 'Summarising…' }); },
-      onPlan: (plan) => {
-        if (!fresh()) return;
-        agents.focusPoll = true;
-        if (phase === 'lab' || phase === 'impact') $('#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
-        if (plan.mode === 'run') {
-          refused = true;
-          const target = plan.policy === 'fare' ? 'fare' : 'bike';
-          update({ status: 'LIVE-AGENT WORLD RUNS ARE NOT ENABLED IN THIS SITE', summary: `The orchestrator picked a live world run of the ${target === 'fare' ? 'TTC fare' : 'Bloor bike lane'} policy. ${mappedMode() ? 'The mapped paired run on this page uses fixture-rule choices; this site' : 'This site'} asks all 100 agents for a 1–5 rating instead.`,
-            action: { label: `Ask all 100 agents to rate the ${target === 'fare' ? 'fare change' : 'Bloor change'} 1–5 ↗`, run: () => runScenario(target) } });
-          return;
-        }
-        if (plan.mode === 'poll') update({ question: plan.question, status: 'LIVE AGENT POLL · ASKING', summary: plan.note || '' });
-        if (plan.mode === 'reply') update({ label: 'Orchestrator reply.', status: 'ORCHESTRATOR REPLY' });
-      },
-      onStart: (start) => { if (!refused) { poll.asked = start.ids?.length; update({ label: `${start.label[0].toUpperCase()}${start.label.slice(1)}.` }); } },
-      onAnswer: (event) => { if (!fresh() || refused) return; addPollRow(poll, event.id, event.answer, event.agent); update({ status: `LIVE AGENT POLL · ${poll.rows.length} ANSWERED` }); },
-      onDone: (done) => { ended = true; if (!refused) update({ status: `LIVE AGENT POLL · ${poll.rows.length} OF ${done.aggregate?.asked ?? poll.rows.length} ANSWERED` }); },
-      // At the plan limit the server replays the newest saved poll instead; label it as such.
-      onReplay: (saved) => {
-        ended = true;
-        if (saved.record.kind !== 'poll' || !fresh()) return;
-        Object.entries(saved.record.answers || {}).forEach(([id, answer]) => addPollRow(poll, id, answer));
-        update({ question: saved.record.question, status: saved.label.toUpperCase() });
-      },
-      onReply: (reply) => { ended = true; update({ summary: reply.text }); },
-      onSummary: (summary) => { if (!refused) update({ summary: `${summary.summary} (${summary.numbers_verified ? 'numbers checked' : 'numbers not verified'})` }); },
-      onError: (error) => {
-        ended = true;
-        if (poll.rows.length || poll.summary) update({ summary: `${poll.summary} (${error.message})`.trim() });
-        else update({ status: `AGENT REQUEST FAILED · ${error.message}`.toUpperCase() });
-      },
-    });
-  } catch (error) { if (!ended) update({ status: `AGENT REQUEST FAILED · ${error?.message || error}`.toUpperCase() }); }
-}
-
 async function runScenario(scenario, promptOverride = null) {
   const token = ++investigationToken;
-  if (promptOverride === null) agents.focusPoll = false;
   await agentsReady;
   if (token !== investigationToken) return;
   await Promise.all([worldReady, backendReady]);
@@ -987,12 +1008,12 @@ async function runScenario(scenario, promptOverride = null) {
     current = await legacyScenario(scenario, promptOverride);
     if (token !== investigationToken) return;
   }
-  if (scenario !== 'custom' && promptOverride === null) startPolicyPoll(scenario);   // composer questions go through askOrchestrator
+  if (scenario !== 'custom') startPolicyPoll(scenario);   // the composer drafts a policy for the agents via draftPolicy
   const agentNote = !agents.online ? 'no live model call'
-    : promptOverride !== null ? 'asking the persona agents through the orchestrator' : 'asking all 100 persona agents for a 1–5 rating';
+    : scenario === 'custom' ? 'drafting a policy, then asking all 100 persona agents for a 1–5 rating' : 'asking all 100 persona agents for a 1–5 rating';
   $('#investigationNote').textContent = !useMapped
     ? (!agents.online ? 'Prepared demo replay · no live model call'
-      : promptOverride !== null ? 'Asking the persona agents through the orchestrator' : 'Prepared replay (synthetic) · asking all 100 persona agents for a 1–5 rating')
+      : scenario === 'custom' ? 'Drafting a policy, then asking all 100 persona agents for a 1–5 rating' : 'Asking all 100 persona agents for a 1–5 rating')
     : scenario === 'custom'
       ? `Compiling the hypothesis ${mapped.backend ? `on ${mapped.backend.host}` : 'with offline rules in this browser'} · ${agentNote}`
       : `Mapped paired run ${mapped.backend ? `on ${mapped.backend.host}` : 'in this browser'} · ${agentNote}`;
@@ -1034,7 +1055,7 @@ async function runScenario(scenario, promptOverride = null) {
   $('#personaLab').hidden = false;
   setPhase('lab');
   requestAnimationFrame(() => {
-    $(agents.focusPoll ? '#agentPoll' : '#lab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+    $($('#agentPoll').hidden ? '#lab' : '#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
     startReplay();
   });
 }
@@ -1124,7 +1145,7 @@ function renderLab(options = {}) {
   else { if (bloorMainMap.run) bloorMainMap.setRun(null); bloorMainMap.setScenario(current.id); }
   const replay = replayActive();
   bloorBikeMap.setScenario('bike');
-  const chatPoll = agents.chatPoll && (agents.chatPoll.view === current.id || (current.id === 'compiled' && agents.chatPoll.view === 'custom')) ? agents.chatPoll : null;
+  const chatPoll = agents.chatPoll && (current.id === 'custom' || current.id === 'compiled') ? agents.chatPoll : null;
   showPoll(agents.polls[current.id] || chatPoll);
   showActors();
   $('#bikeLab').hidden = current.id !== 'bike';
@@ -1144,6 +1165,8 @@ function renderLab(options = {}) {
     renderBikeExperiment(current.experiment);
   } else bikeScene.setMotion(false);
   $('#bikeLabButton').hidden = current.id !== 'bike';
+  // Steven's collapse toggle is for the earlier prepared replay; the mapped run's ledger and charts stay open.
+  $('#replayToggle').hidden = current.id === 'custom' || !agents.online || Boolean(result);
   $('#ttcWorkbench').hidden = current.id !== 'fare';
   $('#ttcInspectorButton').hidden = current.id !== 'fare';
   setCopy('#ttcWorkbenchKicker', '01 / EARLIER PROTOTYPE · RULE-BASED DISTRICT', Boolean(result));
@@ -1158,7 +1181,7 @@ function renderLab(options = {}) {
   $('#sampleStatus').textContent = current.id === 'custom' ? 'NO MODEL RESULT'
     : result ? `SEED ${result.seed} · v${result.version}${served?.remote ? ` · ${/vultr/i.test(String(served.host)) ? 'VULTR' : 'HOSTED'}` : ''}` : `SYNTHETIC v${run.version}`;
   $('#studyTitle').textContent = current.title;
-  $('#studySummary').textContent = current.summary;
+  $('#studySummary').textContent = current.id === 'custom' || result ? current.summary : `Prepared simulation replay (synthetic, separate from the 100 agents): ${current.summary}`;
   $('#compilerBadge').hidden = !current.compilerBadge;
   $('#compilerBadge').textContent = current.compilerBadge || '';
   $('#viewportArea').textContent = current.viewport;
@@ -1171,11 +1194,14 @@ function renderLab(options = {}) {
   $('#insightNarrative').textContent = current.narrative;
   $('#sourceRibbon').textContent = current.sourceRibbon;
   $('#impactScenarioTag').textContent = current.mapTag;
-  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : result ? `SCENARIO OUTPUTS / MAPPED RUN v${run.version}` : current.trace ? `SCENARIO OUTPUTS / SHARED TRACE v${run.version}` : `SCENARIO OUTPUTS / PAIRED TRACE v${run.version}`;
+  $('#overviewStatus').textContent = current.id === 'custom' ? 'SPECULATIVE PREVIEW / NO MODEL SERIES' : result ? `SCENARIO OUTPUTS / MAPPED RUN v${run.version}` : `PREPARED SIMULATION REPLAY (SYNTHETIC, SEPARATE FROM THE 100 AGENTS) v${run.version}`;
   const custom = current.id === 'custom';
   $('#chainLabel').textContent = custom ? 'WHAT A CONNECTED ENGINE WOULD DO' : 'WATCH THE CHAIN';
   $('#impactButtonHint').textContent = custom ? 'Inspect missing evidence' : 'See the connected effects';
-  $('#railNoteText').textContent = custom ? (current.compilerBadge ? 'The compiler found no mapped lever for this question, so no agent decisions or policy effects were computed. Inspect a sector to see what is missing.' : 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.') : result ? mappedRailNote(result, by) : current.trace ? 'The map shows observed Bathurst–Spadina context; the fare run still uses a separate synthetic district. Open its inspector for people, events and reruns.' : current.id === 'fare' ? `The map shows observed Bathurst–Spadina context; ${current.experiment.population.count} ${by.who} use a separate paired run. The charts share that run; the TTC inspector below is the earlier rule-based prototype with its own trace.` : `The map shows observed Bathurst–Spadina context; ${current.experiment.population.count} ${by.who} use a separate paired trace. The charts and decision ledger share that trace, not the map yet.`;
+  $('#railNoteText').textContent = custom
+    ? (current.compilerBadge ? 'The compiler found no mapped lever for this question, so no simulated policy effects were computed. The 100 agents rate the drafted policy above; inspect a sector to see what is missing.' : 'No simulated policy effects have been computed for this question. The 100 agents rate the drafted policy above; inspect a sector to see what is missing.')
+    : result ? mappedRailNote(result, by)
+    : `The map shows observed Bathurst–Spadina context; its dots follow the 100 agents' 1–5 ratings when they are online. The charts and ${current.id === 'fare' ? 'TTC inspector' : 'decision ledger'} are a prepared simulation replay (synthetic, separate from the 100 agents).`;
   $('#impactHeadingLine').textContent = custom ? 'One question.' : 'One decision.';
   $('#impactHeadingEm').textContent = custom ? 'Open outcomes.' : 'Many futures.';
   $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : result ? 'Each chart reduces the same committed events the map replays and the decision ledger lists.' : current.trace ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : current.id === 'fare' ? 'Each fare chart reduces the same committed events of one paired run.' : 'Each Bloor chart reduces the same committed events shown in the decision ledger.';
@@ -1189,7 +1215,7 @@ function renderLab(options = {}) {
   $('.timeline-bar').hidden = !bloorMainMap.canvas.hidden && !replay;
   $('.timeline-bar').classList.toggle('is-replay', replay);
   $('#timelineKicker').textContent = replay ? 'ONE EVENT LOG · BOTH WORLDS' : 'ILLUSTRATIVE CITY REPLAY';
-  $('#replayToggle').hidden = !replay;
+  $('#eventReplayPlay').hidden = !replay;
   $('#timelinePeriods').hidden = !replay;
   $('#timelineFrames').hidden = replay;
   $('#timeScrubber').max = replay ? '1000' : '100';
@@ -1481,7 +1507,7 @@ $('#hypothesisForm').addEventListener('submit', event => {
     : null;
   const chosen = match ? match[0] : compiledMatch ? compiledMatch[0] : 'custom';
   runScenario(chosen, query);
-  askOrchestrator(query, chosen);
+  if (chosen === 'custom') draftPolicy(query);
 });
 $('#hypothesisInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('#hypothesisForm').requestSubmit(); } });
 $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', () => {
@@ -1489,7 +1515,9 @@ $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', 
   $('#hypothesisInput').value = preparedScenarios[chosen].prompt;
   runScenario(chosen);
 }));
-$('#agentPollAction').addEventListener('click', () => agents.shown?.action?.run());
+$('#replayToggle').addEventListener('click', () => setReplayOpen(document.body.classList.contains('replay-collapsed')));
+// Buttons that lead into the replay open it first (registered before their own scroll handlers).
+$$('#impactMapButton, #bikeLabButton, #ttcInspectorButton').forEach((button) => button.addEventListener('click', () => setReplayOpen(true)));
 $('#impactMapButton').addEventListener('click', () => { $('#impact').hidden = false; setPhase('impact'); scene.setSector(activeSector); $('#impact').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' }); });
 $('#bikeLabButton').addEventListener('click', () => $('#bikeLab').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
 $('#ttcInspectorButton').addEventListener('click', () => $('#ttcWorkbench').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' }));
@@ -1515,7 +1543,7 @@ $('#timeScrubber').addEventListener('input', () => {
   bloorMainMap.pause();
   bloorMainMap.setProgress(Number($('#timeScrubber').value) / Number($('#timeScrubber').max || 1000));
 });
-$('#replayToggle').addEventListener('click', () => syncReplayButton(bloorMainMap.toggle()));
+$('#eventReplayPlay').addEventListener('click', () => syncReplayButton(bloorMainMap.toggle()));
 setInterval(() => {
   if ($('#lab').hidden || !scene.running || replayActive()) return;
   const value = Math.floor(scene.time % 100);

@@ -537,9 +537,14 @@ function createServer(options = {}) {
     };
   }
 
+  // Same-origin by default. The one exception: a page served from a developer's own machine
+  // (Steven's agent server on :4174, python http.server on :4173) may call this engine, so a
+  // teammate's localhost demo still runs its paired worlds on Vultr. Any other origin gets 403.
+  const LOCAL_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d{1,5})?$/;
   const originAllowed = (req) => {
     const origin = req.headers.origin;
     if (!origin) return true;
+    if (LOCAL_ORIGIN.test(origin)) return true;
     try { return new URL(origin).host === req.headers.host; } catch { return false; }
   };
 
@@ -547,6 +552,16 @@ function createServer(options = {}) {
     const rawPath = (req.url || '/').split('?')[0];
     if (rawPath.startsWith('/api/')) {
       if (!originAllowed(req)) throw new HttpError(403, 'Cross-origin requests are not allowed');
+      const origin = req.headers.origin;
+      if (origin && LOCAL_ORIGIN.test(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Vary', 'Origin, Accept-Encoding');
+        if (req.method === 'OPTIONS') {
+          res.writeHead(204, { ...SECURITY_HEADERS, 'Access-Control-Allow-Methods': 'GET, POST', 'Access-Control-Allow-Headers': 'content-type', 'Access-Control-Max-Age': '600', 'Content-Length': 0 });
+          res.end();
+          return undefined;
+        }
+      }
       if (req.method === 'OPTIONS') throw new HttpError(403, 'Cross-origin requests are not allowed');
       if (rawPath === '/api/health' && (req.method === 'GET' || req.method === 'HEAD')) return sendJson(req, res, 200, health());
       if (rawPath === '/api/compile' && req.method === 'POST') return sendJson(req, res, 200, await compile(req));
