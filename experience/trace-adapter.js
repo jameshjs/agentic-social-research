@@ -63,7 +63,7 @@
       trace,
       title: trace.scenario.question,
       summary: `${trace.personas.length} synthetic people make choices across two seeded worlds. ${trace.diverged_events} choices differ after the fare change; inspect them below.`,
-      breadcrumb: 'TORONTO · SCHEMATIC WEST-END', viewport: 'SYNTHETIC DISTRICT', mapTag: 'TTC FARE / SCHEMATIC DISTRICT',
+      breadcrumb: 'BLOOR MAP · SYNTHETIC FARE TRACE', viewport: 'BATHURST–SPADINA SECTION', mapTag: 'TTC FARE / SCHEMATIC TRACE',
       location: trace.scenario.geography,
       headline: { label: `SAMPLE FARE RECEIPTS · ${post.toUpperCase()}`, value: `${money(revenue.after - revenue.before)}/wk`, direction: 'simulated difference from baseline' },
       mini: [

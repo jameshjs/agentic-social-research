@@ -11,6 +11,20 @@ const scene = new CityScene($('#cityCanvas'));
 const bikeScene = new CityScene($('#bikeWorldCanvas'));
 bikeScene.setScenario('bike');
 bikeScene.setPhase('lab');
+const bloorMainMap = new window.BloorMapView($('#bloorMapMain'));
+const bloorBikeMap = new window.BloorMapView($('#bloorMapBike'));
+fetch('../data/world/bloor_spadina_bathurst.json')
+  .then((response) => { if (!response.ok) throw new Error(`Map HTTP ${response.status}`); return response.json(); })
+  .then((world) => {
+    bloorMainMap.setWorld(world);
+    bloorBikeMap.setWorld(world);
+    $('#bikeMapCredit').hidden = false;
+    bloorMainMap.setScenario(current.id);
+    bloorBikeMap.setScenario('bike');
+    $('#worldCaption').textContent = current.id === 'custom' ? current.worldCaption : 'Mapped Bathurst–Spadina context · synthetic policy trace';
+    if (phase === 'lab' || phase === 'impact') renderLab();
+  })
+  .catch(() => { /* Keep the existing schematic city as an offline fallback. */ });
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current = preparedScenarios.fare;
 let phase = 'intro';
@@ -229,11 +243,16 @@ async function runScenario(scenario, promptOverride = null) {
 }
 
 function renderLab() {
+  bloorMainMap.canvas.hidden = current.id === 'custom' || !bloorMainMap.world;
+  $('#simulationViewport').classList.toggle('has-mapped-world', !bloorMainMap.canvas.hidden);
+  $('#mapAttribution').hidden = bloorMainMap.canvas.hidden;
+  bloorMainMap.setScenario(current.id);
+  bloorBikeMap.setScenario('bike');
   $('#bikeLab').hidden = current.id !== 'bike';
   if (current.id === 'bike') {
     bikeScene.resize();
     bikeScene.setPhase('lab');
-    bikeScene.setMotion(true);
+    bikeScene.setMotion(!bloorBikeMap.world);
     renderBikeExperiment(current.experiment);
   } else bikeScene.setMotion(false);
   $('#bikeLabButton').hidden = current.id !== 'bike';
@@ -245,7 +264,7 @@ function renderLab() {
   $('#studyTitle').textContent = current.title;
   $('#studySummary').textContent = current.summary;
   $('#viewportArea').textContent = current.viewport;
-  $('#worldCaption').textContent = current.worldCaption;
+  $('#worldCaption').textContent = !bloorMainMap.canvas.hidden ? 'Mapped Bathurst–Spadina context · synthetic policy trace' : current.worldCaption;
   $('#focusLabelA').textContent = current.focus[0];
   $('#focusLabelB').textContent = current.focus[1];
   $('#headlineEyebrow').textContent = current.headline.label;
@@ -258,7 +277,7 @@ function renderLab() {
   const custom = current.id === 'custom';
   $('#chainLabel').textContent = custom ? 'WHAT A CONNECTED ENGINE WOULD DO' : 'WATCH THE CHAIN';
   $('#impactButtonHint').textContent = custom ? 'Inspect missing evidence' : 'See the connected effects';
-  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : current.id === 'fare' ? 'This is a seeded rule-engine result, not a Toronto forecast. Open the living run to inspect people, events, evidence and reruns.' : 'Eight synthetic people make bounded route choices. The charts and decision ledger use one event trace; city motion is schematic. This is not a Toronto forecast.';
+  $('#railNoteText').textContent = custom ? 'No agent decisions or policy effects have been computed for this question. Inspect a sector to see what is missing.' : current.id === 'fare' ? 'The map shows observed Bathurst–Spadina context; the fare run still uses a separate synthetic district. Open its inspector for people, events and reruns.' : 'The map shows observed Bathurst–Spadina context; eight synthetic people use a separate paired trace. The charts and decision ledger share that trace, not the map yet.';
   $('#impactHeadingLine').textContent = custom ? 'One question.' : 'One decision.';
   $('#impactHeadingEm').textContent = custom ? 'Open outcomes.' : 'Many futures.';
   $('#impactDescription').textContent = custom ? 'Each sector shows the evidence and model work still needed before a policy effect can be estimated.' : current.id === 'fare' ? 'Each chart reads the same versioned event trace as the TTC city inspector.' : 'Each Bloor chart reduces the same committed events shown in the decision ledger.';
@@ -267,6 +286,8 @@ function renderLab() {
   $('#overviewTitle').textContent = custom ? 'What remains to measure.' : 'Every signal in view.';
   $('#overviewDescription').textContent = custom ? 'These sectors have no modelled series. Choose one to see its missing inputs and evidence.' : current.id === 'fare' ? 'Five linked views of one seeded run. Change an assumption in the TTC inspector and every chart updates.' : 'Five event-derived views of one paired Bloor sample. Choose a chart to inspect its assumption boundary.';
   $('#viewToggle').hidden = custom;
+  $('#motionButton').hidden = !bloorMainMap.canvas.hidden;
+  $('.timeline-bar').hidden = !bloorMainMap.canvas.hidden;
   $('#viewportLegend').hidden = custom;
   $('#cityStateNote').hidden = !custom;
   $('#focusMarkerA').hidden = custom;
@@ -458,6 +479,8 @@ function setViewSelection(mode) {
 function setCityMode(mode) {
   scene.setMode(mode);
   bikeScene.setMode(mode);
+  bloorMainMap.setMode(mode);
+  bloorBikeMap.setMode(mode);
   $('#bikeWorldState').textContent = mode === 'baseline' ? 'EXISTING PROTECTED TRACK' : 'HYPOTHETICAL REMOVAL';
   setViewSelection(mode);
   $('#bikeStage').dataset.view = mode;
