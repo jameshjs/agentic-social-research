@@ -1,0 +1,73 @@
+{
+ "round": "005",
+ "decided_at": "2026-10-17T09:33:56+00:00",
+ "check_targeted": "right_person",
+ "hypothesis": "Twin's full text is 18k words, mostly unchosen options, so a cleaner persona should help agents find the answers that matter and raise right person in both families, at lower cost.",
+ "change": "Persona format full -> compact: the respondent's given answers as question and chosen answer only, without unchosen options (about 11k words instead of 18k), keeping the labelled points of numbered scales. Instructions unchanged from round 3.",
+ "compared_with": "003-spending-habits",
+ "kept": false,
+ "on_trial": false,
+ "reason": "discard: fell beyond noise: right_group_gaps -0.086 (noise 0.049); marks passed fell 4 -> 3; no check improved beyond noise: right_person +0.013 (noise 0.015), right_spread -0.007 (noise 0.010), right_group_gaps -0.086 (noise 0.049), steady -0.004 (noise 0.010)",
+ "deltas": {
+  "right_person": 0.013342696629213502,
+  "right_spread": -0.006812865731465667,
+  "right_group_gaps": -0.0864197530864198,
+  "steady": -0.0040000000000000036
+ },
+ "noise": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ },
+ "check": {
+  "right_person": 0.8167134831460674,
+  "right_spread": 0.8670058737869095,
+  "right_group_gaps": 0.7654320987654321,
+  "steady": 0.966,
+  "marks_passed": 3,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8148558758314856,
+    "right_spread": 0.8762364556356073,
+    "right_group_gaps": 1.0
+   },
+   "pricing": {
+    "right_person": 0.8172106824925816,
+    "right_spread": 0.8646982283247352,
+    "right_group_gaps": 0.6984126984126984
+   }
+  }
+ },
+ "tuning": {
+  "right_person": 0.7929171668667467,
+  "right_spread": 0.8492745779258386,
+  "right_group_gaps": 0.6333333333333333,
+  "steady": null,
+  "marks_passed": 2,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.7810810810810811,
+    "right_spread": 0.9094595655157406,
+    "right_group_gaps": 1.0
+   },
+   "pricing": {
+    "right_person": 0.7962962962962963,
+    "right_spread": 0.8342283310283631,
+    "right_group_gaps": 0.5686274509803921
+   }
+  }
+ },
+ "triggers_fired": [],
+ "question": null,
+ "reply": null,
+ "spend_total_usd": 9.55,
+ "format": "compact",
+ "family_note": "Right person rose in pricing (0.800 -> 0.817) but pricing group gaps fell 0.825 -> 0.698; tuning right person fell 0.814 -> 0.793. Cost per round fell 30% ($1.13).",
+ "tuning_findings": [
+  "Pricing: agents say yes to everyday necessities people often pass on: milk 1.00 vs 0.50, coffee 0.70 vs 0.25, pain reliever 0.82 vs 0.45, detergent 0.93 vs 0.62, baking soda 1.00 vs 0.78 (round 3 instructions)."
+ ],
+ "note": "A first launch of this round was stopped after a few seconds, before any answers were saved, because compact personas showed bare scale numbers ('7') without the scale's labels; formats.py now keeps them."
+}

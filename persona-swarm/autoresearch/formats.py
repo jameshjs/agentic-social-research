@@ -15,17 +15,28 @@ OPENNESS = {"original": 1, "curious": 1, "ingenious": 1, "imagination": 1, "inve
 def blocks(pid):
     return json.loads((GIVEN / f"{pid}.json").read_text())
 
+NUMBER = re.compile(r"^-?\d+$")
+
+def scale(options):
+    """' (scale: Tightwad ... 1 … Spendthrift ... 11)' for a numbered scale with labelled points, else ''."""
+    labelled = [" ".join(str(o).split()) for o in options or [] if re.search(r"[A-Za-z]", str(o))]
+    return f" (scale: {' … '.join(labelled)})" if len(labelled) >= 2 else ""
+
 def answered(bl):
-    """(block name, question, answer text) for every answered question, in survey order."""
+    """(block name, question, answer text) for every answered question, in survey order. A bare scale number keeps
+    the scale's labelled points, so "7" still says what 7 means once the other options are dropped."""
     for b in bl:
         name = (b.get("BlockName") or "").strip()
         for q in b.get("Questions") or []:
             t, a = q.get("QuestionType"), q.get("Answers") or {}
             text = " ".join(str(q.get("QuestionText", "")).split())
             if t == "MC" and isinstance(a.get("SelectedText"), str):
-                yield name, text, a["SelectedText"]
+                ans = a["SelectedText"]
+                yield name, text, ans + (scale(q.get("Options")) if NUMBER.match(ans.strip()) else "")
             elif t == "Matrix" and isinstance(a.get("SelectedText"), list) and q.get("Rows"):
-                yield name, text, "; ".join(f"{r}: {s}" for r, s in zip(q["Rows"], a["SelectedText"]))
+                cells = a["SelectedText"]
+                tail = scale(q.get("Columns")) if any(NUMBER.match(str(c).strip()) for c in cells) else ""
+                yield name, text, "; ".join(f"{r}: {c}" for r, c in zip(q["Rows"], cells)) + tail
             elif t == "TE" and a.get("Text"):
                 yield name, text, " ".join(str(a["Text"]).split()) if not isinstance(a["Text"], dict) else json.dumps(a["Text"])
             elif t == "Slider" and a.get("Values") is not None:
