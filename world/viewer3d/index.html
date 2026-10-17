@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bloor 3D Viewer</title>
+<style>
+  :root {
+    --glass: rgba(16, 20, 27, 0.78); --glass-2: rgba(30, 36, 46, 0.9); --ink: #eef1f5; --muted: #a3adb9; --line: rgba(255,255,255,0.12);
+    --accent: #5ab0ff; --obs: #3fbf88; --der: #e2b04a; --asm: #ff7b72; --sim: #7aa2ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #9fc3e6; color: var(--ink); font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; }
+  .panel { position: fixed; background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+  #head { top: 12px; left: 12px; max-width: 340px; }
+  #head h1 { font-size: 15px; margin: 0 0 2px; letter-spacing: 0.2px; }
+  #head .sub { color: var(--muted); font-size: 12px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  button, select { font: inherit; color: var(--ink); background: var(--glass-2); border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px; cursor: pointer; }
+  button:hover, select:hover { border-color: rgba(255,255,255,0.3); }
+  button.on { background: var(--accent); color: #06121f; border-color: var(--accent); }
+  #layers { top: 150px; left: 12px; width: 210px; }
+  #layers h2, #insp h2, #dash h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
+  #layers label { display: flex; align-items: center; gap: 7px; padding: 2px 0; cursor: pointer; }
+  #layers[hidden] { display: none; }
+  body.embed #head, body.embed #scen, body.embed #credit, body.embed #layers { display: none !important; }
+  body.embed #hl, body.embed #armWrap { display: none !important; }
+  body.embed #right { top: 56px; bottom: 70px; width: 270px; right: 8px; }
+  body.embed #people { max-height: 46%; }
+  body.embed #insp { max-height: 52%; }
+  body.embed #stats { display: none; }
+  body.embed #dash { bottom: 8px; left: 8px; right: 8px; padding: 6px 10px; grid-template-columns: auto minmax(0, 1fr); }
+  body.embed #dash > .ctl:nth-of-type(2) { display: none; }
+  #layers .key { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; font-size: 11px; color: var(--muted); }
+  .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; vertical-align: -1px; margin-right: 4px; }
+  #insp { display: none; }
+  #insp.open { display: block; }
+  #insp .x { position: absolute; top: 6px; right: 8px; background: none; border: 0; font-size: 18px; color: var(--muted); }
+  #insp h3 { margin: 0 24px 6px 0; font-size: 15px; }
+  #insp table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #insp td { padding: 3px 4px; border-top: 1px solid var(--line); vertical-align: top; }
+  #insp td:first-child { color: var(--muted); width: 42%; }
+  .chip { display: inline-block; font-size: 10px; padding: 0 6px; border-radius: 9px; border: 1px solid currentColor; margin-left: 4px; vertical-align: 1px; }
+  .chip.observed { color: var(--obs); } .chip.derived { color: var(--der); } .chip.assumption { color: var(--asm); } .chip.simulated { color: var(--sim); }
+  #insp .note { color: var(--muted); font-size: 11px; margin-top: 6px; }
+  #dash { left: 12px; right: 12px; bottom: 12px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; }
+  #dash .ctl { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  #clock { font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600; min-width: 84px; }
+  #scrub { width: 100%; accent-color: var(--accent); }
+  #stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12px; color: var(--muted); }
+  #stats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  #stats table { border-collapse: collapse; font-size: 11px; }
+  #stats td, #stats th { padding: 0 6px; text-align: right; font-weight: normal; }
+  #stats th { color: var(--muted); }
+  #tip { position: fixed; pointer-events: none; background: var(--glass-2); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font-size: 12px; display: none; max-width: 260px; z-index: 10; }
+  #tip b { display: block; }
+  #tip span { color: var(--muted); }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; background: linear-gradient(#9fc3e6, #dfe9f1); color: #1b2633; font-size: 15px; z-index: 20; text-align: center; padding: 16px; }
+  #loading.err { color: #8b1d16; }
+  .lbl { color: #fff; font-size: 11px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9); white-space: nowrap; pointer-events: none; }
+  .lbl.big { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; }
+  .lbl.sub { color: #9ff0c9; font-style: italic; font-weight: 500; }
+  .lbl.stn { background: rgba(0,0,0,0.55); padding: 1px 6px; border-radius: 6px; border-left: 3px solid #3fbf88; }
+  #credit { position: fixed; right: 12px; bottom: 132px; font-size: 10px; color: rgba(255,255,255,0.85); text-shadow: 0 1px 2px #000; text-align: right; pointer-events: none; }
+  /* scenario headline, people list, persona tags, street cues */
+  #hl { top: 12px; left: 50%; transform: translateX(-50%); width: min(600px, calc(100% - 720px)); min-width: 420px; padding: 10px 14px; }
+  #hl .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #hl select { font-weight: 600; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; padding: 5px 14px; font-weight: 600; background: var(--glass-2); }
+  .seg button[data-arm="baseline"].on { background: #4fe3ff; color: #04202a; }
+  .seg button[data-arm="policy"].on { background: #ff3df0; color: #2a0326; }
+  #hl .q { margin: 8px 0 6px; font-size: 13px; color: var(--ink); }
+  .tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .tile { background: rgba(255,255,255,0.06); border: 1px solid var(--line); border-radius: 8px; padding: 5px 7px; min-width: 0; }
+  .tile span { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile b { display: block; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tile b em { font-style: normal; color: var(--muted); font-weight: 400; }
+  .tile i { font-style: normal; font-size: 11px; color: var(--muted); }
+  .tile i.up, .board i.up { color: #ff8ad8; } .tile i.down, .board i.down { color: #7ee7ff; }
+  #hl .note, #people .note { color: var(--muted); font-size: 11px; margin-top: 6px; }
+  #right { position: fixed; top: 12px; right: 12px; bottom: 150px; width: 330px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  #right > .panel { position: static; pointer-events: auto; }
+  #insp { max-height: 62%; overflow: auto; flex: none; position: relative !important; }
+  #people { flex: 0 1 auto; overflow: auto; min-height: 0; }
+  #people h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin: 0 0 6px; }
+  .person { display: block; width: 100%; text-align: left; margin: 0 0 5px; padding: 6px 8px; line-height: 1.35; }
+  .person span { color: var(--muted); font-size: 11px; }
+  .person em { font-style: normal; color: #ff8ad8; font-size: 12px; }
+  .person.on { border-color: #ffe14d; background: rgba(255,225,77,0.12); }
+  .chgtxt { color: #ff8ad8; }
+  .ptag { background: rgba(10,12,16,0.82); border: 1px solid rgba(255,255,255,0.25); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; white-space: nowrap; pointer-events: none; }
+  .ptag span { color: #cfd6de; margin-left: 4px; }
+  .ptag.chg { border-color: #ff3df0; box-shadow: 0 0 10px rgba(255,61,240,0.6); }
+  .ptag.chg span { color: #ff9ff3; font-weight: 600; }
+  .ptag.pick { border-color: #ffe14d; box-shadow: 0 0 12px rgba(255,225,77,0.7); }
+  .fare { background: rgba(10,12,16,0.85); color: #e8fff4; border: 1px solid #3fbf88; font-size: 11px; padding: 3px 7px; border-radius: 6px; white-space: nowrap; text-align: center; pointer-events: none; }
+  .fare.small { font-size: 10px; padding: 1px 5px; }
+  .fare.up { border-color: #ff3b30; color: #fff; background: rgba(120,10,10,0.88); animation: pulse 1.2s ease-in-out infinite; }
+  .fare s { opacity: 0.6; } .fare b { color: #ffb3ab; font-size: 13px; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 rgba(255,59,48,0); } 50% { box-shadow: 0 0 16px rgba(255,59,48,0.9); } }
+  .board { background: rgba(10,12,16,0.85); border: 2px solid #4fe3ff; color: #fff; padding: 6px 12px; border-radius: 10px; text-align: center; font-size: 12px; pointer-events: none; white-space: nowrap; }
+  .board b { font-size: 16px; display: block; }
+  .board .k { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #9fe9ff; }
+  .board.pol { border-color: #ff3df0; box-shadow: 0 0 24px rgba(255,61,240,0.55); }
+  .board.pol .k { color: #ff9ff3; }
+  .board i { font-style: normal; }
+  .dtag { color: #8affc1; font-size: 11px; font-weight: 600; text-shadow: 0 1px 3px #000; white-space: nowrap; pointer-events: none; }
+  body[data-arm="policy"] #stage { box-shadow: inset 0 0 0 3px rgba(255,61,240,0.55); }
+  body[data-arm="baseline"] #stage { box-shadow: inset 0 0 0 3px rgba(79,227,255,0.45); }
+  #stage { transition: box-shadow 0.4s; }
+  @media (max-width: 1240px) { #hl { top: auto; bottom: 168px; left: 12px; transform: none; width: auto; right: 354px; min-width: 0; } .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 820px) {
+    #hl { left: 12px; right: 12px; top: 120px; bottom: auto; }
+    #right { top: auto; left: 12px; right: 12px; width: auto; bottom: 168px; max-height: 40vh; }
+    #people { display: none !important; }
+    #layers { top: auto; bottom: 168px; width: auto; max-width: 200px; max-height: 40vh; overflow: auto; }
+    #layers .key { display: none; }
+    #insp { max-height: 40vh; z-index: 5; }
+    #dash { grid-template-columns: minmax(0, 1fr); padding: 8px; }
+    #dash .ctl select { flex: 1 1 0; min-width: 0; }
+    #stats table { display: none; }
+    #layers { padding: 6px 10px; font-size: 12px; }
+    #head { right: 12px; max-width: none; }
+    #credit { display: none; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="stage" aria-label="3D view of Bloor St W between Bathurst St and Spadina Ave"></div>
+<div id="loading">Loading the Bloor world…</div>
+
+<section id="head" class="panel">
+  <h1>Bloor St W · Bathurst → Spadina</h1>
+  <div class="sub">Drag to move around. Click a person to meet them.</div>
+  <div class="btns" id="presets">
+    <button data-preset="overview">Overview</button>
+    <button data-preset="flyover">Street flyover</button>
+    <button id="night" title="Toggle day / night">☾ Night</button>
+    <button id="layersBtn" title="Show map layers">Layers</button>
+  </div>
+</section>
+
+<section id="layers" class="panel" hidden>
+  <h2>Layers</h2>
+  <label><input type="checkbox" data-layer="buildings" checked> Buildings</label>
+  <label><input type="checkbox" data-layer="businesses" checked> Businesses</label>
+  <label><input type="checkbox" data-layer="transit" checked> Transit</label>
+  <label><input type="checkbox" data-layer="cycling" checked> Cycling</label>
+  <label><input type="checkbox" data-layer="signals" checked> Signals</label>
+  <label><input type="checkbox" data-layer="residents"> Residents <span class="chip derived">estimate</span></label>
+  <label><input type="checkbox" data-layer="agents" checked> Agents <span class="chip simulated">sim</span></label>
+  <label><input type="checkbox" data-layer="labels" checked> Labels</label>
+  <label><input type="checkbox" id="trails" checked> Changed routes</label>
+  <label><input type="checkbox" id="allNames"> All persona names</label>
+  <div class="key" id="key"></div>
+</section>
+
+<section id="hl" class="panel" aria-live="polite">
+  <div class="row">
+    <select id="scen" aria-label="Scenario"><option value="bike">Bike lane: Bloor track loses protection</option><option value="fare">TTC fare: adult +$0.50</option></select>
+    <span class="seg" id="armWrap"><button data-arm="baseline">Baseline</button><button data-arm="policy">Policy</button></span>
+    <select id="week" aria-label="Week of the persona run" hidden></select>
+    <button id="live" hidden style="display:none" title="Load the newest saved run from the persona server">Load latest live run</button>
+  </div>
+  <div id="hlBody"></div>
+</section>
+
+<div id="right">
+  <aside id="insp" class="panel">
+    <button class="x" id="inspClose" aria-label="Close">×</button>
+    <div id="inspBody"></div>
+  </aside>
+  <section id="people" class="panel"><div id="peopleBody"></div></section>
+</div>
+
+<section id="dash" class="panel">
+  <div class="ctl">
+    <button id="play" aria-label="Play or pause">❚❚</button>
+    <span id="clock">08:00:00</span>
+    <select id="speed" aria-label="Playback speed">
+      <option value="1">1×</option><option value="4">4×</option><option value="10" selected>10×</option><option value="30">30×</option><option value="60">60×</option>
+    </select>
+  </div>
+  <input id="scrub" type="range" min="0" max="1" step="1" value="0" aria-label="Simulation time">
+  <div class="ctl">
+    <select id="start" aria-label="Scenario start" hidden><option value="28800">AM peak 08:00</option><option value="45000">Midday 12:30</option><option value="61200">PM peak 17:00</option></select>
+    <span id="trackWrap" hidden><select id="track" aria-label="Sandbox policy arm: cycle track"><option value="protected">Policy arm track: protected</option><option value="painted">painted</option><option value="none" selected>none (share lanes)</option></select></span>
+    <select id="density" aria-label="Agent density" hidden><option value="0.15">15% of counts</option><option value="0.3">30% of counts</option><option value="0.6" selected>60% of counts</option><option value="1">100% of counts</option></select>
+  </div>
+  <div id="stats"></div>
+</section>
+<div id="credit">City of Toronto Open Data (OGL–Toronto) · © OpenStreetMap contributors (ODbL) · TTC GTFS · Personas: Twin-2K-500 (CC BY 4.0)</div>
+<div id="tip"></div>
+
+<script>
+  // If the module never starts (for example three.js could not load from the CDN), say so.
+  setTimeout(function () {
+    var el = document.getElementById('loading');
+    if (el && !window.__viewer3d) { el.className = 'err'; el.textContent = 'The 3D viewer did not start. It needs network access to cdn.jsdelivr.net for three.js, and WebGL. Check the browser console for details.'; }
+  }, 20000);
+</script>
+<script src="../background.js"></script>
+<script src="../sandbox.js"></script>
+<script type="module" src="./viewer.js"></script>
+</body>
+</html>
