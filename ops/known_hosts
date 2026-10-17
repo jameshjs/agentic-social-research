@@ -1,0 +1,2 @@
+# Pinned ED25519 host key for the existing Vultr VM (verified against the team's known_hosts).
+155.138.141.130 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINhIhre9l041jC46kGaA3iH2QiwwL38R1mUrSXtPATrP

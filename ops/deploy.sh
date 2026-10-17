@@ -45,10 +45,7 @@ step() { printf '\n== %s\n' "$*"; }
 WARNINGS=()
 
 # Only these paths are copied; api/server.js additionally allowlists what it serves.
-PATHS=(./api ./experiment ./world ./data ./experience ./demo-ui
-  ./persona-swarm/data/record ./persona-swarm/runtime/agents-client.js
-  ./bloor-bike-demo.md ./bike-lane-papers.md ./papers.md ./demo-data.md ./prd.md ./pitch)
-[ -d persona-swarm/data/reactions ] && PATHS+=(./persona-swarm/data/reactions)
+source ops/deploy-paths.sh
 
 push_key() {
   DEPLOY_HOST="$HOST" DEPLOY_SSH_KEY="$SSH_KEY" DEPLOY_COMPILER_MODEL="$COMPILER_MODEL" node ops/vultr.js run -- node -e '

@@ -12,6 +12,14 @@
 
 Public URL: <https://155-138-141-130.sslip.io/experience/>. Health: `/api/health` (shows `git_sha`, `git_dirty`, and whether inference is configured).
 
+## Automatic deployment from GitHub
+
+[`../.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) runs the offline engine/API and persona-runtime tests on pull requests and pushes. A passing push to `main` then runs [`deploy-ci.sh`](./deploy-ci.sh): it copies the same allowlisted files as the manual deploy, leaves `/etc/counterfactual.env` and Caddy alone, restarts the service, and checks `/experience/`, both paired API runs, and the public HTTPS health endpoint. If a check fails, it restores the previous release and restarts it. The prior release remains on the VM at `/srv/counterfactual.rollback-*` for inspection. A superseded workflow skips deployment; `workflow_dispatch` can redeploy the current `main` commit.
+
+**Activation requires a repository admin.** In GitHub → repository Settings → Secrets and variables → Actions, add a repository secret named `VULTR_DEPLOY_SSH_KEY`. Its value must be the private half of an SSH key whose public half is authorized for `root@155.138.141.130`. Prefer a dedicated, revocable CI key; keep the private half out of git, issues, chat, and workflow logs. The host's ED25519 key is pinned in [`known_hosts`](./known_hosts). The current GitHub collaborator token can push code but does not have repository admin permission to configure secrets. Until the secret is set, the test job works but the production deploy job reports the missing credential and does not change the VM. No Vultr API token or inference key is needed in GitHub Actions; the VM retains its current inference configuration.
+
+After activation, check the Actions run and verify `/api/health.git_sha` equals the pushed commit. If the VM is replaced or its SSH host key changes, verify the new fingerprint independently before updating `known_hosts`.
+
 ## Redeploy
 
 ```bash

@@ -1,0 +1,61 @@
+name: Test and deploy to Vultr
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Offline tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Engine, world, experience, and API tests
+        run: >-
+          node --test
+          experiment/test-world-runner.js
+          experience/test-world-run-adapter.js
+          experiment/test-scenario-compiler.js
+          experiment/test-runner.js
+          experience/test-experiment-adapter.js
+          experience/test-trace-adapter.js
+          world/test-sandbox.js
+          experiment/test-vultr-decision.js
+          api/test-server.js
+      - name: Persona runtime tests
+        run: npm --prefix persona-swarm/runtime test
+      - name: Check deploy scripts
+        run: bash -n ops/deploy.sh ops/deploy-ci.sh ops/deploy-paths.sh
+
+  deploy:
+    name: Production deploy
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://155-138-141-130.sslip.io/experience/
+    concurrency:
+      group: counterfactual-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned SSH host key and deploy credential
+        env:
+          VULTR_DEPLOY_SSH_KEY: ${{ secrets.VULTR_DEPLOY_SSH_KEY }}
+        run: |
+          test -n "$VULTR_DEPLOY_SSH_KEY" || { echo 'Set VULTR_DEPLOY_SSH_KEY in repository Actions secrets'; exit 1; }
+          install -d -m 700 "$HOME/.ssh"
+          install -m 600 ops/known_hosts "$HOME/.ssh/known_hosts"
+          printf '%s\n' "$VULTR_DEPLOY_SSH_KEY" > "$HOME/.ssh/vultr_htv_ed25519"
+          chmod 600 "$HOME/.ssh/vultr_htv_ed25519"
+      - name: Deploy and smoke test both policy runs
+        run: bash ops/deploy-ci.sh
