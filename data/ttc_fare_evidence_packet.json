@@ -1,0 +1,81 @@
+{
+  "schema_version": "0.1-demo-fixture",
+  "hypothesis": "What if adult TTC pay-as-you-go fare rose by CAD 0.50 in a small UTSC-area district?",
+  "run_id": null,
+  "retrieval_query": "fare increase ridership mode shift shopping retail employment",
+  "provider": "local_curated_index",
+  "source_snapshot_time": "2026-10-17",
+  "papiers_item_ids": {
+    "documents": [],
+    "passages": [],
+    "highlights": [],
+    "notes": [],
+    "conversations": []
+  },
+  "human_engagement_signal": {
+    "status": "none_yet",
+    "human_note": null,
+    "human_approval": null
+  },
+  "selected_claims": [
+    {
+      "claim_id": "C03",
+      "source_id": "F03",
+      "finding": "Bogota BRT fare-increase response differed by horizon and income/off-peak use; reported short-run elasticities were about -0.565 at one week and -0.408 after one month.",
+      "method": "station-level daily panel",
+      "setting": "Bogota BRT, 2001-2012",
+      "candidate_mechanism": "fare_to_ride_choice",
+      "transfer_warning": "Illustrative sensitivity only; not a Toronto fare elasticity."
+    },
+    {
+      "claim_id": "C07",
+      "source_id": "F07",
+      "finding": "A Boston low-income fare discount increased trips and health/social-service trips in a randomized evaluation.",
+      "method": "randomized controlled evaluation",
+      "setting": "low-income MBTA riders, Boston, 2019",
+      "candidate_mechanism": "affordability_to_trip_purpose",
+      "transfer_warning": "Discount result cannot be reversed mechanically into a Toronto fare-hike effect."
+    },
+    {
+      "claim_id": "C08",
+      "source_id": "F08",
+      "finding": "Temporary free public transport had no statistically significant effect on paid hours or earnings.",
+      "method": "randomized controlled trial",
+      "setting": "low-income riders outside Toronto",
+      "candidate_mechanism": "access_to_work_income",
+      "transfer_warning": "Counterevidence to a deterministic worker-income chain."
+    },
+    {
+      "claim_id": "C10",
+      "source_id": "F10",
+      "finding": "An Albany downtown fare-free program was associated with positive sales effects for some shop types/seasons and locations near bus routes.",
+      "method": "retail sales-tax time series",
+      "setting": "Albany, New York, early 1980s",
+      "candidate_mechanism": "transit_access_to_retail_sales",
+      "transfer_warning": "Fare removal and old downtown context; no Toronto sales coefficient or business-closure probability."
+    },
+    {
+      "claim_id": "C11",
+      "source_id": "F11",
+      "finding": "Other off-peak free-fare experiments raised ridership without noticeable commercial or employment change.",
+      "method": "program evaluation",
+      "setting": "United States, early 1980s",
+      "candidate_mechanism": "transit_access_to_retail_and_employment",
+      "transfer_warning": "Include zero retail/employment effect as a plausible scenario."
+    }
+  ],
+  "conflicting_claims": [
+    {
+      "topic": "transit_to_commercial_effect",
+      "claim_ids": ["C10", "C11"],
+      "resolution": "Do not select a positive retail coefficient from these papers; run zero and nonzero illustrative scenarios."
+    },
+    {
+      "topic": "transit_to_worker_income",
+      "claim_ids": ["C08"],
+      "resolution": "The income path is speculative and cannot be presented as an empirical prediction."
+    }
+  ],
+  "required_next_step": "Retrieve an actual human note and source passage from Papiers, ask a human to choose/edit/reject the proposed assumptions, then version and rerun.",
+  "source_index": "data/ttc_fare_evidence.json"
+}

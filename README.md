@@ -8,11 +8,13 @@ A general, human-guided social simulation and policy decision product. Enter **a
 2. [Research and source dossier](./research.md) — sponsor briefs, event rules/deadline conflicts, hacker package, Toronto dataset catalogue, and modelling evidence. Teammates and coding agents should read this before researching from scratch.
 3. [Locked Toronto MVP demo and ranked data](./demo-data.md) — UTSC-area fare scenario, verified observed facts, multi-agent causal chain, dataset gaps, and first-hour owner handoffs. [Machine-readable source fixture](./data/toronto_demo_baseline.json).
 4. [Coding-agent instructions](./AGENTS.md) and [Claude Code instructions](./CLAUDE.md) — shared implementation contract, owner boundaries, and safe Git sync. The committed [Claude hook](./.claude/hooks/sync-main.py) fetches before each prompt and fast forwards only a clean `main`.
+5. [Fare-demo paper and evidence pack](./papers.md) with a [machine-readable source index](./data/ttc_fare_evidence.json) and [offline EvidencePacket fixture](./data/ttc_fare_evidence_packet.json) — 15 relevant studies/reports, what each supports, conflicting evidence, and explicit transfer limits. [Papiers CLI setup](./papiers-setup.md) shows how to curate them in the team's library and demonstrate a real human note.
 
 ## Confirmed direction
 
 - **Primary prize:** [Papiers Autoresearch](https://hack-the-valley-11.devpost.com/) — agents must use human research notes and judgment, ask for expertise, and show a human-guided revision.
 - **Papiers integration:** The research orchestrator will read a curated library of analogous papers and human annotations through [Papiers' documented read-only CLI](https://wiki.papiers.ai/docs/agents), propose cited assumptions, and ask a person before changing the experiment. The live path needs a token; a local cited fixture backs up the demo.
+- **Current Papiers status:** Meet installed CLI `0.1.5`; authentication and a real library passage/note are still pending. The checked-in paper pack is agent-curated research, not a claim of a completed Papiers integration. See [setup and acceptance test](./papiers-setup.md).
 - **Secondary prize:** [U of T School of Cities](https://hack-the-valley-11.devpost.com/) — one demo must address a concrete Toronto urban issue using Toronto data. [Sponsor data guide](https://docs.google.com/document/u/0/d/1xkrJwUTqOOMaujorvh12dRXWtdL35bOf27dxgRnNuFY/mobilebasic#heading=h.hvv5c04l3mzk).
 - **Additional category:** sustainable FinTech & Economic Inclusion, if the demo actually explains household/business economic effects.
 - **Generality proof:** two different live hypotheses pass through one system, plus an unprepared prompt exercises the speculative fallback.
@@ -36,3 +38,10 @@ This repository currently contains planning/research documents and a Claude Code
 ## Four-person Git handoff
 
 Each owner starts from current `main`, fetches at least every 30 minutes during a long work session, and syncs before editing shared schemas or pushing. Claude Code does this on every new prompt when a fast forward is safe. If local changes prevent a pull, finish and commit the current slice, then integrate the fetched commits deliberately. Share each pushed commit hash and any schema change with the team; never reset or force push to bypass someone else's work. Full ownership and cadence are in [PRD §14](./prd.md#14-team-ownership-and-critical-path).
+
+### Next pull: fare research handoff (17 Oct)
+
+- **All four / coding agents:** pull `main`, then read [papers.md](./papers.md) and [papiers-setup.md](./papiers-setup.md). Fifteen studies/reports are indexed; five selected claims and two explicit conflicts are in the [sample `EvidencePacket`](./data/ttc_fare_evidence_packet.json). No shared production schema was changed by this research commit.
+- **Meet:** finish local Papiers sign-in, have a real team member annotate F03 and F11 in the Papiers app, verify `search`/`read` returns the original passage and note, then wire the adapter. The CLI is installed on Meet's machine but currently has no token.
+- **Steven + James:** consume the fixture for an autonomous investigation, evidence-for/against evaluation, a proposed sensitivity experiment, and a versioned human-approved rerun. Keep the research setting/transfer warning beside any proposed parameter.
+- **Aadit:** make the source, conflicting evidence, agent next step, human choice, and changed run visible in the city/dashboard presentation.
