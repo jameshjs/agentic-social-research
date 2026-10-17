@@ -58,7 +58,7 @@ Claude Code session following `autoresearch/program.md`.
 | Backend | Persona agents run through the `claude` CLI on the claude.ai plan. Switch to an Anthropic API key, with prompt caching for the repeated given answers, if the team gets one |
 | Keep rule | Noise = per-check difference between two runs of the starting instructions. Keep a change only if at least one check improves by more than its noise and none falls by more than its noise. The number of benchmark marks passed may never fall |
 | Loop length | Exactly 10 tuning rounds. Then the final set is scored once |
-| Triggers (stop and ask) | 3 rounds in a row with no kept change · any check jumps by more than 3× its noise · one check rises past its noise while another falls past its noise · a result contradicts an annotated paper · the benchmark is passed · logged spend reaches $30 (raised from $10 on 17 Oct, after round 0 measured the cost) |
+| Triggers (stop and ask) | 3 rounds in a row with no kept change · any check jumps by more than 3× its noise · one check rises past its noise while another falls past its noise · a result contradicts a highlighted or annotated paper · the benchmark is passed · logged spend reaches $30 (raised from $10 on 17 Oct, after round 0 measured the cost) |
 | While waiting | Ideas may be tried on the tuning set only. At most 2 changes may be on trial without sign-off |
 | May change | `instructions.md` and the persona format setting only. Never the scorer, sets, benchmark, rewordings, given answers or the model (`claude-haiku-5-5`, low effort) |
 | Sign-off | A coach types `sign off round NN — <name>` in the researcher session. Knowledge comes through Papiers notes, read at the start of each round. Coaches: Steven and Meet |
@@ -225,7 +225,8 @@ needs, and Task 12 depends on it.
 - **Produces:**
   - Steven's own token in `persona-swarm/.env`.
   - Park 2024 and the Twin-2K-500 paper saved and annotated by a coach.
-  - Each round writes `sources.json`: the query, item ids read, coach notes used, and the time.
+  - Each round writes `sources.json`: every paper, highlight and note in the library in full, the searches, the ids
+    used, and the time (`autoresearch/coach_notes.py`).
 - **Acceptance checks:**
   - `papiers auth status` reports a token.
   - `papiers search "persona" --json` returns at least one annotated item.
@@ -250,7 +251,8 @@ needs, and Task 12 depends on it.
 ## Task 10: Tuning rounds 1–10
 
 - **Consumes:** `program.md`, run by the researcher agent.
-- **Produces:** rounds `001`–`010`, each committed on the branch as soon as it ends:
+- **Produces:** rounds `001`–`010`, each committed on the branch as soon as it ends, and each ending with the
+  researcher agent's suggested edits for the next round (from the results and the coaches' highlights):
   - `round NN keep (on trial): <change> — <check> +x.xx`
   - `round NN discard: <change> — within noise`
   - `round NN signed off: <coach>` when a coach signs off a kept change
@@ -338,10 +340,14 @@ These were open when the plan was first drafted. They are now reflected in the t
    the final set can't be scored twice; and the 10 / 30 / 158 given-answers comparison runs on the check set.
 4. **Sets re-balanced:** the 2:5:5 cycle starts at its most balanced rotation, which keeps every set within 7 points
    of the pool (the first draw had the tuning set 11 points short on the South).
-5. **Papiers:** the CLI is installed and Steven's token works, but the library is empty, so rounds record no coach
-   notes until papers are saved and annotated.
+5. **Papiers:** the CLI is installed and Steven's token works. The library was empty through round 6; Steven then
+   added 7 papers and 15 highlights (no notes yet).
 6. **Item ids fixed after round 0.** The pricing block is shuffled per respondent, so position ids (`price_01`)
    named a different product for each person, and two puzzle conditions shared one cut-off slug. Right person was
    unaffected, but per-item baselines, spread and group gaps pooled different questions. Items are now named by
    content, saved answers were re-keyed (the same answers under new ids) and every round was re-scored before any
    keep decision was made.
+7. **The researcher agent steers each round from results and highlights.** From round 7, every round reads all
+   Papiers papers, highlights and notes in full. It also writes up to three suggested edits for the next round,
+   each tied to a result and to the highlight ids behind it; the first is run unless a coach picks another. The
+   suggestions for round 7 are in `rounds/006-necessities/decision.json`.

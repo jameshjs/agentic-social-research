@@ -62,8 +62,20 @@ The AI that proposes changes to the instructions, runs tuning rounds, and asks c
 _Avoid_: orchestrator (that is the world engine), main agent
 
 **Coach**:
-A teammate who steers the researcher agent through notes on papers in Papiers and by approving or rejecting changes.
+A teammate who steers the researcher agent through highlights and notes on papers in Papiers and by approving or
+rejecting changes.
 _Avoid_: judge, reviewer, user
+
+**Highlight**:
+A passage a coach marks in a paper in Papiers. With notes, highlights are how coaches give the researcher agent
+research knowledge; every round reads all of them.
+_Avoid_: annotation (Papiers' annotated filter doesn't count highlights), quote
+
+**Suggested edit**:
+A change to the instructions or the persona format that the researcher agent proposes for the next tuning round,
+tied to a round's results and to the highlights or notes behind it. One suggested edit becomes the next round's
+change.
+_Avoid_: recommendation, proposal (on its own)
 
 **Tuning round**:
 One attempt at a single instruction change: run the persona agents, score them, then keep or discard the change.

@@ -3,3 +3,5 @@ data/twin/
 __pycache__/
 # dry runs of the round runner (random answers, no model calls)
 autoresearch/rounds/dry-*/
+# the Papiers lookup waiting for the next round (run_round.py files it as sources.json)
+autoresearch/rounds/sources-pending.json

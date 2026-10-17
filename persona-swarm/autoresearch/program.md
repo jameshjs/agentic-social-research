@@ -21,12 +21,15 @@ procedure; follow it every round.
 
 ## Each round
 
-1. **Read.** Look at the last round's scorecard and find the weakest check. Read coach knowledge in Papiers:
-   `python3 autoresearch/coach_notes.py "<problem>" ...` lists notes, recent highlights and annotated papers, runs
-   the searches, and saves the lookup for the runner to file as the round's `sources.json`. Read any hit in full
-   with `set -a; . ./.env; set +a; papiers read <id> --json`, and list the ids you used under `notes_used`.
-2. **Hypothesise.** One sentence: what change should fix the weakest check, and why (cite note or passage ids).
-3. **Change.** Edit `instructions.md` (or the format) once.
+1. **Read.** Look at the last round's scorecard, its family breakdown and the tuning-set mistakes, and find the
+   weakest check. Then read the coaches' knowledge: `python3 autoresearch/coach_notes.py "<problem>" ...` saves every
+   paper in the Papiers library, every highlight and note in full (with its paper), and any searches, for the runner
+   to file as the round's `sources.json`. All of it is the round's context, not just what is new.
+2. **Suggest.** Steer the next round from the results and the highlights: write up to three suggested edits under
+   `next_suggestions` in the last round's `decision.json`. Each gives the edit, the result it answers, the highlight
+   or note ids behind it, the expected effect and the risk. Take the first unless a coach picks another, and list
+   its ids under `notes_used` in `sources.json`.
+3. **Change.** Edit `instructions.md` (or the format) once, as the chosen suggestion says.
 4. **Run.** `python3 autoresearch/run_round.py --slug <short-name> --sets tuning,check --steady [--format <fmt>]`.
 5. **Decide.** `python3 autoresearch/record_round.py autoresearch/rounds/NNN-<slug> --targeted <check> --label
    "<short change>" --change "<what changed>" --hypothesis "<why>"` applies `evaluate.keep()` against the last kept
@@ -37,12 +40,31 @@ procedure; follow it every round.
    printed (`round NN keep (on trial): <change> — <check> +x.xx` or `round NN discard: <change> — within noise`),
    then re-publish the tuning record page.
 
+## Coach context from round 7 (17 Oct)
+
+Steven's Papiers library holds 7 papers and 15 highlights, and no notes yet. From round 7 on, every round reads all
+of them (step 1) and its suggested edits cite them (step 2).
+
+- **Out of One, Many** (Argyle et al.), 12 highlights:
+  - Algorithmic fidelity means matching the patterns of relationships between ideas, demographics and behaviour
+    (pattern correspondence), which is what right spread and right group gaps measure.
+  - Matching each individual is not expected, and draws vary.
+  - Personas are conditioned through an interviewer-and-me transcript whose answers come from the offered options.
+  - Party is the most predictive element, but combining elements predicts best, and some elements mildly hurt.
+  - The template was never optimised.
+- **Virtual Personas via an Anthology of Backstories** (Moon et al.), 3 highlights:
+  - Instruction-tuned models conditioned on a backstory give only positive, helpful actions.
+  - Questions are asked in series, with the earlier answers in view.
+  - Backstories must cover enough kinds of people.
+- **Not highlighted yet:** Twin-2K-500, Digital Twins are Funhouse Mirrors, Synthetic Replacements for Human Survey
+  Data?, Automated Social Science, and LLM Agents Grounded in Self-Reports.
+
 ## Stop and ask a coach when
 
 1. 3 rounds in a row keep nothing.
 2. Any check jumps by more than 3× its noise in one round.
 3. One check rises past its noise while another falls past its noise.
-4. A result contradicts a paper a coach annotated.
+4. A result contradicts a paper a coach highlighted or annotated.
 5. The benchmark is passed (rounds still continue to 10).
 6. Logged spend reaches $30.
 

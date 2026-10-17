@@ -1,0 +1,23 @@
+{
+ "round": "006",
+ "slug": "necessities",
+ "started_at": "2026-10-17T09:34:44+00:00",
+ "ended_at": "2026-10-17T09:41:09+00:00",
+ "seconds": 384.3,
+ "sets": [
+  "tuning",
+  "check"
+ ],
+ "format": "full",
+ "given_size": null,
+ "no_persona": false,
+ "all_families": false,
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "dry_run": false,
+ "respondents": 140,
+ "calls": 240,
+ "failed_calls": 0,
+ "missing_items": 0,
+ "cost_usd": 1.5893
+}

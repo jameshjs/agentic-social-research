@@ -1,0 +1,121 @@
+{
+ "round": "006",
+ "decided_at": "2026-10-17T09:41:34+00:00",
+ "check_targeted": "right_person",
+ "hypothesis": "Agents say yes to everyday necessities people often pass on (milk 1.00 vs 0.50, coffee 0.70 vs 0.25, detergent 0.93 vs 0.62), which also flattens spread, so a necessity-specific rule should raise right person and spread on pricing without round 2's blanket cut.",
+ "change": "Added one bullet on top of round 3: don't say yes just because most households use a product; people often pass on common household items because they already have some at home, prefer another brand, or don't use that item themselves.",
+ "compared_with": "003-spending-habits",
+ "kept": false,
+ "on_trial": false,
+ "reason": "discard: fell beyond noise: right_spread -0.026 (noise 0.010), right_group_gaps -0.074 (noise 0.049); marks passed fell 4 -> 3; no check improved beyond noise: right_person +0.007 (noise 0.015), right_spread -0.026 (noise 0.010), right_group_gaps -0.074 (noise 0.049), steady -0.006 (noise 0.010)",
+ "deltas": {
+  "right_person": 0.0074906367041198685,
+  "right_spread": -0.025603706300360574,
+  "right_group_gaps": -0.07407407407407407,
+  "steady": -0.006000000000000005
+ },
+ "noise": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ },
+ "check": {
+  "right_person": 0.8108614232209738,
+  "right_spread": 0.8482150332180146,
+  "right_group_gaps": 0.7777777777777778,
+  "steady": 0.964,
+  "marks_passed": 3,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.8170731707317073,
+    "right_spread": 0.8945636388352172,
+    "right_group_gaps": 0.9444444444444444
+   },
+   "pricing": {
+    "right_person": 0.8091988130563799,
+    "right_spread": 0.836627881813714,
+    "right_group_gaps": 0.7301587301587301
+   }
+  }
+ },
+ "tuning": {
+  "right_person": 0.8037214885954381,
+  "right_spread": 0.799504287364766,
+  "right_group_gaps": 0.625,
+  "steady": null,
+  "marks_passed": 1,
+  "missing_share": 0.0,
+  "by_family": {
+   "policy": {
+    "right_person": 0.7783783783783784,
+    "right_spread": 0.909901253724507,
+    "right_group_gaps": 0.9444444444444444
+   },
+   "pricing": {
+    "right_person": 0.8109567901234568,
+    "right_spread": 0.7719050457748308,
+    "right_group_gaps": 0.5686274509803921
+   }
+  }
+ },
+ "triggers_fired": [
+  "1: three rounds in a row kept nothing"
+ ],
+ "question": "Trigger 1: rounds 4-6 kept nothing. Round 3's group gaps (0.852) looks like a lucky high against every other run (0.765-0.840). Re-run round 3's instructions once on the check set and compare later rounds with the mean of its two runs, or keep the single run?",
+ "reply": null,
+ "spend_total_usd": 11.14,
+ "format": "full",
+ "next_suggestions": {
+  "written_at": "2026-10-17T10:01:55+00:00",
+  "context": "Results of rounds 0-6 and the Papiers library: 7 papers, 15 highlights by Steven, no notes (sources-pending.json).",
+  "suggestions": [
+   {
+    "rank": 1,
+    "kind": "persona format",
+    "edit": "New 'interview' persona format: each given answer as 'Interviewer: <question> (options: ...)' then 'Me: <chosen answer>', in the respondent's own voice, keeping the options as the full format does. Instructions unchanged from round 3.",
+    "answers_result": "Every instruction that shifted how often agents buy (rounds 2 and 6) flattened spread; the compact format (round 5) dropped unchosen options and lost pricing group gaps. The persona's form is the untried lever that keeps all the information.",
+    "highlights": [
+     "hl_5703c07f40e1f2f3b0f76374047995fc",
+     "hl_d1cf914bb377b6ed2788b8e79056aa4e",
+     "hl_79e7a1c718f2069a9ce579f614d9501e"
+    ],
+    "why": "Out of One, Many conditions on an interviewer-and-me transcript whose answers come from the interviewer's options, and notes its template was never optimised.",
+    "expected": "Right person and group gaps up through closer continuity with the respondent's own voice.",
+    "risk": "Like compact, a format change can move pricing group gaps either way."
+   },
+   {
+    "rank": 2,
+    "kind": "instructions",
+    "edit": "Add one bullet: 'You are a real person, not a helpful assistant: people often say no, don't care, or hold views others dislike. Don't choose an answer because it sounds agreeable, positive or helpful.'",
+    "answers_result": "Agents say yes to everyday necessities people pass on (milk 1.00 vs 0.50, coffee 0.70 vs 0.25, round 3 tuning set).",
+    "highlights": [
+     "hl_42736e321c9efbb55c00281d4eaf4edc"
+    ],
+    "why": "The Anthology paper finds instruction-tuned models conditioned on a backstory give only positive and helpful actions.",
+    "expected": "Right person up on pricing.",
+    "risk": "Rounds 2 and 6 show that shifting agents' overall readiness to buy cuts spread; policy answers, where people support most proposals, could also move the wrong way."
+   },
+   {
+    "rank": 3,
+    "kind": "instructions",
+    "edit": "Policy only: 'Political opinions: combine all of your background. Party is one part, but your age, religion, income and your own answers about values also shape each view.'",
+    "answers_result": "Agents still put Democrats and Republicans 1.3-2.9 points apart against people's 0.2-1.3; round 1's party fix raised policy right person 0.799 -> 0.826 but not the pooled check.",
+    "highlights": [
+     "hl_f9cf5b71d8b01335a0f1fee0962f34de"
+    ],
+    "why": "Out of One, Many finds party the most predictive element, but no single element carries the prediction and combining them predicts best.",
+    "expected": "Policy right person up; pooled checks likely within noise, since policy is a fifth of the items.",
+    "risk": "Small pooled effect: probably a discard under the keep rule."
+   }
+  ],
+  "method_note": {
+   "suggestion": "Re-measure round 3's kept instructions once on the check set and compare later rounds with the mean of its two runs (trigger 1, waiting for Steven).",
+   "highlights": [
+    "hl_ef176edeb52094c16f68e9ad57932e9a"
+   ],
+   "why": "Out of One, Many expects variation between draws and no individual-level match; round 3's group gaps of 0.852 sits above every other run (0.765-0.840)."
+  }
+ }
+}
