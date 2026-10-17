@@ -41,10 +41,13 @@
     window.removeEventListener('keydown', onKey);
   }
 
+  // After the first run app.js marks the landing as done; it stays at the street until a page reload.
+  const landed = () => document.body.classList.contains('is-landed');
+
   // Mirrors app.js updateReveal().
   function scrollProgress() {
     const section = document.getElementById('intro');
-    if (!section) return 1;
+    if (!section || landed()) return 1;
     const travel = Math.max(1, section.offsetHeight - window.innerHeight);
     return Math.max(0, Math.min(1, window.scrollY / travel));
   }
@@ -116,6 +119,7 @@
 
   function drive(now) {
     flightFrame = 0;
+    if (landed()) { flightDir = 0; return; }
     const dt = flightLast ? Math.min(0.05, (now - flightLast) / 1000) : 0.016;
     flightLast = now;
     const max = introTravel();
@@ -127,6 +131,7 @@
   }
 
   function onLanding(down) {
+    if (landed()) return false;
     const max = introTravel();
     if (window.scrollY > max + 48) return false;
     if (down && window.scrollY >= max - 1) return false;
@@ -191,6 +196,8 @@
   }
 
   function onScroll() {
+    // Landing mid-flight (e.g. a ?demo= link at the top) jumps to the street rather than flying there behind the lab.
+    if (landed() && target !== 1) live = null;
     target = scrollProgress();
     if (!frame) frame = requestAnimationFrame(render);
   }

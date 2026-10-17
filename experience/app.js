@@ -74,6 +74,7 @@ const backendReady = (async () => {
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current = preparedScenarios.fare;
 let phase = 'intro';
+let landed = false;
 let investigationToken = 0;
 let activeSector = 'mobility';
 let activeBikeRole = 'cyclist';
@@ -863,7 +864,8 @@ function setPhase(value) {
 function updateReveal() {
   const section = $('#intro');
   const travel = Math.max(1, section.offsetHeight - window.innerHeight);
-  const progress = Math.max(0, Math.min(1, window.scrollY / travel));
+  const progress = landed ? 1 : Math.max(0, Math.min(1, window.scrollY / travel));
+  if (landed) document.body.classList.toggle('composer-in-view', section.getBoundingClientRect().bottom > window.innerHeight * .75);
   document.documentElement.style.setProperty('--reveal', progress.toFixed(3));
   const composer = $('#composerScene');
   const ready = progress > .32;
@@ -874,6 +876,17 @@ function updateReveal() {
   scene.setReveal(progress);
   if (phase === 'intro' && progress > .34) setPhase('composer');
   if (phase === 'composer' && progress < .22) setPhase('intro');
+}
+
+// The first run ends the landing: the intro shrinks to the composer alone, so scrolling back up offers another
+// question instead of replaying the Earth-to-Bloor flight. Only a page reload shows the landing again.
+function endLanding() {
+  if (landed) return;
+  const section = $('#intro'), before = section.offsetHeight;
+  landed = true;
+  document.body.classList.add('is-landed');
+  window.scrollTo({ top: Math.max(0, window.scrollY - (before - section.offsetHeight)), behavior: 'instant' });
+  updateReveal();
 }
 
 function goToComposer() {
@@ -899,7 +912,7 @@ function resetToIntro() {
   showPoll(null);
   scene.setSector(null);
   scene.setScenario('fare');
-  setPhase('intro');
+  setPhase(landed ? 'composer' : 'intro');
 }
 
 const steps = [
@@ -1155,6 +1168,7 @@ async function runScenario(scenario, promptOverride = null) {
   scene.setScenario(useMapped ? scenario : current.id);
   const overlay = $('#investigation');
   overlay.hidden = false;
+  endLanding();
   setPhase('investigating');
   const copy = useMapped ? demoSteps : steps;
   const stepMs = reducedMotion ? 100 : 350;

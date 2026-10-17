@@ -13,6 +13,9 @@ body.demo-view #agentsNote{display:none!important}
 .composer-heading h2{margin-bottom:26px}
 .hypothesis-card{max-width:600px;margin-left:auto;margin-right:auto}   /* a narrower prompt bar */
 .globe-caption{display:none!important}                                  /* no street-name caption on the landing */
+/* After the first run (app.js .is-landed) the prompt page is one screen; the landing scroll comes back only on reload. */
+body.is-landed .intro-chapter{height:auto;min-height:0}
+body.is-landed .scroll-cue{display:none}
 
 
 /* ---------- lab (demo view): the 3D view, then the decision brief ---------- */
