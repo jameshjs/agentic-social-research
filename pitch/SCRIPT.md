@@ -34,20 +34,17 @@
 >
 > Those tuned Haiku agents are running live right now, 100 of them. Aadit?"
 
-## 1:30–3:35 · Aadit · Live site (city → prompt → 3D → reports)
+## 1:30–3:35 · Aadit · Live site (Earth → question → agents → 3D impact)
 
 | Time | Do | Say |
 | --- | --- | --- |
-| 1:30 | Page is at the top. **Scroll slowly** through the clouds. | "This is Toronto. Scroll down…" |
-| 1:38 | Composer appears. Click the **Bloor bike lane** chip. | "…and ask it anything. Let's take the hard one: remove the protected bike lane on Bloor." |
-| 1:45 | The run overlay plays, then the 3D view. Leave it on **Baseline**. | "This is the real 619 metres of Bloor, Bathurst to Spadina. 925 buildings from the City's 3D massing data, 243 real businesses, the mapped signals, Line 2 on its actual schedule. The background traffic is calibrated to the City's 2025 counts, within 1% at both ends." |
-| 2:05 | Click **With policy**. | "Same 19 people, same seed. The only difference is the track is gone. Watch the cyclists: they're in the car lane now." |
-| 2:15 | In the ledger or the people list, click **Leila**. The camera flies to her. | "Leila is a less-confident cyclist. She stops riding Bloor and takes a side street. Hawa, Maria and Sam switch to the TTC." |
-| 2:35 | **Scroll** to the report. | "Every number here is added up from those events. Nothing is typed in by hand." |
-| 2:40 | Point at the headline and the charts. | "Cycling trips on Bloor drop from 7 to 3. Cycling next to cars goes from zero to over a kilometre a day. Kaya, a visitor, shops somewhere else, so Curbside Cycle's takings fall below its staffing line, and under our staffing rule it closes early the next period. And drivers? No time gain. Those cyclists are in the drivers' queue now." |
-| 3:05 | Point at the *not estimable* list. | "Injuries, closures, construction cost: we mark them not estimable instead of making them up." |
-| 3:12 | Scroll to the **100 agents** panel. | "And here are Steven's 100 agents reacting live: the rating split, by group, each with a reason." |
-| 3:25 | *(Only if ahead of time)* Click **TTC fare**. | "Same city, same people, a different policy. Fair Pass riders don't move. Adults near the cutoff do." |
+| 1:30 | Page is at the top. **Scroll slowly** through the clouds and Earth-to-Bloor fly-in. | "This is Toronto. Let's zoom into one real section of Bloor." |
+| 1:38 | At the question box, type **What if Bloor's protected bike lane were removed?** and click **Run the city**. | "One freeform question starts the experiment. The two demo cases are recognized from what we type; there are no scenario buttons." |
+| 1:45 | If the agents are online, the **100-agent reaction** appears first. Show the live distribution and one reason; then scroll to the lab. If the tunnel is down, go straight to the lab. | "These are survey-style reactions from synthetic personas, not a forecast. They help us ask what to inspect in the city." |
+| 2:05 | Let the 3D world load on **Baseline**. | "This is the mapped 619-metre Bathurst–Spadina section. The street, businesses, signals and transit context are sourced; the people and their responses are synthetic." |
+| 2:15 | Click **See bike impact**. Let the camera follow Leila through the baseline and policy phases. | "Same person, same seed. With the track removed she takes a side street; other riders switch mode or ride beside cars. Every visible decision comes from the paired run." |
+| 2:50 | Point to the four metric tiles below the 3D scene. | "Bloor bike trips, metres cycled beside cars, shop sales and car trips are reduced from those events. The simulated Bloor bike trips fall; shared-lane cycling rises. We do not turn that into an injury or city-wide forecast." |
+| 3:15 | If time permits, switch to **Researcher view** to show the ledger, source boundary and rerun. Otherwise keep the 3D scene on screen. | "A researcher can inspect each choice, challenge an assumption and rerun. The public view keeps the city first." |
 
 **If something breaks:**
 - **3D doesn't load:** press the `2D` button. The same run plays on the 2D map.
