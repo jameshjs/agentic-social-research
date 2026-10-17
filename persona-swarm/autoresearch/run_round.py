@@ -1,7 +1,7 @@
 # Runs one tuning round (PLAN.md Task 5): every respondent in the chosen sets gets one persona-agent call that sees the
 # shared instructions plus that respondent's given answers, and answers their exam. Writes autoresearch/rounds/NNN-<slug>/
 # with the instructions used, answers, scores and timing/cost. The researcher adds sources.json and decision.json.
-# Usage: python3 autoresearch/run_round.py --slug start --sets tuning,check [--format full] [--steady] [--dry-run]
+# Usage: python3 autoresearch/run_round.py --slug start --sets tuning,check [--format full_relative] [--steady] [--dry-run]
 import argparse, asyncio, json, random, re, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--slug", required=True)
     ap.add_argument("--sets", default="tuning,check")
-    ap.add_argument("--format", default="full", choices=formats.FORMATS)
+    ap.add_argument("--format", default="full_relative", choices=formats.FORMATS)  # the kept round 9's format (ADR 0004)
     ap.add_argument("--given-size", type=int)
     ap.add_argument("--instructions", default=str(HERE / "instructions.md"))
     ap.add_argument("--number", type=int, help="round number; default is the next free one")

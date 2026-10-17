@@ -40,8 +40,8 @@ _Avoid_: test-retest reliability, accuracy ceiling
 ### The tuning loop
 
 **Persona tuning loop**:
-The whole process: ten tuning rounds of prompt tuning against the benchmark, steered by coaches, before the
-instructions are used by the city's agents.
+The whole process: tuning rounds of prompt tuning against the benchmark, steered by coaches until the team decides
+to stop, before the instructions are used by the city's agents.
 _Avoid_: gym, agent gym, training environment
 
 **Tuning record**:

@@ -1,0 +1,72 @@
+{
+ "method": "mean of round 003's 5 check-set runs; noise = 2 x their sample standard deviation",
+ "runs": [
+  "003-spending-habits",
+  "003-spending-habits-repeat",
+  "003-spending-habits-repeat2",
+  "003-spending-habits-repeat3",
+  "003-spending-habits-repeat4"
+ ],
+ "per_run": [
+  {
+   "right_person": 0.8033707865168539,
+   "right_spread": 0.8738187395183752,
+   "right_group_gaps": 0.8518518518518519,
+   "steady": 0.97,
+   "marks_passed": 4
+  },
+  {
+   "right_person": 0.8110955056179775,
+   "right_spread": 0.8646264782538009,
+   "right_group_gaps": 0.7901234567901234,
+   "steady": 0.974,
+   "marks_passed": 3
+  },
+  {
+   "right_person": 0.8103932584269663,
+   "right_spread": 0.8623225599914474,
+   "right_group_gaps": 0.7654320987654321,
+   "steady": 0.971,
+   "marks_passed": 3
+  },
+  {
+   "right_person": 0.8125,
+   "right_spread": 0.8555390633304789,
+   "right_group_gaps": 0.7530864197530864,
+   "steady": 0.975,
+   "marks_passed": 3
+  },
+  {
+   "right_person": 0.8192883895131086,
+   "right_spread": 0.8697471446360109,
+   "right_group_gaps": 0.8271604938271605,
+   "steady": 0.964,
+   "marks_passed": 4
+  }
+ ],
+ "bar": {
+  "right_person": 0.8113295880149813,
+  "right_spread": 0.8652107971460227,
+  "right_group_gaps": 0.7975308641975308,
+  "steady": 0.9708,
+  "marks": {
+   "right_person": true,
+   "right_spread": true,
+   "right_group_gaps": false,
+   "beats_baselines": true
+  },
+  "marks_passed": 3
+ },
+ "noise": {
+  "right_person": 0.011357218605532014,
+  "right_spread": 0.014032138036068256,
+  "right_group_gaps": 0.08300116698257588,
+  "steady": 0.00864869932417587
+ },
+ "old_noise_round_0": {
+  "right_person": 0.014981273408239626,
+  "right_spread": 0.01,
+  "right_group_gaps": 0.04938271604938271,
+  "steady": 0.01
+ }
+}

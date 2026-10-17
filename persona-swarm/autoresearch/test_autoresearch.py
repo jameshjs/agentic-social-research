@@ -163,6 +163,14 @@ def test_review_gate():
             "Steven: redo round 7 Steven: Spread fell again. Next: Read papers on answer variety."), rr.read()
         assert rr.needs_review() is None
 
+        # the keep rule takes the re-benchmarked noise when rounds/rebench/bar.json exists, else round 0's
+        (rr.ROUNDS / "000-start").mkdir()
+        (rr.ROUNDS / "000-start" / "decision.json").write_text(json.dumps({"noise": {"right_person": 0.015}}))
+        assert rr.current_noise() == {"right_person": 0.015}, rr.current_noise()
+        (rr.ROUNDS / "rebench").mkdir()
+        (rr.ROUNDS / "rebench" / "bar.json").write_text(json.dumps({"noise": {"right_person": 0.011}}))
+        assert rr.current_noise() == {"right_person": 0.011}, rr.current_noise()
+
 if __name__ == "__main__":
     test_all()
     test_review_gate()

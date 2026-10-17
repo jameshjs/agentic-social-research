@@ -1,7 +1,7 @@
 # Researcher brief: persona tuning loop
 
 You are the researcher agent. Your job is to improve the shared **instructions** (`instructions.md`) so persona agents
-answer like the real respondents they represent, over **exactly 10 tuning rounds**, with coaches steering you. Read
+answer like the real respondents they represent, round by round until **the team decides to stop**, with coaches steering you. Read
 [PLAN.md](../PLAN.md) for the full rules and [CONTEXT.md](../CONTEXT.md) for the vocabulary. This brief is the
 procedure; follow it every round.
 
@@ -10,12 +10,13 @@ procedure; follow it every round.
 - Edit `evaluate.py`, `rewordings.json`, `twin_loader.py`, the sets, the benchmark, the given answers or the model.
 - Read anything under `~/.cache/persona-swarm/` (the check and final answer sheets live there).
 - Put exam questions, options or answers into `instructions.md`, or name a respondent in it.
-- Score the final set before round 10 is finished and signed off.
+- Score the final set before the team has stopped the loop and signed off the instructions.
 
 ## May
 
 - Edit `instructions.md` (one idea per round, 600 words at most) and choose the persona format
-  (`full`, `compact`, `profile`, `interview`, `short_card`).
+  (`full`, `compact`, `profile`, `interview`, `short_card`, `full_relative`). `full_relative`, the kept round 9's, is in
+  force and is `run_round.py`'s default.
 - Read tuning-set answer sheets (`data/twin/tuning_answers.jsonl`) and tuning answers in round folders, to study
   mistakes.
 
@@ -73,7 +74,7 @@ of them (step 1) and its suggested edits cite them (step 2).
 2. Any check jumps by more than 3× its noise in one round.
 3. One check rises past its noise while another falls past its noise.
 4. A result contradicts a paper a coach highlighted or annotated.
-5. The benchmark is passed (rounds still continue to 10).
+5. The benchmark is passed (rounds still continue until the team stops them).
 
 While waiting you may test ideas on the tuning set only; at most 2 changes may be on trial at once.
 
@@ -84,7 +85,24 @@ A coach signs off in the round review (step 7). `--verdict sign-off` on a kept r
 and the last signed-off instructions are restored. `--verdict continue` records the comment without a decision, so a
 kept change stays on trial. Leave every change uncommitted for the coach.
 
-## After round 10
+## Re-benchmark (17 Oct, ADR 0004)
+
+Rounds 4–9 kept nothing, several within noise, and round 3's first score looked lucky. So the team stopped the loop
+before round 10 and re-benchmarked instead. Re-runs use the re-measure mechanism (`--number NNN --slug <slug>-repeatK
+--sets check --steady`, with that round's `--instructions` file and `--format`), so `instructions.md` is never swapped.
+
+1. Run round 3's kept instructions 3 more times, for 5 check-set runs. The bar is their mean per check, the noise
+   2 × their standard deviation: `rounds/rebench/bar.json`.
+2. Run rounds 4, 7, 8 and 9 once more each. Judge each on the mean of its 2 runs against that bar and noise, with the
+   keep rule and the marks recomputed on the means: `rounds/rebench/rejudged.json`.
+3. Report the results to the team. The original verdicts in `decision.json` and `results.tsv` stay as they are; the
+   team picks any kept candidate and decides when the loop ends.
+
+Outcome: round 9 was the only round that passed, and the team kept it on trial (its `decision.json` keeps the original
+verdict under `original_verdict` and adds `rebench`). From round 10, a round is compared with the mean of round 9's 2
+runs, and `record_round.py` takes the noise from `rounds/rebench/bar.json`.
+
+## After the last round
 
 Score the final set once with the best signed-off instructions (all question families, with steady), then the
 extras: experiment effects on the decision puzzles, and the 10 / 30 / 158 given-answers comparison. Write

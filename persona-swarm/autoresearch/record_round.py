@@ -1,7 +1,7 @@
-# Records one tuning round (program.md steps 5-6): applies the keep rule against the last kept round with round 0's
-# noise, checks the triggers, writes decision.json, appends the results.tsv row (and the previous row's commit hash),
-# restores instructions.md after a discard, and prints the commit message. Also records a coach's typed review of a
-# round (which run_round.py waits for) and a sign-off.
+# Records one tuning round (program.md steps 5-6): applies the keep rule against the last kept round with the
+# re-benchmarked noise (round 0's before it), checks the triggers, writes decision.json, appends the results.tsv row
+# (and the previous row's commit hash), restores instructions.md after a discard, and prints the commit message. Also
+# records a coach's typed review of a round (which run_round.py waits for) and a sign-off.
 # Usage: python3 autoresearch/record_round.py autoresearch/rounds/001-<slug> --targeted right_person \
 #            --label "<short change>" --change "<what changed>" --hypothesis "<why>"
 #        python3 autoresearch/record_round.py --review 007 --by Steven --verdict continue --comment "..." --improvement "..."
@@ -68,6 +68,11 @@ def sign_off(rnd, by):
     d.write_text(json.dumps(decision, indent=1))
     print(f"round {int(rnd):02d} signed off: {by}")
 
+def current_noise():
+    """Per-check noise: the re-benchmark's (2 x the sd of round 3's 5 runs, ADR 0004) when present, else round 0's pair."""
+    bench = ROUNDS / "rebench" / "bar.json"
+    return json.loads((bench if bench.exists() else ROUNDS / "000-start" / "decision.json").read_text())["noise"]
+
 def needs_review():
     """Why the next round can't start, or None: the last numbered round needs a coach's typed review (ADR 0003)."""
     nums = sorted({int(p.name[:3]) for p in ROUNDS.glob("[0-9][0-9][0-9]-*")})
@@ -111,7 +116,7 @@ def record(a):
     prev_dir = folder(base["round"])
     prev = kept_score(base["round"])
     scores, meta = json.loads((out / "score.json").read_text()), json.loads((out / "meta.json").read_text())
-    new, noise = scores["check"], json.loads((ROUNDS / "000-start" / "decision.json").read_text())["noise"]
+    new, noise = scores["check"], current_noise()
     kept, reason = (False, "discard: invalid round, over 5% of check items missing") if new["invalid"] \
         else evaluate.keep(prev, new, noise)
     deltas = {c: new[c] - prev[c] for c in evaluate.CHECKS if new.get(c) is not None and prev.get(c) is not None}
