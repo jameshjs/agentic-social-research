@@ -181,13 +181,24 @@ python3 scripts/export_reactions.py   # runs → data/dashboard/reactions.csv fo
 python3 scripts/test_swarm.py         # offline self-check, no model calls
 ```
 
-**Anthropic API backend (hosted demo).** `scripts/plan.py` takes a freeform hypothesis: one Opus 5.5 call picks the
+**Anthropic API benchmark path.** `scripts/plan.py` takes a freeform hypothesis: one Opus 5.5 call picks the
 most affected group and words the proposal, then each persona in it reacts through Haiku 5.5. Calls bill to the API
 key, not a Claude plan. Run `pip install anthropic` and put `ANTHROPIC_API_KEY` in `persona-swarm/.env` (see
 `.env.example`). The tuning loop and `react.py` stay on the CLI.
 
 ```bash
 python3 scripts/plan.py "Raising TTC fares by 50 cents will push low-income riders to drive"
+```
+
+**Vultr-only survey prototype path.** With a server-side `VULTR_INFERENCE_API_KEY` in `.env` or the shell, the same
+script can use Vultr `glm-5.3` for planning and `glm-5.3-flash` for persona reactions. It requires no Anthropic API
+key or SDK. The Vultr adapter enforces structured JSON and rejects a different returned model ID. First regenerate
+the ignored persona pool and groups with the commands above. This survey prototype is not connected to the city's
+event engine, and model quality has not been measured live. [Model and credit decision](../VULTR.md).
+
+```bash
+python3 scripts/plan.py --provider vultr "Raising TTC fares by 50 cents will push low-income riders to drive"
+python3 scripts/test_vultr_api.py  # offline boundary checks, no Vultr key or network
 ```
 
 What it taught us, which is the starting point for `instructions.md`:
