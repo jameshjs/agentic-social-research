@@ -24,6 +24,15 @@
   #layers { top: 150px; left: 12px; width: 210px; }
   #layers h2, #insp h2, #dash h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
   #layers label { display: flex; align-items: center; gap: 7px; padding: 2px 0; cursor: pointer; }
+  #layers[hidden] { display: none; }
+  body.embed #head, body.embed #scen, body.embed #credit, body.embed #layers { display: none !important; }
+  body.embed #hl, body.embed #armWrap { display: none !important; }
+  body.embed #right { top: 56px; bottom: 70px; width: 270px; right: 8px; }
+  body.embed #people { max-height: 46%; }
+  body.embed #insp { max-height: 52%; }
+  body.embed #stats { display: none; }
+  body.embed #dash { bottom: 8px; left: 8px; right: 8px; padding: 6px 10px; grid-template-columns: auto minmax(0, 1fr); }
+  body.embed #dash > .ctl:nth-of-type(2) { display: none; }
   #layers .key { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; font-size: 11px; color: var(--muted); }
   .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; vertical-align: -1px; margin-right: 4px; }
   #insp { display: none; }
@@ -75,7 +84,7 @@
   #right { position: fixed; top: 12px; right: 12px; bottom: 150px; width: 330px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
   #right > .panel { position: static; pointer-events: auto; }
   #insp { max-height: 62%; overflow: auto; flex: none; position: relative !important; }
-  #people { flex: 1 1 auto; overflow: auto; min-height: 120px; }
+  #people { flex: 0 1 auto; overflow: auto; min-height: 0; }
   #people h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin: 0 0 6px; }
   .person { display: block; width: 100%; text-align: left; margin: 0 0 5px; padding: 6px 8px; line-height: 1.35; }
   .person span { color: var(--muted); font-size: 11px; }
@@ -131,17 +140,16 @@
 
 <section id="head" class="panel">
   <h1>Bloor St W · Bathurst → Spadina</h1>
-  <div class="sub">Read-only. Drag to orbit, right-drag to pan, scroll to zoom. Click a person to see their persona. B flips baseline/policy.</div>
+  <div class="sub">Drag to move around. Click a person to meet them.</div>
   <div class="btns" id="presets">
     <button data-preset="overview">Overview</button>
     <button data-preset="flyover">Street flyover</button>
-    <button data-preset="bird">Bird's eye</button>
-    <button data-preset="along">Along Bloor</button>
     <button id="night" title="Toggle day / night">☾ Night</button>
+    <button id="layersBtn" title="Show map layers">Layers</button>
   </div>
 </section>
 
-<section id="layers" class="panel">
+<section id="layers" class="panel" hidden>
   <h2>Layers</h2>
   <label><input type="checkbox" data-layer="buildings" checked> Buildings</label>
   <label><input type="checkbox" data-layer="businesses" checked> Businesses</label>
@@ -158,10 +166,10 @@
 
 <section id="hl" class="panel" aria-live="polite">
   <div class="row">
-    <select id="scen" aria-label="Scenario"><option value="bike">Bike lane: Bloor track loses protection</option><option value="fare">TTC fare: adult +$0.50</option><option value="sandbox">Sandbox only</option></select>
+    <select id="scen" aria-label="Scenario"><option value="bike">Bike lane: Bloor track loses protection</option><option value="fare">TTC fare: adult +$0.50</option></select>
     <span class="seg" id="armWrap"><button data-arm="baseline">Baseline</button><button data-arm="policy">Policy</button></span>
-    <select id="week" aria-label="Week of the persona run"></select>
-    <button id="live" style="display:none" title="Load the newest saved run from the persona server">Load latest live run</button>
+    <select id="week" aria-label="Week of the persona run" hidden></select>
+    <button id="live" hidden style="display:none" title="Load the newest saved run from the persona server">Load latest live run</button>
   </div>
   <div id="hlBody"></div>
 </section>
@@ -184,9 +192,9 @@
   </div>
   <input id="scrub" type="range" min="0" max="1" step="1" value="0" aria-label="Simulation time">
   <div class="ctl">
-    <select id="start" aria-label="Scenario start"><option value="28800">AM peak 08:00</option><option value="45000">Midday 12:30</option><option value="61200">PM peak 17:00</option></select>
-    <span id="trackWrap"><select id="track" aria-label="Sandbox policy arm: cycle track"><option value="protected">Policy arm track: protected</option><option value="painted">painted</option><option value="none" selected>none (share lanes)</option></select></span>
-    <select id="density" aria-label="Agent density"><option value="0.15">15% of counts</option><option value="0.3">30% of counts</option><option value="0.6" selected>60% of counts</option><option value="1">100% of counts</option></select>
+    <select id="start" aria-label="Scenario start" hidden><option value="28800">AM peak 08:00</option><option value="45000">Midday 12:30</option><option value="61200">PM peak 17:00</option></select>
+    <span id="trackWrap" hidden><select id="track" aria-label="Sandbox policy arm: cycle track"><option value="protected">Policy arm track: protected</option><option value="painted">painted</option><option value="none" selected>none (share lanes)</option></select></span>
+    <select id="density" aria-label="Agent density" hidden><option value="0.15">15% of counts</option><option value="0.3">30% of counts</option><option value="0.6" selected>60% of counts</option><option value="1">100% of counts</option></select>
   </div>
   <div id="stats"></div>
 </section>
@@ -200,6 +208,7 @@
     if (el && !window.__viewer3d) { el.className = 'err'; el.textContent = 'The 3D viewer did not start. It needs network access to cdn.jsdelivr.net for three.js, and WebGL. Check the browser console for details.'; }
   }, 20000);
 </script>
+<script src="../background.js"></script>
 <script src="../sandbox.js"></script>
 <script type="module" src="./viewer.js"></script>
 </body>

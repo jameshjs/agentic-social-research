@@ -15,6 +15,15 @@ python -m http.server 4173          # from the repository root
 node world/viewer3d/build-standalone.mjs
 ```
 
+## Inside /experience/
+
+The lab's city viewport opens this viewer in 3D by default, through `experience/viewer3d-bridge.js`; a 3D/2D button switches back to the 2D map. `?view=2d` starts on 2D.
+- The bridge passes the page's own `experiment.v2` RunResult, taken from `counterfactual:result`, to `?embed=1`. The 3D people are the run's synthetic people, and each travel event's recorded sandbox steps are drawn as they are. The 3D view, ledger and charts therefore read one event log.
+- The page's Baseline / With policy toggle and the decision ledger drive the 3D view, which flies to the person on the clicked row.
+- Playback skips the empty hours between the run's travel.
+
+The standalone page below keeps the persona-swarm runs. For the demo it shows only the scenario picker, Baseline/Policy, three numbers, the people list and a short persona card. The Layers button reveals the rest.
+
 ## The two demo scenarios, with personas
 
 The selector at the top switches between the persona runtime's two prepared runs (Steven's `persona-swarm/runtime`, which drives Meet's paired experiment). **Baseline / Policy** (or the B key) flips arms at the same moment, with the same seed.

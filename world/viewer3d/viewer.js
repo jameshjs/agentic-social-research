@@ -164,7 +164,7 @@ scene.add(sun, sun.target);
 /* ---------- picking registry ---------- */
 const pickables = [];
 function pickable(obj, describe) { obj.userData.describe = describe; pickables.push(obj); return obj; }
-const chip = (s) => (s ? `<span class="chip ${s}">${s === 'assumption' ? 'assumed' : s}</span>` : '');
+const chip = () => '';   // per-field status tags removed for the demo; the headline footnote states the status once
 
 /* ---------- ground, roads, sidewalks ---------- */
 const MAT = {
@@ -384,14 +384,9 @@ const buildingById = new Map(W.buildings.items.map((b) => [b.id, b]));
 function describeBuilding(b) {
   if (!b) return null;
   const biz = (b.business_ids || []).map((id) => bizById.get(id)).filter(Boolean);
-  return { title: b.address || `Building ${b.id}`, kind: 'Building', status: 'observed', obj: b,
-    rows: [['Height', `${b.height_m} m ${chip('observed')}<br><span class="note">${esc(b.height_source || '')}, City 3D Massing 2025</span>`],
-      ['Floors', `~${b.floors_est} ${chip('derived')}`], ['Floor area', `~${(b.floor_area_m2_est || 0).toLocaleString()} m² ${chip('derived')}`],
-      ['Use', `${esc(b.use)} ${chip('derived')}<br><span class="note">OSM building tag: ${esc(b.osm_building || 'untagged')}</span>`],
-      ['Residents', b.residents_est != null ? `≈ ${b.residents_est} ${chip('derived')}` : 'n/a'],
-      ['Neighbourhood', esc(b.neighbourhood || 'n/a')],
-      ['Businesses', biz.length ? biz.map((x) => `${esc(x.name || x.kind)} <span class="note">(${esc(x.category)})</span>`).join('<br>') : 'none mapped']],
-    note: 'Residents are a dasymetric estimate: 2021 neighbourhood population spread over floor area.' };
+  return { title: b.address || 'Building', kind: `${b.height_m} m tall · ~${b.floors_est} floors`, obj: b,
+    rows: [['Residents', b.residents_est != null ? `≈ ${Math.round(b.residents_est)} (estimate)` : 'n/a'],
+      ...(biz.length ? [['Businesses', biz.slice(0, 4).map((x) => esc(x.name || x.kind)).join('<br>')]] : [])] };
 }
 // Hover highlight for one building.
 const hlMat = new THREE.MeshBasicMaterial({ color: '#5ab0ff', transparent: true, opacity: 0.35, depthWrite: false });
@@ -651,14 +646,14 @@ function describeSignal(entry) {
   const s = entry.s, timed = s.on_bloor && !s.private_access;
   return { title: `Signal PX ${s.px}`, kind: esc(s.name), status: 'observed', live: true,
     rows: () => {
-      const r = [['Control mode', esc(s.control_mode)], ['Approaches', esc(s.approaches)], ['Pedestrian walk speed', `${esc(s.ped_walk_speed)} ${chip('observed')}`], ['Transit pre-emption', s.transit_preempt ? 'yes' : 'no'], ['Activated', esc(s.activated)]];
+      const r = [];
       if (timed && state.sb) {
         const ph = state.sb.signalAt(s.px, state.t);
         r.unshift(['Phase now', `<b>${ph.phase.replace('_', ' ')}</b> (${Math.round(ph.c)} s into ${state.sb.plan.cycle} s cycle) ${chip('assumption')}`], ['Walk now', `${ph.walk ? ph.walk.replace('_', ' ') : "don't walk"} ${chip('assumption')}`]);
       } else r.unshift(['Phase now', 'not timed in the sandbox']);
       return r;
     },
-    note: timed ? esc(W.signal_timing.why) : 'Only the four Bloor signals have assumed timing in world/sandbox.js.' };
+    note: timed ? 'Signal timing is assumed (90 s cycle).' : '' };
 }
 function updateSignals(t) {
   for (const e of SIG) {
@@ -717,8 +712,9 @@ const GEO = {
 GEO.transit = GEO.walk;
 const agentMat = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.05 });
 const state = { t: 8 * 3600, start: 8 * 3600, end: 8.5 * 3600, playing: true, speed: 10, arms: {}, arm: 'policy', scenario: 'bike', week: 2,
-  agents: [], follow: null, night: false, nightK: 0, policyK: 1, selected: null };
+  agents: [], follow: null, night: false, nightK: 0, policyK: 1, selected: null, mapped: null, windows: null };
 const SEED = 7;
+const EMBED = new URLSearchParams(location.search).has('embed');   // inside /experience/
 
 /* ---------- personas from the persona runtime (persona-swarm), read-only ---------- */
 async function loadPersonas() {
@@ -731,10 +727,10 @@ const SCEN = {
   fare: { run: 'fare', title: 'Adult TTC fare +$0.50, Fair Pass unchanged', short: 'TTC fare' },
   sandbox: { run: null, title: 'Sandbox only (no personas)', short: 'Sandbox' },
 };
-const runOf = (sc = state.scenario) => (PD && SCEN[sc].run ? PD.runs[SCEN[sc].run] : null);
-const personaById = (id) => (PD ? PD.personas[id] : null);
+const runOf = (sc = state.scenario) => (state.mapped ? (state.mapped.scen === sc ? state.mapped.run : null) : PD && SCEN[sc].run ? PD.runs[SCEN[sc].run] : null);
+const personaById = (id) => (state.mapped ? state.mapped.personas[id] : PD ? PD.personas[id] : null) || null;
 const ROLE = { driver: 'Driver', cyclist: 'Cyclist', pedestrian: 'Pedestrian', transit_rider: 'TTC rider', shop_owner: 'Shop owner', shop_worker: 'Shop worker' };
-const CHOICE = { walk: 'walk', drive: 'drive', bus: 'TTC', bike: 'cycle', bike_bloor: 'cycle on Bloor', bike_detour: 'cycle via side streets', defer: 'stay home' };
+const CHOICE = { walk: 'walk', drive: 'drive', car: 'drive', bus: 'TTC', transit: 'TTC', bike: 'cycle', bike_bloor: 'cycle on Bloor', bike_detour: 'cycle via side streets', bike_side_street: 'cycle via side streets', defer: 'stay home', shop_elsewhere: 'shop elsewhere' };
 const choiceMode = (c) => ({ walk: 'walk', drive: 'car', bus: 'transit', bike: 'bike', bike_bloor: 'bike', bike_detour: 'bike' }[c] || null);
 // Side-street cycling routes from the City cycling network, used to draw `bike_detour` trips.
 const DETOUR = {
@@ -766,7 +762,7 @@ function makeRng(sb) {
   };
 }
 /* Background traffic from the observed 15-minute counts; identical in both arms (same seed, same plan). */
-function spawnBackground(sb, start, minutes, density) {
+function spawnBackground(sb, start, minutes, density, span = 900) {
   const nodes = [...sb.graph.nodes.values()], portals = nodes.filter((n) => n.kind === 'portal'), last = XS.length - 1;
   const doors = [...sb.graph.doors.values()].map((id) => sb.graph.nodes.get(id));
   const R = makeRng(sb), pick = (arr, ...p) => arr[Math.floor(R(...p) * arr.length) % arr.length];
@@ -782,10 +778,10 @@ function spawnBackground(sb, start, minutes, density) {
       sb.travel(id, pick(portals.filter((p) => p.id !== from.id), id, 'home').id);
     }
   };
-  for (let t = start; t < start + minutes * 60; t += 900) {
+  for (let t = start; t < start + minutes * 60; t += span) {
     const f = sb.flowAt(t); if (!f) continue;
-    const n = (v) => Math.round((v || 0) * density);
-    const each = (count, tag, fn) => { for (let j = 0; j < count; j++) fn(t + R(tag, t, j) * 900, `${tag}${t}.${j}`); };
+    const n = (v) => Math.round((v || 0) * density * span / 900);
+    const each = (count, tag, fn) => { for (let j = 0; j < count; j++) fn(t + R(tag, t, j) * span, `${tag}${t}.${j}`); };
     const farOr = (key, end, alt) => (R(key, 'far') < 0.7 ? pick(at(end), key, 'd') : pick(alt, key, 'd'));
     each(n(f.eb_vehicles_in), 'ceb', (tt, key) => spawn('car', pick(at(0), key, 'o'), farOr(key, last, portals.filter((p) => p.intersection > 0)), tt));
     each(n(f.wb_vehicles_in), 'cwb', (tt, key) => spawn('car', pick(at(last), key, 'o'), farOr(key, 0, portals.filter((p) => p.intersection < last)), tt));
@@ -845,6 +841,62 @@ function spawnPersonas(sb, run, arm, week, start, fares) {
   }
   return { plan, detours };
 }
+/* Persona agents of a mapped experiment.v2 run: each `travel` event already carries its validated sandbox
+ * steps (edge, start, wait, travel), so the viewer only draws them. */
+function stepSegs(graph, mode, steps) {
+  const events = steps.filter((s) => graph.edges.has(s.edge)).map((s) => ({ type: 'moved', actor: 'x', edge: s.edge, t: s.t, wait_s: s.wait_s || 0, travel_s: s.travel_s || 0, arrive_t: s.t + (s.wait_s || 0) + (s.travel_s || 0) }));
+  return events.length ? buildTimeline({ graph, events, agents: new Map([['x', { mode }]]) })[0] : null;
+}
+function mappedPersonaAgents(sb, run, armName, week) {
+  const key = armName === 'policy' ? 'intervention' : 'baseline', out = [];
+  for (const e of run.mapped.runs[key].events) {
+    if (e.action !== 'travel' || e.tick !== week || !e.steps || !e.steps.length) continue;
+    const a = stepSegs(sb.graph, e.mode, e.steps); if (!a) continue;
+    const c = run.choices[key][`${e.tick}:${e.actor}:${e.trip_id}`] || {};
+    a.id = `${e.actor}:${e.trip_id}:${e.leg}`;
+    a.persona = { id: a.id, pid: e.actor, trip: e.trip_id, choice: c.chosen || e.mode, reason: c.reason, options: c.options, event_id: e.id };
+    out.push(a);
+  }
+  return out;
+}
+/* Busy stretches of the day, so playback can skip the empty hours between them. */
+function travelWindows(agents, pad = 20, merge = 90) {
+  const iv = agents.map((a) => [a.t0 - pad, a.t1 + pad]).sort((a, b) => a[0] - b[0]), out = [];
+  for (const w of iv) { const last = out[out.length - 1]; if (last && w[0] - last[1] < merge) last[1] = Math.max(last[1], w[1]); else out.push([...w]); }
+  return out;
+}
+/* experiment.v2 RunResult (experiment/world-runner.js) -> the same compact shape as a persona-swarm run. */
+function fromMappedRun(r) {
+  const choices = { baseline: {}, intervention: {} }, fares = {};
+  for (const arm of ['baseline', 'intervention']) {
+    fares[`${arm}:adult`] = (r.scenario.levers[arm] || {}).adult_fare_cad ?? SB.DEFAULT_POLICY.adult_fare_cad;
+    for (const e of r.runs[arm].events) {
+      if (e.action === 'choose_trip') choices[arm][`${e.tick}:${e.actor}:${e.trip_id}`] = { chosen: e.chosen, options: e.options, reason: e.reason, destination: e.destination };
+      if (e.action === 'pay_fare') { const p = r.personas.find((x) => x.id === e.actor); if (p && p.fare_category !== 'adult') fares[`${arm}:${p.fare_category}`] = Math.max(fares[`${arm}:${p.fare_category}`] || 0, e.amount_cad); }
+    }
+  }
+  const sum = (arm) => r.runs[arm].metrics.by_tick.reduce((acc, t) => { for (const [k, v] of Object.entries(t)) if (typeof v === 'number' && k !== 'tick') acc[k] = (acc[k] || 0) + v; return acc; }, {});
+  const tot = (x) => ({ ...x, bloor_route_trips: x.bloor_bike_trips, bus_trips: x.transit_trips });
+  const changed = r.changed_decisions.map((c) => ({ key: c.key, tick: c.tick, actor: c.actor, trip: c.trip_id, from: c.baseline.action, to: c.intervention.action }));
+  return { mapped: r, question: r.scenario.question, ticks: r.scenario.ticks, policy_start: r.scenario.policy_start,
+    label: `${r.population.count} synthetic people, seed ${r.seed}, v${r.version}`, totals: { baseline: tot(sum('baseline')), intervention: tot(sum('intervention')) },
+    checks: { changed_decisions: { count: changed.length, of_pairs: Object.keys(choices.baseline).length } }, fares, choices, changed };
+}
+function mappedPersona(p) {
+  const pref = Object.entries(p.mode_preference || {}).sort((a, b) => b[1] - a[1])[0];
+  return { id: p.id, name: p.name, role: p.role, neighbourhood: p.home && p.home.street ? p.home.street : p.home && p.home.kind === 'offmap' ? 'visitor' : 'Bloor',
+    fare_category: p.fare_category, has_car: p.has_car, has_bike: p.has_bike, routine: p.routine || [], budget: p.daily_budget_cad,
+    traits: [pref ? `prefers ${CHOICE[pref[0]] || pref[0]}` : null, p.cost_sensitivity > 1.2 ? 'watches costs closely' : null, p.bike_safety_sensitivity > 1.2 ? 'nervous cycling in traffic' : null].filter(Boolean), mapped: true };
+}
+function setMappedRun(result) {
+  if (!result || result.schema_version !== 'experiment.v2') return false;
+  const scen = Object.keys(result.scenario.levers.intervention || {}).includes('bloor_cycle_track') ? 'bike' : 'fare';
+  state.mapped = { scen, run: fromMappedRun(result), personas: Object.fromEntries(result.personas.map((p) => [p.id, mappedPersona(p)])) };
+  state.scenario = scen; state.week = result.scenario.policy_start; state.selected = null; inspected = null;
+  rebuildArms();
+  return true;
+}
+
 /* A detour drawn on the side-street cycling network: off Bloor, so it is not a sandbox edge. */
 function detourAgent(d) {
   const line = DETOUR[d.side], s0 = project(line.pts, line.cum, [d.from.x, d.from.y]), s1 = project(line.pts, line.cum, [d.to.x, d.to.y > 0 ? 300 : -400]);
@@ -916,10 +968,21 @@ function buildArm(armName, scen, start, density) {
     if (scen === 'fare') policy.adult_fare_cad = fares['intervention:adult'] ?? policy.adult_fare_cad + 0.5;
     if (scen === 'sandbox') policy.bloor_cycle_track = $('track').value;
   }
-  const sb = SB.createSandbox(W, { seed: SEED, policy });
-  spawnBackground(sb, start, 30, density);
-  const pp = run ? spawnPersonas(sb, run, armName, state.week, start, fares) : { plan: [], detours: [] };
-  const agents = buildTimeline(sb);
+  if (run && run.mapped) {                                           // the page's run decides the levers
+    policy = { ...SB.DEFAULT_POLICY };
+    for (const [k, v] of Object.entries(run.mapped.scenario.levers[armName === 'policy' ? 'intervention' : 'baseline'] || {})) if (k in policy) policy[k] = v;
+  }
+  // background: false skips the routed background fit (slow); the viewer draws its own count-driven traffic.
+  const sb = SB.createSandbox(W, { seed: run && run.mapped ? run.mapped.seed : SEED, policy, background: false });
+  let pp = { plan: [], detours: [] }, mappedAgents = [];
+  if (run && run.mapped) {
+    mappedAgents = mappedPersonaAgents(sb, run, armName, state.week);
+    for (const w of travelWindows(mappedAgents)) spawnBackground(sb, w[0], (w[1] - w[0]) / 60, density * 0.6, Math.max(60, w[1] - w[0]));
+  } else {
+    spawnBackground(sb, start, 30, density);
+    if (run) pp = spawnPersonas(sb, run, armName, state.week, start, fares);
+  }
+  const agents = buildTimeline(sb).concat(mappedAgents);
   for (const d of pp.detours) agents.push(detourAgent(d));
   const byId = new Map(agents.map((a) => [a.id, a]));
   for (const e of pp.plan) { e.agent = byId.get(e.id) || null; if (e.agent) { e.agent.persona = e; } }
@@ -1067,36 +1130,32 @@ function buildTrails() {
 }
 
 /* ---------- persona and agent cards ---------- */
+const optionText = (o) => (typeof o === 'string' ? (CHOICE[o] || o) : `${CHOICE[o.action] || o.action}${o.minutes ? ` ${Math.round(o.minutes)} min` : ''}${o.cost_cad ? ` $${o.cost_cad.toFixed(2)}` : ''}`);
 function describePersona(pid) {
   const p = personaById(pid); if (!p) return null;
-  const run = runOf(), poll = PD.poll && PD.poll.answers[pid];
-  const biz = p.shop ? W.businesses.items.find((b) => b.id === p.shop.osm_id) : null;
-  return { title: p.name, kind: `${ROLE[p.role] || p.role} · ${esc(p.neighbourhood)} · persona ${p.id}`, status: 'simulated', live: true, persona: pid,
+  const run = runOf();
+  const who = p.mapped
+    ? `${esc(ROLE[p.role] || p.role.replace(/_/g, ' '))} · ${esc(p.neighbourhood)}`
+    : `${esc(p.age_band || '')} ${esc(p.sex || '')} · ${esc(ROLE[p.role] || p.role)} · ${esc(p.neighbourhood)}`;
+  return { title: p.name, kind: who, live: true, persona: pid,
     rows: () => {
-      const r = [
-        ['Who', `${esc(p.sex || '')}, ${esc(p.age_band || 'age n/a')} · ${esc(p.income_band || '')} household<br><span class="note">about $${p.weekly_income_cad}/week, $${p.disposable_cash_weekly_cad}/week after rent and essentials</span>`],
-        ['Gets around', `${esc(ROLE[p.role] || p.role)} · ${p.has_car ? 'has a car' : 'no car'} · ${p.has_bike ? 'has a bike' : 'no bike'} · walks up to ${p.max_walk_km} km<br><span class="note">${p.fare_category === 'fair_pass' ? 'Fair Pass (low-income) TTC fare' : 'full adult TTC fare'}</span>`],
-      ];
-      if (biz) r.push(['Works at', `${esc(biz.name || biz.kind)} <span class="note">(${esc(biz.kind)}, real Bloor business, OSM)</span>`]);
-      if (p.traits.length) r.push(['Character', p.traits.map(esc).join('<br>') + ' <span class="note">(from their own survey answers)</span>']);
+      const r = [];
+      const cash = p.mapped ? `$${p.budget}/day budget` : `$${p.disposable_cash_weekly_cad}/week spare cash`;
+      r.push(['About', `${cash} · ${p.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare'} · ${p.has_car ? 'car' : 'no car'} · ${p.has_bike ? 'bike' : 'no bike'}`]);
+      if (p.traits.length) r.push(['Traits', p.traits.slice(0, 2).map(esc).join('<br>')]);
+      const fixed = r.length;
       if (run) {
-        const wk = state.week, trips = (p.routine || []).map((x) => x.id);
-        for (const trip of trips) {
+        const wk = state.week;
+        for (const trip of (p.routine || []).map((x) => x.id)) {
           const k = `${wk}:${pid}:${trip}`, b = run.choices.baseline[k], i = run.choices.intervention[k];
-          if (!b && !i) continue;
-          const chg = b && i && b.chosen !== i.chosen;
-          r.push([`Week ${wk} · ${trip}`, chg
-            ? `<b class="chgtxt">${esc(CHOICE[b.chosen] || b.chosen)} → ${esc(CHOICE[i.chosen] || i.chosen)}</b><br><span class="note">Baseline: “${esc(b.reason)}”</span><br>Policy: “${esc(i.reason)}”`
-            : `${esc(CHOICE[(i || b).chosen] || (i || b).chosen)} in both arms<br><span class="note">“${esc((i || b).reason)}”</span>`]);
+          if (!b || !i || b.chosen === i.chosen) continue;
+          const why = p.mapped ? `options: ${(i.options || []).map(optionText).join(' · ')}` : `“${esc(i.reason)}”`;
+          r.push([esc(trip), `<b class="chgtxt">${esc(CHOICE[b.chosen] || b.chosen)} → ${esc(CHOICE[i.chosen] || i.chosen)}</b><br><span class="note">${why}</span>`]);
         }
-        const all = run.changed.filter((c) => c.actor === pid);
-        if (all.length) r.push(['All weeks', all.map((c) => `wk ${c.tick} ${esc(c.trip)}: ${esc(CHOICE[c.from] || c.from)} → ${esc(CHOICE[c.to] || c.to)}`).join('<br>')]);
+        if (r.length === fixed) r.push(['This period', 'same choices with and without the policy']);
       }
-      if (poll && state.scenario === 'fare') r.push(['Poll on the fare', `<b>${esc(poll.stance)}</b>, affected ${esc(poll.affected)}<br><span class="note">“${esc(poll.reason)}” — ${esc(PD.poll.label)}</span>`]);
-      r.push(['Home on map', `building in ${esc(p.neighbourhood)} ${chip('assumption')}`]);
       return r;
     },
-    note: `Twin-anchored synthetic persona: a US survey respondent's own answers placed in a synthetic Toronto role (${esc(PD.attribution || '')}). Reasons are the persona agent's own words (${esc(run ? run.model : 'Haiku')}). Trip mode comes from the persona runtime; route, timing and waits come from world/sandbox.js; the home building is placed by neighbourhood for display.`,
     action: { label: state.follow && state.follow.persona && state.follow.persona.pid === pid ? 'Stop following' : 'Follow', run: () => followPersona(pid) } };
 }
 function followPersona(pid, fly = false) {
@@ -1131,8 +1190,8 @@ function describeAgent(a, arm) {
 const CUES = { tags: [] };
 {
   const mk = (cls, x, y, h) => { const d = document.createElement('div'); d.className = cls; const o = new CSS2DObject(d); o.position.copy(P(x, y, h)); scene.add(o); return o; };
-  for (const st of W.transit.stations) st.entrances.forEach((e, k) => CUES.tags.push(mk(k ? 'fare small' : 'fare', e.x, e.y, k ? 6 : 10)));
-  for (const s of STOPS) if (s.deps.some((d) => d.route === '510' || d.route === '511')) CUES.tags.push(mk('fare small', s.xy[0], s.xy[1], 6));
+  // One fare tag per station, at its main (first) entrance; fewer tags keep the street readable.
+  for (const st of W.transit.stations) CUES.tags.push(mk('fare', st.entrances[0].x, st.entrances[0].y, 12));
   CUES.detour = Object.values(DETOUR).map((d) => mk('dtag', d.pts[1][0] - 60, d.pts[1][1], 6));
   DETOUR.north.lbl = CUES.detour[0]; DETOUR.south.lbl = CUES.detour[1];
 }
@@ -1142,8 +1201,8 @@ function headlineItems(run, sc) {
   const B = run.totals.baseline, I = run.totals.intervention, c = run.checks.changed_decisions;
   const item = (label, a, b, fmt = (v) => v) => ({ label, a: fmt(a), b: fmt(b), d: pct(a, b), up: b > a, same: a === b });
   const items = sc === 'bike'
-    ? [item('Bloor bike trips', B.bloor_route_trips, I.bloor_route_trips), item('All bike trips', B.bike_trips, I.bike_trips), item('Walk trips', B.walk_trips, I.walk_trips), item('Car trips', B.car_trips, I.car_trips), item('Shop sales', B.shop_sales_cad, I.shop_sales_cad, (v) => `$${Math.round(v).toLocaleString()}`)]
-    : [item('TTC fare revenue', B.fare_revenue_cad, I.fare_revenue_cad, money), item('Car trips', B.car_trips, I.car_trips), item('Walk trips', B.walk_trips, I.walk_trips), item('TTC trips', B.bus_trips, I.bus_trips), item('Household transport', B.household_transport_spend_cad, I.household_transport_spend_cad, money)];
+    ? [item('Bloor bike trips', B.bloor_route_trips, I.bloor_route_trips), item('Walk trips', B.walk_trips, I.walk_trips), item('Shop sales', B.shop_sales_cad, I.shop_sales_cad, (v) => `$${Math.round(v).toLocaleString()}`)]
+    : [item('TTC fare revenue', B.fare_revenue_cad, I.fare_revenue_cad, money), item('Car trips', B.car_trips, I.car_trips), item('TTC trips', B.bus_trips, I.bus_trips)];
   return { items, changed: `${c.count} of ${c.of_pairs}` };
 }
 function updateCues() {
@@ -1182,9 +1241,9 @@ function renderHeadline() {
   const h = headlineItems(run, sc);
   const weeks = Array.from({ length: run.ticks }, (_, i) => i + 1);
   $('week').innerHTML = weeks.map((w) => `<option value="${w}" ${w === state.week ? 'selected' : ''}>Week ${w}${w < run.policy_start ? ' (before policy)' : ''}</option>`).join('');
-  $('hlBody').innerHTML = `<div class="q">${esc(run.question)}</div>
+  $('hlBody').innerHTML = `
     <div class="tiles">${h.items.map((x) => `<div class="tile"><span>${esc(x.label)}</span><b>${x.a} <em>→</em> ${x.b}</b><i class="${x.same ? '' : x.up ? 'up' : 'down'}">${x.same ? 'no change' : x.d}</i></div>`).join('')}</div>
-    <div class="note">${h.changed} trip decisions changed between arms, 40 persona agents × 4 weeks · ${esc(run.label)} · ${esc(run.model || '')}, ${run.calls} calls, ${run.sample ? 'committed sample' : 'saved'} run of ${esc((run.saved_at || '').slice(0, 16).replace('T', ' '))} UTC ${chip('simulated')}</div>`;
+    <div class="note">${h.changed} choices changed · ${run.mapped ? esc(run.label) : '40 AI persona agents, 4 weeks'} · synthetic, not a forecast</div>`;
   renderPeople();
 }
 function renderPeople() {
@@ -1193,11 +1252,11 @@ function renderPeople() {
   for (const c of run.changed) (by.get(c.actor) || by.set(c.actor, []).get(c.actor)).push(c);
   const list = [...by.entries()].sort((a, b) => b[1].length - a[1].length);
   $('people').style.display = '';
-  $('peopleBody').innerHTML = `<h2>People affected (${list.length})</h2>` + list.map(([pid, cs]) => {
+  $('peopleBody').innerHTML = `<h2>People affected (${list.length})</h2>` + list.slice(0, 8).map(([pid, cs]) => {
     const p = personaById(pid);
     const t = [...new Set(cs.map((c) => `${CHOICE[c.from] || c.from} → ${CHOICE[c.to] || c.to}`))];
-    return `<button class="person${state.selected === pid ? ' on' : ''}" data-pid="${pid}"><b>${esc(p ? p.name : pid)}</b> <span>${esc(p ? ROLE[p.role] || p.role : '')}, ${esc(p ? p.age_band || '' : '')}</span><br><em>${t.map(esc).join(' · ')}</em> <span>wk ${[...new Set(cs.map((c) => c.tick))].join(', ')}</span></button>`;
-  }).join('') + '<div class="note">Click a person to fly to them. Magenta ring and route: changed this week. Cyan route: the same trip in the other arm.</div>';
+    return `<button class="person${state.selected === pid ? ' on' : ''}" data-pid="${pid}"><b>${esc(p ? p.name : pid)}</b> <span>${esc(p ? ROLE[p.role] || p.role.replace(/_/g, ' ') : '')}</span><br><em>${t.slice(0, 2).map(esc).join(' · ')}</em></button>`;
+  }).join('') + (list.length > 8 ? `<div class="note">+${list.length - 8} more · click anyone on the street</div>` : '');
   for (const b of document.querySelectorAll('#peopleBody .person')) b.onclick = () => selectPerson(b.dataset.pid);
 }
 function selectPerson(pid) {
@@ -1214,9 +1273,15 @@ function rebuildArms() {
   const start = +$('start').value, density = +$('density').value, t0 = performance.now();
   disposeArm(state.arms.baseline); disposeArm(state.arms.policy);
   state.arms = { baseline: buildArm('baseline', state.scenario, start, density), policy: buildArm('policy', state.scenario, start, density) };
-  state.start = start; state.end = Math.max(start + 1800, ...Object.values(state.arms).flatMap((a) => a.agents.map((x) => x.t1)));
-  if (state.t < start || state.t > state.end) state.t = start;
-  const sc = $('scrub'); sc.min = start; sc.max = Math.ceil(state.end);
+  if (state.mapped) {
+    state.windows = travelWindows(Object.values(state.arms).flatMap((a) => a.people));
+    state.start = state.windows.length ? state.windows[0][0] : start; state.end = state.windows.length ? state.windows[state.windows.length - 1][1] : start + 1800;
+  } else {
+    state.windows = null;
+    state.start = start; state.end = Math.max(start + 1800, ...Object.values(state.arms).flatMap((a) => a.agents.map((x) => x.t1)));
+  }
+  if (state.t < state.start || state.t > state.end) state.t = state.start;
+  const sc = $('scrub'); sc.min = Math.floor(state.start); sc.max = Math.ceil(state.end);
   for (const arm of Object.values(state.arms)) {
     arm.rejected = arm.sb.events.filter((e) => e.type === 'action_rejected' || e.type === 'trip_infeasible').length;
     arm.finished = arm.sb.events.filter((e) => e.type === 'trip_completed').map((e) => e.t + e.duration_s).sort((a, b) => a - b);
@@ -1234,21 +1299,16 @@ function afterArmSwitch() {
   if (inspected && inspected.agent) inspected = null;
   refreshInspector();
 }
-function setArm(a) { if (state.arm === a) return; state.arm = a; afterArmSwitch(); }
+function setArm(a) {
+  if (state.arm === a) return;
+  state.arm = a; afterArmSwitch();
+  if (EMBED && window.parent !== window) window.parent.postMessage({ type: 'viewer3d:arm', arm: a }, location.origin);
+}
 
 /* ---------- dashboard ---------- */
 function renderStats() {
   const arm = curArm(); if (!arm) return;
-  let done = 0; { let lo = 0, hi = arm.finished.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arm.finished[m] <= state.t) lo = m + 1; else hi = m; } done = lo; }
-  const modes = ['walk', 'transit', 'bike', 'car'], B = state.arms.baseline.stats, Pp = state.arms.policy.stats;
-  const cell = (s, m) => (s[m] ? (s[m].dur / s[m].n / 60).toFixed(1) : '–');
-  const rows = modes.map((m) => {
-    const a = Pp[m], b = B[m], delta = a && b ? ((a.dur / a.n - b.dur / b.n) / 60) : null;
-    return `<tr><th style="text-align:left">${AGENT_STYLE[m].label}</th><td>${cell(B, m)}</td><td>${cell(Pp, m)}</td><td>${delta == null ? '–' : (delta >= 0 ? '+' : '') + delta.toFixed(2)}</td>${m === 'bike' ? `<td>${a ? Math.round(a.shared / a.n) : 0} m shared</td>` : '<td></td>'}</tr>`;
-  }).join('');
-  $('stats').innerHTML = `<span>Showing <b>${state.arm}</b> · on stage: <b>${counts.people}</b> persona trips · <b>${counts.walk}</b> walking · <b>${counts.transit}</b> to transit · <b>${counts.bike}</b> cycling · <b>${counts.car}</b> driving · <b>${counts.waiting}</b> waiting</span>
-    <span>Trips finished: <b>${done}</b> / ${arm.finished.length} · rejected actions: <b>${arm.rejected}</b> · seed ${SEED}, same in both arms ${chip('simulated')}</span>
-    <table><tr><th style="text-align:left">sandbox mean trip</th><th>baseline min</th><th>policy min</th><th>Δ min</th><th></th></tr>${rows}</table>`;
+  $('stats').innerHTML = `<span>${state.arm === 'policy' ? 'With policy' : 'Baseline'} · <b>${counts.people}</b> of the people we follow are on the street now${state.mapped ? ` · period ${state.week}` : ''}</span>`;
 }
 
 /* ---------- inspector + tooltip ---------- */
@@ -1349,6 +1409,7 @@ function goPreset(name, instant = false) {
 }
 for (const b of document.querySelectorAll('[data-preset]')) b.onclick = () => goPreset(b.dataset.preset);
 const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+$('layersBtn').onclick = () => { $('layers').hidden = !$('layers').hidden; $('layersBtn').classList.toggle('on', !$('layers').hidden); };
 $('night').onclick = () => { state.night = !state.night; $('night').classList.toggle('on', state.night); $('night').textContent = state.night ? '☀ Day' : '☾ Night'; };
 const lerpC = (a, b, k) => col(a).lerp(col(b), k);
 function applyLighting(k) {
@@ -1387,7 +1448,7 @@ window.addEventListener('keydown', (e) => {
 /* Live replay: when the page is served by the persona server (persona-swarm/runtime/server.js), load
  * its newest saved run instead of the bundled one. Read-only GETs; no model calls. */
 (async () => {
-  if (!/^https?:$/.test(location.protocol)) return;
+  if (!/^https?:$/.test(location.protocol) || EMBED || $('live').hidden) return;   // the live-run button is off for the demo
   try {
     const h = await fetch('/health'); if (!h.ok) return;
     const info = await h.json(); if (!info || !('backend' in info)) return;
@@ -1417,7 +1478,11 @@ window.addEventListener('resize', () => {
 let lastFrame = performance.now(), lastUi = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - lastFrame) / 1000); lastFrame = now;
-  if (state.playing) { state.t += dt * state.speed; if (state.t > state.end) { state.t = state.start; for (const a of state.agents) a.cursor = 0; } }
+  if (state.playing) {
+    state.t += dt * state.speed;
+    if (state.t > state.end) { state.t = state.start; for (const a of state.agents) a.cursor = 0; }
+    if (state.windows && !state.windows.some((w) => state.t >= w[0] && state.t <= w[1])) { const nx = state.windows.find((w) => w[0] > state.t); state.t = nx ? nx[0] : state.start; }
+  }
   const target = state.night ? 1 : 0;
   if (state.nightK !== target) { state.nightK += Math.sign(target - state.nightK) * Math.min(Math.abs(target - state.nightK), dt / 1.4); applyLighting(state.nightK); }
   MAT.track.emissive.set(state.trackPulse ? '#ff7a00' : '#ffd29a');
@@ -1454,7 +1519,19 @@ if (!PD && state.scenario !== 'sandbox') state.scenario = 'sandbox';
 if (['baseline', 'policy'].includes(HASH.get('arm'))) state.arm = HASH.get('arm');
 if (HASH.get('week')) state.week = +HASH.get('week');
 $('scen').value = state.scenario;
-rebuildArms();
+// Embedded in /experience/ (?embed=1): show the page's own mapped run and follow its Baseline/Policy toggle.
+if (EMBED) document.body.classList.add('embed');
+let parentRun = null;
+if (EMBED) { try { parentRun = window.parent !== window ? window.parent.CounterfactualCurrentRun : null; } catch (e) { parentRun = null; } }
+if (!(parentRun && setMappedRun(parentRun))) rebuildArms();
+window.addEventListener('message', (ev) => {
+  if (ev.origin !== location.origin || !ev.data || typeof ev.data !== 'object') return;
+  const d = ev.data;
+  if (d.type === 'viewer3d:run') setMappedRun(d.result);
+  if (d.type === 'viewer3d:arm') setArm(d.arm === 'baseline' ? 'baseline' : 'policy');
+  if (d.type === 'viewer3d:person' && personaById(d.id)) selectPerson(d.id);
+});
+if (EMBED && window.parent !== window) window.parent.postMessage({ type: 'viewer3d:ready' }, location.origin);
 const startPreset = PRESETS[HASH.get('preset')] ? HASH.get('preset') : 'overview';
 goPreset(startPreset, true);
 document.querySelector(`[data-preset="${startPreset}"]`).classList.add('on');
