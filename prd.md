@@ -3,7 +3,7 @@
 **Working title:** Counterfactual Lab (rename with the team)
 **Status:** Final product scope v1.0; model credentials, exact stack, and deployment URL are implementation fields to fill at kickoff
 **Hackathon:** Hack the Valley 11, 16–18 October 2026
-**Owners:** Meet (product/compiler/evidence/integration), James (world engine/orchestrator/backend), Steven (persona swarm), Adit (city frontend)
+**Owners:** Meet (product/compiler/evidence/integration), James (world engine/orchestrator/backend), Steven (persona swarm), Aadit (city frontend)
 **Product type:** General-purpose, human-guided social hypothesis simulator
 **Primary competition target:** Papiers Autoresearch
 **Secondary:** Hack the Valley × U of T School of Cities
