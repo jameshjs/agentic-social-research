@@ -27,10 +27,18 @@
   #layers[hidden] { display: none; }
   body.embed #head, body.embed #scen, body.embed #credit, body.embed #layers { display: none !important; }
   body.embed #hl, body.embed #armWrap { display: none !important; }
-  body.embed #right { top: 56px; bottom: 70px; width: 270px; right: 8px; }
-  body.embed #people { max-height: 46%; }
-  body.embed #insp { max-height: 52%; }
+  body.embed #right { position: static; width: 0; height: 0; }
+  body.embed #insp { position: fixed !important; top: 76px; right: 12px; width: 300px; max-height: calc(100% - 160px); }
+  body.embed #people { position: fixed; left: 12px; right: 12px; bottom: 62px; max-height: none; padding: 6px 8px; display: flex; gap: 6px; align-items: center; overflow-x: auto; background: rgba(16,20,27,0.55); }
+  body.embed #people h2 { margin: 0 6px 0 2px; white-space: nowrap; }
+  body.embed #peopleBody { display: flex; gap: 6px; align-items: center; }
+  body.embed #people .person { width: auto; margin: 0; padding: 4px 9px; white-space: nowrap; }
+  body.embed #people .person br, body.embed #people .note { display: none; }
+  body.embed #people .person em { margin-left: 6px; }
   body.embed #stats { display: none; }
+  body.embed #credit { display: block !important; top: 10px; bottom: auto; right: 12px; opacity: 0.75; }
+  .ptag .pay { color: #b8ffd9; font-weight: 700; }
+  .ptag .pay.up { color: #ff9f97; }
   body.embed #dash { bottom: 8px; left: 8px; right: 8px; padding: 6px 10px; grid-template-columns: auto minmax(0, 1fr); }
   body.embed #dash > .ctl:nth-of-type(2) { display: none; }
   #layers .key { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; font-size: 11px; color: var(--muted); }
@@ -1206,6 +1214,32 @@ const SCHED = [];
     for (const g of [-0.72, 0.72]) ribbon(ln.pts.filter((p) => !(p[2] < 0)).map((p) => [p[0] + g, p[1]]), 0.12, 0.09, railPos);
     SCHED.push({ ...ln, kind: 'streetcar', length: 30, width: 2.6, height: 3.6 });
   }
+  // Buses on their sourced routes: 7 Bathurst (Bathurst Station and north) and 127 Davenport (Spadina Rd to Spadina Station).
+  const b7 = stopXY('14617'), b127 = stopXY('14777'), spRd = 614.6;
+  const buses = [
+    { route: '7', dir: '1', label: '7 Bathurst bus northbound', pts: [[b7[0], b7[1]], [bathX + 4.8, b7[1] + 12], [bathX + 4.8, YMAX]] },
+    { route: '7', dir: '0', label: '7 Bathurst bus southbound', pts: [[bathX - 4.8, YMAX], [bathX - 4.8, b7[1] + 12], [b7[0], b7[1]]] },
+    { route: '127', dir: '1', label: '127 Davenport bus northbound', pts: [[b127[0], b127[1]], [spRd + 4.8, b127[1] + 12], [spRd + 4.8, YMAX]] },
+    { route: '127', dir: '0', label: '127 Davenport bus southbound', pts: [[spRd - 4.8, YMAX], [spRd - 4.8, b127[1] + 12], [b127[0], b127[1]]] },
+  ];
+  for (const ln of buses) {
+    ln.cum = polyLen(ln.pts); ln.len = ln.cum[ln.cum.length - 1];
+    const deps = W.transit.surface_departures.filter((d) => d.route === ln.route && d.direction_id === ln.dir);
+    const ref = [...new Set(deps.map((d) => d.stop_id))].map((id) => ({ id, s: project(ln.pts, ln.cum, stopXY(id)) })).sort((a, b) => a.s - b.s)[0];
+    if (!ref) continue;
+    ln.refStop = ref.id; ln.refS = ref.s;
+    const tbh = {};
+    for (const d of deps.filter((x) => x.stop_id === ref.id)) for (const [h, k] of Object.entries(d.trips_by_hour)) tbh[h] = (tbh[h] || 0) + k;
+    ln.tbh = tbh;
+    SCHED.push({ ...ln, kind: 'bus', speed: 7, length: 12, width: 2.6, height: 3.2 });
+  }
+  // Stops each surface vehicle pauses at (s along its path), from the same GTFS stops.
+  for (const ln of SCHED) {
+    if (ln.kind === 'subway') continue;
+    const ids = [...new Set(W.transit.surface_departures.filter((d) => d.route === ln.route && d.direction_id === ln.dir).map((d) => d.stop_id))];
+    ln.stops = ids.map((id) => { const xy = stopXY(id); return { id, xy, s: project(ln.pts, ln.cum, xy) }; })
+      .filter((x) => { const q = along(ln.pts, ln.cum, x.s); return Math.hypot(q.x - x.xy[0], q.y - x.xy[1]) < 40; }).sort((a, b) => a.s - b.s);
+  }
   groups.transit.add(flatMesh(railPos, MAT.rail));
   // Line 2: eastbound passes Bathurst's EB platform at each departure, westbound passes Spadina's WB platform.
   const plat = (st, name) => W.transit.stations.find((s) => s.id === st).platforms.find((p) => p.route === '2' && p.name.includes(name));
@@ -1215,6 +1249,22 @@ const SCHED = [];
   SCHED.push({ route: '2', label: 'Line 2 eastbound', kind: 'subway', pts: eb, cum: polyLen(eb), refS: bEB.x - (X0 - 400), tbh: bEB.trips_by_hour, speed: (sEB.x - bEB.x) / run.eastbound_bathurst_to_spadina_median, length: 138, width: 3, height: 3.4 });
   SCHED.push({ route: '2', label: 'Line 2 westbound', kind: 'subway', pts: wb, cum: polyLen(wb), refS: (X1 + 400) - sWB.x, tbh: sWB.trips_by_hour, speed: (sWB.x - bWB.x) / run.westbound_spadina_to_bathurst_median, length: 138, width: 3, height: 3.4 });
   for (const s of SCHED) { s.len = s.cum[s.cum.length - 1]; s.deps = depTimes(s.tbh, 4 * 3600, 27 * 3600); }
+}
+/* Where a surface vehicle is `t` seconds after it left the start of its path: cruise at `speed`, and pause
+ * DWELL seconds at each GTFS stop. The scheduled time `d` is when it reaches its reference stop. */
+const DWELL = 16;
+function vehicleAt(s, d, t) {
+  if (!s.stops) return { pos: s.refS + (t - d) * s.speed, dwell: -1 };
+  const before = s.stops.filter((x) => x.s < s.refS - 0.5).length;
+  let e = t - (d - (s.refS / s.speed + before * DWELL)), pos = 0;
+  for (let k = 0; k < s.stops.length; k++) {
+    const run = (s.stops[k].s - pos) / s.speed;
+    if (e < run) return { pos: pos + e * s.speed, dwell: -1 };
+    e -= run; pos = s.stops[k].s;
+    if (e < DWELL) return { pos, dwell: k, u: e / DWELL };
+    e -= DWELL;
+  }
+  return { pos: pos + e * s.speed, dwell: -1 };
 }
 // Vehicle meshes (pooled).
 const VEH = [];
@@ -1237,7 +1287,7 @@ const VEH = [];
     g.visible = false; groups.transit.add(g);
     const v = { sched: s, mesh: g, dep: null };
     VEH.push(v);
-    pickable(g, () => v.dep == null ? null : { title: s.label, kind: s.kind === 'subway' ? 'Subway train' : 'Streetcar', status: 'observed',
+    pickable(g, () => v.dep == null ? null : { title: s.label, kind: s.kind === 'subway' ? 'Subway train' : s.kind === 'bus' ? 'Bus' : 'Streetcar', status: 'observed',
       rows: [['Scheduled at reference', `${hm(v.dep)} ${chip('observed')}`], ['Trips this hour', s.tbh[String(Math.floor(state.t / 3600))] || 0], ['Animated speed', `${s.speed.toFixed(1)} m/s ${chip(s.kind === 'subway' ? 'derived' : 'assumption')}`]],
       note: s.kind === 'subway' ? 'Line 2 departure times from GTFS trips per hour; speed from the observed median platform-to-platform run time.' : 'Departure times from GTFS trips per hour at the first stop on screen; in-between positions use an assumed 6 m/s, without dwell.' });
   }
@@ -1248,16 +1298,44 @@ function updateVehicles(t) {
   for (const s of SCHED) {
     const pool = VEH.filter((v) => v.sched === s); let k = 0;
     for (const d of s.deps) {
-      const pos = s.refS + (t - d) * s.speed;
-      if (pos < -s.length || pos > s.len + (s.kind === 'streetcar' ? 0 : s.length)) continue;
+      const at = vehicleAt(s, d, t), pos = at.pos;
+      if (pos < -s.length || pos > s.len + (s.kind === 'subway' ? s.length : 0)) continue;
       if (k >= pool.length) break;
       const v = pool[k++], p = along(s.pts, s.cum, pos - s.length / 2);
       v.dep = d; v.mesh.visible = true;
       v.mesh.position.copy(P(p.x, p.y, p.h + (s.kind === 'subway' ? 0 : 0.05)));
       v.mesh.rotation.y = p.yaw;
+      if (at.dwell >= 0 && p.h > -0.5) boardAt(s, s.stops[at.dwell], p, d, at.dwell, at.u);
     }
     used.set(s, k);
   }
+  flushRiders();
+}
+/* Riders getting on and off at a stop while the vehicle waits there. Decorative: GTFS gives the schedule,
+ * not passenger counts, so 1–4 figures per stop are drawn from a fixed hash. */
+const RIDERS = { mesh: null, n: 0, max: 80 };
+const riderSpot = new THREE.Vector3(), riderQ = new THREE.Quaternion();
+function boardAt(s, stop, p, d, k, u) {
+  if (!RIDERS.mesh || !groups.transit.visible) return;
+  const nx = -Math.sin(p.yaw), ny = Math.cos(p.yaw);                       // left of travel = the curb side here
+  const side = (stop.xy[0] - p.x) * nx + (stop.xy[1] - p.y) * ny >= 0 ? 1 : -1;
+  const door = [p.x + nx * side * (s.width / 2 + 0.3), p.y + ny * side * (s.width / 2 + 0.3)];
+  const curb = [p.x + nx * side * (s.width / 2 + 4.5), p.y + ny * side * (s.width / 2 + 4.5)];
+  const count = 1 + Math.floor(hash(`${s.label}${d}${k}`) * 4);
+  for (let j = 0; j < count && RIDERS.n < RIDERS.max; j++) {
+    const boarding = hash(`${s.label}${d}${k}${j}`) < 0.6, a = j * 0.14, f = (u - a) / 0.55;
+    if (f < 0 || f > 1) continue;
+    const [from, to] = boarding ? [curb, door] : [door, curb];
+    const off = (j - count / 2) * 1.1;
+    riderSpot.set(from[0] + (to[0] - from[0]) * f + Math.cos(p.yaw) * off, 0.15, -(from[1] + (to[1] - from[1]) * f + Math.sin(p.yaw) * off));
+    riderQ.setFromAxisAngle(UP, Math.atan2(to[1] - from[1], to[0] - from[0]));
+    RIDERS.mesh.setMatrixAt(RIDERS.n++, tmpM.compose(riderSpot, riderQ, tmpS.setScalar(Math.min(2, Math.max(1, camera.position.distanceTo(controls.target) / 200)))));
+  }
+}
+function flushRiders() {
+  if (!RIDERS.mesh) return;
+  for (let i = RIDERS.n; i < RIDERS.max; i++) RIDERS.mesh.setMatrixAt(i, tmpM.makeScale(0, 0, 0));
+  RIDERS.mesh.instanceMatrix.needsUpdate = true; RIDERS.n = 0;
 }
 
 /* ---------- signals ---------- */
@@ -1504,7 +1582,8 @@ function mappedPersonaAgents(sb, run, armName, week) {
     const a = stepSegs(sb.graph, e.mode, e.steps); if (!a) continue;
     const c = run.choices[key][`${e.tick}:${e.actor}:${e.trip_id}`] || {};
     a.id = `${e.actor}:${e.trip_id}:${e.leg}`;
-    a.persona = { id: a.id, pid: e.actor, trip: e.trip_id, choice: c.chosen || e.mode, reason: c.reason, options: c.options, event_id: e.id };
+    const fare = run.mapped.runs[key].events.find((x) => x.action === 'pay_fare' && x.actor === e.actor && x.tick === e.tick && x.trip_id === e.trip_id);
+    a.persona = { id: a.id, pid: e.actor, trip: e.trip_id, choice: c.chosen || e.mode, reason: c.reason, options: c.options, event_id: e.id, fare: fare ? fare.amount_cad : null };
     out.push(a);
   }
   return out;
@@ -1538,12 +1617,18 @@ function mappedPersona(p) {
     fare_category: p.fare_category, has_car: p.has_car, has_bike: p.has_bike, routine: p.routine || [], budget: p.daily_budget_cad,
     traits: [pref ? `prefers ${CHOICE[pref[0]] || pref[0]}` : null, p.cost_sensitivity > 1.2 ? 'watches costs closely' : null, p.bike_safety_sensitivity > 1.2 ? 'nervous cycling in traffic' : null].filter(Boolean), mapped: true };
 }
+/* From the skyline down to Bloor & Spadina: start high over the city and settle on the section. */
+function zoomIn() {
+  camera.position.copy(P(420, -900, 2300)); controls.target.copy(P(470, 0, 0)); controls.update();
+  tween = { from: { pos: camera.position.clone(), tgt: controls.target.clone() }, to: { pos: P(330, -150, 110), tgt: P(520, 10, 0) }, t0: performance.now() + 250, dur: 3200 };
+}
 function setMappedRun(result) {
   if (!result || result.schema_version !== 'experiment.v2') return false;
   const scen = Object.keys(result.scenario.levers.intervention || {}).includes('bloor_cycle_track') ? 'bike' : 'fare';
   state.mapped = { scen, run: fromMappedRun(result), personas: Object.fromEntries(result.personas.map((p) => [p.id, mappedPersona(p)])) };
   state.scenario = scen; state.week = result.scenario.policy_start; state.selected = null; inspected = null;
   rebuildArms();
+  if (EMBED) zoomIn();
   return true;
 }
 
@@ -1694,6 +1779,9 @@ function agentPose(a, t) {
   return { x: s.pa[0] + (s.pb[0] - s.pa[0]) * f - s.uy * a.jitter, y: s.pa[1] + (s.pb[1] - s.pa[1]) * f + s.ux * a.jitter, h: s.pa[2] + (s.pb[2] - s.pa[2]) * f, yaw: Math.atan2(s.uy, s.ux), waiting, seg: s };
 }
 const counts = { walk: 0, transit: 0, bike: 0, car: 0, waiting: 0, people: 0 };
+RIDERS.mesh = new THREE.InstancedMesh(GEO.walk, new THREE.MeshStandardMaterial({ color: '#e9eef2', roughness: 0.6 }), RIDERS.max);
+RIDERS.mesh.frustumCulled = false; groups.transit.add(RIDERS.mesh); flushRiders();
+for (let i = 0; i < RIDERS.max; i++) RIDERS.mesh.setColorAt(i, col(AGENT_STYLE.walk.palette[i % AGENT_STYLE.walk.palette.length]));
 const curArm = () => state.arms[state.arm];
 function updateAgents(t) {
   for (const k of Object.keys(counts)) counts[k] = 0;
@@ -1734,12 +1822,16 @@ function updateAgents(t) {
     const sc = Math.min(CAP[a.mode] * 1.25, far * 1.3);
     o.body.scale.setScalar(sc);
     o.ring.material = pickedNow ? ringMat.picked : changed ? ringMat.changed : ringMat.same;
-    o.ring.scale.setScalar(sc * (changed || pickedNow ? pulse : 1));
-    const show = changed || pickedNow || state.labelsAll;
+    const flash = state.flashUntil && performance.now() < state.flashUntil && changed ? 2.2 : 1;
+    o.ring.scale.setScalar(sc * flash * (changed || pickedNow ? pulse : 1));
+    const paying = e.fare != null && p.seg && /^stairs_/.test(p.seg.edge) && p.seg.pb[2] < p.seg.pa[2];
+    const show = changed || pickedNow || state.labelsAll || paying;
     o.lab.visible = show && groups.labels.visible;
     if (show) {
       const [bc, pc] = state.arm === 'policy' ? [otherChoice(e), e.choice] : [e.choice, otherChoice(e)];   // always baseline → policy
-      const html = `<b>${esc(personaById(e.pid).name)}</b> ${changed ? `<span>${esc(CHOICE[bc] || bc)} → ${esc(CHOICE[pc] || pc)}</span>` : `<span>${esc(CHOICE[e.choice] || e.choice)}</span>`}`;
+      const fareUp = paying && e.fare > ((runOf() || {}).fares || {})['baseline:adult'];
+      const html = paying ? `<b>${esc(personaById(e.pid).name)}</b> <span class="pay${fareUp ? ' up' : ''}">pays $${e.fare.toFixed(2)}</span>`
+        : `<b>${esc(personaById(e.pid).name)}</b> ${changed ? `<span>${esc(CHOICE[bc] || bc)} → ${esc(CHOICE[pc] || pc)}</span>` : `<span>${esc(CHOICE[e.choice] || e.choice)}</span>`}`;
       if (o.tag._html !== html) { o.tag.innerHTML = html; o.tag._html = html; }
       o.tag.classList.toggle('chg', changed); o.tag.classList.toggle('pick', pickedNow);
       o.lab.position.y = 2.6 * sc;
@@ -1951,7 +2043,7 @@ function afterArmSwitch() {
 }
 function setArm(a) {
   if (state.arm === a) return;
-  state.arm = a; afterArmSwitch();
+  state.arm = a; state.flashUntil = performance.now() + 2600; afterArmSwitch();
   if (EMBED && window.parent !== window) window.parent.postMessage({ type: 'viewer3d:arm', arm: a }, location.origin);
 }
 
@@ -2001,14 +2093,17 @@ renderer.domElement.addEventListener('pointerleave', () => { pointer = null; $('
 renderer.domElement.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
-  const d = pickAt(e.clientX, e.clientY);
+  let d = pickAt(e.clientX, e.clientY);
+  if (EMBED && d && !d.persona && !d.agent) d = null;              // inside /experience/: no overlay cards for buildings or street furniture
   if (d && d.persona) { state.selected = d.persona; buildTrails(); renderPeople(); } else if (!d) { state.follow = null; if (state.selected) { state.selected = null; buildTrails(); renderPeople(); } }
   inspected = d; refreshInspector();
 });
 function updateHover() {
   if (!hoverDirty || !pointer) return;
   hoverDirty = false;
-  const d = pickAt(pointer[0], pointer[1]), tip = $('tip');
+  let d = pickAt(pointer[0], pointer[1]);
+  const tip = $('tip');
+  if (EMBED && d && !d.persona) d = null;
   highlightBuilding(d && d.kind === 'Building' ? d.obj : null);
   if (!d) { tip.style.display = 'none'; renderer.domElement.style.cursor = ''; return; }
   const rows = typeof d.rows === 'function' ? d.rows() : d.rows;
@@ -2139,7 +2234,7 @@ function frame(now) {
   MAT.track.emissiveIntensity = state.trackPulse ? 0.35 + 0.3 * Math.sin(now / 260) : state.trackGlow || 0;
   updateAgents(state.t); updateVehicles(state.t); updateSignals(state.t);
   if (tween) {
-    const k = Math.min(1, (now - tween.t0) / tween.dur), e = ease(k);
+    const k = Math.max(0, Math.min(1, (now - tween.t0) / tween.dur)), e = ease(k);
     camera.position.lerpVectors(tween.from.pos, tween.to.pos, e); controls.target.lerpVectors(tween.from.tgt, tween.to.tgt, e);
     if (k >= 1) tween = null;
   }

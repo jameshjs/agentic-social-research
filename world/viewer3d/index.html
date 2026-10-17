@@ -27,10 +27,18 @@
   #layers[hidden] { display: none; }
   body.embed #head, body.embed #scen, body.embed #credit, body.embed #layers { display: none !important; }
   body.embed #hl, body.embed #armWrap { display: none !important; }
-  body.embed #right { top: 56px; bottom: 70px; width: 270px; right: 8px; }
-  body.embed #people { max-height: 46%; }
-  body.embed #insp { max-height: 52%; }
+  body.embed #right { position: static; width: 0; height: 0; }
+  body.embed #insp { position: fixed !important; top: 76px; right: 12px; width: 300px; max-height: calc(100% - 160px); }
+  body.embed #people { position: fixed; left: 12px; right: 12px; bottom: 62px; max-height: none; padding: 6px 8px; display: flex; gap: 6px; align-items: center; overflow-x: auto; background: rgba(16,20,27,0.55); }
+  body.embed #people h2 { margin: 0 6px 0 2px; white-space: nowrap; }
+  body.embed #peopleBody { display: flex; gap: 6px; align-items: center; }
+  body.embed #people .person { width: auto; margin: 0; padding: 4px 9px; white-space: nowrap; }
+  body.embed #people .person br, body.embed #people .note { display: none; }
+  body.embed #people .person em { margin-left: 6px; }
   body.embed #stats { display: none; }
+  body.embed #credit { display: block !important; top: 10px; bottom: auto; right: 12px; opacity: 0.75; }
+  .ptag .pay { color: #b8ffd9; font-weight: 700; }
+  .ptag .pay.up { color: #ff9f97; }
   body.embed #dash { bottom: 8px; left: 8px; right: 8px; padding: 6px 10px; grid-template-columns: auto minmax(0, 1fr); }
   body.embed #dash > .ctl:nth-of-type(2) { display: none; }
   #layers .key { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; font-size: 11px; color: var(--muted); }

@@ -1666,10 +1666,17 @@ $('#hypothesisForm').addEventListener('submit', event => {
   const compiledMatch = !match && scenarioCompiler?.PREPARED_PROMPTS
     ? Object.entries(scenarioCompiler.PREPARED_PROMPTS).find(([id, prompts]) => preparedScenarios[id] && prompts.some((phrase) => scenarioCompiler.normalizeText(phrase) === scenarioCompiler.normalizeText(query)))
     : null;
-  const chosen = match ? match[0] : compiledMatch ? compiledMatch[0] : 'custom';
+  // A question about the TTC fare or the Bloor bike lane opens the matching prepared run (they are no longer buttons).
+  const intent = !match && !compiledMatch ? preparedIntent(normalized) : null;
+  const chosen = match ? match[0] : compiledMatch ? compiledMatch[0] : intent || 'custom';
   runScenario(chosen, query);
   if (chosen === 'custom') draftPolicy(query);
 });
+function preparedIntent(text) {
+  const fare = /\b(ttc|transit|subway|streetcar|bus|presto)\b/.test(text) && /\b(fare|fares|price|cost|cents?|\$|raise|increase|hike)\b|\$/.test(text);
+  const bike = /\b(bike|bikes|bicycle|cycle|cycling|cyclists?)\b/.test(text) && /\b(lane|lanes|track|tracks|bloor|path)\b/.test(text);
+  return fare && preparedScenarios.fare ? 'fare' : bike && preparedScenarios.bike ? 'bike' : null;
+}
 $('#hypothesisInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('#hypothesisForm').requestSubmit(); } });
 $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', () => {
   const chosen = button.dataset.scenarioChoice;
