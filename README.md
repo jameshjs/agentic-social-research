@@ -9,6 +9,7 @@ A general, human-guided social simulation and policy decision product. Enter **a
 3. [Locked Toronto MVP demo and ranked data](./demo-data.md) — UTSC-area fare scenario, verified observed facts, multi-agent causal chain, dataset gaps, and first-hour owner handoffs. [Machine-readable source fixture](./data/toronto_demo_baseline.json).
 4. [Coding-agent instructions](./AGENTS.md) and [Claude Code instructions](./CLAUDE.md) — shared implementation contract, owner boundaries, and safe Git sync. The committed [Claude hook](./.claude/hooks/sync-main.py) fetches before each prompt and fast forwards only a clean `main`.
 5. [Fare-demo paper and evidence pack](./papers.md) with a [machine-readable source index](./data/ttc_fare_evidence.json) and [offline EvidencePacket fixture](./data/ttc_fare_evidence_packet.json) — 15 relevant studies/reports, what each supports, conflicting evidence, and explicit transfer limits. [Papiers CLI setup](./papiers-setup.md) shows how to curate them in the team's library and demonstrate a real human note.
+6. **Candidate scenario, not locked:** [Bloor bike-lane pack](./bike-lane-papers.md) — Bill 212 keep-vs-remove question with 11 checked sources, a [Toronto baseline fixture](./data/bloor_bike_lane_baseline.json), an [evidence index](./data/bike_lane_evidence.json), and an [offline EvidencePacket](./data/bike_lane_evidence_packet.json). Adopting it needs a team decision and a PRD decision-log entry.
 
 ## Confirmed direction
 

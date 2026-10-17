@@ -1,0 +1,176 @@
+{
+  "schema_version": "1.0",
+  "scenario": "candidate_bloor_st_w_bike_lane_keep_vs_remove",
+  "curated_on": "2026-10-17",
+  "provenance": "Agent-curated summaries of linked original sources; not Papiers search results, not human annotations, and not Toronto-calibrated forecast parameters.",
+  "human_review_status": "pending",
+  "papers": [
+    {
+      "id": "B01",
+      "title": "Bloor Street West Bike Lane Pilot Project Evaluation",
+      "authors": "City of Toronto, General Manager, Transportation Services",
+      "year": 2017,
+      "url": "https://www.toronto.ca/legdocs/mmis/2017/pw/bgrd/backgroundfile-107582.pdf",
+      "mechanisms": ["lane_to_cycling_volume", "route_diversion", "lane_to_vehicle_volume", "lane_to_travel_time", "lane_to_parking", "lane_to_safety", "lane_to_retail_spending", "stakeholder_support"],
+      "finding": "Pilot area cycling rose 49% (3,309 to 4,925 per day; 25% of the increase estimated as new riders) while Harbord fell 25% and Dupont 11%; Bloor motor vehicles fell 16%, net across three corridors -3%; peak travel times rose 0:32 to 4:15 after signal adjustments; on-street parking 303 to 167 spaces (total -10%); conflicts -44% overall but bike-pedestrian +61%; Moneris spending grew 4.45% in pilot area vs 3.73% surrounding, 2.21% Danforth, 4.96% city-wide; 57% of drivers who do not bike and 51% of business respondents disagreed with the trade-off.",
+      "mvp_use": "Primary Toronto baseline for installation effects, diversion branches, parking supply and a real stakeholder-opinion split for personas.",
+      "transfer_limit": "Installation in 2016-2017, observational before/after, under one year of collision data; removal in 2026 may not reverse these effects symmetrically.",
+      "review_depth": "full_report_text"
+    },
+    {
+      "id": "B02",
+      "title": "Economic Impact Study of Bike Lanes in Toronto's Bloor Annex and Korea Town Neighbourhoods",
+      "authors": "Nancy Smith Lea; Yvonne Verlinden; Beth Savan; Daniel Arancibia; Steven Farber; Lee Vernich; Jeff Allen",
+      "year": 2017,
+      "url": "https://ero.ontario.ca/public/public_uploads/2024-11/Bloor-Economic-Impact-Study-Full-Report-2019-09-03_4.pdf",
+      "mechanisms": ["lane_to_customer_counts", "lane_to_visit_frequency", "mode_to_spending", "lane_to_vacancy", "merchant_survey_instrument"],
+      "finding": "3,005 visitor surveys, 525 merchant surveys and 15 bike counts across fall 2015, fall 2016 and spring 2017; more merchants reported 100+ customers, visitors reported higher spending and three more visit days per month, vacancies stable at 6%; but the same indicators also grew on the Danforth control, so positive outcomes may be attributable to other factors.",
+      "mvp_use": "Survey instrument template (merchant Q1 customer counts, Q6 estimated customer mode shares) and evidence that walking/cycling visitors visit more often.",
+      "transfer_limit": "Commissioned by the BIAs, City and Metcalf Foundation and written by an active-transportation organization; self-reported survey indicators; Danforth control later received cycle tracks in 2020. Report says the vacancy rate was 6%; the City staff report says 7%.",
+      "review_depth": "full_report_executive_summary_and_appendix_b"
+    },
+    {
+      "id": "B03",
+      "title": "Measuring the Local Economic Impacts of Replacing On-Street Parking With Bike Lanes: A Toronto (Canada) Case Study",
+      "authors": "Daniel Arancibia et al.",
+      "year": 2019,
+      "url": "https://tcat.ca/resources/bloor-street-economic-impact-studies/",
+      "journal": "Journal of the American Planning Association 85(4): 463-481",
+      "mechanisms": ["lane_to_retail_spending", "lane_to_visit_frequency"],
+      "finding": "Peer-reviewed publication of the B02 Bloor study.",
+      "mvp_use": "Cite as the peer-reviewed version of B02 when a human checks the paper itself.",
+      "transfer_limit": "Same data and limits as B02.",
+      "review_depth": "bibliographic_record_via_tcat_full_text_not_checked"
+    },
+    {
+      "id": "B04",
+      "title": "Bike Lanes, On-Street Parking and Business: Year 2 Report (Bloor West Village)",
+      "authors": "Jennifer Forkes; Nancy Smith Lea (Clean Air Partnership)",
+      "year": 2010,
+      "url": "https://www.tcat.ca/wp-content/uploads/2016/08/BikeLanes_Parking_Business_BloorWestVillageNewCover.pdf",
+      "mechanisms": ["merchant_belief_vs_customer_mode", "mode_to_spending", "merchant_survey_instrument"],
+      "finding": "96 merchants and 510 visitors: 21% of visitors usually drove, but 69% of merchants believed more than 20% of customers drove; 46% of merchants expected a bike lane with 50% less parking to decrease customers (Annex 2008: 25%); non-drivers visited more often and reported spending more per month.",
+      "mvp_use": "Initialize merchant personas with a measured belief gap and let the survey/skeptic challenge it; heterogeneity between neighbourhoods.",
+      "transfer_limit": "Stated perceptions and intercept surveys, no actual sales data; Bloor West Village has a different street width and more driving than the Annex.",
+      "review_depth": "full_report_text"
+    },
+    {
+      "id": "B05",
+      "title": "Bike Lanes, On-Street Parking and Business: A Study of Bloor Street in Toronto's Annex Neighbourhood",
+      "authors": "Clean Air Partnership",
+      "year": 2009,
+      "url": "https://www.pedbikeinfo.org/resources/resources_details.cfm?id=4391",
+      "mechanisms": ["customer_mode_share", "merchant_belief_vs_customer_mode"],
+      "finding": "2008 survey of 61 merchants and 538 patrons on Bloor in the Annex: 46% walked, 32% transit, 12% cycled, 10% drove; merchants' mode estimates were broadly accurate and more expected a lane to help than hurt.",
+      "mvp_use": "Pre-pilot customer mode share for the Annex shop personas; contrast with B04 where merchants overestimated driving.",
+      "transfer_limit": "2008 data, one summer survey; summarized from secondary sources and the B04 comparison tables.",
+      "review_depth": "secondary_summary_and_b04_comparison"
+    },
+    {
+      "id": "B06",
+      "title": "Economic impacts on local businesses of investments in bicycle and pedestrian infrastructure: a review of the evidence",
+      "authors": "Jamey M. B. Volker; Susan Handy",
+      "year": 2021,
+      "url": "https://doi.org/10.1080/01441647.2021.1912849",
+      "doi": "10.1080/01441647.2021.1912849",
+      "mechanisms": ["lane_to_retail_spending", "business_type_heterogeneity"],
+      "finding": "Review of 23 mostly US/Canadian studies: active-travel facilities generally have positive or non-significant effects on retail and food-service businesses, while bicycle facilities may hurt auto-oriented businesses.",
+      "mvp_use": "Business-type heterogeneity: give an auto-oriented shop persona a different response than a cafe.",
+      "transfer_limit": "Literature review of installations with mixed designs; not a removal estimate.",
+      "review_depth": "publisher_abstract"
+    },
+    {
+      "id": "B07",
+      "title": "Understanding Economic and Business Impacts of Street Improvements for Bicycle and Pedestrian Mobility: A Multi-City Multi-Approach Exploration",
+      "authors": "Jenny H. Liu; Wei Shi",
+      "year": 2020,
+      "url": "https://doi.org/10.15760/trec.248",
+      "doi": "10.15760/trec.248",
+      "mechanisms": ["lane_to_retail_spending", "lane_to_employment"],
+      "finding": "Fourteen corridors in six US cities: street improvements had positive or no significant effects on corridor business performance; food service gained most.",
+      "mvp_use": "Low/base/high retail cases that include zero.",
+      "transfer_limit": "US cities, installation not removal; co-sponsored by PeopleForBikes.",
+      "review_depth": "report_abstract_and_university_press_release"
+    },
+    {
+      "id": "B08",
+      "title": "Vancouver Separated Bike Lane Business Impact Study",
+      "authors": "Stantec Consulting",
+      "year": 2011,
+      "url": "https://council.vancouver.ca/20110728/documents/penv3-BusinessImpactStudyReportDowntownSeparatedBicycleLanes-StantecReport.pdf",
+      "mechanisms": ["lane_to_retail_spending", "parking_loss_to_business"],
+      "finding": "Estimated sales declines of about 10% on Hornby and 4% on Dunsmuir, largely from business-reported perceptions, with about one-third survey participation and hot-spot blocks.",
+      "mvp_use": "Required negative retail case for the sweep and the skeptic.",
+      "transfer_limit": "Perception-based, low response, confounded by 2010 Olympics, HST and downtown construction; primary PDF could not be downloaded, so figures come from secondary summaries.",
+      "review_depth": "secondary_summaries_only"
+    },
+    {
+      "id": "B09",
+      "title": "Route Infrastructure and the Risk of Injuries to Bicyclists: A Case-Crossover Study",
+      "authors": "Kay Teschke et al.",
+      "year": 2012,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3519333",
+      "doi": "10.2105/AJPH.2012.300762",
+      "mechanisms": ["infrastructure_to_injury_risk"],
+      "finding": "690 injured adult cyclists in Toronto and Vancouver: cycle tracks had the lowest risk, adjusted OR 0.11 (95% CI 0.02-0.54) relative to major streets with parked cars and no bike infrastructure.",
+      "mvp_use": "Safety branch with a wide uncertainty range; cited in B01.",
+      "transfer_limit": "Relative injury odds by route type, not a predicted collision count for Bloor after removal.",
+      "review_depth": "pmc_record_summary"
+    },
+    {
+      "id": "B10",
+      "title": "Bikeway Networks: A Review of Effects on Cycling",
+      "authors": "Ralph Buehler; Jennifer Dill",
+      "year": 2016,
+      "url": "https://ideas.repec.org/a/taf/transr/v36y2016i1p9-27.html",
+      "journal": "Transport Reviews 36(1): 9-27",
+      "mechanisms": ["infrastructure_to_cycling_volume", "route_choice_preference"],
+      "finding": "Most studies find a positive relationship between bikeway networks and cycling; stated and revealed preferences favour separated facilities; network-level evidence is thin.",
+      "mvp_use": "Supports a separated-lane preference in cyclist personas and a reroute branch on removal.",
+      "transfer_limit": "Review of associations; no removal elasticity.",
+      "review_depth": "publisher_abstract"
+    },
+    {
+      "id": "B11",
+      "title": "City staff report on provincially ordered removal of Bloor, Yonge and University bike lanes (Bill 212)",
+      "authors": "City of Toronto",
+      "year": 2024,
+      "url": "https://www.cp24.com/politics/toronto-city-hall/2024/11/13/removing-bike-lanes-on-bloor-yonge-and-university-would-cost-at-least-48-million-city-staff/",
+      "mechanisms": ["removal_cost", "removal_to_travel_time", "construction_disruption"],
+      "finding": "Staff estimated removal at $48 million or more and expected minimal travel-time improvement once lanes are removed, with multi-season reconstruction on Bloor between Spadina and Avenue Rd.",
+      "mvp_use": "Public-budget ledger and construction-disruption ticks for the removal scenario.",
+      "transfer_limit": "Reported through news coverage; primary staff report not retrieved. Province disputed the cost.",
+      "review_depth": "news_coverage_of_staff_report"
+    }
+  ],
+  "policy_context": [
+    {
+      "id": "L01",
+      "title": "Cycle Toronto v. Ontario (Attorney General), 2026 ONCA 582",
+      "date": "2026-08-14",
+      "url": "https://www.cp24.com/local/toronto/2026/08/14/ford-government-can-rip-out-toronto-bike-lanes-court-of-appeal-for-ontario-rules/",
+      "summary": "Court of Appeal allowed the province's appeal of the 30 July 2025 Superior Court ruling; there is no Charter right to bicycle lanes, so removal under Bill 212 may proceed.",
+      "use": "Context for why the question is live; not causal evidence."
+    }
+  ],
+  "conflicts": [
+    {
+      "topic": "retail_effect",
+      "for_positive_or_neutral": ["B01", "B02", "B06", "B07"],
+      "for_negative": ["B08"],
+      "caveat": "B02's own control street improved similarly; most designs are weak. Run negative, zero and positive retail cases."
+    },
+    {
+      "topic": "merchant_beliefs",
+      "for_overestimating_driving": ["B04"],
+      "for_accurate_estimates": ["B05"],
+      "caveat": "Belief accuracy differs by neighbourhood; do not hard-code one merchant bias."
+    },
+    {
+      "topic": "installation_vs_removal",
+      "sources": ["B01", "B11"],
+      "caveat": "All economic evidence is from installation; removal may differ because riders, routes and businesses adapted since 2016."
+    }
+  ],
+  "parameter_gate": "Observed corridor facts load from data/bloor_bike_lane_baseline.json. Reroute, mode-switch, customer-loss and business-response values are sensitivity cases with source IDs and human approval, never Toronto forecasts."
+}

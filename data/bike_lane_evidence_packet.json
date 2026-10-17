@@ -1,0 +1,113 @@
+{
+  "schema_version": "0.1-demo-fixture",
+  "hypothesis": "What happens to cyclists, drivers, local shops and the public budget if the Bloor St W bike lane between Shaw St and Avenue Rd is removed under Bill 212?",
+  "run_id": null,
+  "retrieval_query": "bike lane removal parking business retail cycling diversion safety Toronto Bloor",
+  "provider": "local_curated_index",
+  "source_snapshot_time": "2026-10-17",
+  "papiers_item_ids": {
+    "documents": [],
+    "passages": [],
+    "highlights": [],
+    "notes": [],
+    "conversations": []
+  },
+  "human_engagement_signal": {
+    "status": "none_yet",
+    "human_note": null,
+    "human_approval": null
+  },
+  "selected_claims": [
+    {
+      "claim_id": "BC01",
+      "source_id": "B01",
+      "source_url": "https://www.toronto.ca/legdocs/mmis/2017/pw/bgrd/backgroundfile-107582.pdf",
+      "paper_title": "Bloor Street West Bike Lane Pilot Project Evaluation",
+      "authors": "City of Toronto Transportation Services",
+      "year": 2017,
+      "source_location": "pages 7, 10-11 (cycling, vehicle volume and travel time tables)",
+      "finding": "After installation, Bloor cycling rose from 3,309 to 4,925 per day, about 25% of the increase was new riders and the rest rerouted from Harbord and Dupont; Bloor vehicles fell 16% with net three-corridor change of -3%; peak travel times rose 0:32 to 4:15.",
+      "method": "municipal before/after counts and GPS travel-time runs",
+      "setting": "Bloor St W, Shaw St to Avenue Rd, June 2016 to June 2017",
+      "candidate_mechanism": "lane_to_route_and_mode_choice",
+      "transfer_warning": "Installation effects; a 2026 removal may not reverse them one-for-one."
+    },
+    {
+      "claim_id": "BC02",
+      "source_id": "B01",
+      "source_url": "https://www.toronto.ca/legdocs/mmis/2017/pw/bgrd/backgroundfile-107582.pdf",
+      "paper_title": "Bloor Street West Bike Lane Pilot Project Evaluation",
+      "authors": "City of Toronto Transportation Services",
+      "year": 2017,
+      "source_location": "pages 12-15 (parking table 5, economic impact findings, Moneris analysis)",
+      "finding": "On-street parking fell from 303 to 167 spaces (total paid spaces -10%); paid parkers -5.95%; point-of-sale value grew 4.45% in the pilot area vs 3.73% surrounding, 2.21% Danforth and 4.96% city-wide; 90% of visitors arrived without a car.",
+      "method": "Toronto Parking Authority monitoring, aggregated Moneris transactions, intercept surveys",
+      "setting": "Bloor pilot area and controls, 2015-2017",
+      "candidate_mechanism": "parking_supply_to_customer_access_and_spending",
+      "transfer_warning": "Aggregate spending trend, not shop-level sales; growth trailed the city-wide trend."
+    },
+    {
+      "claim_id": "BC04",
+      "source_id": "B04",
+      "source_url": "https://www.tcat.ca/wp-content/uploads/2016/08/BikeLanes_Parking_Business_BloorWestVillageNewCover.pdf",
+      "paper_title": "Bike Lanes, On-Street Parking and Business: Year 2 Report",
+      "authors": "Jennifer Forkes; Nancy Smith Lea",
+      "year": 2010,
+      "source_location": "executive summary and section 4.1",
+      "finding": "21% of Bloor West Village visitors usually drove, yet 69% of merchants believed more than 20% of customers drove; 46% of merchants expected fewer customers with a bike lane.",
+      "method": "merchant and visitor intercept surveys",
+      "setting": "Bloor West Village, Toronto (Year 2 survey; report published 2010)",
+      "candidate_mechanism": "merchant_belief_vs_customer_mode",
+      "transfer_warning": "Different street segment and population from the Annex; perceptions, not sales."
+    },
+    {
+      "claim_id": "BC06",
+      "source_id": "B06",
+      "source_url": "https://doi.org/10.1080/01441647.2021.1912849",
+      "doi": "10.1080/01441647.2021.1912849",
+      "paper_title": "Economic impacts on local businesses of investments in bicycle and pedestrian infrastructure: a review of the evidence",
+      "authors": "Jamey M. B. Volker; Susan Handy",
+      "year": 2021,
+      "source_location": "journal abstract",
+      "finding": "Across 23 studies, active-travel facilities generally had positive or non-significant effects on retail and food service, but bicycle facilities may hurt auto-oriented businesses.",
+      "method": "literature review",
+      "setting": "mostly United States and Canada",
+      "candidate_mechanism": "business_type_heterogeneity",
+      "transfer_warning": "Installation evidence; use for heterogeneity, not a removal coefficient."
+    },
+    {
+      "claim_id": "BC08",
+      "source_id": "B08",
+      "source_url": "https://council.vancouver.ca/20110728/documents/penv3-BusinessImpactStudyReportDowntownSeparatedBicycleLanes-StantecReport.pdf",
+      "paper_title": "Vancouver Separated Bike Lane Business Impact Study",
+      "authors": "Stantec Consulting",
+      "year": 2011,
+      "source_location": "secondary summaries of report findings",
+      "finding": "Businesses on Hornby and Dunsmuir reported estimated sales declines of about 10% and 4% after separated lanes opened.",
+      "method": "business, customer and employee surveys with comparison streets",
+      "setting": "downtown Vancouver, 2010-2011",
+      "candidate_mechanism": "lane_to_retail_spending_negative_case",
+      "transfer_warning": "Perception-based with about one-third response and major confounders; primary PDF not checked."
+    }
+  ],
+  "conflicting_claims": [
+    {
+      "topic": "retail_effect_of_lane",
+      "claim_ids": ["BC02", "BC06", "BC08"],
+      "resolution": "Do not choose one retail coefficient. Run negative, zero and positive retail cases and keep the shop-response chain labelled assumption-driven."
+    },
+    {
+      "topic": "merchant_beliefs",
+      "claim_ids": ["BC04"],
+      "resolution": "Seed some merchant personas with an overestimated driving share and let survey evidence challenge it; Annex merchants in 2008 estimated more accurately (B05)."
+    },
+    {
+      "topic": "installation_vs_removal",
+      "claim_ids": ["BC01", "BC02"],
+      "resolution": "Treat reversal of 2016-2017 effects as a sensitivity case, including partial reversal and a construction-disruption period (B11)."
+    }
+  ],
+  "required_next_step": "Retrieve an actual human note and source passage from Papiers for B01 or B04, ask a human to choose/edit/reject the proposed reversal and retail cases, then version and rerun.",
+  "source_index": "data/bike_lane_evidence.json",
+  "baseline_fixture": "data/bloor_bike_lane_baseline.json"
+}

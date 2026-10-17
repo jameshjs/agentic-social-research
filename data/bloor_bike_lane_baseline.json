@@ -1,0 +1,136 @@
+{
+  "purpose": "Observed source facts for a candidate Bloor Street West bike-lane scenario (keep vs remove); no simulated results, behavioural coefficients, or forecasts",
+  "status": "candidate_scenario_not_locked",
+  "checked_date": "2026-10-17",
+  "sources": {
+    "intersection_count": {
+      "url": "https://open.toronto.ca/dataset/traffic-volumes-at-intersections-for-all-modes/",
+      "resource_id": "6afa3b1f-f6a5-4235-8bd6-7568411c19f4",
+      "resource_name": "tmc_most_recent_summary_data",
+      "publisher": "City of Toronto Transportation Services",
+      "source_type": "short_term_observed_count",
+      "dataset_last_refreshed": "2026-10-16"
+    },
+    "cycling_network": {
+      "url": "https://open.toronto.ca/dataset/cycling-network/",
+      "resource_id": "71fdb11f-99df-4f7b-8af1-d7240dae69b3",
+      "resource_name": "cycling-network",
+      "publisher": "City of Toronto Transportation Services",
+      "source_type": "infrastructure_inventory",
+      "dataset_last_refreshed": "2026-09-14"
+    },
+    "neighbourhood_profile": {
+      "url": "https://open.toronto.ca/dataset/neighbourhood-profiles/",
+      "resource_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/6e19a90f-971c-46b3-852c-0c48c436d1fc/resource/19d4a806-7385-4889-acf2-256f1e079060/download/nbhd_2021_census_profile_full_158model.xlsx",
+      "resource_name": "neighbourhood-profiles-2021-158-model",
+      "publisher": "City of Toronto / Statistics Canada",
+      "source_type": "2021_census_aggregate"
+    },
+    "pilot_evaluation_2017": {
+      "url": "https://www.toronto.ca/legdocs/mmis/2017/pw/bgrd/backgroundfile-107582.pdf",
+      "title": "Bloor Street West Bike Lane Pilot Project Evaluation (report for action, 3 October 2017)",
+      "publisher": "City of Toronto Transportation Services",
+      "source_type": "municipal_before_after_evaluation",
+      "evidence_id": "B01"
+    },
+    "bike_share_ridership": {
+      "url": "https://open.toronto.ca/dataset/bike-share-toronto-ridership-data/",
+      "publisher": "Toronto Parking Authority / City of Toronto",
+      "source_type": "trip_records",
+      "loaded": false,
+      "note": "2025 and 2026 ZIP resources were updated 2026-10-13. Not yet extracted; subset to stations near Bloor between Shaw and Avenue Rd if used."
+    }
+  },
+  "study_corridor": {
+    "name": "Bloor St W, Shaw St to Avenue Rd / Queen's Park (2016 pilot area, about 2.4 km)",
+    "neighbourhoods_adjacent": ["Annex", "University", "Palmerston-Little Italy"],
+    "comparison_street": "Danforth Ave (control in B01/B02 2015-2017), but it gained cycle tracks in 2020, so it is no longer a no-bike-lane control"
+  },
+  "cycling_network_segments": [
+    {"street": "Bloor St W", "from": "Avenue Rd/Queen's Park", "to": "Spadina Ave", "installed": 2016, "upgraded": 2024, "type": "Cycle Track", "segment_id": 1266, "source_id": "cycling_network"},
+    {"street": "Bloor St W", "from": "Spadina Ave", "to": "Bathurst St", "installed": 2016, "upgraded": 2019, "type": "Cycle Track", "segment_id": 1267, "source_id": "cycling_network"},
+    {"street": "Bloor St W", "from": "Bathurst St", "to": "Shaw St", "installed": 2016, "upgraded": 2018, "type": "Cycle Track", "segment_id": 1174, "source_id": "cycling_network"},
+    {"street": "Bloor St W", "from": "Shaw St", "to": "Salem Ave", "installed": 2020, "upgraded": null, "type": "Cycle Track", "segment_id": 1414, "source_id": "cycling_network"},
+    {"street": "Bloor St W", "from": "Runnymede Rd", "to": "Aberfoyle Cres/Gardenvale Rd", "installed": 2023, "upgraded": null, "type": "Cycle Track", "segment_id": 1375, "source_id": "cycling_network"},
+    {"street": "Danforth Ave", "from": "Broadview Ave", "to": "Dawes Rd", "installed": 2020, "upgraded": null, "type": "Cycle Track", "source_id": "cycling_network"}
+  ],
+  "intersections": [
+    {"location": "Avenue Rd / Queen's Park / Bloor St W", "latest_count_date": "2025-06-25", "count_duration_hours": 14, "observed_vehicles": 26685, "observed_bicycles": 6189, "observed_pedestrians": 21613, "source_id": "intersection_count"},
+    {"location": "Bloor St W / St George St", "latest_count_date": "2025-06-25", "count_duration_hours": 14, "observed_vehicles": 16654, "observed_bicycles": 6885, "observed_pedestrians": 15696, "source_id": "intersection_count"},
+    {"location": "Spadina Ave / Bloor St W / Spadina Rd", "latest_count_date": "2025-06-25", "count_duration_hours": 14, "observed_vehicles": 25211, "observed_bicycles": 6554, "observed_pedestrians": 15013, "source_id": "intersection_count"},
+    {"location": "Bathurst St / Bloor St W", "latest_count_date": "2026-07-25", "count_duration_hours": 14, "observed_vehicles": 21527, "observed_bicycles": 4521, "observed_pedestrians": 23763, "source_id": "intersection_count"},
+    {"location": "Bloor St W / Manning Ave (East)", "latest_count_date": "2025-06-25", "count_duration_hours": 14, "observed_vehicles": 14788, "observed_bicycles": 6254, "observed_pedestrians": 13180, "source_id": "intersection_count"},
+    {"location": "Bloor St W / Ossington Ave", "latest_count_date": "2025-06-25", "count_duration_hours": 14, "observed_vehicles": 21550, "observed_bicycles": 5609, "observed_pedestrians": 13062, "source_id": "intersection_count"},
+    {"location": "Bloor St W / Shaw St", "latest_count_date": "2025-06-25", "count_duration_hours": 14, "observed_vehicles": 13337, "observed_bicycles": 7687, "observed_pedestrians": 6659, "source_id": "intersection_count"}
+  ],
+  "comparison_intersections": [
+    {"location": "Danforth Ave / Broadview Ave", "latest_count_date": "2025-06-24", "count_duration_hours": 14, "observed_vehicles": 25745, "observed_bicycles": 2963, "observed_pedestrians": 14996, "source_id": "intersection_count"},
+    {"location": "Pape Ave / Danforth Ave", "latest_count_date": "2025-06-24", "count_duration_hours": 14, "observed_vehicles": 20490, "observed_bicycles": 2758, "observed_pedestrians": 14564, "source_id": "intersection_count"},
+    {"location": "Bloor St W / Runnymede Rd (Bloor West Village)", "latest_count_date": "2026-05-13", "count_duration_hours": 14, "observed_vehicles": 17309, "observed_bicycles": 747, "observed_pedestrians": 17811, "source_id": "intersection_count"}
+  ],
+  "neighbourhoods": [
+    {
+      "name": "Annex", "neighbourhood_number": 95, "workbook_column": "CH", "source_id": "neighbourhood_profile",
+      "income_reference_year": 2020, "median_after_tax_household_income_cad": 72000, "low_income_lim_at_prevalence_pct": 14.4,
+      "private_households_25pct_sample": 16325, "renter_households_25pct_sample": 9655,
+      "commuting_reference_year": 2021, "commuting_sample_note": "2021 Census 25% sample; employed residents with a usual place of work",
+      "all_mode_commuters": 7175, "car_truck_van_commuters": 2720, "public_transit_commuters": 1760, "walk_commuters": 1715, "bicycle_commuters": 615
+    },
+    {
+      "name": "University", "neighbourhood_number": 79, "workbook_column": "BT", "source_id": "neighbourhood_profile",
+      "income_reference_year": 2020, "median_after_tax_household_income_cad": 68500, "low_income_lim_at_prevalence_pct": 14.6,
+      "private_households_25pct_sample": 3240, "renter_households_25pct_sample": 1980,
+      "commuting_reference_year": 2021, "commuting_sample_note": "2021 Census 25% sample; employed residents with a usual place of work",
+      "all_mode_commuters": 1460, "car_truck_van_commuters": 510, "public_transit_commuters": 395, "walk_commuters": 350, "bicycle_commuters": 140
+    },
+    {
+      "name": "Palmerston-Little Italy", "neighbourhood_number": 80, "workbook_column": "BU", "source_id": "neighbourhood_profile",
+      "income_reference_year": 2020, "median_after_tax_household_income_cad": 76500, "low_income_lim_at_prevalence_pct": 10.9,
+      "private_households_25pct_sample": 6180, "renter_households_25pct_sample": 3620,
+      "commuting_reference_year": 2021, "commuting_sample_note": "2021 Census 25% sample; employed residents with a usual place of work",
+      "all_mode_commuters": 3395, "car_truck_van_commuters": 1335, "public_transit_commuters": 820, "walk_commuters": 570, "bicycle_commuters": 545
+    }
+  ],
+  "pilot_before_after_2016_2017": {
+    "source_id": "pilot_evaluation_2017",
+    "note": "Official City before/after evaluation of the pilot area; observational, not experimental",
+    "daily_cyclists_bloor": {"june_2016": 3309, "october_2016": 4501, "june_2017": 4925},
+    "daily_cyclists_parallel_routes_june_2016_to_june_2017": {"dupont_st": [956, 852], "harbord_st": [4631, 3490]},
+    "share_of_cycling_increase_estimated_new_riders_pct": 25,
+    "daily_motor_vehicles": {
+      "bloor_st_w": {"june_2016": 24322, "june_2017": 20434},
+      "dupont_st": {"june_2016": 20491, "june_2017": 21958},
+      "harbord_st": {"june_2016": 13502, "june_2017": 14086},
+      "net_three_corridor_change_pct": -3
+    },
+    "peak_travel_time_change_june_2016_to_june_2017": {
+      "am_eastbound": "+0:02:00", "am_westbound": "+0:00:32", "pm_eastbound": "+0:00:49", "pm_westbound": "+0:04:15"
+    },
+    "parking_spaces_study_area": {
+      "on_street": {"before": 303, "after": 167},
+      "off_street": {"before": 860, "after": 876},
+      "total": {"before": 1163, "after": 1043}
+    },
+    "parking_outcomes": {"paid_parkers_change_pct": -5.95, "on_street_revenue_change_pct": -36.1, "total_parking_revenue_change": "about +$44,300 (less than +1%)"},
+    "conflict_changes_pct": {"all_road_users": -44, "motor_vehicle_motor_vehicle": -71, "bike_motor_vehicle": -61, "pedestrian_motor_vehicle": -55, "bike_pedestrian": 61},
+    "baseline_cyclist_collisions_per_year_2008_2012": 22,
+    "moneris_point_of_sale_value_growth_pct": {"pilot_area": 4.45, "surrounding_area": 3.73, "danforth_control": 2.21, "city_wide": 4.96},
+    "visitor_arrival_without_car_pct": 90,
+    "visitor_cycling_arrival_pct": {"2015": 7, "2017": 18},
+    "drivers_reporting_parking_difficulty_pct": {"bloor": [8, 33], "danforth": [14, 25]},
+    "public_survey_disagree_pct": {"drive_and_do_not_bike": 57, "local_business_representatives": 51},
+    "public_survey_agree_pct": {"people_who_bike": 92, "nearby_residents": 74}
+  },
+  "policy_context": {
+    "bill_212": "Ontario's Reducing Gridlock, Saving You Time Act, 2024 authorizes the province to remove bike lanes on Bloor St, Yonge St and University Ave. Exact Bloor limits in the statute are not yet verified here.",
+    "court_status": "Ontario Superior Court found the removal provisions unconstitutional on 2025-07-30; the Court of Appeal allowed the province's appeal on 2026-08-14 (Cycle Toronto v. Ontario (AG), 2026 ONCA 582).",
+    "city_removal_cost_estimate": "City staff (Nov 2024) estimated removal at about $48 million or more and expected minimal travel-time improvement; reported by news coverage, primary report not retrieved."
+  },
+  "global_limits": [
+    "Intersection counts are 14-hour short-term counts on single days; they are not daily totals, customer counts, or post-policy predictions",
+    "Neighbourhood commuting counts describe employed residents travelling to work, not visitors or shoppers on Bloor",
+    "Pilot before/after figures cover 2016-2017 installation; removal in 2026 is not guaranteed to reverse them symmetrically",
+    "No dataset here reports business-level sales, profits or closures; use anonymized synthetic shops",
+    "Do not scale corridor results to Toronto-wide traffic, retail or safety outcomes"
+  ]
+}
