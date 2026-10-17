@@ -4,6 +4,8 @@ A general, human-guided social simulation and policy decision product. Enter **a
 
 ## Start here
 
+**Current team handoff:** [TEAM_SYNC.md](./TEAM_SYNC.md) records what is on `main`, the Bloor UI commit, and the next shared integration path. Read it before starting a new work block.
+
 1. [Product requirements](./prd.md) — final product scope, user flow, P0 acceptance criteria, architecture, data contracts, visual requirements, named team workstreams, demo, and implementation gaps.
 2. [Research and source dossier](./research.md) — sponsor briefs, event rules/deadline conflicts, hacker package, Toronto dataset catalogue, and modelling evidence. Teammates and coding agents should read this before researching from scratch.
 3. [Locked Toronto MVP demo and ranked data](./demo-data.md) — UTSC-area fare scenario, verified observed facts, multi-agent causal chain, dataset gaps, and first-hour owner handoffs. [Machine-readable source fixture](./data/toronto_demo_baseline.json).

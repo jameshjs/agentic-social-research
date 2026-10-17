@@ -2,6 +2,8 @@
 
 # Claude Code team workflow
 
+Read the current [team handoff](./TEAM_SYNC.md) before starting new work. It identifies the latest UI/persona commits and the shared runtime integration order; it does not replace the PRD.
+
 The imported `AGENTS.md` is the shared product contract. Read the linked PRD, research dossier, [TTC demo notes](./demo-data.md), [Bloor bike demo brief](./bloor-bike-demo.md), [Bloor evidence pack](./bike-lane-papers.md), [visual prototype handoff](./experience/README.md), and [fare paper pack](./papers.md) before changing architecture. These prepared cases demonstrate a general hypothesis engine. For Papiers work, read [papiers-setup.md](./papiers-setup.md) and use the [evidence index](./data/ttc_fare_evidence.json) only as an explicitly agent-curated offline fallback.
 
 ## Keep this four-person checkout current
