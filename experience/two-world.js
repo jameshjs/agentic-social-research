@@ -1,8 +1,8 @@
 /* Two Worlds demo view.
  * 1. The 100-agent panel sits right after the prompt, above the 3D view.
- * 2. The decision brief sits under the 3D view. Every figure is reduced from the
- *    current experiment.v2 run (metrics.by_tick, metrics.by_group, events).
- *    Nothing in the brief is a typed result. */
+ * 2. The results brief sits under the 3D view. Every figure is reduced from the
+ *    current experiment.v2 run (metrics.by_tick, metrics.by_group, events), as
+ *    before → after over the same weekdays. Nothing in the brief is a typed result. */
 (function () {
   'use strict';
 
@@ -16,55 +16,70 @@
   const box = document.createElement('section');
   box.className = 'tw-brief';
   box.hidden = true;
-  box.setAttribute('aria-label', 'Decision brief');
+  box.setAttribute('aria-label', 'Results brief');
   const layout = document.querySelector('#lab .lab-layout');
   if (layout) layout.after(box);
 
   const LITERATURE = {
-    fare: 'Fare studies report ridership, revenue from fares actually paid, and differences by fare product — not the posted fare times every boarding (Guzman, Gomez and Moncada 2020; Hickey 2005; Kholodov et al. 2021; Morrissey and Oke 2022). A shop effect is not assumed: free-fare experiments found no clear commercial change (Studenmund and Connor 1982). No Toronto elasticity is applied.',
-    bike: 'Cycle-track studies report route and mode shift, vehicle time, customer arrivals, and retail receipts, which run from gains to losses (Smith Lea et al. 2017/2019; Volker and Handy 2021; Stantec 2011). Installation results are not reversed into a removal effect. Metres shared with cars are exposure, not injuries. The 2025 counter west of Huron (3,524 passages/day) is street context, not a result of this run.',
-    compiled: 'Any lever the world can run is reduced the same way: trips by mode, who pays, focal-shop receipts, and sample TTC receipts. Citywide totals, injuries, emissions, closures and GDP stay off this brief.',
+    fare: 'Fare studies report ridership, revenue from fares actually paid, and differences by fare product (Guzman, Gomez and Moncada 2020; Hickey 2005; Kholodov et al. 2021; Morrissey and Oke 2022). Free-fare experiments found no clear effect on shops (Studenmund and Connor 1982), so no shop effect is assumed. No Toronto elasticity is applied.',
+    bike: 'Cycle-track studies report route and mode shift, vehicle time, customer arrivals and retail sales, with results ranging from gains to losses (Smith Lea et al. 2017/2019; Volker and Handy 2021; Stantec 2011). Installation results are not reversed into a removal effect.',
+    compiled: 'Any lever the world can run is reduced the same way: trips by mode, who pays, shop sales and TTC fare revenue. Citywide totals, injuries, emissions, closures and GDP stay off this brief.',
+  };
+  const CONTEXT = {
+    fare: 'Observed: the adult PRESTO fare is $3.30 and Fair Pass is $2.10 (citywide TTC rules); streets, signals, Line 2 and the six shops are mapped. Synthetic: the residents, their trip choices, shopping baskets and the shop-hours rule.',
+    bike: 'Observed: streets, signals, Line 2 and the six shops are mapped; the 2025 Bloor counter west of Huron recorded 3,524 cyclist passages a day (street context, not a result of this run). Synthetic: the residents, their trip choices, shopping baskets and the shop-hours rule.',
+    compiled: 'Observed: streets, signals, Line 2 and the six shops are mapped. Synthetic: the residents, their trip choices, shopping baskets and the shop-hours rule.',
   };
   const MEASURE = {
     fare: [
-      'A Toronto response by fare product and trip purpose, counted from paid rides rather than the posted fare.',
-      'Transactions at these six shops before the receipt change is treated as a retail effect.',
-      'Sampling weights before any figure is scaled past these people or this 619 m section.',
+      'How Toronto riders respond by fare product and trip purpose, counted from paid rides.',
+      'Sales at these six shops, before a change in sales is treated as a retail effect.',
+      'Sampling weights, before any figure is scaled beyond these residents or this block.',
     ],
     bike: [
-      'Origin–destination counts on this Bathurst–Spadina block, kept separate from the Huron counter.',
-      'A removal design and cost for this segment. The City multi-corridor estimate does not apply here.',
-      'Shop transactions, and an exposure model, before any injury or retail claim. The 2016–17 installation studies are not a removal coefficient.',
+      'Trip counts on this Bathurst–Spadina block, kept separate from the Huron counter.',
+      'A removal design and cost for this segment. The City multi-corridor estimate does not apply.',
+      'Shop sales and a traffic-conflict model, before any retail or injury claim.',
     ],
     compiled: [
       'A measured response for this lever. The run only changes the mapped rules.',
-      'The same limits on sampling, shop transactions and exposure as the prepared cases.',
+      'The same limits on sampling, shop sales and exposure as the prepared cases.',
     ],
   };
+  const LIMIT_LABEL = {
+    citywide_ttc_revenue_cad: 'Citywide TTC revenue',
+    business_closures: 'Business closures',
+    injuries: 'Injuries',
+    emissions_kg: 'Emissions',
+    gdp_cad: 'GDP',
+    driver_time_beyond_section: 'Driver time beyond this block',
+    removal_construction_cost_cad: 'Removal construction cost',
+  };
+  const ASSUMPTION_LABEL = {
+    cost_weight: 'How strongly price affects trip choices',
+    unprotected_cycling_discomfort_per_km: 'Discomfort of cycling in traffic, per km',
+    shop_staffing_response: 'Shops shorten hours when daily sales fall below a floor',
+  };
 
-  const r1 = (n) => Math.round((n + Number.EPSILON) * 10) / 10;
-  const money = (n) => {
-    const neg = n < -0.004;
-    const body = Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return (neg ? '−' : '') + '$' + body;
+  // ---------- formatting: one rule per unit, used everywhere ----------
+  const whole = (n) => Math.abs(n - Math.round(n)) < 0.005;
+  const cad = (n) => {
+    const v = Math.abs(n);
+    const body = whole(v) ? Math.round(v).toLocaleString('en-CA') : v.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (n < -0.004 ? '−' : '') + '$' + body;
   };
-  const moneyDelta = (n) => (Math.abs(n) < 0.005 ? '$0.00' : (n > 0 ? '+' : '−') + money(Math.abs(n)));
-  const count = (n) => {
-    const v = r1(n);
-    return Number.isInteger(v) ? String(v) : v.toFixed(1);
-  };
-  const countDelta = (n) => {
-    const v = r1(n);
-    if (v === 0) return '0';
-    return (v > 0 ? '+' : '−') + count(Math.abs(v));
-  };
+  const fare = (n) => '$' + Number(n).toFixed(2);
+  const num = (n) => (whole(n) ? Math.round(n).toLocaleString('en-CA') : (Math.round(n * 10) / 10).toFixed(1));
+  const metres = (n) => Math.round(n).toLocaleString('en-CA') + ' m';
+  const minutes = (n) => (Math.round(n * 10) / 10).toFixed(1) + ' min';
   const pct = (base, next) => (base ? Math.round(((next - base) / Math.abs(base)) * 100) : null);
-  const pctText = (base, next) => {
+  const signed = (d, fmt) => (d > 0 ? '+' : '−') + fmt(Math.abs(d)).replace(/^−/, '');
+  function change(base, next, fmt) {
+    const d = next - base;
+    if (Math.abs(d) < (fmt === minutes ? 0.05 : 0.005)) return { text: 'No change', dir: 0 };
     const p = pct(base, next);
-    if (p === null) return next ? 'new' : '—';
-    if (p === 0) return '0%';
-    return (p > 0 ? '+' : '−') + Math.abs(p) + '%';
-  };
+    return { text: signed(d, fmt) + (p === null ? '' : ` (${p > 0 ? '+' : '−'}${Math.abs(p)}%)`), dir: d > 0 ? 1 : -1 };
+  }
   const same = (a, b) => Math.abs(a - b) < 0.005;
 
   function el(tag, attrs, kids) {
@@ -80,10 +95,9 @@
     }
     return node;
   }
-  function txt(tag, className, text) {
-    return el(tag, className ? { class: className } : {}, [text]);
-  }
+  const txt = (tag, className, text) => el(tag, className ? { class: className } : {}, [text]);
 
+  // ---------- reading the run ----------
   function kindOf(run) {
     const base = run.scenario.levers?.baseline || {};
     const next = run.scenario.levers?.intervention || {};
@@ -91,363 +105,347 @@
     if (Number(next.adult_fare_cad) !== Number(base.adult_fare_cad)) return 'fare';
     return 'compiled';
   }
-  function sum(run, arm, id) {
-    return run.runs[arm].metrics.by_tick
-      .filter((row) => row.tick >= run.scenario.policy_start)
-      .reduce((total, row) => total + (Number(row[id]) || 0), 0);
+  const policyRows = (run, arm) => run.runs[arm].metrics.by_tick.filter((row) => row.tick >= run.scenario.policy_start);
+  const sum = (run, arm, id) => policyRows(run, arm).reduce((total, row) => total + (Number(row[id]) || 0), 0);
+  function mean(run, arm, id) {
+    const rows = policyRows(run, arm);
+    return rows.length ? rows.reduce((total, row) => total + (Number(row[id]) || 0), 0) / rows.length : 0;
   }
-  function series(run, arm, id) {
-    return run.runs[arm].metrics.by_tick.map((row) => Number(row[id]) || 0);
-  }
+  const series = (run, arm, id) => run.runs[arm].metrics.by_tick.map((row) => Number(row[id]) || 0);
   function groupSum(run, arm, group, id) {
     const values = run.runs[arm].metrics.by_group?.[group]?.[id];
     if (!values) return null;
     return values.filter((_, index) => index + 1 >= run.scenario.policy_start).reduce((total, value) => total + (Number(value) || 0), 0);
   }
-  function meanOf(run, arm, id) {
-    const rows = run.runs[arm].metrics.by_tick.filter((row) => row.tick >= run.scenario.policy_start);
-    if (!rows.length) return 0;
-    return rows.reduce((total, row) => total + (Number(row[id]) || 0), 0) / rows.length;
-  }
-  function headcount(run, category) {
-    return (run.personas || []).filter((person) => person.fare_category === category).length;
-  }
+  const headcount = (run, category) => (run.personas || []).filter((person) => person.fare_category === category).length;
   function reducedShopNames(run) {
     const names = new Map((run.places?.shops || []).map((shop) => [shop.business_id, shop.name]));
     const ids = run.runs.intervention.events
       .filter((event) => event.action === 'set_shop_hours' && event.reduced && event.tick >= run.scenario.policy_start)
       .map((event) => event.business_id);
-    return [...new Set(ids)].map((id) => names.get(id) || 'A focal shop');
+    return [...new Set(ids)].map((id) => names.get(id) || 'A mapped shop');
   }
+  const list = (items) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`);
 
   function model(run) {
     const kind = kindOf(run);
     const start = run.scenario.policy_start;
-    const periods = run.scenario.ticks - start + 1;
-    const B = (id) => sum(run, 'baseline', id);
-    const P = (id) => sum(run, 'intervention', id);
-    const changedPeople = new Set(run.changed_decisions.filter((row) => row.tick >= start).map((row) => row.actor)).size;
-    const fareOk = same(B('household_fare_spend_cad'), B('fare_revenue_cad')) && same(P('household_fare_spend_cad'), P('fare_revenue_cad'));
-    const shops = reducedShopNames(run);
-    return {
-      run, kind, start, periods, changedPeople, fareOk, shops,
+    const pair = (id, how = sum) => ({ base: how(run, 'baseline', id), next: how(run, 'intervention', id) });
+    const group = (g, id) => ({ base: groupSum(run, 'baseline', g, id), next: groupSum(run, 'intervention', g, id) });
+    const m = {
+      run, kind, start,
+      days: run.scenario.ticks - start + 1,
+      people: run.population?.count || (run.personas || []).length,
+      changed: new Set(run.changed_decisions.filter((row) => row.tick >= start).map((row) => row.actor)).size,
+      shops: reducedShopNames(run),
+      shopCount: (run.places?.shops || []).length || 6,
       adultN: headcount(run, 'adult'), fairN: headcount(run, 'fair_pass'),
-      fareBefore: run.scenario.levers?.baseline?.adult_fare_cad,
-      fareAfter: run.scenario.levers?.intervention?.adult_fare_cad,
-      B, P,
-      adultFare: { base: groupSum(run, 'baseline', 'adult', 'household_fare_spend_cad'), next: groupSum(run, 'intervention', 'adult', 'household_fare_spend_cad') },
-      fairFare: { base: groupSum(run, 'baseline', 'fair_pass', 'household_fare_spend_cad'), next: groupSum(run, 'intervention', 'fair_pass', 'household_fare_spend_cad') },
-      adultTrips: { base: groupSum(run, 'baseline', 'adult', 'transit_trips'), next: groupSum(run, 'intervention', 'adult', 'transit_trips') },
-      fairTrips: { base: groupSum(run, 'baseline', 'fair_pass', 'transit_trips'), next: groupSum(run, 'intervention', 'fair_pass', 'transit_trips') },
-      driver: { base: meanOf(run, 'baseline', 'driver_mapped_minutes'), next: meanOf(run, 'intervention', 'driver_mapped_minutes') },
+      fare: { base: run.scenario.levers?.baseline?.adult_fare_cad, next: run.scenario.levers?.intervention?.adult_fare_cad },
+      transit: pair('transit_trips'), bike: pair('bike_trips'), bloorBike: pair('bloor_bike_trips'),
+      walk: pair('walk_trips'), car: pair('car_trips'), elsewhere: pair('errands_elsewhere'), completed: pair('completed_trips'),
+      revenue: pair('fare_revenue_cad'), paid: pair('household_fare_spend_cad'), transport: pair('household_transport_spend_cad'),
+      sales: pair('shop_sales_cad'), visits: pair('local_shop_visits'), reduced: pair('shops_reduced_hours', mean),
+      shared: pair('bloor_shared_cycling_m'), driver: pair('driver_mapped_minutes', mean), cyclist: pair('cyclist_mapped_minutes', mean),
+      adultTrips: group('adult', 'transit_trips'), fairTrips: group('fair_pass', 'transit_trips'),
+      adultPaid: group('adult', 'household_fare_spend_cad'), fairPaid: group('fair_pass', 'household_fare_spend_cad'),
     };
+    m.offBloor = { base: m.bike.base - m.bloorBike.base, next: m.bike.next - m.bloorBike.next };
+    m.transfer = same(m.paid.base, m.revenue.base) && same(m.paid.next, m.revenue.next);
+    m.hasGroups = m.adultTrips.base != null;
+    return m;
   }
 
-  function pair(base, next, format) {
-    return `${format(base)} → ${format(next)}`;
-  }
+  // ---------- plain-language takeaways, each built from the figures in the table ----------
+  function takeaways(m) {
+    const out = [];
+    const d = (p) => p.next - p.base;
+    const modes = m.kind === 'bike'
+      ? [['subway', m.transit], ['cycling on Bloor', m.bloorBike], ['cycling on other streets', m.offBloor], ['walking', m.walk], ['driving', m.car], ['errands outside the area', m.elsewhere]]
+      : [['subway', m.transit], ['cycling', m.bike], ['walking', m.walk], ['driving', m.car], ['errands outside the area', m.elsewhere]];
+    const moved = (sign) => modes.filter(([, p]) => sign * d(p) > 0.5).sort((a, b) => sign * (d(b[1]) - d(a[1])))
+      .map(([label, p]) => `${label} (${sign > 0 ? '+' : '−'}${num(Math.abs(d(p)))})`);
+    const losses = moved(-1), gains = moved(1);
+    const kept = same(m.completed.base, m.completed.next) ? ` No one stops travelling: all ${num(m.completed.next)} trips still happen.` : '';
+    const shift = losses.length && gains.length ? `${list(losses).replace(/^./, (c) => c.toUpperCase())} trips shift to ${list(gains)}.` : '';
+    const shopLine = () => {
+      const c = change(m.sales.base, m.sales.next, cad);
+      const hours = m.shops.length ? ` ${list(m.shops)} ${m.shops.length > 1 ? 'shorten their' : 'shortens its'} hours under the simulated staffing rule (not a closure).` : '';
+      return c.dir === 0 ? `Sales at the ${m.shopCount} mapped shops do not change.${hours}` : `Sales at the ${m.shopCount} mapped shops ${c.dir < 0 ? 'fall' : 'rise'} ${c.text.replace(/^[+−]/, '')}.${hours}`;
+    };
 
-  function finding(m) {
-    const revenueDown = m.P('fare_revenue_cad') < m.B('fare_revenue_cad') - 0.005;
-    const revenueUp = m.P('fare_revenue_cad') > m.B('fare_revenue_cad') + 0.005;
     if (m.kind === 'fare') {
-      const farePct = pct(m.fareBefore, m.fareAfter);
-      const rideBit = revenueDown
-        ? 'The extra fare does not cover the rides this sample gives up.'
-        : revenueUp
-          ? 'In this sample the extra fare more than covers the rides given up.'
-          : 'Sample receipts do not move.';
-      return `Adult fare ${money(m.fareBefore)} → ${money(m.fareAfter)}${farePct ? ` (${farePct > 0 ? '+' : '−'}${Math.abs(farePct)}% on the posted fare)` : ''}. ${rideBit}`;
+      const up = m.fare.next > m.fare.base;
+      if (m.hasGroups) {
+        const fairHeld = same(m.fairTrips.base, m.fairTrips.next);
+        const n = d(m.adultTrips);
+        out.push(`${Math.abs(n) < 0.5 ? 'Adult riders take the same number of subway trips' : `Adult riders take ${num(Math.abs(n))} ${n < 0 ? 'fewer' : 'more'} subway trips`} (${num(m.adultTrips.base)} → ${num(m.adultTrips.next)}).${fairHeld ? ` The ${m.fairN} Fair Pass riders keep all ${num(m.fairTrips.next)} of theirs.` : ''}`);
+      } else {
+        out.push(`Subway trips go from ${num(m.transit.base)} to ${num(m.transit.next)}.`);
+      }
+      if (shift) out.push(shift + kept);
+      const r = change(m.revenue.base, m.revenue.next, cad);
+      const why = r.dir < 0
+        ? (up ? 'the higher fare does not make up for the rides lost' : 'the extra rides do not make up for the lower fare')
+        : (up ? 'the higher fare outweighs the rides lost' : 'the extra rides outweigh the lower fare');
+      out.push(r.dir === 0 ? 'TTC fare revenue does not change.' : `TTC fare revenue ${r.dir < 0 ? 'falls' : 'rises'} ${r.text.replace(/^[+−]/, '')}: ${why}.`);
+      out.push(shopLine());
+    } else if (m.kind === 'bike') {
+      const r = change(m.revenue.base, m.revenue.next, cad);
+      out.push(`Cycling trips on Bloor ${d(m.bloorBike) < 0 ? 'drop' : 'go'} from ${num(m.bloorBike.base)} to ${num(m.bloorBike.next)}. ${shift}${r.dir > 0 ? ` TTC fare revenue rises ${r.text.replace(/^\+/, '')} as a result.` : ''}`.trim());
+      if (d(m.shared) > 0) out.push(`Residents who keep riding Bloor now cycle ${metres(m.shared.next)} in mixed traffic, up from ${metres(m.shared.base)}. That is exposure, not an injury count.`);
+      out.push(Math.abs(d(m.driver)) < 0.15
+        ? `Drivers do not get through faster: average time through the block stays at ${minutes(m.driver.next)}.`
+        : `Average driver time through the block goes from ${minutes(m.driver.base)} to ${minutes(m.driver.next)}.`);
+      out.push(shopLine());
+    } else {
+      out.push(`Subway trips go from ${num(m.transit.base)} to ${num(m.transit.next)}; cycling from ${num(m.bike.base)} to ${num(m.bike.next)}.`);
+      if (shift) out.push(shift + kept);
+      out.push(shopLine());
     }
-    if (m.kind === 'bike') {
-      const driverSame = Math.abs(m.driver.next - m.driver.base) < 0.15;
-      return driverSame
-        ? 'Protection comes off Bloor. Sample cycling leaves the street. Driver time inside the 619 m does not improve.'
-        : `Protection comes off Bloor. Sample cycling leaves the street. Mean driver time inside the section goes from ${m.driver.base.toFixed(1)} to ${m.driver.next.toFixed(1)} min per car leg.`;
-    }
-    const levers = (m.run.scenario.intervention || []).map((change) => change.lever || change.operator).filter(Boolean).join(', ') || 'compiled lever';
-    return `Compiled change (${levers}) on the same 19 people and the same map. The figures below are what the event log records.`;
+    return out.slice(0, 4);
   }
 
-  function suggests(m) {
-    const lines = [];
-    lines.push(`Line 2 trips ${pair(m.B('transit_trips'), m.P('transit_trips'), count)} (${pctText(m.B('transit_trips'), m.P('transit_trips'))}).`);
-    if (m.kind === 'bike' || m.B('bloor_bike_trips') !== m.P('bloor_bike_trips')) {
-      lines.push(`Cycling trips on Bloor ${pair(m.B('bloor_bike_trips'), m.P('bloor_bike_trips'), count)}. Cycling trips on any street ${pair(m.B('bike_trips'), m.P('bike_trips'), count)}.`);
-    }
-    lines.push(`Walking ${pair(m.B('walk_trips'), m.P('walk_trips'), count)}. Car ${pair(m.B('car_trips'), m.P('car_trips'), count)}. Errands outside the section ${pair(m.B('errands_elsewhere'), m.P('errands_elsewhere'), count)}. Completed trips ${pair(m.B('completed_trips'), m.P('completed_trips'), count)}.`);
-    if (m.adultFare.base != null) {
-      const fairHeld = same(m.fairFare.base, m.fairFare.next) && same(m.fairTrips.base, m.fairTrips.next);
-      lines.push(`Adult riders (${m.adultN}) pay ${pair(m.adultFare.base, m.adultFare.next, money)} across ${pair(m.adultTrips.base, m.adultTrips.next, count)} Line 2 trips. Fair Pass riders (${m.fairN}) pay ${pair(m.fairFare.base, m.fairFare.next, money)} across ${pair(m.fairTrips.base, m.fairTrips.next, count)} trips${fairHeld ? ', unchanged' : ''}.`);
-    }
-    lines.push(`Sample TTC receipts ${pair(m.B('fare_revenue_cad'), m.P('fare_revenue_cad'), money)} (${moneyDelta(m.P('fare_revenue_cad') - m.B('fare_revenue_cad'))}). Focal shop receipts ${pair(m.B('shop_sales_cad'), m.P('shop_sales_cad'), money)}. Shop visits ${pair(m.B('local_shop_visits'), m.P('local_shop_visits'), count)}.`);
-    if (m.kind === 'bike') {
-      lines.push(`Distance cycled beside cars on Bloor ${pair(m.B('bloor_shared_cycling_m'), m.P('bloor_shared_cycling_m'), (n) => Math.round(n).toLocaleString('en-CA') + ' m')}. Mean driver time inside the section ${m.driver.base.toFixed(1)} → ${m.driver.next.toFixed(1)} min per car leg.`);
-    }
-    return lines.join(' ');
+  // ---------- building blocks ----------
+  function kpi(label, base, next, fmt, note) {
+    const c = change(base, next, fmt);
+    return el('article', { class: 'tw-kpi' }, [
+      txt('span', 'tw-kpi-label', label),
+      el('p', { class: 'tw-kpi-value' }, [txt('span', 'is-before', fmt(base)), txt('span', 'tw-arrow', '→'), txt('span', 'is-after', fmt(next))]),
+      txt('p', `tw-kpi-change${c.dir ? '' : ' is-flat'}`, c.text),
+      note ? txt('p', 'tw-kpi-note', note) : null,
+    ]);
+  }
+  function kpiCount(label, value, note) {
+    return el('article', { class: 'tw-kpi' }, [
+      txt('span', 'tw-kpi-label', label),
+      el('p', { class: 'tw-kpi-value' }, [txt('span', 'is-after', value)]),
+      txt('p', 'tw-kpi-note', note),
+    ]);
   }
 
-  function barWidth(value, peak) {
-    if (!value) return 'width:0;min-width:0';
-    return `width:${(value / peak) * 100}%`;
-  }
-  function bars(rows, scale) {
-    const shared = Math.max(1, ...rows.flatMap((row) => [row.base, row.next]));
-    return el('div', { class: 'tw-bars' }, rows.map((row) => {
-      const peak = scale === 'row' ? Math.max(1, row.base, row.next) : shared;
-      return el('div', { class: 'tw-bar' }, [
-        txt('span', 'tw-bar-label', row.label),
-        el('span', { class: 'tw-bar-track', title: `Baseline ${row.format(row.base)}, with policy ${row.format(row.next)}` }, [
-          el('i', { class: 'tw-bar-base', style: barWidth(row.base, peak) }),
-          el('i', { class: 'tw-bar-next', style: barWidth(row.next, peak) }),
-        ]),
-        txt('b', null, `${row.format(row.base)} → ${row.format(row.next)}`),
-      ]);
-    }));
+  function table(groups) {
+    const head = el('thead', {}, [el('tr', {}, [
+      txt('th', 'tw-col-measure', 'Measure'), txt('th', null, 'Before'), txt('th', null, 'After'), txt('th', null, 'Change'),
+    ])]);
+    const body = el('tbody', {}, groups.flatMap((g) => [
+      el('tr', { class: 'tw-group' }, [el('th', { colspan: 4, scope: 'rowgroup' }, [g.title])]),
+      ...g.rows.filter(Boolean).map((row) => {
+        const c = change(row.base, row.next, row.fmt);
+        return el('tr', {}, [
+          el('th', { scope: 'row' }, [txt('span', null, row.label), row.sub ? txt('small', null, row.sub) : null]),
+          txt('td', 'is-before', row.fmt(row.base)),
+          txt('td', 'is-after', row.fmt(row.next)),
+          txt('td', `tw-change${c.dir ? '' : ' is-flat'}`, c.text),
+        ]);
+      }),
+    ]));
+    return el('table', { class: 'tw-table' }, [head, body]);
   }
 
-  function chart(title, unit, base, next, format, policyStart) {
-    const w = 360, h = 168, left = 52, right = 10, top = 16, bottom = 28;
+  function modeBars(rows) {
+    const peak = Math.max(1, ...rows.flatMap((row) => [row.base, row.next]));
+    const w = (v) => (v ? `width:${Math.max(1.5, (v / peak) * 100)}%` : 'width:0');
+    return el('div', { class: 'tw-bars' }, rows.map((row) => el('div', { class: 'tw-bar' }, [
+      txt('span', 'tw-bar-label', row.label),
+      el('span', { class: 'tw-bar-track', 'aria-hidden': 'true' }, [
+        el('i', { class: 'tw-bar-before', style: w(row.base) }),
+        el('i', { class: 'tw-bar-after', style: w(row.next) }),
+      ]),
+      el('span', { class: 'tw-bar-values' }, [txt('span', 'is-before', num(row.base)), ' → ', txt('span', 'is-after', num(row.next))]),
+    ])));
+  }
+
+  function dayChart(base, next, fmt, policyStart) {
+    const w = 420, h = 190, left = 56, right = 14, top = 22, bottom = 30;
     const all = [...base, ...next];
-    const lo = Math.min(...all), hi = Math.max(...all);
-    const span = hi - lo || 1;
+    const lo = Math.min(0, ...all);
+    const raw = Math.max(lo + 1, ...all), mag = 10 ** Math.floor(Math.log10(raw));
+    const hi = [1, 2, 2.5, 4, 5, 6, 8, 10].map((f) => f * mag).find((v) => v >= raw);
     const x = (i) => left + (base.length === 1 ? (w - left - right) / 2 : i * (w - left - right) / (base.length - 1));
-    const y = (v) => top + (1 - (v - lo) / span) * (h - top - bottom);
+    const y = (v) => top + (1 - (v - lo) / (hi - lo)) * (h - top - bottom);
     const ns = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-    svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', `${title}. Unit: ${unit}. Baseline ${base.map(format).join(', ')}. With policy ${next.map(format).join(', ')}.`);
-    const node = (name, attrs) => {
+    const node = (name, attrs, text) => {
       const item = document.createElementNS(ns, name);
       for (const [key, value] of Object.entries(attrs)) item.setAttribute(key, value);
+      if (text != null) item.textContent = text;
       return item;
     };
-    svg.append(node('line', { x1: left, x2: w - right, y1: y(hi), y2: y(hi), stroke: '#94b5ad33' }));
-    svg.append(node('line', { x1: left, x2: w - right, y1: y(lo), y2: y(lo), stroke: '#94b5ad33' }));
-    const axis = (v) => {
-      const full = format(v);
-      if (full.length <= 7) return full;
-      const abs = Math.abs(v);
-      const body = abs >= 100 ? Math.round(abs).toLocaleString('en-CA') : abs.toFixed(1);
-      return (v < -0.004 ? '−' : '') + (String(full).includes('$') ? '$' + body : body);
-    };
-    const hiLabel = node('text', { x: left - 6, y: y(hi) + 4, fill: '#8db3b3', 'font-size': 10, 'text-anchor': 'end' });
-    hiLabel.textContent = axis(hi);
-    const loLabel = node('text', { x: left - 6, y: y(lo) + 4, fill: '#8db3b3', 'font-size': 10, 'text-anchor': 'end' });
-    loLabel.textContent = axis(lo);
-    svg.append(hiLabel, loLabel);
-    const path = (values) => values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
-    svg.append(node('path', { d: path(base), fill: 'none', stroke: '#ff987e', 'stroke-width': 2.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
-    svg.append(node('path', { d: path(next), fill: 'none', stroke: '#a8f4d1', 'stroke-width': 2.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
-    base.forEach((v, i) => {
-      svg.append(node('circle', { cx: x(i), cy: y(v), r: 3, fill: '#ff987e' }));
-      svg.append(node('circle', { cx: x(i), cy: y(next[i]), r: 3.2, fill: '#a8f4d1' }));
-      const tick = node('text', { x: x(i), y: h - 8, fill: '#8db3b3', 'font-size': 10, 'text-anchor': 'middle' });
-      tick.textContent = `P${i + 1}`;
-      svg.append(tick);
-    });
+    const svg = node('svg', { viewBox: `0 0 ${w} ${h}`, role: 'img', 'aria-label': `Before: ${base.map(fmt).join(', ')}. After: ${next.map(fmt).join(', ')}.` });
+    for (const v of [lo, (lo + hi) / 2, hi]) {
+      svg.append(node('line', { x1: left, x2: w - right, y1: y(v), y2: y(v), stroke: '#a8c4c41f' }));
+      svg.append(node('text', { x: left - 8, y: y(v) + 4, 'text-anchor': 'end', class: 'tw-axis' }, fmt(v)));
+    }
     const cut = Number(policyStart) - 1;
     if (cut > 0 && cut < base.length) {
-      const mark = (x(cut - 1) + x(cut)) / 2;
-      svg.append(node('line', { x1: mark, x2: mark, y1: top, y2: h - bottom, stroke: '#e4f69288', 'stroke-dasharray': '3 3' }));
+      const mx = (x(cut - 1) + x(cut)) / 2;
+      svg.append(node('line', { x1: mx, x2: mx, y1: top - 8, y2: h - bottom, stroke: '#e4f692aa', 'stroke-dasharray': '4 4' }));
+      svg.append(node('text', { x: mx + 6, y: top - 8, class: 'tw-axis is-mark' }, 'Policy starts'));
     }
-    return el('figure', { class: 'tw-chart' }, [
-      el('figcaption', {}, [
-        txt('span', null, title),
-        txt('small', null, unit),
-      ]),
-      svg,
-    ]);
+    const path = (values) => values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+    svg.append(node('path', { d: path(base), fill: 'none', stroke: '#9db0b5', 'stroke-width': 2.2, 'stroke-dasharray': '6 5' }));
+    svg.append(node('path', { d: path(next), fill: 'none', stroke: '#a8f4d1', 'stroke-width': 2.6 }));
+    base.forEach((v, i) => {
+      svg.append(node('circle', { cx: x(i), cy: y(v), r: 3.4, fill: '#9db0b5' }));
+      svg.append(node('circle', { cx: x(i), cy: y(next[i]), r: 3.8, fill: '#a8f4d1' }));
+      svg.append(node('text', { x: x(i), y: h - 8, 'text-anchor': 'middle', class: 'tw-axis' }, `Day ${i + 1}`));
+    });
+    return svg;
   }
 
-  function nodeCard(kicker, title, value, note) {
-    return el('article', { class: 'tw-node' }, [
-      txt('span', null, kicker),
-      txt('strong', null, title),
-      txt('b', null, value),
-      txt('p', null, note),
-    ]);
-  }
+  const legend = () => el('p', { class: 'tw-legend' }, [txt('i', 'is-before', ''), 'Before: current rules', txt('i', 'is-after', ''), 'After: with the policy']);
 
-  function flow(m) {
-    const behaviour = m.kind === 'bike'
-      ? nodeCard('Behaviour', 'Cycling trips on Bloor', pair(m.B('bloor_bike_trips'), m.P('bloor_bike_trips'), count), `${pctText(m.B('bloor_bike_trips'), m.P('bloor_bike_trips'))} · any-street cycling ${pair(m.B('bike_trips'), m.P('bike_trips'), count)}`)
-      : nodeCard('Behaviour', 'Line 2 trips', pair(m.B('transit_trips'), m.P('transit_trips'), count), `${pctText(m.B('transit_trips'), m.P('transit_trips'))} · completed trips ${pair(m.B('completed_trips'), m.P('completed_trips'), count)}`);
-    const access = m.kind === 'bike'
-      ? nodeCard('Exposure', 'Metres beside cars', pair(m.B('bloor_shared_cycling_m'), m.P('bloor_shared_cycling_m'), (n) => Math.round(n).toLocaleString('en-CA') + ' m'), 'Summed over the policy weekdays. Exposure, not injuries.')
-      : nodeCard('Access', 'Errands that leave the section', pair(m.B('errands_elsewhere'), m.P('errands_elsewhere'), count), m.B('deferred_trips') || m.P('deferred_trips') ? `Deferred trips ${pair(m.B('deferred_trips'), m.P('deferred_trips'), count)}.` : 'No trip in this sample is deferred.');
-    const firms = nodeCard('Firms', 'Focal shop receipts', pair(m.B('shop_sales_cad'), m.P('shop_sales_cad'), money), `Visits ${pair(m.B('local_shop_visits'), m.P('local_shop_visits'), count)}. ${m.shops.length ? m.shops.join(', ') + ' shortens hours under the synthetic staffing rule. Not a closure.' : 'No focal shop shortens its hours.'}`);
-    const who = m.adultFare.base == null
-      ? nodeCard('Households', 'Recorded transport payments', pair(m.B('household_transport_spend_cad'), m.P('household_transport_spend_cad'), money), 'Fares plus stated travel costs. Time is not priced.')
-      : nodeCard('Households', 'Who pays the fare', `Adult ${pair(m.adultFare.base, m.adultFare.next, money)}`, `Fair Pass ${pair(m.fairFare.base, m.fairFare.next, money)}. ${m.adultN} adult, ${m.fairN} Fair Pass.`);
-    const budget = nodeCard('Public ledger', 'Sample TTC receipts', pair(m.B('fare_revenue_cad'), m.P('fare_revenue_cad'), money), m.fareOk ? 'Equals household fare payments. A transfer, not a second benefit.' : 'Compare with household fare payments before treating this as the public side.');
-    const lever = m.kind === 'bike'
-      ? nodeCard('Lever', 'Protected track', 'Removed', 'No car lane is added. Cyclists who stay on Bloor share the car lane.')
-      : m.kind === 'fare'
-        ? nodeCard('Lever', 'Adult single fare', `${money(m.fareBefore)} → ${money(m.fareAfter)}`, 'Fair Pass fare is unchanged. Citywide TTC rule, applied inside this section.')
-        : nodeCard('Lever', 'Compiled change', (m.run.scenario.intervention || []).map((change) => `${change.lever || change.operator} ${change.value ?? ''}`).join(', ') || 'See the question', 'The validator accepted this lever. The response is not from a published coefficient.');
-    return el('div', { class: 'tw-flow', role: 'group', 'aria-label': 'Causal chain from the lever to behaviour, households, the public ledger and shops' }, [
-      lever, behaviour, access, who, budget, firms,
-    ]);
-  }
-
-  function limits(run, kind) {
-    return (run.not_estimable || [])
-      .filter((item) => kind === 'bike' || item.id !== 'removal_construction_cost_cad')
-      .map((item) => ({ id: item.id, reason: item.reason }));
-  }
-  const LIMIT_LABEL = {
-    citywide_ttc_revenue_cad: 'Citywide TTC revenue',
-    business_closures: 'Business closures',
-    injuries: 'Injuries',
-    emissions_kg: 'Emissions',
-    gdp_cad: 'GDP',
-    driver_time_beyond_section: 'Driver time past this block',
-    removal_construction_cost_cad: 'Removal construction cost',
-  };
-
+  // ---------- the brief ----------
   function render(run) {
     if (!run || run.schema_version !== 'experiment.v2') { box.hidden = true; box.replaceChildren(); return; }
     const m = model(run);
-    const modes = [
-      ['Line 2', m.B('transit_trips'), m.P('transit_trips')],
-      ['Bike on Bloor', m.B('bloor_bike_trips'), m.P('bloor_bike_trips')],
-      ['Bike, other street', m.B('bike_trips') - m.B('bloor_bike_trips'), m.P('bike_trips') - m.P('bloor_bike_trips')],
-      ['Walk', m.B('walk_trips'), m.P('walk_trips')],
-      ['Car', m.B('car_trips'), m.P('car_trips')],
-      ['Errand outside section', m.B('errands_elsewhere'), m.P('errands_elsewhere')],
-    ].filter((row) => row[1] || row[2]);
-    const length = Math.round(run.world?.section_length_m || 619);
-    const relevant = { fare: ['cost_weight', 'shop_staffing_response'], bike: ['unprotected_cycling_discomfort_per_km', 'shop_staffing_response'] };
-    const assumptions = (run.assumptions || []).filter((item) => item.kind === 'sensitivity' && (!relevant[m.kind] || relevant[m.kind].includes(item.id)));
+    const shopsSub = m.shops.length ? list(m.shops) : null;
 
-    const distribution = m.adultFare.base == null ? null : el('div', { class: 'tw-panel' }, [
-      el('header', {}, [txt('span', null, 'Who is affected'), txt('h3', null, 'Adult fare versus Fair Pass')]),
-      bars([
-        { label: `Line 2 · adult (${m.adultN})`, base: m.adultTrips.base, next: m.adultTrips.next, format: count },
-        { label: `Line 2 · Fair Pass (${m.fairN})`, base: m.fairTrips.base, next: m.fairTrips.next, format: count },
-        { label: 'Fare paid · adult', base: m.adultFare.base, next: m.adultFare.next, format: money },
-        { label: 'Fare paid · Fair Pass', base: m.fairFare.base, next: m.fairFare.next, format: money },
-      ], 'row'),
-      txt('p', 'tw-panel-note', m.kind === 'fare'
-        ? 'Each row is scaled on its own. Length compares baseline with policy, not trips with dollars. Fair Pass is the concession this fare change holds fixed.'
-        : 'Each row is scaled on its own. Length compares baseline with policy, not trips with dollars.'),
-    ]);
+    const kpis = m.kind === 'bike'
+      ? [
+        kpi('Cycling trips on Bloor', m.bloorBike.base, m.bloorBike.next, num),
+        kpi('Distance cycled in mixed traffic', m.shared.base, m.shared.next, metres, 'Exposure, not injuries'),
+        kpi('Driver time through the block', m.driver.base, m.driver.next, minutes, 'Average per car trip'),
+        kpi('Sales at the mapped shops', m.sales.base, m.sales.next, cad),
+      ]
+      : [
+        kpi('TTC fare revenue', m.revenue.base, m.revenue.next, cad),
+        kpi('Subway trips', m.transit.base, m.transit.next, num),
+        kpi('Sales at the mapped shops', m.sales.base, m.sales.next, cad),
+        kpiCount('Residents who change a trip', `${m.changed} of ${m.people}`, 'Everyone else travels as before'),
+      ];
+
+    const travelRows = [
+      { label: 'Subway (Line 2)', base: m.transit.base, next: m.transit.next, fmt: num },
+      ...(m.kind === 'bike'
+        ? [
+          { label: 'Cycling on Bloor', base: m.bloorBike.base, next: m.bloorBike.next, fmt: num },
+          { label: 'Cycling on other streets', base: m.offBloor.base, next: m.offBloor.next, fmt: num },
+        ]
+        : [{ label: 'Cycling', base: m.bike.base, next: m.bike.next, fmt: num }]),
+      { label: 'Walking', base: m.walk.base, next: m.walk.next, fmt: num },
+      { label: 'Driving', base: m.car.base, next: m.car.next, fmt: num },
+      { label: 'Errands moved outside the area', base: m.elsewhere.base, next: m.elsewhere.next, fmt: num },
+    ].filter((row) => row.base || row.next);
+
+    const groups = [];
+    if (m.kind === 'fare' || (m.kind === 'compiled' && m.hasGroups)) {
+      groups.push({ title: 'Riders', rows: [
+        m.kind === 'fare' ? { label: 'Adult fare per ride', sub: 'Fair Pass stays at $2.10', base: m.fare.base, next: m.fare.next, fmt: fare } : null,
+        m.hasGroups ? { label: 'Subway trips by adult riders', sub: `${m.adultN} residents`, base: m.adultTrips.base, next: m.adultTrips.next, fmt: num } : null,
+        m.hasGroups ? { label: 'Subway trips by Fair Pass riders', sub: `${m.fairN} residents`, base: m.fairTrips.base, next: m.fairTrips.next, fmt: num } : null,
+        m.hasGroups ? { label: 'Fares paid by adult riders', base: m.adultPaid.base, next: m.adultPaid.next, fmt: cad } : null,
+        m.hasGroups ? { label: 'Fares paid by Fair Pass riders', base: m.fairPaid.base, next: m.fairPaid.next, fmt: cad } : null,
+        { label: 'All transport spending', sub: 'Fares plus travel costs; time is not priced', base: m.transport.base, next: m.transport.next, fmt: cad },
+      ] });
+    }
+    if (m.kind === 'bike') {
+      groups.push({ title: 'Cycling and traffic on Bloor', rows: [
+        { label: 'Distance cycled in mixed traffic', sub: 'Exposure, not injuries', base: m.shared.base, next: m.shared.next, fmt: metres },
+        { label: 'Average cycling time through the block', base: m.cyclist.base, next: m.cyclist.next, fmt: minutes },
+        { label: 'Average driver time through the block', sub: `Inside the ${Math.round(run.world?.section_length_m || 619)} m only`, base: m.driver.base, next: m.driver.next, fmt: minutes },
+      ] });
+    }
+    groups.push({ title: `How residents travel · trips by mode`, rows: [
+      ...travelRows,
+      { label: 'All trips completed', base: m.completed.base, next: m.completed.next, fmt: num },
+    ] });
+    groups.push({ title: 'TTC', rows: [
+      { label: 'Fare revenue from these residents', sub: m.transfer ? 'Equal to fares paid: a transfer, not a gain' : null, base: m.revenue.base, next: m.revenue.next, fmt: cad },
+    ] });
+    groups.push({ title: `Local businesses · ${m.shopCount} mapped shops`, rows: [
+      { label: 'Sales', base: m.sales.base, next: m.sales.next, fmt: cad },
+      { label: 'Customer visits', base: m.visits.base, next: m.visits.next, fmt: num },
+      { label: 'Shops on shorter hours', sub: shopsSub ? `${shopsSub}; simulated rule, not a closure` : 'Simulated rule, not a closure', base: m.reduced.base, next: m.reduced.next, fmt: num },
+    ] });
+
+    const trend = m.kind === 'bike'
+      ? { title: 'Cycling trips on Bloor, per day', id: 'bloor_bike_trips', fmt: num }
+      : { title: 'TTC fare revenue, per day', id: 'fare_revenue_cad', fmt: cad };
+    const assumptions = (run.assumptions || []).filter((item) => item.kind === 'sensitivity'
+      && (m.kind === 'bike' ? item.id !== 'cost_weight' : item.id !== 'unprotected_cycling_discomfort_per_km'));
+    const limits = (run.not_estimable || []).filter((item) => m.kind === 'bike' || item.id !== 'removal_construction_cost_cad');
+    const length = Math.round(run.world?.section_length_m || 619);
 
     box.replaceChildren(
-      el('header', { class: 'tw-brief-head' }, [
-        txt('p', 'tw-kicker', `Decision brief · ${m.periods} modelled weekdays after the change · ${run.population.count} synthetic people · ${String(run.evidence_tier || 'assumption-driven').replace(/_/g, ' ')}`),
+      el('header', { class: 'tw-head' }, [
+        txt('p', 'tw-eyebrow', 'Results · simulated'),
         txt('h2', null, run.scenario.question || 'What changed in this run'),
-        txt('p', 'tw-scope', `${run.world?.title || 'Bathurst–Spadina'} · ${length} m · seed ${run.seed} · policy starts period ${m.start} of ${run.scenario.ticks} · ${m.changedPeople} of ${run.population.count} people change a choice`),
+        txt('p', 'tw-lede', `${m.people} synthetic residents on a real map of Bloor St W, Bathurst to Spadina (${length} m). Before and after use the same people and the same random seed; only the policy differs. Figures are totals for the ${m.days} weekdays after the change. This shows how the effect travels, not a forecast for Toronto.`),
+        legend(),
       ]),
-      el('div', { class: 'tw-hero' }, [
-        el('div', {}, [
-          txt('span', null, m.kind === 'bike' ? 'Sample cycling trips on Bloor' : 'Sample TTC receipts'),
-          txt('strong', null, m.kind === 'bike'
-            ? pair(m.B('bloor_bike_trips'), m.P('bloor_bike_trips'), count)
-            : pair(m.B('fare_revenue_cad'), m.P('fare_revenue_cad'), money)),
-          txt('em', null, m.kind === 'bike'
-            ? `${pctText(m.B('bloor_bike_trips'), m.P('bloor_bike_trips'))} · ${countDelta(m.P('bloor_bike_trips') - m.B('bloor_bike_trips'))} trips`
-            : `${moneyDelta(m.P('fare_revenue_cad') - m.B('fare_revenue_cad'))} · ${pctText(m.B('fare_revenue_cad'), m.P('fare_revenue_cad'))}`),
-        ]),
-        txt('p', null, finding(m)),
+      el('div', { class: 'tw-kpis' }, kpis),
+      el('section', { class: 'tw-card tw-takeaways' }, [
+        txt('h3', null, 'What happens'),
+        el('ol', {}, takeaways(m).map((line) => txt('li', null, line))),
       ]),
-      el('div', { class: 'tw-ledgers' }, [
-        el('article', {}, [
-          txt('span', null, 'Households'),
-          txt('strong', null, pair(m.B('household_transport_spend_cad'), m.P('household_transport_spend_cad'), money)),
-          txt('p', null, `Recorded transport payments. Fare portion ${pair(m.B('household_fare_spend_cad'), m.P('household_fare_spend_cad'), money)}.`),
-        ]),
-        el('article', {}, [
-          txt('span', null, 'Firms on this block'),
-          txt('strong', null, pair(m.B('shop_sales_cad'), m.P('shop_sales_cad'), money)),
-          txt('p', null, `Receipts at the six mapped shops. Visits ${pair(m.B('local_shop_visits'), m.P('local_shop_visits'), count)}. ${moneyDelta(m.P('shop_sales_cad') - m.B('shop_sales_cad'))}.`),
-        ]),
-        el('article', {}, [
-          txt('span', null, 'Public ledger'),
-          txt('strong', null, pair(m.B('fare_revenue_cad'), m.P('fare_revenue_cad'), money)),
-          txt('p', null, m.fareOk ? 'Matches household fare payments in both arms. One transfer, two sides.' : 'Sample fare payments received inside the section.'),
-        ]),
-      ]),
-      el('div', { class: 'tw-split' }, [
-        distribution,
-        el('div', { class: 'tw-panel' }, [
-          el('header', {}, [
-            txt('span', null, 'Substitution'),
-            txt('h3', null, 'Where the trips went'),
-            el('p', { class: 'tw-legend' }, [txt('i', 'is-base', ''), ' Baseline ', txt('i', 'is-next', ''), ' With policy']),
+      el('div', { class: 'tw-grid' }, [
+        el('section', { class: 'tw-card' }, [txt('h3', null, 'Scorecard'), table(groups)]),
+        el('div', { class: 'tw-side' }, [
+          el('section', { class: 'tw-card' }, [txt('h3', null, 'Trips by mode'), modeBars(travelRows)]),
+          el('section', { class: 'tw-card' }, [
+            txt('h3', null, trend.title),
+            dayChart(series(run, 'baseline', trend.id), series(run, 'intervention', trend.id), trend.fmt, m.start),
+            txt('p', 'tw-note', 'Both lines match until the policy starts, because the people and seed are the same.'),
           ]),
-          bars(modes.map(([label, base, next]) => ({ label, base, next, format: count })), 'shared'),
-          txt('p', 'tw-panel-note', 'Counts of completed sample trips over the same weekdays. A trip that leaves the section is not a deferred trip.'),
-        ]),
-      ].filter(Boolean)),
-      el('div', { class: 'tw-charts' }, [
-        chart(
-          m.kind === 'bike' ? 'Cycling trips on Bloor' : 'Sample TTC receipts',
-          m.kind === 'bike' ? 'trips per modelled weekday' : 'CAD per modelled weekday',
-          series(run, 'baseline', m.kind === 'bike' ? 'bloor_bike_trips' : 'fare_revenue_cad'),
-          series(run, 'intervention', m.kind === 'bike' ? 'bloor_bike_trips' : 'fare_revenue_cad'),
-          m.kind === 'bike' ? count : money,
-          m.start,
-        ),
-        chart(
-          m.kind === 'bike' ? 'Metres cycled beside cars' : 'Line 2 trips',
-          m.kind === 'bike' ? 'metres per modelled weekday' : 'trips per modelled weekday',
-          series(run, 'baseline', m.kind === 'bike' ? 'bloor_shared_cycling_m' : 'transit_trips'),
-          series(run, 'intervention', m.kind === 'bike' ? 'bloor_shared_cycling_m' : 'transit_trips'),
-          m.kind === 'bike' ? (n) => Math.round(n).toLocaleString('en-CA') : count,
-          m.start,
-        ),
-        chart(
-          'Focal shop receipts',
-          'CAD per modelled weekday',
-          series(run, 'baseline', 'shop_sales_cad'),
-          series(run, 'intervention', 'shop_sales_cad'),
-          money,
-          m.start,
-        ),
-      ]),
-      txt('p', 'tw-chart-note', `Each point is one modelled weekday. The dashed line is where the policy starts (period ${m.start}). Coral is baseline, mint is with the policy. Same people, same seed.`),
-      el('section', { class: 'tw-graph', 'aria-label': 'How the lever reaches each ledger' }, [
-        el('header', {}, [txt('span', null, 'Causal chain'), txt('h3', null, 'One lever, five ledgers')]),
-        flow(m),
-        txt('p', 'tw-panel-note', 'The lever changes the choice score. That changes trips. Trips change who pays, what the sample TTC receives, and which shop door opens. Fare payments appear once as a household cost and once as a public receipt.'),
-      ]),
-      el('section', { class: 'tw-limits' }, [
-        el('div', {}, [txt('span', null, 'Not estimable from this run'), txt('strong', null, 'Left off the brief on purpose')]),
-        el('ul', {}, limits(run, m.kind).map((item) => {
-          const li = txt('li', null, LIMIT_LABEL[item.id] || item.id);
-          if (item.reason) li.title = item.reason;
-          return li;
-        })),
-      ]),
-      el('div', { class: 'tw-decide' }, [
-        el('section', {}, [
-          txt('span', null, 'What this run suggests'),
-          txt('p', null, suggests(m)),
-        ]),
-        el('section', {}, [
-          txt('span', null, 'What is still uncertain'),
-          el('ul', {}, assumptions.map((item) => txt('li', null, `${item.id.replace(/_/g, ' ')}: base ${item.value}${item.low !== undefined ? `, low ${item.low}, high ${item.high}` : ''}. ${item.note || ''}`))),
-          txt('p', null, 'The charts are the base case. Low and high are the declared range, not a computed confidence interval. A versioned rerun is in Researcher view.'),
-        ]),
-        el('section', {}, [
-          txt('span', null, 'What to measure before acting'),
-          el('ol', {}, (MEASURE[m.kind] || MEASURE.compiled).map((line) => txt('li', null, line))),
         ]),
       ]),
-      el('aside', { class: 'tw-context' }, [
-        txt('span', null, 'Observed context, not a model output'),
-        txt('p', null, m.kind === 'bike'
-          ? 'Streets, signals, Line 2 and the six shop doors are mapped. The 2025 Bloor counter west of Huron recorded 3,524 passages/day. That is a scale cue for the street, not a removal effect and not a number this run produced.'
-          : 'The adult PRESTO fare is $3.30 and Fair Pass is $2.10, citywide TTC rules. Streets, signals, Line 2 and the six shop doors are mapped. The choice response, baskets and shop-hour rule are synthetic.'),
+      el('div', { class: 'tw-grid tw-grid--even' }, [
+        el('section', { class: 'tw-card' }, [
+          txt('h3', null, 'What this run cannot tell you'),
+          el('ul', { class: 'tw-limits' }, limits.map((item) => el('li', {}, [txt('strong', null, LIMIT_LABEL[item.id] || item.id.replace(/_/g, ' ')), item.reason ? txt('span', null, item.reason) : null]))),
+        ]),
+        el('section', { class: 'tw-card' }, [
+          txt('h3', null, 'Measure before acting'),
+          el('ol', { class: 'tw-measure' }, (MEASURE[m.kind] || MEASURE.compiled).map((line) => txt('li', null, line))),
+        ]),
       ]),
-      txt('p', 'tw-lit', LITERATURE[m.kind] || LITERATURE.compiled),
+      el('details', { class: 'tw-card tw-method' }, [
+        el('summary', {}, ['Method, assumptions and sources']),
+        txt('p', null, CONTEXT[m.kind] || CONTEXT.compiled),
+        txt('p', null, `Seed ${run.seed}. The policy starts on day ${m.start} of ${run.scenario.ticks}. Evidence tier: ${String(run.evidence_tier || 'assumption-driven').replace(/_/g, ' ')}.`),
+        assumptions.length ? el('ul', {}, assumptions.map((item) => txt('li', null, typeof item.value === 'boolean'
+          ? `${ASSUMPTION_LABEL[item.id] || item.id.replace(/_/g, ' ')}: ${item.value ? 'on' : 'off'}. ${item.note || ''}`
+          : `${ASSUMPTION_LABEL[item.id] || item.id.replace(/_/g, ' ')}: ${item.value} (declared test range ${item.low}–${item.high}, not a confidence interval). ${item.note || ''}`))) : null,
+        txt('p', null, LITERATURE[m.kind] || LITERATURE.compiled),
+      ]),
+    );
+    box.hidden = false;
+  }
+
+  // A question with no mapped lever has no run: no 3D street and no figures, only the agents and this card.
+  function renderSpeculative(scenario) {
+    const reason = String(scenario.summary || '').split(' The compiler kept')[0].trim();
+    box.replaceChildren(
+      el('header', { class: 'tw-head' }, [
+        txt('p', 'tw-eyebrow', 'Not simulated'),
+        txt('h2', null, scenario.title || 'This question'),
+        txt('p', 'tw-lede', 'Two Worlds simulates a question when it maps to something the Bloor St W world can change: the adult fare, Line 2 frequency, the cycle track, car lanes, parking or signal timing. This one does not, so there is no 3D street and no simulated figures. The 100 persona agents still rate it; their answers are synthetic opinions, not measured effects.'),
+      ]),
+      el('div', { class: 'tw-grid tw-grid--even' }, [
+        el('section', { class: 'tw-card' }, [
+          txt('h3', null, 'Why it was not run'),
+          txt('p', 'tw-measure-text', reason || 'No mapped Bathurst–Spadina lever directly represents this question.'),
+          scenario.compilerBadge ? txt('p', 'tw-note', `Read by: ${scenario.compilerBadge}.`) : null,
+        ]),
+        el('section', { class: 'tw-card' }, [
+          txt('h3', null, 'What a simulation would need'),
+          el('ol', { class: 'tw-measure' }, [
+            txt('li', null, 'A lever the world can change, with a before and an after value.'),
+            txt('li', null, 'A mechanism linking that change to people’s choices, with evidence for its size.'),
+            txt('li', null, 'The residents, firms and places it reaches, mapped into the world.'),
+          ]),
+        ]),
+      ]),
     );
     box.hidden = false;
   }
 
   window.addEventListener('counterfactual:result', (event) => render(event.detail));
   if (window.CounterfactualCurrentRun) render(window.CounterfactualCurrentRun);
+  new MutationObserver(() => {
+    const { phase, scenario } = document.body.dataset;
+    if (phase !== 'lab' || scenario !== 'custom') return;
+    const now = window.counterfactualPreview?.current?.();
+    if (now && now.id === 'custom' && !now.run) renderSpeculative(now);
+  }).observe(document.body, { attributes: true, attributeFilter: ['data-phase', 'data-scenario'] });
 })();

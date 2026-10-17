@@ -1656,9 +1656,12 @@ $('#hypothesisForm').addEventListener('submit', event => {
   runScenario(chosen, query);
   if (chosen === 'custom') draftPolicy(query);
 });
+// Only a fare increase or a lane removal is the prepared run; a fare cut or a new lane is compiled like any other question.
 function preparedIntent(text) {
-  const fare = /\b(ttc|transit|subway|streetcar|bus|presto)\b/.test(text) && /\b(fare|fares|price|cost|cents?|\$|raise|increase|hike)\b|\$/.test(text);
-  const bike = /\b(bike|bikes|bicycle|cycle|cycling|cyclists?)\b/.test(text) && /\b(lane|lanes|track|tracks|bloor|path)\b/.test(text);
+  const fare = /\b(ttc|transit|subway|streetcar|bus|presto)\b/.test(text) && /\b(fare|fares|price|cost|cents?|\$|raise|increase|hike)\b|\$/.test(text)
+    && !/\b(free|cut(s|ting)?|lower(s|ed|ing)?|reduc(e|es|ed|ing)|decreas(e|es|ed|ing)|drop(s|ped|ping)?|discount(s|ed)?|eliminat(e|es|ed|ing)|freez(e|es|ing)|frozen|scrap(s|ped)?)\b/.test(text);
+  const bike = /\b(bike|bikes|bicycle|cycle|cycling|cyclists?)\b/.test(text) && /\b(lane|lanes|track|tracks|bloor|path)\b/.test(text)
+    && !/\b(add(s|ed|ing)?|build(s|ing)?|built|install(s|ed|ing)?|new|extend(s|ed|ing)?|expand(s|ed|ing)?|widen(s|ed|ing)?|creat(e|es|ed|ing)|another|more)\b/.test(text);
   return fare && preparedScenarios.fare ? 'fare' : bike && preparedScenarios.bike ? 'bike' : null;
 }
 $('#hypothesisInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('#hypothesisForm').requestSubmit(); } });
