@@ -11,9 +11,9 @@ This is the **one public entry point** for the hackathon demo. The cinematic ent
 ## Two World demo pass (17 Oct)
 
 The default demo view now runs landing → prompt → 3D. The changes live in `two-world.css` and `two-world.js`, plus text edits in `index.html` and one routing function in `app.js`. Researcher view (`?detail=1`) still shows every section.
-- **Landing:** a real Toronto skyline under real clouds that part as you scroll. Both photos come from Wikimedia Commons under CC BY-SA 4.0 and are credited on the page and in `assets/CREDITS.md`. The brand is "two.world", with a shorter hero and prompt.
-- **No scenario buttons:** a typed question about the TTC fare or the Bloor bike lane opens the matching prepared run (`preparedIntent` in `app.js`). Anything else uses the compiler path.
-- **Lab:** shows only the 3D view, made larger and with no 2D toggle, under a single timeline. Everything below it (people strip, report, ledger, footer) is hidden in the demo view.
+- **Landing:** the drawn city under drawn clouds that part as you scroll. It uses no photos, so it needs no credit line. The brand is "two.world", with a shorter hero and prompt.
+- **Prepared questions:** the two chips under the prompt run the prepared cases. A typed question about the TTC fare or the Bloor bike lane opens the same runs (`preparedIntent` in `app.js`). Anything else uses the compiler path.
+- **Lab:** shows only the 3D view, made larger and with no 2D toggle, under a single timeline. Below it is one row of metric tiles, baseline → with policy, summed by `two-world.js` from the run's own `metrics.by_tick`. Everything else below (people strip, report, ledger, footer) is hidden in the demo view.
 - **The 100-agent panel:** sits right after the prompt, without its caveat line or its mean/flagged line.
 
 ## Run it
