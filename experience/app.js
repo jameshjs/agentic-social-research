@@ -1046,9 +1046,23 @@ function addPollRow(poll, id, answer, agent) {
     const cards = $('#agentPollCards'), card = pollCard(row);
     card.classList.add('is-new');
     cards.append(card);
-    cards.scrollTo({ left: cards.scrollWidth, behavior: reducedMotion ? 'instant' : 'smooth' });
+    followStrip(cards);
     renderPollStats(poll); announcePoll(poll);
   }
+}
+
+// One frame loop glides the strip to its right end. Repeated smooth scrollTo calls restart before finishing and fall behind a fast stream.
+let stripGlide = 0;
+function followStrip(strip) {
+  if (reducedMotion) { strip.scrollLeft = strip.scrollWidth; return; }
+  if (stripGlide) return;
+  const step = () => {
+    const gap = strip.scrollWidth - strip.clientWidth - strip.scrollLeft;
+    if (gap < 1) { stripGlide = 0; return; }
+    strip.scrollLeft += Math.max(1, gap * 0.18);
+    stripGlide = requestAnimationFrame(step);
+  };
+  stripGlide = requestAnimationFrame(step);
 }
 
 // Streams one 1–5 poll of all 100 agents into a poll object (askAgents for prepared policies, chat for drafts).
