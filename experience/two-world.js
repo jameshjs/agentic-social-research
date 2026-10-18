@@ -1077,8 +1077,8 @@
       ])),
       txt('p', 'tw-note', `${n} of ${asked} agents have answered so far. A person can appear in more than one band.`),
     ]);
-    report.replaceChildren(
-      done ? null : txt('p', 'tw-status tw-poll-live', `${n} of ${asked} agents have answered so far; the figures update as answers arrive.`),
+    report.replaceChildren(   // native replaceChildren prints null as the text "null"; '' adds nothing visible
+      done ? '' : txt('p', 'tw-status tw-poll-live', `${n} of ${asked} agents have answered so far; the figures update as answers arrive.`),
       el('div', { class: 'tw-kpis' }, [
         kpi('Support', share(support), 'is-support', `${plain(support)} of ${plain(n)} agents`, 'Rated 4 or 5'),
         kpi('Oppose', share(oppose), 'is-oppose', `${plain(oppose)} of ${plain(n)} agents`, 'Rated 1 or 2'),
@@ -1111,7 +1111,7 @@
       ]),
       el('section', { class: 'tw-card tw-agents' }, [
         txt('h3', null, 'Every agent’s answer'),
-        txt('p', 'tw-note tw-note--lead', 'One card per agent, coloured by rating. Open a card for that agent’s reason, or filter by role.'),
+        txt('p', 'tw-note tw-note--lead', 'One card per agent, coloured by rating, with that agent’s reason (hover for all of it). Filter by role.'),
         agentsSlot,
       ]),
       el('div', { class: 'tw-poll-report' }, []),

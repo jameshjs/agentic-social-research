@@ -1,6 +1,6 @@
 // Landing globe: scrolling the intro flies from the whole Earth down to Bloor St W, Bathurst to Spadina.
 // It reads the same scroll progress as app.js updateReveal() (0 = top, ~.32 = the composer slide) and never
-// touches run state. Without WebGL, with reduced motion, with ?globe=off, or if the map style does not load,
+// touches run state. Without WebGL, with reduced motion, or if the map style does not load,
 // it removes itself and the drawn landing stays as it was.
 (function () {
   'use strict';
@@ -18,9 +18,8 @@
   const MAX_ZOOM_PER_S = 2.2;     // a fast flick cannot skip Earth → Toronto → Bloor
 
   const stage = document.getElementById('globeStage');
-  const params = new URLSearchParams(window.location.search);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!stage || params.get('globe') === 'off' || reduced || !webgl()) { if (stage) stage.remove(); return; }
+  if (!stage || reduced || !webgl()) { if (stage) stage.remove(); return; }
 
   let map = null, target = 0, frame = 0, lastStamp = 0, ready = false, captionTimer = 0, live = null;
   let flightDir = 0, flightFrame = 0, flightLast = 0;

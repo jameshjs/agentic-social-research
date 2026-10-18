@@ -6,21 +6,15 @@
 (function () {
   'use strict';
   const viewport = document.getElementById('simulationViewport');
-  const bottom = viewport && viewport.querySelector('.viewport-bottom');
-  if (!viewport || !bottom) return;
+  if (!viewport) return;
   const origin = window.location.origin;
 
   const style = document.createElement('style');
   style.textContent = `
     .view3d-frame{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:13px;z-index:2;display:none;background:#0d1f2b}
     .simulation-viewport.is-3d .view3d-frame{display:block}
-    .simulation-viewport.is-3d #bloorMapMain,.simulation-viewport.is-3d .focus-marker,.simulation-viewport.is-3d .world-caption,
-    .simulation-viewport.is-3d #mapPersonaCard,.simulation-viewport.is-3d #mapMotionNote,.simulation-viewport.is-3d .viewport-legend,
-    .simulation-viewport.is-3d #mapAttribution{visibility:hidden}
-    .simulation-viewport.is-3d .viewport-upper{pointer-events:none}
+    .simulation-viewport.is-3d #bloorMapMain,.simulation-viewport.is-3d #mapPersonaCard{visibility:hidden}
     .simulation-viewport.is-3d .viewport-bottom{left:auto;bottom:auto;top:14px;right:14px;gap:8px}
-    .view3d-toggle{border:1px solid #a8f4d13b;border-radius:40px;background:#0b212af0;color:var(--mint,#a8f4d1);padding:8px 14px;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer}
-    .view3d-toggle[aria-pressed="true"]{background:var(--mint,#a8f4d1);color:#0c2a2a}
     /* The button sits 10px under the Baseline / With policy toggle: top 16px, ~54px tall (~48px on phones). */
     .impact-tour{position:absolute;z-index:7;inset:0;display:none;color:#ecfff6;font-family:'Space Grotesk',sans-serif;pointer-events:none}
     .simulation-viewport.is-3d .impact-tour.is-ready{display:block}
@@ -49,11 +43,6 @@
     @media(max-width:760px){.arm-badge{top:auto;bottom:14px;font-size:10px;padding:5px 10px}}
     @media(max-width:760px){.impact-tour button{top:75px;padding:8px 11px;font-size:10px}.impact-tour-card{bottom:58px;padding:8px 10px}.impact-tour-card strong{font-size:13px}}`;
   document.head.appendChild(style);
-
-  const button = document.createElement('button');
-  button.type = 'button'; button.className = 'view3d-toggle'; button.textContent = '3D';
-  button.setAttribute('aria-pressed', 'false'); button.title = 'Show the mapped run in 3D';
-  bottom.insertBefore(button, bottom.firstChild);
 
   const tour = document.createElement('div');
   tour.className = 'impact-tour';
@@ -174,11 +163,7 @@
       viewport.appendChild(frame);
     }
     viewport.classList.toggle('is-3d', open);
-    button.setAttribute('aria-pressed', String(open));
-    button.textContent = open ? '2D' : '3D';
-    button.title = open ? 'Back to the 2D map' : 'Show the mapped run in 3D';
   }
-  button.addEventListener('click', () => setOpen(!viewport.classList.contains('is-3d')));
 
   window.addEventListener('counterfactual:result', (event) => {
     last = event.detail;
@@ -210,13 +195,6 @@
     const run = window.CounterfactualCurrentRun, name = label.split(' · ')[0];
     const person = isMapped(run) && run.personas.find((p) => p.name === name || p.id === name);
     if (person) send({ type: 'viewer3d:person', id: person.id });
-  });
-  // Any control marked data-viewer3d-person="<persona id>" (the demo view's "people who changed" strip) does the same.
-  // app.js switches the page to "With policy" on the same click, before this bubbling handler runs.
-  document.addEventListener('click', (event) => {
-    const id = event.target.closest && event.target.closest('[data-viewer3d-person]')?.dataset.viewer3dPerson;
-    const run = window.CounterfactualCurrentRun;
-    if (id && isMapped(run) && run.personas.some((p) => p.id === id)) send({ type: 'viewer3d:person', id });
   });
 
   // The 3D view is the default when the mapped world is in use and WebGL works.

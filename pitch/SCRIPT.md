@@ -47,7 +47,7 @@
 | 3:15 | Keep the 3D scene on screen. | "The public view keeps the city first." |
 
 **If something breaks:**
-- **3D doesn't load:** press the `2D` button. The same run plays on the 2D map.
+- **3D doesn't load:** add `?view=2d` to the URL (for example `?demo=bike&view=2d`). The same run plays on the 2D map.
 - **Agents panel says offline:** skip it and say "they're on Steven's laptop".
 - **Site is down:** switch to the deck's backup slides 7–9 (screenshots of each beat).
 
