@@ -1,9 +1,10 @@
 /* Landing globe (globe-intro.js). Opaque from the first paint so the drawn city never shows first.
    Clouds stay over the globe and part as it zooms. The stage is removed if the globe cannot run. */
 .globe-stage{position:fixed;z-index:1;inset:0;pointer-events:none;background:radial-gradient(circle at 68% 50%,#16384a 0%,#0a1c27 48%,#07131c 75%);transition:opacity .9s ease}
-body:not([data-phase=intro]):not([data-phase=composer]) .globe-stage{opacity:0;visibility:hidden;transition:opacity .4s ease,visibility 0s .4s}
-/* After a run, scrolling back to the composer shows the street frame behind it again (app.js .composer-in-view). */
-body.is-landed.composer-in-view .globe-stage{opacity:1;visibility:visible;transition:opacity .4s ease}
+body:not([data-phase=intro]):not([data-phase=composer]):not(.is-landed) .globe-stage{opacity:0;visibility:hidden;transition:opacity .4s ease,visibility 0s .4s}
+/* After a run (app.js .is-landed) the prompt page is one screen, and the street frame scrolls with it so Bloor stays
+   under the headline. */
+body.is-landed .globe-stage{position:absolute;bottom:auto;height:100vh}
 .globe-map{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
 .globe-stage.is-ready .globe-map{opacity:1}
 body:has(.globe-stage) .city-stage{visibility:hidden}

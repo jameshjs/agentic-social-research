@@ -865,7 +865,6 @@ function updateReveal() {
   const section = $('#intro');
   const travel = Math.max(1, section.offsetHeight - window.innerHeight);
   const progress = landed ? 1 : Math.max(0, Math.min(1, window.scrollY / travel));
-  if (landed) document.body.classList.toggle('composer-in-view', section.getBoundingClientRect().bottom > window.innerHeight * .75);
   document.documentElement.style.setProperty('--reveal', progress.toFixed(3));
   const composer = $('#composerScene');
   const ready = progress > .32;
