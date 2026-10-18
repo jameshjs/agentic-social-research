@@ -69,12 +69,19 @@ let investigationToken = 0;
 // Live persona agents. The agent server (persona-swarm/runtime/server.js) also serves this site, so calls are same-origin
 // and the browser holds no key. Served any other way, health() fails and the prepared replays run.
 const agents = { client: window.AgentsClient?.create() || null, online: false, count: 0, roster: new Map(), polls: {}, chatPoll: null, shown: null, chatToken: 0, roleFilter: '' };
+const withTimeout = (promise, ms, label) => {
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise).finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${label} timed out`)), ms); }),
+  ]);
+};
 const agentsReady = (async () => {
   try {
-    const health = agents.client && await agents.client.health();
+    const health = agents.client && await withTimeout(agents.client.health(), 2500, 'agents health');
     agents.online = Boolean(health?.ok);
     agents.count = health?.agents || 0;
-    if (agents.online) agents.roster = new Map((await agents.client.agents()).agents.map((agent) => [agent.id, agent]));
+    if (agents.online) agents.roster = new Map((await withTimeout(agents.client.agents(), 4000, 'agents roster')).agents.map((agent) => [agent.id, agent]));
   } catch (error) { console.warn('Persona agents unavailable; using prepared replays.', error); }
   // The corner pill always states the agents' real state.
   const note = $('#agentsNote');
@@ -763,6 +770,13 @@ async function draftPolicy(idea) {
 
 async function runScenario(scenario, promptOverride = null) {
   const token = ++investigationToken;
+  const overlay = $('#investigation');
+  overlay.hidden = false;
+  endLanding();
+  setPhase('investigating');
+  $('#investigationNote').textContent = 'Starting the run…';
+  $('#runButton').disabled = true;
+  try {
   await agentsReady;
   if (token !== investigationToken) return;
   await Promise.all([worldReady, backendReady]);
@@ -777,10 +791,6 @@ async function runScenario(scenario, promptOverride = null) {
     : 'The mapped world did not load · nothing is simulated';
   document.body.dataset.scenario = useMapped ? scenario : current.id;
   scene.setScenario(useMapped ? scenario : current.id);
-  const overlay = $('#investigation');
-  overlay.hidden = false;
-  endLanding();
-  setPhase('investigating');
   const stepMs = reducedMotion ? 100 : 350;
   let work = null;
   for (let i = 0; i < demoSteps.length; i++) {
@@ -816,6 +826,9 @@ async function runScenario(scenario, promptOverride = null) {
     $(current.id === 'custom' || $('#agentPoll').hidden ? '#lab' : '#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
     startReplay();
   });
+  } finally {
+    $('#runButton').disabled = false;
+  }
 }
 
 // Prepared selectors run the canonical mapped RunResult; any other prompt is compiled, then run or kept speculative.
@@ -889,7 +902,7 @@ function setCityMode(mode) {
   setViewSelection(mode);
 }
 
-$('#headerExplore').addEventListener('click', () => $('[data-scenario-choice="fare"]').click());   // same as the TTC fare chip
+$('#headerExplore').addEventListener('click', () => $('[data-scenario-choice="bike"]').click());
 $('.brand').addEventListener('click', resetToIntro);
 $('#hypothesisForm').addEventListener('submit', event => {
   event.preventDefault();

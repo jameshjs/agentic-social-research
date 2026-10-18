@@ -25,11 +25,15 @@
     };
     const headers = () => { const { key } = conf(); return { 'content-type': 'application/json', ...(key ? { authorization: `Bearer ${key}` } : {}) }; };
 
-    async function getJSON(path) {
-      const r = await fetch(conf().url + path, { headers: headers() });
-      if (r.status === 401) throw fail('access key required', 401);
-      if (!r.ok) throw fail(`HTTP ${r.status}`, r.status);
-      return r.json();
+    async function getJSON(path, timeoutMs = 2500) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const r = await fetch(conf().url + path, { headers: headers(), signal: controller.signal });
+        if (r.status === 401) throw fail('access key required', 401);
+        if (!r.ok) throw fail(`HTTP ${r.status}`, r.status);
+        return await r.json();
+      } finally { clearTimeout(timer); }
     }
 
     /* POST, then read the server-sent events and call on<Event>(data) for each. */
