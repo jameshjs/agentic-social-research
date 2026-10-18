@@ -453,17 +453,33 @@
   }
 
   // ---------- building blocks ----------
+  // The change across runs on a scale that always includes zero: the bar runs from the smallest to the
+  // largest change, the white dot is the base case, the tick marked 0 is no change, and the bar takes
+  // the Robustness colour (mint holds, yellow touches zero, orange reverses).
   function rangeCell(s, f) {
-    if (!s || s.min == null) return txt('span', 'tw-range-text', s?.state === 'pending' ? '…' : '—');
-    if (isZero(s.min, f) && isZero(s.max, f)) return txt('span', 'tw-range-text', '0');
-    const scale = Math.max(Math.abs(s.min), Math.abs(s.max)) || 1;
-    const x = (v) => 50 + (46 * v) / scale;
+    if (!s || s.min == null) return txt('span', 'tw-range-text is-quiet', s?.state === 'pending' ? 'Testing…' : '—');
+    if (isZero(s.min, f) && isZero(s.max, f)) return txt('span', 'tw-range-text is-quiet', 'No change in any run');
+    const lo = Math.min(0, s.min), hi = Math.max(0, s.max), span = hi - lo || 1;
+    const x = (v) => (4 + (92 * (v - lo)) / span).toFixed(1);
+    const words = isZero(s.max - s.min, f) ? delta(s.min, f) : `${delta(s.min, f)} to ${delta(s.max, f)}`;
     const plot = el('span', { class: 'tw-range-plot', 'aria-hidden': 'true' }, [
-      el('b', { style: `left:${x(s.min).toFixed(1)}%;width:${Math.max(1.5, x(s.max) - x(s.min)).toFixed(1)}%` }),
-      el('i', { style: `left:${x(s.d0).toFixed(1)}%` }),
+      el('span', { class: 'tw-range-zero', style: `left:${x(0)}%` }, [txt('em', null, '0')]),
+      el('b', { style: `left:${x(s.min)}%;width:${Math.max(2, x(s.max) - x(s.min))}%` }),
+      el('i', { style: `left:${x(s.d0)}%` }),
     ]);
-    const text = isZero(s.max - s.min, f) ? delta(s.min, f) : `${delta(s.min, f)} to ${delta(s.max, f)}`;
-    return el('span', { class: 'tw-range' }, [plot, txt('span', 'tw-range-text', text)]);
+    return el('span', { class: `tw-range is-${s.state}` }, [txt('span', 'tw-range-text', words), plot]);
+  }
+  function rangeLegend(runs) {
+    const key = (cls, text) => el('span', {}, [el('span', { class: cls, 'aria-hidden': 'true' }), text]);
+    return el('p', { class: 'tw-range-legend' }, [
+      txt('strong', null, 'Change across all runs: '),
+      key('tw-key-bar', `lowest to highest change over ${runs ? plural(runs, 'run') : 'the runs'}`),
+      key('tw-key-dot', 'base case'),
+      key('tw-key-zero', '0 = no change'),
+      key('tw-key-bar is-holds', 'same direction every run'),
+      key('tw-key-bar is-sensitive', 'sometimes zero'),
+      key('tw-key-bar is-reverses', 'direction flips'),
+    ]);
   }
 
   function header(m) {
@@ -611,7 +627,7 @@
 
   // ---------- impacts by stakeholder ----------
   function impacts(m, sens) {
-    const head = el('thead', {}, [el('tr', {}, ['Indicator', 'Baseline', 'Policy', 'Change', '%', 'Range across runs', 'Robustness']
+    const head = el('thead', {}, [el('tr', {}, ['Indicator', 'Baseline', 'Policy', 'Change', '%', 'Change across all runs', 'Robustness']
       .map((label, i) => txt('th', i === 0 ? 'tw-col-label' : i === 5 ? 'tw-col-range' : null, label)))]);
     const hidden = new Set();
     const row = (id) => {
@@ -644,8 +660,9 @@
     }));
     const runs = sens.status === 'done' ? sens.used.length + 1 : null;
     return card('Impacts by stakeholder', [
+      rangeLegend(runs),
       scroll(el('table', { class: 'tw-table tw-impacts' }, [head, body])),
-      txt('p', 'tw-note', `Totals over ${m.days} modelled weekdays after the change. Range: smallest to largest change across ${runs ? plural(runs, 'run') : 'the runs'}, the base case (dot) and each assumption variant that moves a figure. Robustness: whether the change keeps its sign in every run. Lower spending can reflect trips given up; travel time is not monetised.${hidden.size ? ` Unchanged and not listed: ${[...hidden].join('; ')}.` : ''}`),
+      txt('p', 'tw-note', `Totals over ${m.days} modelled weekdays after the change. Change across all runs: the bar spans the smallest to largest change across ${runs ? plural(runs, 'run') : 'the runs'} (the base case, shown as the white dot, and each assumption variant that moves a figure), on a scale that always includes 0. Robustness: whether the change keeps its sign in every run. Lower spending can reflect trips given up; travel time is not monetised.${hidden.size ? ` Unchanged and not listed: ${[...hidden].join('; ')}.` : ''}`),
     ]);
   }
 
