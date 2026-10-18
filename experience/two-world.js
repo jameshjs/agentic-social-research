@@ -913,93 +913,189 @@
   window.addEventListener('counterfactual:poll', (event) => { poll = event.detail; if (speculative) pollReport(); });
 
   function pollReport() {
-    const report = box.querySelector('.tw-poll-report'), agentsCard = box.querySelector('.tw-agents');
+    const report = box.querySelector('.tw-poll-report'), agentsCard = box.querySelector('.tw-agents'), head = box.querySelector('.tw-head');
     if (!report) return;
     const live = poll && poll.view === 'custom' ? poll : null;
     const rows = live ? live.rows.filter((row) => row.rating) : [];
     if (agentsCard) agentsCard.hidden = false;
-    const drafted = live && !/^Drafting/.test(live.question)
-      ? el('p', { class: 'tw-drafted' }, [txt('span', null, 'Policy the agents rated, drafted from your question'), live.question]) : null;
+    const asked = live?.asked || 100;
+    const n = rows.length;
+    const cell = (label, value, note) => el('div', {}, [txt('dt', null, label), el('dd', {}, [value, note ? txt('small', null, note) : null])]);
+    if (head) {
+      head.querySelector('.tw-scope')?.remove();
+      const policy = live && !/^Drafting/.test(live.question) ? live.question : 'Drafting a concrete policy from your question';
+      head.append(el('dl', { class: 'tw-scope' }, [
+        cell('Policy', policy, 'Orchestrator draft; not a mapped street lever'),
+        cell('Panel', `${n} of ${asked} persona agents`, 'Synthetic opinions, not observed people'),
+        cell('Method', '1–5 survey · no street run', 'No trip, shop or fare figures from the world'),
+      ]));
+    }
     if (!rows.length) {
       const offline = document.getElementById('agentsNote')?.dataset.state === 'offline';
       const status = !live ? (offline ? 'The persona-agent panel is offline, so this question has no ratings yet.' : 'Waiting for the persona-agent panel…')
         : live.failed ? `The agent poll did not complete: ${live.status.replace(/^AGENT POLL FAILED · /, '').toLowerCase()}.`
         : `${live.status.charAt(0)}${live.status.slice(1).toLowerCase()}`;
-      report.replaceChildren(...[drafted, card('Persona-agent ratings', [txt('p', 'tw-status', status)])].filter(Boolean));
+      report.replaceChildren(card('Assessment', [txt('p', 'tw-status', status)]));
       return;
     }
-    const n = rows.length, asked = live.asked || 100;
     const avg = (list) => list.reduce((s, row) => s + row.rating, 0) / list.length;
     const split = (list) => [list.filter((r) => r.rating <= 2).length, list.filter((r) => r.rating === 3).length, list.filter((r) => r.rating >= 4).length];
     const [oppose, neutral, support] = split(rows);
-    const share = (k, of = n) => `${plain((k / of) * 100)}%`;
-    const kpi = (label, value, tone, change, foot) => el('article', { class: 'tw-kpi' }, [
-      txt('span', 'tw-kpi-label', label),
-      el('p', { class: 'tw-kpi-value' }, [txt('span', tone, value)]),
-      txt('p', 'tw-kpi-change', change),
-      el('p', { class: 'tw-kpi-foot' }, [txt('small', 'tw-note', foot)]),
-    ]);
+    const shareN = (k, of = n) => (of ? (k / of) * 100 : 0);
+    const share = (k, of = n) => `${plain(shareN(k, of))}%`;
+    const mean = avg(rows);
+    const counts = [1, 2, 3, 4, 5].map((r) => rows.filter((row) => row.rating === r).length);
+    const flagged = rows.filter((row) => row.answer.consistency === 'check').length;
     const done = n >= asked || (/ANSWERED$/.test(live.status) && !/^LIVE/.test(live.status));
-
-    // Groups: role, then fare product. Smallest groups are still shown, with their size beside the average.
     const groupBy = (key) => Object.entries(rows.reduce((acc, row) => ((acc[key(row.agent)] ||= []).push(row), acc), {}))
       .sort((a, b) => b[1].length - a[1].length);
     const roles = groupBy((agent) => words(agent.role || 'agent'));
     const fares = rows.some((row) => row.agent.fare_category) ? groupBy((agent) => (agent.fare_category === 'fair_pass' ? 'Fair Pass' : 'Adult fare')) : [];
-    const bar = (list) => {
-      const [o, u, s] = split(list);
-      return el('span', { class: 'tw-split', 'aria-label': `${o} oppose, ${u} neutral, ${s} support` }, [
-        o ? el('i', { class: 'is-oppose', style: `flex:${o}` }, []) : null,
-        u ? el('i', { class: 'is-neutral', style: `flex:${u}` }, []) : null,
-        s ? el('i', { class: 'is-support', style: `flex:${s}` }, []) : null,
-      ]);
+    const cars = rows.some((row) => 'has_car' in (row.agent || {})) ? groupBy((agent) => (agent.has_car ? 'Has a car' : 'No car')) : [];
+    const bikes = rows.some((row) => 'has_bike' in (row.agent || {})) ? groupBy((agent) => (agent.has_bike ? 'Has a bike' : 'No bike')) : [];
+    const modes = rows.some((row) => row.agent.mode) ? groupBy((agent) => words(agent.mode)) : [];
+    const stanceOf = (list) => {
+      const [o, , s] = split(list), p = list.length;
+      if (s / p >= 0.5) return { state: 'holds', label: 'Support majority' };
+      if (o / p >= 0.5) return { state: 'warn', label: 'Oppose majority' };
+      return { state: 'sensitive', label: 'Split' };
     };
-    const groupRows = (title, groups) => (groups.length ? [
-      el('tr', { class: 'tw-group' }, [el('th', { colspan: '5' }, [title])]),
-      ...groups.map(([name, list]) => el('tr', {}, [
-        txt('th', null, name), txt('td', null, plain(list.length)), txt('td', 'tw-num-strong', avg(list).toFixed(1)),
-        txt('td', null, share(split(list)[2], list.length)), el('td', {}, [bar(list)]),
-      ])),
-    ] : []);
     const ranked = roles.filter(([, list]) => list.length >= 3).map(([name, list]) => ({ name, list, mean: avg(list) })).sort((a, b) => a.mean - b.mean);
     const lo = ranked[0], hi = ranked[ranked.length - 1];
-    const lead = lo && hi && hi.mean - lo.mean >= 0.2
-      ? `Least supportive: ${lo.name}s (average ${lo.mean.toFixed(1)}, ${plural(lo.list.length, 'agent')}). Most supportive: ${hi.name}s (${hi.mean.toFixed(1)}, ${plural(hi.list.length, 'agent')}).`
-      : 'Every role with three or more agents rated it within 0.2 of the others.';
-    const legend = el('p', { class: 'tw-note tw-split-legend' }, [txt('i', 'is-oppose', ''), 'oppose (1–2)', txt('i', 'is-neutral', ''), 'neutral (3)', txt('i', 'is-support', ''), 'support (4–5)']);
-
-    // Voices: the first clear reason at each end of the scale and in the middle, in agent-id order.
+    const gap = (a, b) => (a && b ? Math.abs(avg(a[1]) - avg(b[1])) : 0);
+    const fareGap = fares.length === 2 ? gap(fares[0], fares[1]) : 0;
+    const carGap = cars.length === 2 ? gap(cars[0], cars[1]) : 0;
+    const grade = !done
+      ? { state: 'pending', label: 'Answers arriving', text: `${n} of ${asked} agents have answered. The tables update as ratings arrive; treat early shares as incomplete.` }
+      : oppose / n >= 0.6
+        ? { state: 'warn', label: 'Exploratory · opposed', text: `${share(oppose)} of this panel rated the drafted policy 1 or 2. These are synthetic opinions on a question the street cannot run, not a measured effect.` }
+        : support / n >= 0.6
+          ? { state: 'holds', label: 'Exploratory · supported', text: `${share(support)} of this panel rated the drafted policy 4 or 5. These are synthetic opinions on a question the street cannot run, not a measured effect.` }
+          : { state: 'info', label: 'Exploratory · split', text: `No side reaches 60% of this panel (oppose ${share(oppose)}, support ${share(support)}). Use the breakdown to see who is uneasy, not to size a real-world effect.` };
     const clear = rows.filter((row) => row.answer.reason && row.answer.consistency !== 'check').sort((a, b) => String(a.id).localeCompare(String(b.id)));
     const voices = [clear.find((r) => r.rating <= 2), clear.find((r) => r.rating === 3), clear.find((r) => r.rating >= 4)].filter(Boolean);
     const summary = String(live.summary || '').replace(/^Summarising…$/, '');
-
-    report.replaceChildren(...[
-      drafted,
+    const findings = [
+      { text: `${plain(oppose)} of ${plain(n)} agents oppose (rated 1–2), ${plain(neutral)} are neutral, ${plain(support)} support. Average ${mean.toFixed(1)} / 5. ${plain(counts[0])} rated 1, ${plain(counts[4])} rated 5.` },
+      lo && hi && hi.mean - lo.mean >= 0.2
+        ? { text: `Least supportive role: ${lo.name}s (average ${lo.mean.toFixed(1)}, ${plural(lo.list.length, 'agent')}). Most supportive: ${hi.name}s (${hi.mean.toFixed(1)}, ${plural(hi.list.length, 'agent')}).` }
+        : { text: `Every role with three or more agents is within 0.2 of the others on the 1–5 scale.` },
+      fares.length === 2 ? { text: `Fair Pass average ${avg(fares.find((g) => g[0] === 'Fair Pass')?.[1] || []).toFixed(1)} versus adult fare ${avg(fares.find((g) => g[0] === 'Adult fare')?.[1] || []).toFixed(1)}${fareGap >= 0.2 ? `: a ${fareGap.toFixed(1)}-point gap.` : ': the two fare products are within 0.2.'}` } : null,
+      cars.length === 2 ? { text: `Agents with a car average ${avg(cars.find((g) => g[0] === 'Has a car')?.[1] || []).toFixed(1)}; agents without a car average ${avg(cars.find((g) => g[0] === 'No car')?.[1] || []).toFixed(1)}${carGap >= 0.2 ? `: a ${carGap.toFixed(1)}-point gap.` : '.'}` } : null,
+      flagged ? { text: `${plural(flagged, 'answer')} flagged because the written reason may not match the rating.`, chip: chip('warn', 'Check') } : { text: `No answer was flagged for a rating–reason mismatch.` },
+      ...voices.map((row) => ({ text: `${row.agent.name || row.id} (${words(row.agent.role || 'agent')}, rated ${row.rating} ${STANCES[row.rating - 1]}): “${row.answer.reason}”` })),
+    ].filter(Boolean);
+    const kpi = (label, value, tone, change, foot) => el('article', { class: 'tw-kpi' }, [
+      txt('span', 'tw-kpi-label', label),
+      el('p', { class: 'tw-kpi-value' }, [txt('span', tone, value)]),
+      txt('p', 'tw-kpi-change', change),
+      el('p', { class: 'tw-kpi-foot' }, [chip('info', foot)]),
+    ]);
+    const pollLine = (title, sub, points, unit) => {
+      const vals = points.map((p) => p.v);
+      if (!vals.length) return null;
+      const W = 320, H = 150, L = 46, R = 12, T = 14, B = 26, nPts = vals.length;
+      const max = Math.max(1, ...vals) * 1.12;
+      const x = (i) => L + (nPts === 1 ? (W - L - R) / 2 : (i * (W - L - R)) / (nPts - 1));
+      const y = (v) => T + (H - T - B) * (1 - v / max);
+      const path = vals.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+      const grid = [0, 0.5, 1].map((f) => {
+        const v = max / 1.12 * f, yy = y(v).toFixed(1);
+        return `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" class="g"/><text x="${L - 6}" y="${(+yy + 3).toFixed(1)}" text-anchor="end">${xmlEsc(unit === '%' ? `${plain(v)}%` : plain(v, 1))}</text>`;
+      }).join('');
+      const labels = points.map((p, i) => `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle">${xmlEsc(p.label)}</text>`).join('');
+      const dots = vals.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.4" class="dn"><title>${xmlEsc(points[i].label)}: ${xmlEsc(unit === '%' ? `${plain(v)}%` : String(v))}</title></circle>`).join('');
+      const fig = el('figure', { class: 'tw-line' });
+      fig.innerHTML = `<figcaption><span>${xmlEsc(title)}</span><small>${xmlEsc(sub)}</small></figcaption>
+        <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${xmlEsc(title)}">${grid}${labels}<path d="${path}" class="ln"/>${dots}</svg>`;
+      return fig;
+    };
+    const charts = el('section', { class: 'tw-card tw-lines' }, [
+      el('header', { class: 'tw-lines-head' }, [txt('h3', null, 'How the panel rated it'),
+        el('p', { class: 'tw-lines-key' }, [txt('i', 'is-next', ''), 'This panel'])]),
+      el('div', { class: 'tw-lines-grid' }, [
+        pollLine('Ratings', `${plain(n)} answers · average ${mean.toFixed(1)} / 5`, [1, 2, 3, 4, 5].map((r) => ({ label: String(r), v: counts[r - 1] })), 'n'),
+        pollLine('Support by role', 'Share who rated 4 or 5', roles.map(([name, list]) => ({ label: name.replace(/ .*/, ''), v: shareN(split(list)[2], list.length) })), '%'),
+        pollLine('Average by role', '1 = strongly oppose, 5 = strongly support', roles.map(([name, list]) => ({ label: name.replace(/ .*/, ''), v: +avg(list).toFixed(2) })), 'n'),
+        fares.length ? pollLine('Average by fare product', 'Fair Pass versus adult fare', fares.map(([name, list]) => ({ label: name.replace(' fare', ''), v: +avg(list).toFixed(2) })), 'n')
+          : cars.length ? pollLine('Average by car access', 'Same 1–5 scale', cars.map(([name, list]) => ({ label: name.replace('Has a ', '').replace('No ', 'no '), v: +avg(list).toFixed(2) })), 'n') : null,
+      ].filter(Boolean)),
+    ]);
+    const groupBands = [
+      ['By role', roles],
+      ['By fare product', fares],
+      ['By car access', cars],
+      ['By bike access', bikes],
+      ['By usual mode', modes],
+    ].filter(([, groups]) => groups.length);
+    const impactRows = (groups) => groups.map(([name, list]) => {
+      const [o, u, s] = split(list), st = stanceOf(list);
+      return el('tr', {}, [
+        el('th', { scope: 'row' }, [txt('span', null, name), txt('small', null, `${plain(list.length)} agents`)]),
+        txt('td', null, plain(list.length)),
+        txt('td', 'tw-num-strong', avg(list).toFixed(1)),
+        txt('td', 'is-oppose', plain(o)),
+        txt('td', 'is-neutral', plain(u)),
+        txt('td', 'is-support', plain(s)),
+        txt('td', null, share(s, list.length)),
+        el('td', {}, [chip(st.state, st.label)]),
+      ]);
+    });
+    const impacts = card('Ratings by stakeholder', [
+      scroll(el('table', { class: 'tw-table tw-impacts' }, [
+        el('thead', {}, [el('tr', {}, ['Group', 'Agents', 'Average', 'Oppose', 'Neutral', 'Support', 'Support %', 'Stance']
+          .map((label, i) => txt('th', i === 0 ? 'tw-col-label' : i === 7 ? 'tw-col-range' : null, label)))]),
+        el('tbody', {}, groupBands.flatMap(([title, groups]) => [
+          el('tr', { class: 'tw-group' }, [el('th', { colspan: 8, scope: 'rowgroup' }, [title])]),
+          ...impactRows(groups),
+        ])),
+      ])),
+      txt('p', 'tw-note', 'Oppose = rated 1–2. Neutral = 3. Support = 4–5. Stance is a majority of that group, not a forecast. Groups overlap across bands.'),
+    ]);
+    const who = card('Who answered how', [
+      scroll(el('table', { class: 'tw-table' }, [
+        el('thead', {}, [el('tr', {}, ['Group', 'People', 'Rated 1–2', 'Rated 3', 'Rated 4–5', 'Average', 'Support share']
+          .map((label, i) => txt('th', i === 0 ? 'tw-col-label' : null, label)))]),
+        el('tbody', {}, [
+          el('tr', { class: 'is-total' }, [
+            txt('th', null, 'All agents'), txt('td', null, plain(n)), txt('td', 'tw-num-strong', plain(oppose)),
+            txt('td', null, plain(neutral)), txt('td', 'tw-num-strong', plain(support)), txt('td', 'tw-num-strong', mean.toFixed(1)),
+            txt('td', null, share(support)),
+          ]),
+          ...groupBands.flatMap(([title, groups]) => [
+            el('tr', { class: 'tw-group' }, [el('th', { colspan: 7, scope: 'rowgroup' }, [title])]),
+            ...groups.map(([name, list]) => {
+              const [o, u, s] = split(list);
+              return el('tr', {}, [
+                txt('th', null, name), txt('td', null, plain(list.length)), txt('td', 'tw-num-strong', plain(o)),
+                txt('td', null, plain(u)), txt('td', 'tw-num-strong', plain(s)), txt('td', 'tw-num-strong', avg(list).toFixed(1)),
+                txt('td', null, share(s, list.length)),
+              ]);
+            }),
+          ]),
+        ]),
+      ])),
+      txt('p', 'tw-note', `${n} of ${asked} agents have answered so far. A person can appear in more than one band.`),
+    ]);
+    report.replaceChildren(
       done ? null : txt('p', 'tw-status tw-poll-live', `${n} of ${asked} agents have answered so far; the figures update as answers arrive.`),
       el('div', { class: 'tw-kpis' }, [
-        kpi('Support', share(support), 'is-support', `${support} of ${n} agents`, 'Rated 4 or 5'),
-        kpi('Oppose', share(oppose), 'is-oppose', `${oppose} of ${n} agents`, 'Rated 1 or 2'),
-        kpi('Neutral', share(neutral), 'is-neutral', `${neutral} of ${n} agents`, 'Rated 3'),
-        kpi('Average rating', `${avg(rows).toFixed(1)} / 5`, 'is-after', `${n} of ${asked} answered`, '1 = strongly oppose, 5 = strongly support'),
+        kpi('Support', share(support), 'is-support', `${plain(support)} of ${plain(n)} agents`, 'Rated 4 or 5'),
+        kpi('Oppose', share(oppose), 'is-oppose', `${plain(oppose)} of ${plain(n)} agents`, 'Rated 1 or 2'),
+        kpi('Neutral', share(neutral), 'is-neutral', `${plain(neutral)} of ${plain(n)} agents`, 'Rated 3'),
+        kpi('Average rating', `${mean.toFixed(1)} / 5`, 'is-after', `${plain(n)} of ${plain(asked)} answered`, '1 oppose · 5 support'),
       ]),
-      el('div', { class: 'tw-grid' }, [
-        card('How each group rated it', [
-          txt('p', 'tw-note tw-note--lead', lead),
-          scroll(el('table', { class: 'tw-table tw-groups' }, [
-            el('thead', {}, [el('tr', {}, ['Group', 'Agents', 'Average', 'Support', 'Split'].map((label, i) => txt('th', i === 0 || i === 4 ? 'tw-col-label' : null, label)))]),
-            el('tbody', {}, [...groupRows('By role', roles), ...groupRows('By fare product', fares)]),
-          ])),
-          legend,
-        ]),
-        card('In their own words', [
-          el('ul', { class: 'tw-voices' }, voices.map((row) => el('li', {}, [
-            txt('p', null, `“${row.answer.reason}”`),
-            txt('small', null, `${row.agent.name || row.id} · ${words(row.agent.role || 'agent')} · rated ${row.rating}, ${STANCES[row.rating - 1]}`),
-          ]))),
-          summary ? txt('p', 'tw-note', `Panel summary: ${summary}`) : null,
-        ]),
+      charts,
+      el('section', { class: 'tw-card tw-assess' }, [
+        el('div', { class: 'tw-assess-head' }, [txt('h3', null, 'Assessment'), chip(grade.state, grade.label)]),
+        txt('p', 'tw-assess-grade', grade.text),
+        el('ol', { class: 'tw-findings' }, findings.map((item) => el('li', {}, [txt('span', null, item.text), item.chip || null]))),
+        summary ? txt('p', 'tw-note', `Panel summary: ${summary}`) : null,
       ]),
-    ].filter(Boolean));
+      impacts,
+      who,
+      txt('p', 'tw-footnote', `Survey-style ratings from ${plain(n)} synthetic persona agents · not a street simulation · not a forecast`),
+    );
   }
   const words = (text) => String(text || 'agent').replaceAll('_', ' ');
 
