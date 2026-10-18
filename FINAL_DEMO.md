@@ -4,10 +4,10 @@
 
 ## Five-minute preflight
 
-1. Open the site at the top on the presentation laptop. Confirm the header reads **Two Worlds** and the Earth-to-Bloor scroll loads. `?globe=off` uses the drawn-city fallback if the venue network blocks map tiles.
+1. Open the site at the top on the presentation laptop. Confirm the header reads **Two Worlds** and the Earth-to-Bloor scroll loads. If the venue network blocks map tiles, the drawn-city landing appears on its own after 12 s.
 2. Confirm `https://twotwosmyworld.select/api/health` reports the latest deployed `git_sha`. Test one bike and one fare run before judging; both use the same Bathurst–Spadina world and `experiment.v2` result.
 3. Confirm `https://twotwosmyworld.select/health` reports `"ok":true` and 100 agents. If Steven's tunnel is down, the 100-agent beat is skipped and the 3D paired run still works.
-4. Keep the [pitch deck](./pitch/) and [Devpost draft](./pitch/DEVPOST.md) open. Have a local repository checkout available; `?engine=off&globe=off` keeps the prepared city replay usable without the live engine or map tiles.
+4. Keep the [pitch deck](./pitch/) and [Devpost draft](./pitch/DEVPOST.md) open. Have a local repository checkout available; `?engine=off` keeps the prepared city replay usable without the live engine.
 
 ## Four-minute path
 

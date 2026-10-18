@@ -23,31 +23,22 @@ body.demo-view #agentsNote{display:none!important}
 body.is-landed .intro-chapter{height:auto;min-height:0}
 body.is-landed .scroll-cue{display:none}
 
-
 /* ---------- lab (demo view): the 3D view, then the decision brief ---------- */
-body.demo-view .lab-status,body.demo-view .lab-scenarios{display:none!important}
+
 body.demo-view .lab-shell{padding-top:76px;padding-bottom:16px;min-height:0;padding-left:clamp(10px,1.4vw,22px);padding-right:clamp(10px,1.4vw,22px)}
 body.demo-view .lab-layout{margin-top:10px}
 body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{height:calc(100vh - 110px);min-height:600px}
-body.demo-view .view3d-toggle{display:none!important}                         /* 3D only */
-body.demo-view .simulation-viewport.is-3d .motion-button{display:none!important}  /* the 3D view has its own play button */
-body.demo-view .timeline-bar{display:none!important}                          /* one timeline: the 3D view's */
-body.demo-view #peopleStrip,body.demo-view #labCredit,body.demo-view #runLedger,body.demo-view #ttcWorkbench,body.demo-view #bikeLab,
-body.demo-view #impact,body.demo-view #personaLab,body.demo-view #about{display:none!important}
 @media(max-width:760px){body.demo-view .simulation-viewport,body.demo-view .simulation-viewport.has-mapped-world{height:72vh;min-height:420px}}
 
 /* Only the two prepared policies (fare, bike) get the 3D street. Any other question shows the 100 agents and the
    results brief: a compiled run's figures, or the not-simulated card. */
-body.demo-view:not([data-scenario=fare]):not([data-scenario=bike]) #lab .lab-layout,
-body.demo-view:not([data-scenario=fare]):not([data-scenario=bike]) #lab .lab-titlebar,
-body[data-scenario=compiled] .tw-brief .tw-head h2{display:none!important}
+body.demo-view:not([data-scenario=fare]):not([data-scenario=bike]) #lab .lab-layout,body.demo-view:not([data-scenario=fare]):not([data-scenario=bike]) #lab .lab-titlebar,body[data-scenario=compiled] .tw-brief .tw-head h2{display:none!important}
 
 /* ---------- header: transparent, no separator line, no "Enter the city" ---------- */
 .site-header{border-bottom:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* Past the landing, content scrolls under the header, so it takes the page colour (still no banner or blur). */
 body:not([data-phase=intro]):not([data-phase=composer]) .site-header{background:var(--ink)!important}
 .site-header .brand-word{text-shadow:0 1px 14px #07131c}
-#enterButton{display:none!important}
 
 /* ---------- policy impact assessment under the 3D view. Figures come from two-world.js. ----------
    Report layout on a solid full-width surface. Baseline is slate and policy is mint everywhere; chips carry
@@ -65,26 +56,11 @@ body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:96px
 .tw-brief .is-support{color:var(--after)}
 .tw-brief .is-oppose{color:var(--warn)}
 .tw-brief .is-neutral{color:var(--before)}
-.tw-drafted{margin-top:18px!important;padding:14px 18px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:#eef6f4;font-size:15px;line-height:1.5;max-width:1000px}
-.tw-drafted span{display:block;margin-bottom:4px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+
 .tw-poll-live{margin-top:12px!important}
-.tw-split{display:flex;gap:2px;width:100px;height:10px;border-radius:3px;overflow:hidden;background:#14343b}
-.tw-split i,.tw-split-legend i{display:block;min-width:3px}
-.tw-split i.is-oppose,.tw-split-legend i.is-oppose{background:var(--warn)}
-.tw-split i.is-neutral,.tw-split-legend i.is-neutral{background:#6f8c8f}
-.tw-split i.is-support,.tw-split-legend i.is-support{background:var(--after)}
-.tw-split-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.tw-split-legend i{width:10px;height:10px;border-radius:2px;margin-left:8px}
-.tw-split-legend i:first-child{margin-left:0}
-.tw-groups tbody tr:not(.tw-group) th{min-width:110px}
-.tw-groups td:last-child{width:100px}
-.tw-voices{padding:0;list-style:none}
-.tw-voices li{padding:12px 0;border-bottom:1px solid var(--rule)}
-.tw-voices li:first-child{padding-top:0}
-.tw-voices p{color:#e6efed;font-size:14px;line-height:1.55}
-.tw-voices small{display:block;margin-top:6px;color:var(--muted)}
+
 .tw-brief #agentPoll{padding:0;background:none;color:inherit}
-.tw-brief #agentPoll .persona-reaction-head,.tw-brief #agentPollStats{display:none}
+.tw-brief #agentPoll .persona-reaction-head{display:none}
 .tw-brief .agent-poll-split,.tw-brief .agent-poll-filter,.tw-brief .agent-poll-cards{max-width:none}
 .tw-agents[hidden]{display:none}
 .tw-brief h2,.tw-brief h3,.tw-brief p,.tw-brief ol,.tw-brief ul,.tw-brief dl,.tw-brief dd{margin:0}
@@ -92,7 +68,7 @@ body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:96px
 .tw-brief a{color:var(--after);text-underline-offset:3px}
 .tw-eyebrow{color:var(--mint);font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase}
 .tw-head h2{margin:10px 0 0;font:500 30px/1.2 'Space Grotesk',sans-serif;letter-spacing:-.025em;max-width:900px;color:#f3f6ed}
-.tw-lede{max-width:880px;margin-top:12px!important;color:#c3d4d4;font-size:14px;line-height:1.55}
+
 .tw-brief .is-before{color:var(--before)}
 .tw-brief .is-after{color:var(--after)}
 
@@ -130,10 +106,6 @@ body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:96px
 .tw-findings{margin-top:14px!important;padding:0;list-style:none;counter-reset:finding}
 .tw-findings li{display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:baseline;padding:10px 0;border-top:1px solid var(--rule);counter-increment:finding;color:#e6efed;font-size:14.5px;line-height:1.5}
 .tw-findings li::before{content:counter(finding,decimal-leading-zero);color:var(--mint);font-size:11px;font-weight:700;letter-spacing:.6px}
-
-.tw-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
-.tw-grid>.tw-card{margin-top:14px}
-.tw-grid>.tw-card:only-child{grid-column:1/-1}
 
 .tw-scroll{overflow-x:auto;margin:0 -4px;padding:0 4px}
 .tw-table{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -194,7 +166,7 @@ body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:96px
 .tw-limits strong{color:#f1d9d1;font-weight:600}
 .tw-limits span{color:var(--muted)}
 .tw-measure{padding-left:20px}
-.tw-measure-text{color:#d7e5e3;font-size:14px;line-height:1.55}
+
 .tw-measure li{color:#d7e5e3;font-size:13.5px;line-height:1.5}
 .tw-measure li+li{margin-top:8px}
 
@@ -205,7 +177,7 @@ body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:96px
 
 @media(max-width:1080px){
   .tw-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .tw-grid{grid-template-columns:minmax(0,1fr)}
+
   .tw-scope{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:640px){
