@@ -13,7 +13,7 @@ This is the **one public entry point** for the hackathon demo. The cinematic ent
 The default demo view now runs landing → prompt → 3D. The changes live in `two-world.css` and `two-world.js`, plus text edits in `index.html` and one routing function in `app.js`.
 - **Landing:** the globe, with clouds that part as it zooms from Earth to Bloor. The drawn city is only the fallback when the globe cannot load. The brand is "Two Worlds", with a shorter hero and prompt.
 - **Prepared questions:** a typed question about a TTC fare *increase* or a Bloor bike lane *removal* opens the prepared run (`preparedIntent` in `app.js`). A fare cut, free transit, or a new lane goes through the compiler like any other prompt. The prepared cases are not listed as frontend choices.
-- **Only the two prepared runs show the 3D street.** A compiled run (for example free fares, or Line 2 twice as often) shows the 100-agent panel and the results brief, with no 3D view. A question with no mapped lever (for example the Ontario minimum wage) gets one "not simulated" report and no simulated figures. In order, it shows:
+- **Only the two prepared runs show the 3D street.** The viewer does not open for a compiled or speculative question (`streetRun` in `viewer3d-bridge.js`). A compiled run (for example free fares, or Line 2 twice as often) shows the 100-agent panel and the results brief, with no 3D view. A question with no mapped lever (for example the Ontario minimum wage) gets one "not simulated" report and no simulated figures. In order, it shows:
   - the policy the agents rated
   - support, oppose, neutral and average-rating tiles, plus a by-role and by-fare table, all from the agents' 1–5 ratings (`counterfactual:poll` from `app.js`)
   - three agents' reasons

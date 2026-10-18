@@ -161,6 +161,7 @@
 
   let frame = null, ready = false, last = null;
   const isMapped = (r) => r && r.schema_version === 'experiment.v2';
+  const streetRun = (r) => isMapped(r) && (r.scenario_id === 'fare' || r.scenario_id === 'bike');
   const send = (msg) => { if (frame && ready) frame.contentWindow.postMessage(msg, origin); };
   const arm = () => (document.getElementById('baselineView')?.classList.contains('selected') ? 'baseline' : 'policy');
   const sendRun = () => { const r = isMapped(last) ? last : window.CounterfactualCurrentRun; if (isMapped(r)) send({ type: 'viewer3d:run', result: r }); };
@@ -179,7 +180,14 @@
   }
   button.addEventListener('click', () => setOpen(!viewport.classList.contains('is-3d')));
 
-  window.addEventListener('counterfactual:result', (event) => { last = event.detail; stopTour(); if (isMapped(last)) sendRun(); tour.classList.toggle('is-ready', ready && isMapped(last)); tourButton.textContent = isMapped(last) && bikeRun(last) ? '▶ See bike impact' : '▶ See TTC impact'; });
+  window.addEventListener('counterfactual:result', (event) => {
+    last = event.detail;
+    stopTour();
+    if (streetRun(last)) sendRun();
+    else setOpen(false);
+    tour.classList.toggle('is-ready', ready && streetRun(last));
+    tourButton.textContent = bikeRun(last) ? '▶ See bike impact' : '▶ See TTC impact';
+  });
   window.addEventListener('message', (event) => {
     if (event.origin !== origin || !frame || event.source !== frame.contentWindow || !event.data) return;
     if (event.data.type === 'viewer3d:ready') { ready = true; sendRun(); send({ type: 'viewer3d:arm', arm: arm() }); tour.classList.toggle('is-ready', isMapped(last || window.CounterfactualCurrentRun)); }
@@ -214,5 +222,5 @@
   // The 3D view is the default when the mapped world is in use and WebGL works.
   const gl = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
   const wants2d = new URLSearchParams(window.location.search).get('view') === '2d';
-  window.addEventListener('counterfactual:result', (event) => { if (gl && !wants2d && isMapped(event.detail) && !frame) setOpen(true); });
+  window.addEventListener('counterfactual:result', (event) => { if (gl && !wants2d && streetRun(event.detail) && !frame) setOpen(true); });
 })();

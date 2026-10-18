@@ -37,7 +37,7 @@ body.demo-view #impact,body.demo-view #personaLab,body.demo-view #about{display:
 /* Only the two prepared policies (fare, bike) get the 3D street. Any other question shows the 100 agents and the
    results brief: a compiled run's figures, or the not-simulated card. */
 body.demo-view:not([data-scenario=fare]):not([data-scenario=bike]) #lab .lab-layout,
-body.demo-view[data-scenario=custom] #lab .lab-titlebar,
+body.demo-view:not([data-scenario=fare]):not([data-scenario=bike]) #lab .lab-titlebar,
 body[data-scenario=compiled] .tw-brief .tw-head h2{display:none!important}
 
 /* ---------- header: transparent, no separator line, no "Enter the city" ---------- */

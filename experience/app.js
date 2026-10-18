@@ -1100,11 +1100,16 @@ function startPolicyPoll(view) {
 
 // The composer drafts one concrete policy from the typed idea (Opus), then all 100 agents rate it 1–5.
 async function draftPolicy(idea) {
-  if (!(await agentsReady)) return;
+  await agentsReady;
   const token = ++agents.chatToken;
   const fresh = () => token === agents.chatToken;
   const poll = agents.chatPoll = newPoll(`DRAFTED POLICY · FROM “${idea}”`, 'Drafting one concrete policy from your idea…', 'custom');
   showPoll(poll);
+  if (!agents.online || !agents.client) {
+    poll.failed = true;
+    updatePoll(poll, { status: 'AGENT POLL FAILED · PERSONA AGENTS ARE OFFLINE' });
+    return;
+  }
   updatePoll(poll, { status: 'DRAFTING THE POLICY…' });
   const handlers = pollHandlers(poll, fresh);
   try {
@@ -1158,7 +1163,8 @@ async function runScenario(scenario, promptOverride = null) {
     current = await legacyScenario(scenario, promptOverride);
     if (token !== investigationToken) return;
   }
-  if (scenario !== 'custom') startPolicyPoll(scenario);   // the composer drafts a policy for the agents via draftPolicy
+  if (scenario !== 'custom') startPolicyPoll(scenario);
+  else draftPolicy(promptOverride || $('#hypothesisInput').value.trim());
   const where = mapped.backend ? `on ${hostLabel({ ...mapped.backend, remote: true })}` : 'in this browser';
   $('#investigationNote').textContent = !useMapped
     ? (!agents.online ? 'Prepared demo replay · no live model call'
@@ -1292,10 +1298,11 @@ function mappedRailNote(result, by) {
 function renderLab(options = {}) {
   const rerun = Boolean(options.rerun);
   const result = current.run || null;
-  bloorMainMap.canvas.hidden = current.id === 'custom' || !bloorMainMap.world;
+  const showStreet = current.id === 'fare' || current.id === 'bike';
+  bloorMainMap.canvas.hidden = !showStreet || !bloorMainMap.world;
   $('#simulationViewport').classList.toggle('has-mapped-world', !bloorMainMap.canvas.hidden);
-  // A speculative question has no run, so the 3D view (which still holds the previous run) steps aside.
-  $('#simulationViewport').classList.toggle('is-speculative', current.id === 'custom');
+  // Only the two prepared policies have a 3D street. A compiled or speculative question keeps the agents and the brief.
+  $('#simulationViewport').classList.toggle('is-speculative', !showStreet);
   $('#mapAttribution').hidden = bloorMainMap.canvas.hidden;
   if (result) attachRun(rerun);
   else { if (bloorMainMap.run) bloorMainMap.setRun(null); bloorMainMap.setScenario(current.id); }
@@ -1672,7 +1679,6 @@ $('#hypothesisForm').addEventListener('submit', event => {
   const intent = !match && !compiledMatch ? preparedIntent(normalized) : null;
   const chosen = match ? match[0] : compiledMatch ? compiledMatch[0] : intent || 'custom';
   runScenario(chosen, query);
-  if (chosen === 'custom') draftPolicy(query);
 });
 // Only a fare increase or a lane removal is the prepared run; a fare cut or a new lane is compiled like any other question.
 function preparedIntent(text) {
