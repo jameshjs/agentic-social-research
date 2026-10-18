@@ -1651,7 +1651,7 @@ function setBikeRole(roleId) {
 }
 
 $('#enterButton').addEventListener('click', goToComposer);
-$('#headerExplore').addEventListener('click', () => { resetToIntro(); goToComposer(); });
+$('#headerExplore').addEventListener('click', () => $('[data-scenario-choice="fare"]').click());   // same as the TTC fare chip
 $('.brand').addEventListener('click', resetToIntro);
 $('#askAnother').addEventListener('click', resetToIntro);
 $('#hypothesisForm').addEventListener('submit', event => {
