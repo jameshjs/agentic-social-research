@@ -477,9 +477,6 @@
         cell('Policy change', levers.join('; ') || 'Compiled change', `From day ${m.start}`),
         cell('Study area', `Bloor St W, Bathurst to Spadina`, `${m.length} m mapped section`),
         cell('Population', `${m.people} synthetic people`, `${m.residents} residents, ${m.visitors} visitors; not representative`),
-        cell('Horizon', `${m.days} modelled weekday${m.days === 1 ? '' : 's'}`, `Totals over ${days}`),
-        cell('Design', 'Paired baseline and policy arms', `Same people and seed (${m.run.seed}); only the policy differs`),
-        cell('Evidence status', String(m.run.evidence_tier || 'assumption_driven').replace(/_/g, '-').replace(/^./, (c) => c.toUpperCase()), 'Simulated outputs, not a Toronto forecast'),
       ]),
     ]);
   }
@@ -820,6 +817,48 @@
     ]);
   }
 
+  // ---------- line charts: each metric per simulated day, baseline vs with the policy ----------
+  const CHART_SETS = {
+    fare: [['transit_trips', 'TTC trips', 'n'], ['fare_revenue_cad', 'TTC fare receipts', '$'], ['car_trips', 'Car trips', 'n'], ['shop_sales_cad', 'Bloor shop receipts', '$']],
+    bike: [['bloor_bike_trips', 'Bike trips on Bloor', 'n'], ['bloor_shared_cycling_m', 'Metres cycled beside cars', 'm'], ['car_trips', 'Car trips', 'n'], ['shop_sales_cad', 'Bloor shop receipts', '$']],
+    compiled: [['completed_trips', 'Completed trips', 'n'], ['transit_trips', 'TTC trips', 'n'], ['car_trips', 'Car trips', 'n'], ['shop_sales_cad', 'Bloor shop receipts', '$']],
+  };
+  const series = (run, arm, id) => run.runs[arm].metrics.by_tick.map((row) => Number(row[id]) || 0);
+  const sum = (run, arm, id) => run.runs[arm].metrics.by_tick.filter((row) => row.tick >= run.scenario.policy_start).reduce((t, row) => t + (Number(row[id]) || 0), 0);
+  const fmtUnit = (v, unit) => (unit === '$' ? `$${Math.round(v).toLocaleString()}` : unit === 'm' ? `${Math.round(v).toLocaleString()} m` : String(Math.round(v * 10) / 10));
+  const xmlEsc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function lineChart(run, id, label, unit) {
+    const base = series(run, 'baseline', id), next = series(run, 'intervention', id);
+    if (!base.length) return null;
+    const W = 320, H = 150, L = 46, R = 12, T = 14, B = 26, n = base.length;
+    const max = Math.max(1, ...base, ...next) * 1.12;
+    const x = (i) => L + (n === 1 ? (W - L - R) / 2 : (i * (W - L - R)) / (n - 1));
+    const y = (v) => T + (H - T - B) * (1 - v / max);
+    const path = (vals) => vals.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+    const grid = [0, 0.5, 1].map((f) => { const v = max / 1.12 * f, yy = y(v).toFixed(1);
+      return `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" class="g"/><text x="${L - 6}" y="${(+yy + 3).toFixed(1)}" text-anchor="end">${xmlEsc(fmtUnit(v, unit))}</text>`; }).join('');
+    const ps = run.scenario.policy_start, px = x(ps - 1) - (n > 1 ? (x(1) - x(0)) / 2 : 0);
+    const marker = ps > 1 ? `<line x1="${px.toFixed(1)}" x2="${px.toFixed(1)}" y1="${T}" y2="${H - B}" class="p"/><text x="${(px + 4).toFixed(1)}" y="${T + 8}" class="pl">policy starts</text>` : '';
+    const days = base.map((_, i) => `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle">Day ${i + 1}</text>`).join('');
+    const dots = (vals, cls, who) => vals.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.4" class="${cls}"><title>Day ${i + 1} · ${who}: ${xmlEsc(fmtUnit(v, unit))}</title></circle>`).join('');
+    const a = sum(run, 'baseline', id), b = sum(run, 'intervention', id);
+    const fig = el('figure', { class: 'tw-line' });
+    fig.innerHTML = `<figcaption><span>${xmlEsc(label)}</span><small>${xmlEsc(fmtUnit(a, unit))} → ${xmlEsc(fmtUnit(b, unit))} after the change</small></figcaption>
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${xmlEsc(label)} per day, baseline and with the policy">${grid}${marker}${days}
+        <path d="${path(base)}" class="lb"/><path d="${path(next)}" class="ln"/>${dots(base, 'db', 'baseline')}${dots(next, 'dn', 'with policy')}</svg>`;
+    return fig;
+  }
+  function chartsCard(m) {
+    const set = CHART_SETS[m.kind] || CHART_SETS.compiled;
+    const figs = set.map(([id, label, unit]) => lineChart(m.run, id, label, unit)).filter(Boolean);
+    if (!figs.length) return null;
+    return el('section', { class: 'tw-card tw-lines' }, [
+      el('header', { class: 'tw-lines-head' }, [txt('h3', null, 'Day by day'),
+        el('p', { class: 'tw-lines-key' }, [txt('i', 'is-base', ''), 'Baseline', txt('i', 'is-next', ''), 'With the policy'])]),
+      el('div', { class: 'tw-lines-grid' }, figs),
+    ]);
+  }
+
   // ---------- the brief ----------
   function render(run) {
     speculative = false;
@@ -833,13 +872,11 @@
     box.replaceChildren(
       header(m),
       tiles(m, sens),
+      chartsCard(m),
       assessment(m, sens),
       impacts(m, sens),
       incidenceCard(m),
-      el('div', { class: 'tw-grid' }, [diversionCard(m), m.bench ? fareCheck(m) : m.kind === 'bike' ? streetCheck(m) : null].filter(Boolean)),
-      sensitivityCard(m, sens),
-      el('div', { class: 'tw-grid' }, [checksCard(m, sens), limitsCard(m)]),
-      methodCard(m, methodOpen),
+      txt('p', 'tw-footnote', `Simulated · ${m.people} synthetic people on the mapped Bloor St W section · not a forecast`),
     );
     box.hidden = false;
     if (fresh) requestAnimationFrame(() => { if (inView()) startSensitivity(); });

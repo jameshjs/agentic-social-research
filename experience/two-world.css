@@ -205,3 +205,24 @@ body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:96px
   .tw-facts dt{padding-bottom:0;border-bottom:0}
   .tw-limits li{grid-template-columns:1fr;gap:2px}
 }
+
+/* ---------- day-by-day line charts (two-world.js chartsCard) ---------- */
+.tw-lines-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.tw-lines-head h3{margin:0}
+.tw-lines-key{margin:0;color:#b9cfcc;font-size:12px;font-weight:600}
+.tw-lines-key i{display:inline-block;width:18px;height:3px;border-radius:2px;margin:0 6px 3px 12px;vertical-align:middle}
+.tw-lines-key i.is-base{background:#4fe3ff}.tw-lines-key i.is-next{background:#ff3df0}
+.tw-lines-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px}
+.tw-line{margin:0;padding:12px 12px 6px;border:1px solid #a8f4d124;border-radius:12px;background:#0d262ecc}
+.tw-line figcaption{display:flex;flex-direction:column;gap:2px}
+.tw-line figcaption span{font:600 14px 'Space Grotesk',sans-serif;color:#eef6f2}
+.tw-line figcaption small{color:#9fbab8;font-size:11px}
+.tw-line svg{display:block;width:100%;height:auto;margin-top:6px;overflow:visible}
+.tw-line svg text{fill:#8eabae;font:10px 'DM Sans',sans-serif}
+.tw-line svg .g{stroke:#ffffff14;stroke-width:1}
+.tw-line svg .p{stroke:#ffe14d88;stroke-width:1;stroke-dasharray:3 3}
+.tw-line svg .pl{fill:#ffe14dcc;font-size:9px}
+.tw-line svg .lb{fill:none;stroke:#4fe3ff;stroke-width:2.2}
+.tw-line svg .ln{fill:none;stroke:#ff3df0;stroke-width:2.6}
+.tw-line svg .db{fill:#4fe3ff}.tw-line svg .dn{fill:#ff3df0}
+.tw-footnote{margin:14px 2px 0;color:#86a5a8;font-size:11px}
