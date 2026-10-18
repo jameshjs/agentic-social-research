@@ -907,7 +907,7 @@
   }
 
   // ---------- a question with no mapped lever: no run, no 3D street, no simulated figures ----------
-  // The report is the 100 persona agents instead: their ratings as metrics, every answer, then why it was not run.
+  // The report is the 100 persona agents on top, then their ratings as metrics. No compiler cards.
   const STANCES = ['strongly oppose', 'oppose', 'neutral', 'support', 'strongly support'];
   let speculative = false, poll = null;
   window.addEventListener('counterfactual:poll', (event) => { poll = event.detail; if (speculative) pollReport(); });
@@ -917,7 +917,7 @@
     if (!report) return;
     const live = poll && poll.view === 'custom' ? poll : null;
     const rows = live ? live.rows.filter((row) => row.rating) : [];
-    agentsCard.hidden = !rows.length;
+    if (agentsCard) agentsCard.hidden = false;
     const drafted = live && !/^Drafting/.test(live.question)
       ? el('p', { class: 'tw-drafted' }, [txt('span', null, 'Policy the agents rated, drafted from your question'), live.question]) : null;
     if (!rows.length) {
@@ -1007,33 +1007,18 @@
     place();
     current = null;
     speculative = true;
-    const reason = String(scenario.summary || '').split(' The compiler kept')[0].trim();
     const agentsSlot = el('div', { class: 'tw-agents-slot' }, []);
     box.replaceChildren(
       el('header', { class: 'tw-head' }, [
         txt('p', 'tw-eyebrow', 'Persona-agent reaction · not simulated'),
         txt('h2', null, scenario.title || 'This question'),
-        txt('p', 'tw-lede', 'This question maps to none of the things the Bloor St W world can change (the adult fare, Line 2 frequency, the cycle track, car lanes, parking and signal timing), so there is no 3D street and no simulated figures. Instead, 100 synthetic persona agents rated a concrete version of it. Their ratings are synthetic opinions, not measured effects or a forecast.'),
       ]),
-      el('div', { class: 'tw-poll-report' }, []),
-      el('section', { class: 'tw-card tw-agents', hidden: '' }, [
+      el('section', { class: 'tw-card tw-agents' }, [
         txt('h3', null, 'Every agent’s answer'),
         txt('p', 'tw-note tw-note--lead', 'One card per agent, coloured by rating. Open a card for that agent’s reason, or filter by role.'),
         agentsSlot,
       ]),
-      el('div', { class: 'tw-grid' }, [
-        card('Why it was not run', [
-          txt('p', 'tw-measure-text', reason || 'No mapped Bathurst–Spadina lever directly represents this question.'),
-          scenario.compilerBadge ? txt('p', 'tw-note', scenario.compilerBadge) : null,
-        ]),
-        card('What a simulation would need', [
-          el('ol', { class: 'tw-measure' }, [
-            txt('li', null, 'A lever the world can change, with a baseline and a policy value.'),
-            txt('li', null, 'A mechanism linking that change to people’s choices, with evidence for its size.'),
-            txt('li', null, 'The residents, firms and places it reaches, mapped into the world.'),
-          ]),
-        ]),
-      ]),
+      el('div', { class: 'tw-poll-report' }, []),
     );
     adopt(agentsSlot);
     box.hidden = false;
