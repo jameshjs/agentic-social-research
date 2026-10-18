@@ -11,7 +11,11 @@ body.demo-view #agentsNote{display:none!important}
 
 /* ---------- prompt page: the question, one Run button and the two prepared questions ---------- */
 .composer-heading h2{margin-bottom:26px}
-.hypothesis-card{max-width:600px;margin-left:auto;margin-right:auto}   /* a narrower prompt bar */
+/* a shorter (less tall) prompt bar, full width as before */
+.hypothesis-card{padding:8px 10px 8px 14px}
+.composer-input-row{margin-top:0}
+.composer-input-row textarea{min-height:0;height:46px;padding:10px 6px;font-size:clamp(16px,1.6vw,20px);resize:none;overflow-y:auto}
+.run-button{padding:0 14px 0 18px;min-height:44px}
 .globe-caption{display:none!important}                                  /* no street-name caption on the landing */
 /* After the first run (app.js .is-landed) the prompt page is one screen; the landing scroll comes back only on reload. */
 body.is-landed .intro-chapter{height:auto;min-height:0}
