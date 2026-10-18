@@ -971,29 +971,28 @@ function motionFor(policy, agent, rating) {
 const newPoll = (kind, question, view) => ({ kind, question, view, rows: [], status: '', summary: '', asked: 100 });
 const words = (text) => String(text || 'agent').replaceAll('_', ' ');
 
-// A compact card: name, role and rating colour; the reason opens on click and shows on hover.
+// A fixed-size tile: name, role, rating colour and the reason (clamped; the full text on hover or focus).
 function pollCard({ id, answer, agent }) {
   const rating = ratingOf(answer);
-  const card = document.createElement('details'); card.className = 'agent-card'; card.dataset.role = agent.role || 'agent';
+  const card = document.createElement('article'); card.className = 'agent-card'; card.dataset.role = agent.role || 'agent'; card.tabIndex = 0;
   card.style.setProperty('--rating', RATING_COLORS[rating - 1] || '#6f8c8f');
   const check = answer.consistency === 'check';
   if (check) card.classList.add('agent-card--check');
   card.title = `${check ? 'Flagged: the reason may not match the rating. ' : ''}${answer.reason || ''}`;
-  const summary = document.createElement('summary');
+  const head = document.createElement('div'); head.className = 'agent-card-head';
   const name = document.createElement('strong'); name.textContent = agent.name || id;
   const role = document.createElement('span'); role.textContent = words(agent.role);
   const score = document.createElement('b'); score.textContent = rating || '–'; score.setAttribute('aria-label', rating ? `rated ${rating}, ${STANCES[rating - 1]}` : 'no rating');
-  summary.append(name, role, score);
+  head.append(name, role, score);
   const reason = document.createElement('p'); reason.textContent = answer.reason || '';
-  card.append(summary, reason);
+  card.append(head, reason);
   card.hidden = Boolean(agents.roleFilter && agents.roleFilter !== card.dataset.role);
   return card;
 }
 
-// The 1–5 bar, the mean and N, the by-role and by-fare means, and the role filter, from the rows so far.
+// The 1–5 bar and the role filter, from the rows so far.
 function renderPollStats(poll) {
   const counts = SCALE.map((n) => poll.rows.filter((row) => ratingOf(row.answer) === n).length);
-  $('#agentPollSplit').hidden = !poll.rows.length;
   $('#agentPollSplit').setAttribute('aria-label', `Ratings: ${SCALE.map((n, i) => `${n} ${STANCES[i]} ${counts[i]}`).join(', ')}`);
   $('#agentPollSplit').replaceChildren(...SCALE.filter((n, i) => counts[i]).map((n) => {
     const part = document.createElement('span');
@@ -1002,18 +1001,6 @@ function renderPollStats(poll) {
     part.textContent = `${n} ${STANCES[n - 1].toUpperCase()} · ${counts[n - 1]}`;
     return part;
   }));
-  const flagged = poll.rows.filter((row) => row.answer.consistency === 'check').length;
-  const mean = (rows) => { const r = rows.map((row) => ratingOf(row.answer)).filter(Boolean); return r.length ? (r.reduce((a, b) => a + b, 0) / r.length).toFixed(1) : '–'; };
-  const by = (key) => {
-    const groups = {};
-    for (const row of poll.rows) (groups[key(row.agent)] ||= []).push(row);
-    return Object.entries(groups).sort((a, b) => b[1].length - a[1].length).map(([name, rows]) => `${words(name)} ${mean(rows)} (${rows.length})`).join(' · ');
-  };
-  $('#agentPollStats').textContent = !poll.rows.length ? '' : [
-    `${poll.rows.length} OF ${poll.asked} ANSWERED · MEAN ${mean(poll.rows)} / 5${flagged ? ` · ${flagged} FLAGGED (?) WHERE THE REASON MAY NOT MATCH THE RATING` : ''}`,
-    `BY ROLE · ${by((agent) => agent.role)}`,
-    `BY FARE · ${by((agent) => agent.fare_category === 'fair_pass' ? 'Fair Pass' : 'adult fare')}`,
-  ].join('\n');
   const roles = {};
   for (const { agent } of poll.rows) roles[agent.role] = (roles[agent.role] || 0) + 1;
   $('#agentPollFilter').replaceChildren(...[['', poll.rows.length], ...Object.entries(roles).sort((a, b) => b[1] - a[1])].map(([role, n]) => {
@@ -1032,6 +1019,7 @@ function showPoll(poll) {
   $('#agentPoll').hidden = !poll;
   if (!poll) return;
   $('#agentPollCards').replaceChildren(...poll.rows.map(pollCard));
+  $('#agentPollCards').scrollLeft = 0;
   renderPollStats(poll);
   updatePoll(poll, {});
 }
@@ -1042,7 +1030,6 @@ function updatePoll(poll, patch) {
   $('#agentPollKind').textContent = poll.kind;
   $('#agentPollQuestion').textContent = poll.question;
   $('#agentPollStatus').textContent = poll.status;
-  $('#agentPollSummary').textContent = poll.summary;
   announcePoll(poll);
 }
 
@@ -1054,7 +1041,14 @@ function addPollRow(poll, id, answer, agent) {
   const row = { id, answer, rating: ratingOf(answer), agent: agent || agents.roster.get(id) || { id } };
   poll.rows.push(row);
   poll.onRow?.(row);
-  if (agents.shown === poll) { $('#agentPollCards').append(pollCard(row)); renderPollStats(poll); announcePoll(poll); }
+  if (agents.shown === poll) {
+    // New answers join the right end of the one-row strip, which follows them, so the row runs right to left.
+    const cards = $('#agentPollCards'), card = pollCard(row);
+    card.classList.add('is-new');
+    cards.append(card);
+    cards.scrollTo({ left: cards.scrollWidth, behavior: reducedMotion ? 'instant' : 'smooth' });
+    renderPollStats(poll); announcePoll(poll);
+  }
 }
 
 // Streams one 1–5 poll of all 100 agents into a poll object (askAgents for prepared policies, chat for drafts).

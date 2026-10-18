@@ -1983,6 +1983,8 @@ if (HASH.get('week')) state.week = +HASH.get('week');
 $('scen').value = state.scenario;
 // Embedded in /experience/ (?embed=1): show the page's own mapped run and follow its Baseline/Policy toggle.
 if (EMBED) document.body.classList.add('embed');
+// Embedded, the wheel scrolls the page instead of zooming (OrbitControls skips preventDefault when zoom is off).
+if (EMBED) controls.enableZoom = false;
 let parentRun = null;
 if (EMBED) { try { parentRun = window.parent !== window ? window.parent.CounterfactualCurrentRun : null; } catch (e) { parentRun = null; } }
 if (!(parentRun && setMappedRun(parentRun))) rebuildArms();

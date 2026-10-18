@@ -84,7 +84,7 @@ body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:96px
 .tw-voices p{color:#e6efed;font-size:14px;line-height:1.55}
 .tw-voices small{display:block;margin-top:6px;color:var(--muted)}
 .tw-brief #agentPoll{padding:0;background:none;color:inherit}
-.tw-brief #agentPoll .persona-reaction-head,.tw-brief #agentPollStats{display:none}
+.tw-brief #agentPoll .persona-reaction-head{display:none}
 .tw-brief .agent-poll-split,.tw-brief .agent-poll-filter,.tw-brief .agent-poll-cards{max-width:none}
 .tw-agents[hidden]{display:none}
 .tw-brief h2,.tw-brief h3,.tw-brief p,.tw-brief ol,.tw-brief ul,.tw-brief dl,.tw-brief dd{margin:0}

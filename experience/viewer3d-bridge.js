@@ -170,7 +170,7 @@
     if (open && !frame) {
       frame = document.createElement('iframe');
       frame.className = 'view3d-frame'; frame.title = '3D view of the mapped run';
-      frame.src = '../world/viewer3d/?embed=1&v=street-tour-10';
+      frame.src = '../world/viewer3d/?embed=1&v=street-tour-11';
       viewport.appendChild(frame);
     }
     viewport.classList.toggle('is-3d', open);
