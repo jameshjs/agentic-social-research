@@ -32,12 +32,12 @@ ops/deploy.sh --skip-key   # writes the Caddyfile with the agent routes, restart
 ## Steven: going live from your laptop
 
 1. Start the agent server on the tunnel port, requiring the key: `npm --prefix persona-swarm/runtime start -- --port 4179 --require-key`. It uses your `local` Claude login and the `CONSOLE_ACCESS_KEY` in `persona-swarm/.env`.
-2. Open the tunnel and keep it open during the demo:
+2. Open the tunnel and keep it open during the demo. `caffeinate -is` keeps the Mac awake while it runs (`-s` only holds on charger power; closing the lid still sleeps it):
 
    ```sh
-   while true; do ssh -N -i ~/.ssh/vultr_tunnel_ed25519 -o IdentitiesOnly=yes -o ExitOnForwardFailure=yes \
+   caffeinate -is sh -c 'while true; do ssh -N -i ~/.ssh/vultr_tunnel_ed25519 -o IdentitiesOnly=yes -o ExitOnForwardFailure=yes \
        -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 127.0.0.1:4179:127.0.0.1:4179 tunnel@155.138.141.130
-     sleep 5; done   # reconnects after a drop; Ctrl-C twice to stop
+     sleep 5; done'   # reconnects after a drop; Ctrl-C twice to stop
    ```
 
 3. Check from anywhere: `curl -s https://twotwosmyworld.select/health` should return your server's health JSON, and the site's corner pill should read `LIVE · 100 PERSONA AGENTS`.
