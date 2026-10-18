@@ -12,6 +12,11 @@
   }
   place();
   document.addEventListener('DOMContentLoaded', place);
+  // A question with no run shows the panel inside its report instead (renderSpeculative).
+  function adopt(slot) {
+    const poll = document.getElementById('agentPoll');
+    if (poll && poll.parentNode !== slot) slot.append(poll);
+  }
 
   const box = document.createElement('section');
   box.className = 'tw-brief';
@@ -814,6 +819,8 @@
 
   // ---------- the brief ----------
   function render(run) {
+    speculative = false;
+    place();
     if (!run || run.schema_version !== 'experiment.v2') { current = null; box.hidden = true; box.replaceChildren(); return; }
     const fresh = run !== current;
     current = run;
@@ -842,15 +849,119 @@
     window.addEventListener('scroll', () => { if (inView()) startSensitivity(); }, { passive: true });
   }
 
-  // A question with no mapped lever has no run: no 3D street and no figures, only the agents and this card.
+  // ---------- a question with no mapped lever: no run, no 3D street, no simulated figures ----------
+  // The report is the 100 persona agents instead: their ratings as metrics, every answer, then why it was not run.
+  const STANCES = ['strongly oppose', 'oppose', 'neutral', 'support', 'strongly support'];
+  let speculative = false, poll = null;
+  window.addEventListener('counterfactual:poll', (event) => { poll = event.detail; if (speculative) pollReport(); });
+
+  function pollReport() {
+    const report = box.querySelector('.tw-poll-report'), agentsCard = box.querySelector('.tw-agents');
+    if (!report) return;
+    const live = poll && poll.view === 'custom' ? poll : null;
+    const rows = live ? live.rows.filter((row) => row.rating) : [];
+    agentsCard.hidden = !rows.length;
+    const drafted = live && !/^Drafting/.test(live.question)
+      ? el('p', { class: 'tw-drafted' }, [txt('span', null, 'Policy the agents rated, drafted from your question'), live.question]) : null;
+    if (!rows.length) {
+      const offline = document.getElementById('agentsNote')?.dataset.state === 'offline';
+      const status = !live ? (offline ? 'The persona-agent panel is offline, so this question has no ratings yet.' : 'Waiting for the persona-agent panel…')
+        : live.failed ? `The agent poll did not complete: ${live.status.replace(/^AGENT POLL FAILED · /, '').toLowerCase()}.`
+        : `${live.status.charAt(0)}${live.status.slice(1).toLowerCase()}`;
+      report.replaceChildren(...[drafted, card('Persona-agent ratings', [txt('p', 'tw-status', status)])].filter(Boolean));
+      return;
+    }
+    const n = rows.length, asked = live.asked || 100;
+    const avg = (list) => list.reduce((s, row) => s + row.rating, 0) / list.length;
+    const split = (list) => [list.filter((r) => r.rating <= 2).length, list.filter((r) => r.rating === 3).length, list.filter((r) => r.rating >= 4).length];
+    const [oppose, neutral, support] = split(rows);
+    const share = (k, of = n) => `${plain((k / of) * 100)}%`;
+    const kpi = (label, value, tone, change, foot) => el('article', { class: 'tw-kpi' }, [
+      txt('span', 'tw-kpi-label', label),
+      el('p', { class: 'tw-kpi-value' }, [txt('span', tone, value)]),
+      txt('p', 'tw-kpi-change', change),
+      el('p', { class: 'tw-kpi-foot' }, [txt('small', 'tw-note', foot)]),
+    ]);
+    const done = n >= asked || (/ANSWERED$/.test(live.status) && !/^LIVE/.test(live.status));
+
+    // Groups: role, then fare product. Smallest groups are still shown, with their size beside the average.
+    const groupBy = (key) => Object.entries(rows.reduce((acc, row) => ((acc[key(row.agent)] ||= []).push(row), acc), {}))
+      .sort((a, b) => b[1].length - a[1].length);
+    const roles = groupBy((agent) => words(agent.role || 'agent'));
+    const fares = rows.some((row) => row.agent.fare_category) ? groupBy((agent) => (agent.fare_category === 'fair_pass' ? 'Fair Pass' : 'Adult fare')) : [];
+    const bar = (list) => {
+      const [o, u, s] = split(list);
+      return el('span', { class: 'tw-split', 'aria-label': `${o} oppose, ${u} neutral, ${s} support` }, [
+        o ? el('i', { class: 'is-oppose', style: `flex:${o}` }, []) : null,
+        u ? el('i', { class: 'is-neutral', style: `flex:${u}` }, []) : null,
+        s ? el('i', { class: 'is-support', style: `flex:${s}` }, []) : null,
+      ]);
+    };
+    const groupRows = (title, groups) => (groups.length ? [
+      el('tr', { class: 'tw-group' }, [el('th', { colspan: '5' }, [title])]),
+      ...groups.map(([name, list]) => el('tr', {}, [
+        txt('th', null, name), txt('td', null, plain(list.length)), txt('td', 'tw-num-strong', avg(list).toFixed(1)),
+        txt('td', null, share(split(list)[2], list.length)), el('td', {}, [bar(list)]),
+      ])),
+    ] : []);
+    const ranked = roles.filter(([, list]) => list.length >= 3).map(([name, list]) => ({ name, list, mean: avg(list) })).sort((a, b) => a.mean - b.mean);
+    const lo = ranked[0], hi = ranked[ranked.length - 1];
+    const lead = lo && hi && hi.mean - lo.mean >= 0.2
+      ? `Least supportive: ${lo.name}s (average ${lo.mean.toFixed(1)}, ${plural(lo.list.length, 'agent')}). Most supportive: ${hi.name}s (${hi.mean.toFixed(1)}, ${plural(hi.list.length, 'agent')}).`
+      : 'Every role with three or more agents rated it within 0.2 of the others.';
+    const legend = el('p', { class: 'tw-note tw-split-legend' }, [txt('i', 'is-oppose', ''), 'oppose (1–2)', txt('i', 'is-neutral', ''), 'neutral (3)', txt('i', 'is-support', ''), 'support (4–5)']);
+
+    // Voices: the first clear reason at each end of the scale and in the middle, in agent-id order.
+    const clear = rows.filter((row) => row.answer.reason && row.answer.consistency !== 'check').sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    const voices = [clear.find((r) => r.rating <= 2), clear.find((r) => r.rating === 3), clear.find((r) => r.rating >= 4)].filter(Boolean);
+    const summary = String(live.summary || '').replace(/^Summarising…$/, '');
+
+    report.replaceChildren(...[
+      drafted,
+      done ? null : txt('p', 'tw-status tw-poll-live', `${n} of ${asked} agents have answered so far; the figures update as answers arrive.`),
+      el('div', { class: 'tw-kpis' }, [
+        kpi('Support', share(support), 'is-support', `${support} of ${n} agents`, 'Rated 4 or 5'),
+        kpi('Oppose', share(oppose), 'is-oppose', `${oppose} of ${n} agents`, 'Rated 1 or 2'),
+        kpi('Neutral', share(neutral), 'is-neutral', `${neutral} of ${n} agents`, 'Rated 3'),
+        kpi('Average rating', `${avg(rows).toFixed(1)} / 5`, 'is-after', `${n} of ${asked} answered`, '1 = strongly oppose, 5 = strongly support'),
+      ]),
+      el('div', { class: 'tw-grid' }, [
+        card('How each group rated it', [
+          txt('p', 'tw-note tw-note--lead', lead),
+          scroll(el('table', { class: 'tw-table tw-groups' }, [
+            el('thead', {}, [el('tr', {}, ['Group', 'Agents', 'Average', 'Support', 'Split'].map((label, i) => txt('th', i === 0 || i === 4 ? 'tw-col-label' : null, label)))]),
+            el('tbody', {}, [...groupRows('By role', roles), ...groupRows('By fare product', fares)]),
+          ])),
+          legend,
+        ]),
+        card('In their own words', [
+          el('ul', { class: 'tw-voices' }, voices.map((row) => el('li', {}, [
+            txt('p', null, `“${row.answer.reason}”`),
+            txt('small', null, `${row.agent.name || row.id} · ${words(row.agent.role || 'agent')} · rated ${row.rating}, ${STANCES[row.rating - 1]}`),
+          ]))),
+          summary ? txt('p', 'tw-note', `Panel summary: ${summary}`) : null,
+        ]),
+      ]),
+    ].filter(Boolean));
+  }
+  const words = (text) => String(text || 'agent').replaceAll('_', ' ');
+
   function renderSpeculative(scenario) {
     current = null;
+    speculative = true;
     const reason = String(scenario.summary || '').split(' The compiler kept')[0].trim();
+    const agentsSlot = el('div', { class: 'tw-agents-slot' }, []);
     box.replaceChildren(
       el('header', { class: 'tw-head' }, [
-        txt('p', 'tw-eyebrow', 'Policy impact assessment · not simulated'),
+        txt('p', 'tw-eyebrow', 'Persona-agent reaction · not simulated'),
         txt('h2', null, scenario.title || 'This question'),
-        txt('p', 'tw-lede', 'The Bloor St W world can change the adult fare, Line 2 frequency, the cycle track, car lanes, parking and signal timing. This question maps to none of them, so no figures are reported. The persona-agent ratings above are synthetic opinions, not measured effects.'),
+        txt('p', 'tw-lede', 'This question maps to none of the things the Bloor St W world can change (the adult fare, Line 2 frequency, the cycle track, car lanes, parking and signal timing), so there is no 3D street and no simulated figures. Instead, 100 synthetic persona agents rated a concrete version of it. Their ratings are synthetic opinions, not measured effects or a forecast.'),
+      ]),
+      el('div', { class: 'tw-poll-report' }, []),
+      el('section', { class: 'tw-card tw-agents', hidden: '' }, [
+        txt('h3', null, 'Every agent’s answer'),
+        txt('p', 'tw-note tw-note--lead', 'One card per agent, coloured by rating. Open a card for that agent’s reason, or filter by role.'),
+        agentsSlot,
       ]),
       el('div', { class: 'tw-grid' }, [
         card('Why it was not run', [
@@ -866,14 +977,17 @@
         ]),
       ]),
     );
+    adopt(agentsSlot);
     box.hidden = false;
+    pollReport();
   }
 
   window.addEventListener('counterfactual:result', (event) => render(event.detail));
   if (window.CounterfactualCurrentRun) render(window.CounterfactualCurrentRun);
   new MutationObserver(() => {
     const { phase, scenario } = document.body.dataset;
-    if (phase !== 'lab' || scenario !== 'custom') return;
+    if (scenario !== 'custom') { if (speculative) { speculative = false; place(); } return; }
+    if (phase !== 'lab') return;
     const now = window.counterfactualPreview?.current?.();
     if (now && now.id === 'custom' && !now.run) renderSpeculative(now);
   }).observe(document.body, { attributes: true, attributeFilter: ['data-phase', 'data-scenario'] });

@@ -58,6 +58,33 @@ body.demo-view .tw-brief:not([hidden]){
   color:#e6efed;font-variant-numeric:tabular-nums;
 }
 body.demo-view[data-scenario=custom] .tw-brief:not([hidden]){padding-bottom:96px}
+/* Not-simulated report (two-world.js renderSpeculative): the agents' ratings as metrics, then the agent panel itself,
+   which moves in without its own heading or summary line. */
+.tw-brief .is-support{color:var(--after)}
+.tw-brief .is-oppose{color:var(--warn)}
+.tw-brief .is-neutral{color:var(--before)}
+.tw-drafted{margin-top:18px!important;padding:14px 18px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:#eef6f4;font-size:15px;line-height:1.5;max-width:1000px}
+.tw-drafted span{display:block;margin-bottom:4px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.tw-poll-live{margin-top:12px!important}
+.tw-split{display:flex;gap:2px;width:100px;height:10px;border-radius:3px;overflow:hidden;background:#14343b}
+.tw-split i,.tw-split-legend i{display:block;min-width:3px}
+.tw-split i.is-oppose,.tw-split-legend i.is-oppose{background:var(--warn)}
+.tw-split i.is-neutral,.tw-split-legend i.is-neutral{background:#6f8c8f}
+.tw-split i.is-support,.tw-split-legend i.is-support{background:var(--after)}
+.tw-split-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tw-split-legend i{width:10px;height:10px;border-radius:2px;margin-left:8px}
+.tw-split-legend i:first-child{margin-left:0}
+.tw-groups tbody tr:not(.tw-group) th{min-width:110px}
+.tw-groups td:last-child{width:100px}
+.tw-voices{padding:0;list-style:none}
+.tw-voices li{padding:12px 0;border-bottom:1px solid var(--rule)}
+.tw-voices li:first-child{padding-top:0}
+.tw-voices p{color:#e6efed;font-size:14px;line-height:1.55}
+.tw-voices small{display:block;margin-top:6px;color:var(--muted)}
+.tw-brief #agentPoll{padding:0;background:none;color:inherit}
+.tw-brief #agentPoll .persona-reaction-head,.tw-brief #agentPollStats{display:none}
+.tw-brief .agent-poll-split,.tw-brief .agent-poll-filter,.tw-brief .agent-poll-cards{max-width:none}
+.tw-agents[hidden]{display:none}
 .tw-brief h2,.tw-brief h3,.tw-brief p,.tw-brief ol,.tw-brief ul,.tw-brief dl,.tw-brief dd{margin:0}
 .tw-brief small{font-size:12px}
 .tw-brief a{color:var(--after);text-underline-offset:3px}

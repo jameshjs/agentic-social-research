@@ -1043,14 +1043,18 @@ function updatePoll(poll, patch) {
   $('#agentPollQuestion').textContent = poll.question;
   $('#agentPollStatus').textContent = poll.status;
   $('#agentPollSummary').textContent = poll.summary;
+  announcePoll(poll);
 }
+
+// two-world.js builds the not-simulated report from the shown poll.
+function announcePoll(poll) { window.dispatchEvent(new CustomEvent('counterfactual:poll', { detail: poll })); }
 
 function addPollRow(poll, id, answer, agent) {
   if (!answer) return;
-  const row = { id, answer, agent: agent || agents.roster.get(id) || { id } };
+  const row = { id, answer, rating: ratingOf(answer), agent: agent || agents.roster.get(id) || { id } };
   poll.rows.push(row);
   poll.onRow?.(row);
-  if (agents.shown === poll) { $('#agentPollCards').append(pollCard(row)); renderPollStats(poll); }
+  if (agents.shown === poll) { $('#agentPollCards').append(pollCard(row)); renderPollStats(poll); announcePoll(poll); }
 }
 
 // Streams one 1–5 poll of all 100 agents into a poll object (askAgents for prepared policies, chat for drafts).
@@ -1204,7 +1208,8 @@ async function runScenario(scenario, promptOverride = null) {
   setPhase('lab');
   requestAnimationFrame(() => {
     // When the 100 persona agents are online, their panel and its rating animation come first (it sits above the lab); then the 3D lab.
-    $($('#agentPoll').hidden ? '#lab' : '#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+    // A question with no run has no 3D view; its report (agents included) is in the lab.
+    $(current.id === 'custom' || $('#agentPoll').hidden ? '#lab' : '#agentPoll').scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
     startReplay();
   });
 }
