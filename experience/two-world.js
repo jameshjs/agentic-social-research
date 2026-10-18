@@ -6,15 +6,18 @@
 (function () {
   'use strict';
 
+  // Held, not looked up: app.js finds the panel by id, so it must never be left detached when the brief is rebuilt.
+  let panel = null;
+  const agentPanel = () => (panel ||= document.getElementById('agentPoll'));
   function place() {
-    const poll = document.getElementById('agentPoll'), intro = document.getElementById('intro');
+    const poll = agentPanel(), intro = document.getElementById('intro');
     if (poll && intro && intro.nextElementSibling !== poll) intro.after(poll);
   }
   place();
-  document.addEventListener('DOMContentLoaded', place);
+  document.addEventListener('DOMContentLoaded', () => place());
   // A question with no run shows the panel inside its report instead (renderSpeculative).
   function adopt(slot) {
-    const poll = document.getElementById('agentPoll');
+    const poll = agentPanel();
     if (poll && poll.parentNode !== slot) slot.append(poll);
   }
 
@@ -947,6 +950,7 @@
   const words = (text) => String(text || 'agent').replaceAll('_', ' ');
 
   function renderSpeculative(scenario) {
+    place();
     current = null;
     speculative = true;
     const reason = String(scenario.summary || '').split(' The compiler kept')[0].trim();
