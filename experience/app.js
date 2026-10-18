@@ -1751,4 +1751,11 @@ const linkedDemo = new URLSearchParams(window.location.search).get('demo');
 if (linkedDemo && preparedScenarios[linkedDemo]) runScenario(linkedDemo);
 
 // Preview helpers for in-app QA; no production data is exposed.
-window.counterfactualPreview = { runScenario, scene, goToComposer, openEvidence, map: bloorMainMap, rerun: rerunMapped, current: () => current };
+window.counterfactualPreview = {
+  runScenario, scene, goToComposer, openEvidence, map: bloorMainMap, rerun: rerunMapped, current: () => current,
+  // Same people, seed and spec with assumption overrides, for the brief's sensitivity table. Always in this
+  // browser: the API's run quota is per IP, and visitors on one network share it.
+  variant: (result, overrides) => (mappedAvailable() && mapped.specs[runKeyOf(result)]
+    ? worldRunner.runWorldExperiment(mapped.specs[runKeyOf(result)], { world: mapped.world, seed: result.seed, version: result.version, overrides })
+    : Promise.reject(new Error('The in-browser engine is not loaded'))),
+};
