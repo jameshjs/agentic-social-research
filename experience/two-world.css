@@ -14,7 +14,9 @@ body.demo-view #agentsNote{display:none!important}
 /* a shorter (less tall) prompt bar, full width as before */
 .hypothesis-card{padding:8px 10px 8px 14px}
 .composer-input-row{margin-top:0}
-.composer-input-row textarea{min-height:0;height:46px;padding:10px 6px;font-size:clamp(16px,1.6vw,20px);resize:none;overflow-y:auto}
+/* No scrollbar: the question bar grows with its text (fitQuestion in app.js). */
+.composer-input-row textarea{min-height:46px;height:46px;padding:10px 6px;font-size:clamp(16px,1.6vw,20px);resize:none;overflow:hidden;scrollbar-width:none}
+.composer-input-row textarea::-webkit-scrollbar{display:none}
 .run-button{padding:0 14px 0 18px;min-height:44px}
 .globe-caption{display:none!important}                                  /* no street-name caption on the landing */
 /* After the first run (app.js .is-landed) the prompt page is one screen; the landing scroll comes back only on reload. */

@@ -1688,10 +1688,16 @@ function preparedIntent(text) {
     && !/\b(add(s|ed|ing)?|build(s|ing)?|built|install(s|ed|ing)?|new|extend(s|ed|ing)?|expand(s|ed|ing)?|widen(s|ed|ing)?|creat(e|es|ed|ing)|another|more)\b/.test(text);
   return fare && preparedScenarios.fare ? 'fare' : bike && preparedScenarios.bike ? 'bike' : null;
 }
+// The question bar grows with its text instead of showing a scrollbar.
+function fitQuestion() { const box = $('#hypothesisInput'); box.style.height = 'auto'; box.style.height = `${box.scrollHeight}px`; }
+$('#hypothesisInput').addEventListener('input', fitQuestion);
+window.addEventListener('resize', fitQuestion);
+fitQuestion();
 $('#hypothesisInput').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('#hypothesisForm').requestSubmit(); } });
 $$('[data-scenario-choice]').forEach(button => button.addEventListener('click', () => {
   const chosen = button.dataset.scenarioChoice;
   $('#hypothesisInput').value = preparedScenarios[chosen].prompt;
+  fitQuestion();
   runScenario(chosen);
 }));
 $('#replayToggle').addEventListener('click', () => setReplayOpen(document.body.classList.contains('replay-collapsed')));
